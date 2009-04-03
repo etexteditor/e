@@ -1,0 +1,3 @@
+To build you will need to:
+* Get and build everything listed in the "external" folder.
+* Download and install WxWidgets, version 2.8.x

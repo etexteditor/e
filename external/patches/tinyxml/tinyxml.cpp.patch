@@ -1,0 +1,53 @@
+--- C:/Dev/e/externals/tinyxml/tinyxml.orig.cpp	Sun Aug 27 16:52:14 2006
++++ C:/Dev/e/externals/tinyxml/tinyxml.cpp	Wed Mar 26 16:35:36 2008
+@@ -32,7 +32,9 @@
+ #include "tinyxml.h"
+ 
+ 
+-bool TiXmlBase::condenseWhiteSpace = true;
++bool TiXmlBase::condenseWhiteSpace = true;
++bool TiXmlBase::strictEntityEncoding = true;
++bool TiXmlBase::allowBlankValues = false;
+ 
+ void TiXmlBase::PutString( const TIXML_STRING& str, TIXML_STRING* outString )
+ {
+@@ -42,7 +44,7 @@
+ 	{
+ 		unsigned char c = (unsigned char) str[i];
+ 
+-		if (    c == '&' 
++		/*if (    c == '&' 
+ 		     && i < ( (int)str.length() - 2 )
+ 			 && str[i+1] == '#'
+ 			 && str[i+2] == 'x' )
+@@ -65,7 +67,8 @@
+ 					break;
+ 			}
+ 		}
+-		else if ( c == '&' )
++		else*/
++		if ( c == '&' )
+ 		{
+ 			outString->append( entity[0].str, entity[0].strLength );
+ 			++i;
+@@ -80,17 +83,17 @@
+ 			outString->append( entity[2].str, entity[2].strLength );
+ 			++i;
+ 		}
+-		else if ( c == '\"' )
++		else if ( strictEntityEncoding && c == '\"' )
+ 		{
+ 			outString->append( entity[3].str, entity[3].strLength );
+ 			++i;
+ 		}
+-		else if ( c == '\'' )
++		else if ( strictEntityEncoding && c == '\'' )
+ 		{
+ 			outString->append( entity[4].str, entity[4].strLength );
+ 			++i;
+ 		}
+-		else if ( c < 32 )
++		else if ( strictEntityEncoding && c < 32 )
+ 		{
+ 			// Easy pass at non-alpha/numeric/symbol
+ 			// Below 32 is symbolic.

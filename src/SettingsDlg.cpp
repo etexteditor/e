@@ -1,0 +1,392 @@
+/*******************************************************************************
+ *
+ * Copyright (C) 2009, Alexander Stigsen, e-texteditor.com
+ *
+ * This software is licensed under the Open Company License as described
+ * in the file license.txt, which you should have received as part of this
+ * distribution. The terms are also available at http://opencompany.org/license.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ******************************************************************************/
+
+#include "SettingsDlg.h"
+#include "wx/image.h"
+#include <wx/notebook.h>
+#include <wx/fontmap.h>
+
+// Ctrl id's
+enum {
+	CTRL_LOADPIC = 100,
+	CTRL_AUTOPAIR,
+	CTRL_AUTOWRAP,
+	CTRL_KEEPSTATE,
+	CTRL_CHECKCHANGE,
+	CTRL_SHOWMARGIN,
+	CTRL_WRAPMARGIN,
+	CTRL_MARGINSPIN,
+	CTRL_LINEENDING,
+	CTRL_ENCODING,
+	CTRL_BOM
+};
+
+BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
+	EVT_BUTTON(wxID_OK, SettingsDlg::OnButtonOk)
+	EVT_BUTTON(CTRL_LOADPIC, SettingsDlg::OnButtonLoadPic)
+	EVT_CHECKBOX(CTRL_AUTOPAIR, SettingsDlg::OnCheckAutoPair)
+	EVT_CHECKBOX(CTRL_AUTOWRAP, SettingsDlg::OnCheckAutoWrap)
+	EVT_CHECKBOX(CTRL_KEEPSTATE, SettingsDlg::OnCheckKeepState)
+	EVT_CHECKBOX(CTRL_CHECKCHANGE, SettingsDlg::OnCheckCheckChange)
+	EVT_CHECKBOX(CTRL_SHOWMARGIN, SettingsDlg::OnCheckShowMargin)
+	EVT_CHECKBOX(CTRL_WRAPMARGIN, SettingsDlg::OnCheckWrapMargin)
+	EVT_SPINCTRL(CTRL_MARGINSPIN, SettingsDlg::OnMarginSpin) 
+	EVT_COMBOBOX(CTRL_LINEENDING, SettingsDlg::OnComboEol)
+	EVT_COMBOBOX(CTRL_ENCODING, SettingsDlg::OnComboEncoding)
+	EVT_CHECKBOX(CTRL_BOM, SettingsDlg::OnCheckBom)
+END_EVENT_TABLE()
+
+SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
+: wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+  m_catalyst(cw), m_ctUserPic(false)
+{
+	SetTitle (_("Settings"));
+
+	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+	{
+		// Create the notebook
+		wxNotebook* notebook = new wxNotebook(this, wxID_ANY);
+		{
+			// Create the settings page
+			wxPanel* settingsPage = new wxPanel(notebook, wxID_ANY);
+			{
+				wxCheckBox* autoPair = new wxCheckBox(settingsPage, CTRL_AUTOPAIR, _("Auto-pair characters (quotes etc.)"));
+				wxCheckBox* autoWrap = new wxCheckBox(settingsPage, CTRL_AUTOWRAP, _("Auto-wrap selections"));
+				wxCheckBox* keepState = new wxCheckBox(settingsPage, CTRL_KEEPSTATE, _("Keep state between sessions"));
+				wxCheckBox* checkChange = new wxCheckBox(settingsPage, CTRL_CHECKCHANGE, _("Check for external file modifications"));
+				wxCheckBox* showMargin = new wxCheckBox(settingsPage, CTRL_SHOWMARGIN, _("Show margin line"));
+				m_marginSpin = new wxSpinCtrl(settingsPage, CTRL_MARGINSPIN, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 500, 80);
+				m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
+
+				wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
+					settingsSizer->Add(autoPair, 0, wxALL, 5);
+					settingsSizer->Add(autoWrap, 0, wxALL, 5);
+					settingsSizer->Add(keepState, 0, wxALL, 5);
+					settingsSizer->Add(checkChange, 0, wxALL, 5);
+					wxBoxSizer* marginSizer = new wxBoxSizer(wxHORIZONTAL);
+						marginSizer->Add(showMargin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+						marginSizer->Add(m_marginSpin);
+						settingsSizer->Add(marginSizer);
+					settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
+				settingsPage->SetSizer(settingsSizer);
+
+				bool doAutoPair = true;  // default
+				bool doAutoWrap = true;  // default
+				bool doKeepState = true; // default
+				bool doCheckChange = true;  // default
+				bool doShowMargin = false;  // default
+				bool doWrapMargin = false; // default
+				int marginChars = 80;  // default
+				cxLOCK_READ(m_catalyst)
+					catalyst.GetSettingBool(wxT("autoPair"), doAutoPair);
+					catalyst.GetSettingBool(wxT("autoWrap"), doAutoWrap);
+					catalyst.GetSettingBool(wxT("keepState"), doKeepState);
+					catalyst.GetSettingBool(wxT("checkChange"), doCheckChange);
+					catalyst.GetSettingBool(wxT("showMargin"), doShowMargin);
+					catalyst.GetSettingBool(wxT("wrapMargin"), doWrapMargin);
+					catalyst.GetSettingInt(wxT("marginChars"), marginChars);
+				cxENDLOCK
+
+				// Update ctrls
+				autoPair->SetValue(doAutoPair);
+				autoWrap->SetValue(doAutoWrap);
+				keepState->SetValue(doKeepState);
+				checkChange->SetValue(doCheckChange);
+				showMargin->SetValue(doShowMargin);
+				m_marginSpin->SetValue(marginChars);
+				m_wrapMargin->SetValue(doWrapMargin);
+				if (!doShowMargin) {
+					m_marginSpin->Disable();
+					m_wrapMargin->Disable();
+				}
+
+				notebook->AddPage(settingsPage, _("Settings"), true);
+			}
+
+			// Create encoding page
+			wxPanel* encodingPage = new wxPanel(notebook, wxID_ANY);
+			{
+				wxStaticText* desc = new wxStaticText(encodingPage, wxID_ANY, _("Set default encoding for new files."));
+				wxStaticText* labelLine = new wxStaticText(encodingPage, wxID_ANY, _("Line Endings:"));
+				wxStaticText* labelEnc = new wxStaticText(encodingPage, wxID_ANY, _("Encoding:"));
+				m_defLine = new wxComboBox(encodingPage, CTRL_LINEENDING, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN|wxCB_READONLY);
+				m_defEnc = new wxComboBox(encodingPage, CTRL_ENCODING, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN|wxCB_READONLY);
+				m_defBom = new wxCheckBox(encodingPage, CTRL_BOM, _("Byte Order Marker"));
+
+				wxBoxSizer* encSizer = new wxBoxSizer(wxVERTICAL);
+					encSizer->Add(desc, 0, wxALL, 5);
+					wxFlexGridSizer* combiSizer = new wxFlexGridSizer(2, 2, 5, 5);
+						combiSizer->Add(labelLine);
+						combiSizer->Add(m_defLine);
+						combiSizer->Add(labelEnc);
+						combiSizer->Add(m_defEnc);
+						combiSizer->AddStretchSpacer(0);
+						combiSizer->Add(m_defBom);
+						encSizer->Add(combiSizer, 0, wxALL, 5);
+				encodingPage->SetSizer(encSizer);
+
+				UpdateEncoding();
+					
+				notebook->AddPage(encodingPage, _("Encoding"), true);
+			}
+			
+			// Create the profile page
+			wxPanel* profilePage = new wxPanel(notebook, wxID_ANY);
+			{
+				wxFlexGridSizer* profileSizer = new wxFlexGridSizer(2,2, 0, 0);
+				{
+					profileSizer->AddGrowableCol(1); // col 2 is sizable
+
+					wxStaticText* labelName = new wxStaticText(profilePage, wxID_ANY, _("Name:"));
+					profileSizer->Add(labelName, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+					
+					cxLOCK_READ(m_catalyst)
+						m_ctrlUserName = new wxTextCtrl(profilePage, wxID_ANY, catalyst.GetUserName(0));
+						profileSizer->Add(m_ctrlUserName, 1, wxEXPAND|wxALL, 5);
+
+						wxStaticText* labelPic = new wxStaticText(profilePage, wxID_ANY, _("Picture:"));
+						profileSizer->Add(labelPic, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+						wxBoxSizer* picSizer = new wxBoxSizer(wxHORIZONTAL);
+						{
+							m_ctrlUserPic = new wxStaticBitmap(profilePage, wxID_ANY, catalyst.GetUserPic(0));
+							m_ctrlUserPic->SetBackgroundColour(*wxWHITE);
+							picSizer->Add(m_ctrlUserPic, 0);
+
+							wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load.."));
+							picSizer->Add(loadButton, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+
+							profileSizer->Add(picSizer, 0, wxALL, 5);
+						}
+					cxENDLOCK
+
+					profilePage->SetSizerAndFit(profileSizer);
+				}
+
+				notebook->AddPage(profilePage, _("Profile"), true);
+			}
+			notebook->SetSelection(0);
+
+			mainSizer->Add(notebook, 0, wxEXPAND|wxALL, 5);
+		}
+
+		// Buttons
+		mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
+	}
+
+	SetSizerAndFit(mainSizer);
+
+	// Manually set size hints
+	// This should be removed when there are multible pages
+	const wxSize size = GetSize();
+	SetSizeHints(size.x, size.y, -1, size.y);
+
+	Centre();
+}
+
+void SettingsDlg::UpdateEncoding() {
+	// Build list of line endings
+	m_defLine->Append(_("DOS/Windows (CR LF)"));
+	m_defLine->Append(_("Unix (LF)"));
+	m_defLine->Append(_("Mac (CR)"));
+
+	// Build list of encodings
+	const size_t enc_count = wxFontMapper::GetSupportedEncodingsCount();
+	for (size_t enc_id = 0; enc_id < enc_count; ++enc_id) {
+		const wxFontEncoding enc = wxFontMapper::GetEncoding(enc_id);
+		wxString enc_name = wxFontMapper::GetEncodingDescription(enc);
+		if (enc == wxFONTENCODING_DEFAULT) {
+			enc_name += wxT(" (") + wxFontMapper::GetEncodingName(wxLocale::GetSystemEncoding()).Lower() + wxT(")");
+		}
+		m_defEnc->Append(enc_name);
+	}
+
+	// Default values
+	wxTextFileType eol = wxTextBuffer::typeDefault;
+	wxFontEncoding enc = wxFONTENCODING_DEFAULT;
+	bool bom = false; // default
+
+	// Get saved settings
+	wxString eolStr;
+	wxString encStr;
+	cxLOCK_READ(m_catalyst)
+		catalyst.GetSettingString(wxT("formatEol"), eolStr);
+		catalyst.GetSettingString(wxT("formatEncoding"), encStr);
+		catalyst.GetSettingBool(wxT("formatBom"), bom);
+	cxENDLOCK
+	if (eolStr == wxT("crlf")) eol = wxTextFileType_Dos;
+	else if (eolStr == wxT("lf")) eol = wxTextFileType_Unix;
+	else if (eolStr == wxT("cr")) eol = wxTextFileType_Mac;
+	if (!encStr.empty()) enc = wxFontMapper::GetEncodingFromName(encStr);
+
+	// Set eol ctrl
+	if (eol == wxTextFileType_Dos) m_defLine->SetSelection(0);
+	else if (eol == wxTextFileType_Unix) m_defLine->SetSelection(1);
+	else if (eol == wxTextFileType_Mac) m_defLine->SetSelection(2);
+
+	// Set encoding ctrl
+	for(unsigned int i = 0; i < m_defEnc->GetCount(); ++i) {
+		if (wxFontMapper::GetEncoding(i) == enc) {
+			m_defEnc->SetSelection(i);
+			break;
+		}
+	}
+
+	// Set bom ctrl
+	if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
+		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE)
+		m_defBom->Enable(true);
+	else m_defBom->Enable(false);
+	m_defBom->SetValue(bom);
+}
+
+void SettingsDlg::OnComboEol(wxCommandEvent& event) {
+	wxString eolStr;
+	if (event.GetSelection() == 0) eolStr = wxT("crlf");
+	else if (event.GetSelection() == 1) eolStr = wxT("lf");
+	else if (event.GetSelection() == 0) eolStr = wxT("cr");
+
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingString(wxT("formatEol"), eolStr);
+	cxENDLOCK
+}
+
+void SettingsDlg::OnComboEncoding(wxCommandEvent& event) {
+	const wxFontEncoding enc = wxFontMapper::GetEncoding(event.GetSelection());
+	const wxString encStr = wxFontMapper::GetEncodingName(enc);
+	cxLOCK_WRITE(m_catalyst)
+		if (enc == wxFONTENCODING_DEFAULT) catalyst.RemoveSettingString(wxT("formatEncoding"));
+		else catalyst.SetSettingString(wxT("formatEncoding"), encStr);
+	cxENDLOCK
+
+	// Check if bom ctrl should be enabled
+	if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
+		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE)
+		m_defBom->Enable(true);
+	else m_defBom->Enable(false);
+}
+
+void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("formatBom"), event.IsChecked());
+	cxENDLOCK
+}
+
+void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
+	
+	wxString name = m_ctrlUserName->GetLabel();
+	cxLOCK_READ(m_catalyst)
+		if (name == catalyst.GetUserName(0)) name.clear(); // empty string means no change
+	cxENDLOCK
+
+	if (!name.empty() || m_ctUserPic) {
+		if (!m_ctUserPic) m_userImage = wxImage(); // make invalid
+
+		cxLOCK_WRITE(m_catalyst)
+			catalyst.SetProfile(name, m_userImage);
+		cxENDLOCK
+	}
+
+	EndModal(wxID_OK);
+}
+
+void SettingsDlg::OnButtonLoadPic(wxCommandEvent& WXUNUSED(event)) {
+	const wxString filter = wxT("Image files (*.bmp,*.gif.*.ico,*.jpg,*.png)|*.bmp;*.gif;*.png;*.jpg;*.ico");
+	wxFileDialog dlg(this, _("Choose an image"), wxT(""), wxT(""), filter, wxFD_OPEN);
+
+	if (dlg.ShowModal() == wxID_OK) {
+		// Load the image
+		m_userImage.LoadFile(dlg.GetPath());
+		if (m_userImage.Ok()) {
+			// Resize to 48*48
+			if (m_userImage.GetWidth() != 48 || m_userImage.GetHeight() != 48) {
+				m_userImage.Rescale(48, 48);
+			}
+
+			m_ctrlUserPic->SetBitmap(wxBitmap(m_userImage));
+			m_ctUserPic = true;
+		}
+		else {
+			// TODO: Notify user
+		}
+	}
+}
+
+void SettingsDlg::OnCheckAutoPair(wxCommandEvent& event) {
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("autoPair"), event.IsChecked());
+	cxENDLOCK
+
+	// Notify that the settings has changed
+	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
+	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
+}
+
+void SettingsDlg::OnCheckAutoWrap(wxCommandEvent& event) {
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("autoWrap"), event.IsChecked());
+	cxENDLOCK
+
+	// Notify that the settings has changed
+	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
+	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
+}
+
+void SettingsDlg::OnCheckShowMargin(wxCommandEvent& event) {
+	const bool doShowMargin = event.IsChecked();
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("showMargin"), doShowMargin);
+	cxENDLOCK
+
+	m_marginSpin->Enable(doShowMargin);
+	m_wrapMargin->Enable(doShowMargin);
+
+	// Notify that the settings has changed
+	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
+	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
+}
+
+void SettingsDlg::OnCheckWrapMargin(wxCommandEvent& event) {
+	const bool doWrapMargin = event.IsChecked();
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("wrapMargin"), doWrapMargin);
+	cxENDLOCK
+
+	// Notify that the settings has changed
+	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
+	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
+}
+
+void SettingsDlg::OnMarginSpin(wxSpinEvent& event) {
+	const int marginChars = event.GetPosition();
+
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingInt(wxT("marginChars"), marginChars);
+	cxENDLOCK
+
+	// Notify that the settings has changed
+	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
+	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
+}
+
+void SettingsDlg::OnCheckKeepState(wxCommandEvent& event) {
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("keepState"), event.IsChecked());
+	cxENDLOCK
+}
+
+void SettingsDlg::OnCheckCheckChange(wxCommandEvent& event) {
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("checkChange"), event.IsChecked());
+	cxENDLOCK
+}

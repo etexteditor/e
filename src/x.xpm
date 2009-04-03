@@ -1,0 +1,12 @@
+/* XPM */
+static char * x_xpm[] = {
+"8 7 2 1",
+" 	c None",
+"x	c #000000",
+"xx    xx",
+" xx  xx ",
+"  xxxx  ",
+"   xx   ",
+"  xxxx  ",
+" xx  xx ",
+"xx    xx"};

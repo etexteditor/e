@@ -1,0 +1,41 @@
+--- C:/Dev/e/externals/tinyxml/tinyxml.orig.h	Sun Aug 27 16:52:14 2006
++++ C:/Dev/e/externals/tinyxml/tinyxml.h	Wed Mar 26 16:35:34 2008
+@@ -217,8 +217,25 @@
+ 	static void SetCondenseWhiteSpace( bool condense )		{ condenseWhiteSpace = condense; }
+ 
+ 	/// Return the current white space setting.
+-	static bool IsWhiteSpaceCondensed()						{ return condenseWhiteSpace; }
+-
++	static bool IsWhiteSpaceCondensed()						{ return condenseWhiteSpace; }
++
++	/**	It the encoding is strict, all chars that are not alphanumeric will be entity encoded.
++		Otherwise only the chars &<>"' will be entity encoded. The default is to be strict.
++		Note changing this value is not thread safe.
++	*/
++	static void SetStrictEntityEncoding( bool strict )		{ strictEntityEncoding = strict; }
++
++	/// Return the current entity encoding setting.
++	static bool IsEntityEncodingStrict()					{ return strictEntityEncoding; }
++
++	/**	If blank values are allowed, it is possible to have values composed out of
++	    only whitespace and/or newlines (empty values are still removed)
++	*/
++	static void AllowBlankValues( bool allow )		{ allowBlankValues = allow; }
++
++	/// Return the current entity encoding setting.
++	static bool IsBlankValuesAllowed()					{ return allowBlankValues; }
++
+ 	/** Return the position, in the original source file, of this node or attribute.
+ 		The row and column are 1-based. (That is the first row and first column is
+ 		1,1). If the returns values are 0 or less, then the parser does not have
+@@ -405,7 +422,9 @@
+ 
+ 	};
+ 	static Entity entity[ NUM_ENTITY ];
+-	static bool condenseWhiteSpace;
++	static bool condenseWhiteSpace;
++	static bool strictEntityEncoding;
++	static bool allowBlankValues;
+ };
+ 
+ 

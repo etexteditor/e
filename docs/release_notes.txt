@@ -1,0 +1,1505 @@
+13-feb-2009 - 1.0.32
+  o Added experimental support for selective undo.
+  
+  o Fixed issue with filenames being reset if they had
+    only the case changed.
+
+17-oct-2008 - 1.0.31
+  o Fixed detection of correct syntax for bundle items.
+  
+  o Fixed insertion of separators in bundle menus.
+  
+  o Fixed cases where deleted bundles returned on restart.
+  
+  o Fixed completion within autobrackets.
+  
+  o Pageup/down now works in completion popup.
+  
+  o Fixed some issues with transformations in snippets.
+  
+  o Symbols are now stripped of newlines before transformation.
+  
+  o Fixed crash when opening project settings with file selected.
+  
+  o Lots of minor bugfixes.
+
+19-sep-2008 - 1.0.30
+  o Fixed a really nasty memory corruption bug that has been
+    the source of a lot of crashes.
+    
+  o Fixed creation of shortcuts in bundle commands.
+  
+  o Fixed deletion of bundles via context menu.
+  
+  o Fixed crash when clicking on empty dir in project over FTP.
+  
+  o Fixed webpreview crash.
+  
+  o Fixed correct restore of bundle pane state.
+  
+  o Fixed bundle env is now also set for CompletionCmds.
+
+12-sep-2008 - 1.0.29
+  o Added an extension to the snippet format so that you can
+    have the content of a tabstop piped through a shell command.
+    
+  o Fixed some projectpane related bugs which had been the cause
+    of a lot of crashes.
+
+4-sep-2008 - 1.0.28
+  o Added syntax highlighting for Snippets.
+  
+  o Large speedup when opening projects, and some stability
+    improvements in handling when external processes make
+    changes in the project.
+    
+  o Fixed: Focus on text after doubleclicking item in project/
+    bundle pane.
+    
+  o Fixed: Reopening the bundle editor from menu now works.
+  
+  o Fixed: Removed unneeded request to reload after saving
+    bundle items.
+    
+  o Fixed: Some caret issues when last line was wider than
+    display.
+    
+  o Fixed: Some text rendering issues.
+  
+  o Fixed: Show project pane in menu is no longer mixed up with
+    bundle pane.
+    
+  o Fixed: Close button in "Remote Profiles" dialog now works.
+
+28-aug-2008 - 1.0.27
+  o All new bundle editor! You can now edit the bundle items
+    directly in the editor with all basic features available
+    (syntax highlighting, snippets, undo history, etc..).
+    
+  o Hold down shift when selecting an item from the bundle
+    menu and it will open directly in the editor.
+    
+  o From the context menu in the bundle pane you can now
+    export full bundles and individual items for easy sharing.
+    
+  o Added syntax for MSDOS batch files (.bat).
+    
+  o Lots of minor bugfixes.
+
+1-aug-2008 - 1.0.26
+  o Fixed bug that could cause during search and replace.
+  
+  o Fixed issue with external processes renaming files
+    in project pane.
+    
+  o Many minor bugfixes.
+
+20-july-2008 - 1.0.25
+  o Lots of performance and stability improvements.
+  
+  o You can now set it to wrap at margin line (in settings).
+
+9-july-2008 - 1.0.24
+  o Added shortcut to clear all bookmarks (Ctrl-Shift-F2).
+  
+  o Fixed use of F2 for renaming in project.
+  
+  o When showing popup menu with multiple bundle items,
+    they are now sorted by bundle.
+
+2-july-2008 - 1.0.23
+  o Added Bookmarks.
+  
+  o Fixed crash with Ctrl-C on empty file.
+  
+  o You can now also use completions in snippets.
+  
+  o Fixed partial file problem when downloading bundles
+    with ewmpty files.
+    
+  o Fixed some syntax highlighting issues on undo.
+    
+  o Updated default install to include the Ruby on Rails 2
+    bundle.
+
+23-june-2008 - 1.0.22
+  o Fixed a lot of longstanding undo issues. Undoing is now
+    a lot faster. It no longer jumps around and it does not
+    unfold all foldings (only the ones containing changes).
+    
+  o Added support for showing a margin line (enable and set
+    width in settings).
+    
+  o Added 'Copy Path to Clipboard' entry to the tab context
+    menu.
+    
+  o Running the automatic cygwin installer now also works
+    with UAC enabled on Vista.
+
+7-june-2008 - 1.0.21
+  o If you copy a column- or multi-selection, and paste it,
+    it will now be inserted as a column. If you paste it
+    over an existing (multi) selection, it will paste in as
+    many items as fit in the selection(s).
+    
+  o Lots of minor bugfixes and performance improvements.
+    
+23-may-2008 - 1.0.20
+  o You can now edit Languages and Preferences in the
+    Bundle Editor (in JSON format).
+    
+  o The Bundle Editor can now be kept open while you work
+    in the main editor. If you have made changes in the
+    bundle editor, there might be a slight pause when you
+    switch to the main editor (reparsing the bundles).
+    
+  o When completing (ctrl-space) in front of a punctuation
+    character, it will now suggest all other words in in
+    the document that follows same punctuation char.
+  
+  o When opening an empty file, encoding will be set to
+    the user defined default.
+    
+  o Fixed use of margens in Page Setup.
+  
+  o Fixed parsing of Actionscript 3 syntax.
+  
+  o Fixed jumping text on drag'n'drop.
+  
+  o Lots of minor bugfixes.
+  
+19-may-2008 - 1.0.19
+  o Added support for printing.
+  
+  o Fixed some syntax highlighting bugs.
+  
+  o Improved indentation handling.
+  
+7-may-2008 - 1.0.18
+  o Major rewrite of the text renderer. It now supports both
+    proportional and multibyte fonts.
+    
+  o Fixed piping in web preview.
+  
+  o Fixed some PHP indentation issues.
+  
+  o Added the macromates review repo to Bundle Manager.
+
+18-apr-2008 - 1.0.17
+  o Major speed improvements on startup and opening new documents.
+  
+  o Updated regex engine to PCRE 7.6
+  
+  o Fixed problem with unicode in env strings.
+  
+  o Updated with latest bundles from ebundles.
+
+15-apr-2008 - 1.0.16a
+  o Fixed web-preview bug.
+  
+  o Added TM_APPPATH env variable.
+  
+  o New empty documents with custom encoding are no longer showed
+    as modified.
+
+13-apr-2008 - 1.0.16
+  o Encoding for current file is now shown in statusbar (click
+    to change).
+    
+  o You can now set default encoding and line endings for new
+    files in the settings dialog.
+    
+  o When running bundle commands, current working dir is now
+    set to the documents location.
+    
+  o If a bundle does not have fallbackInput defined, it now
+    defaults to entire document.
+    
+  o Fixed regression in snippet parsing that broke 'Wrap selection'
+    in the html bundle.
+
+27-mar-2008 - 1.0.15
+  o Added Bundle Manager.
+    With this you can manage all your bundles and easily install
+    and update bundles from the online repositories.
+    It is available from the menu item 'Bundles/Edit Bundles/
+    Bundle Manager'
+    
+  o Fixed setting of TM_HTML_EMPTY_TAGS env variable.
+  
+  o Fixed setting of TM_INPUT_START_* env vars when output
+    is set to 'scope'.
+    
+  o Fixed use of spaces in tm-file:// paths.
+  
+  o Fixed a few snippet parsing bugs.
+  
+  o Updated installed bundles to latest from ebundles.
+  
+  o Several minor bugfixes.
+
+13-mar-2008 - 1.0.14
+  o Improvements to e command line tool:
+    - Added support for piping text in and out.
+    - There are now options to specify line/column.
+    - Added "mate" shortcut for use in bundles.
+    - Added support for cygwin paths.
+    
+  o Fixed several minor snippet bugs. #212,#215
+
+  o Fixed TM_INFUT_START_* env vars. #68
+  
+  o Added TM_FULLNAME env var.
+  
+  o TM_SUPPORT/bin is now added to PATH.
+  
+  o Added support for tm-file:// links in html output.
+  
+  o Fixed font cache issue. #207
+  
+  o Ctrl-F4 now closes current document. #218
+  
+  o Ctrl-C without selection now copies current line to
+    clipboard. #217
+    
+  o More fixes to the cygwin updater (Vista related).
+
+6-mar-2008 - 1.0.13
+  o Added a separate "e" command to run e from the command line
+    (similar to TextMates "mate" command). This allows you to
+    control whether it should wait returning until you are done
+    editing the file (run it with -h to see options).
+    The installer will add it to the system path, so that it will
+    be available from the command line.
+    
+  o Improved the web previews ability to recognize css paths in
+    html files when doing live css preview with pinned views.
+    
+  o Improved highlighting of matching brackets. It now also
+    highlights the background (used to only make it bold), and
+    the highlight color is themable.
+      
+  o Double-clicking or ctrl-shift-w on a bracket now selects to
+    matching bracket.
+    
+  o Pressing Ctrl-B now jumps to matching bracket (if any).
+  
+  o txmt urls now also works for dirs (opens project).
+  
+  o Fixed passing of UNC paths to cygwin.
+  
+  o Fixed handling of remote servers that return "." and "..".
+
+22-feb-2008 - 1.0.12
+  o You can now see a live preview while editing css files. Just
+    open the target html document (which uses the css file), open
+    'View/Web Preview' and click the 'pin' button. You can now
+    switch back to the css document and see the effect of all
+    your changes live.
+    
+  o Fixed a race condition that on some machines caused regular
+    hangs and crashes.
+    
+  o Fixed bug in Regex ReplaceAll that could cause it to hang.
+  
+  o Fixed bug with Cygwin updater on Vista.
+  
+  o Several performance improvements.
+
+13-feb-2008 - 1.0.11
+  o Removed all use of DDE for interprocess communication. This
+    should finally get rid of all those pesky DDE errors.
+    
+  o You can now use 'Find in Selections' (Ctrl-Shift-F). When
+    doing this, find and replace only happens within the current
+    selection. This also works with multi-selections.
+    
+  o Lots of minor bugfixes to fix edge cases that occasionally
+    caused crashes.
+    
+1-feb-2008 - 1.0.10
+  o You can now upload files to remote projects by dragging
+    them to the project pane.
+    
+  o DDE failure now gives a more informative error message. #182
+  
+  o Accel key on 'Close all tabs' changed to avoid confict. #169
+  
+  o Added shortcut keys and tooltips in search bar. #161
+  
+  o More accel keys in menu items. #89, #90
+  
+  o Project pane now allow you to do renames that only change
+    case. #150
+    
+  o Saving to read-only files now ask if you want to remove
+    write protection. #117
+    
+  o Window position is now only reset if it has become
+    unreachable. #92
+    
+  o Shift-clicking inside selections now resizes them.
+
+25-jan-2008 - 1.0.9
+  o You can now delete, rename and create files and folders
+    in remote projects.
+    
+  o Remote projects now handles linked files and dirs correctly.
+    
+  o Fixed bug that made 'Save As' fail when file existed.
+  
+  o Fixed bug that made it impossible to open root dirs
+    as projects.
+    
+  o Further improvements of handling of files and projects
+    on unstable network drives.
+    
+  o Fixed some flicker when opening new documents.
+  
+  o Added tooltips in Web Preview window.
+  
+17-jan-2008 - 1.0.8
+  o Added preliminary support for remote folders. Right now
+    it only supports ftp and is very basic (only editing, no
+    file manipulation yet). But the underlying framework is
+    very flexible and support for file manipulations and
+    more protocols will come soon.
+    
+  o Further improvements of startup speed. Now also shows
+    a progress dialog when restoring state.
+    
+  o Fixed a longstanding bug that sometimes caused delay
+    when swithing back to the window.
+    
+  o Fixed some delays when working with projects over
+    network drives.
+    
+  o Several minor bugfixes and improvements.
+
+27-nov-2007 - 1.0.7
+  o Many performance improvements, especially to startup
+    time.
+
+12-nov-2007 - 1.0.6
+  o Major improvements in auto-pairing of brackets. It now
+    works even when nested several levels, cleans up extra
+    bracket on backspacing and writing end bracket jumps
+    over it. #105,#106
+    
+  o Pressing shift-tab in snippets, now moves back to 
+    previous tabstop.#82,#69
+    
+  o Fixed bug that made current file disappear in project
+    pane. #140
+         
+  o When selecting words with shift-ctrl-arrows, under-
+    line is now included.
+    
+  o --clearundo now removes unneeded files in .wf dir.
+
+5-nov-2007 - 1.0.5
+  o Added atomic saving. This means that the original
+    file will always be protected if something should
+    fail during a save. #108
+    
+  o Closing last tab could cause a gray view. #129
+  
+  o Fixed mixup in settings. #120
+  
+  o SaveAs now warns if the file already exists. #109
+  
+  o Error messages for saves have been improved.
+  
+  o Syntaxes can now recognize files with dots in the
+    extension (like file.html.erb). #118
+    
+  o Fixed jump to top on shift-select. #95/121
+  
+  o Fixed bug in ReplaceAll. #101
+  
+  o Added tooltips on project buttons. #91
+  
+  o Added two new cmd line options:
+    --clearlayout   resets window layout and positions.
+    --clearundo     clear undo history for all un-
+                    milestoned files.
+  
+23-oct-2007 - 1.0.4
+  o You can now drag the tabs to split the display. This
+    allows you to see multible documents at the same time.
+    
+  o If you manually selects a syntax for a file (with the
+    popup menu), it is remembered next time you open a
+    file with the same extension.
+    
+  o Some improvements to startup speed (more to come).
+  
+  o Lots of minor bugfixes.
+
+7-sep-2007 - 1.0.3
+  o Added 'Tabs to Spaces' & 'Spaces to Tabs' functions
+    to the Text menu.
+  
+  o Clear state on exit if 'Save state' is unselected
+    in settings.
+    
+  o Added env vars TM_INPUT_START_LINE &
+    TM_INPUT_START_COLUMN
+    
+  o Ctrl-X without selection now also cuts the ending
+    newline.
+    
+  o Recent files list  has been increased to 10 items.
+
+  o Improved mousewheel handling to also work when set
+    to scroll pages.
+    
+  o Fixed bug when searching for individual unicode chars.
+ 
+17-aug-2007 - 1.0.2
+  o Added bracket highlighting.
+  
+  o Pressing Ctrl-X when there is no selection now cuts
+    the current line. #45
+    
+  o Ctrl-singleclicking now makes zero-length selection
+    (eg. to get multible active carets). #44
+    
+  o Made some fixes to PHP indetation rules.
+  
+  o F5 now works again for refresh in project pane.
+  
+  o Some minor bugfixes.
+
+9-aug-2007 - 1.0.1
+  o Fixed bug that prevented state from being saved. #29
+  
+  o Added command line option --clearstate. Makes e start up
+    without opening previous documents.
+    
+  o Output is now re-selected after running bundle commands
+    from selections. #24
+    
+  o Using Shift-Return to insert new line under current line
+    now respects indentation in snippets. #28
+    
+  o Holding down ctrl when dragging text now results in a
+    copy. #20
+  
+  o Double clicking disabled tab scroller no longer opens
+    new tab. #21
+    
+  o New shortcuts:
+      F3       - Find Next
+      Shift-F3 - Find Previous
+      Ctrl-F3  - Find current word/selection
+  
+
+7-aug-2007 - 1.0
+  o Removed dangling separator in menu after registration.
+  
+  o Fixed delay on window activation.
+  
+  o F2 now again works as rename in the project pane.
+  
+  o Focus now returns to editor after project pane is closed.
+
+6-aug-2007 (135) - Release Candidate 2
+  o Fixed a rare bug that could cause corruption
+    when milestoning.
+    
+  o Further improvements to the indentation handling.
+  
+  o Fixed bug that messed up folding when changing syntax.
+  
+  o You now get asked for confirmation when moving files
+    in the project pane (hold down shift to avoid). 
+
+2-aug-2007 (134) - Release Candidate 1
+  o Implemented drag'n'drop of selections.
+  
+  o Shift-Enter creates new line.
+  
+  o Symbol List now has a menu item under views, and it can
+    be toggled with F2.
+    
+  o Many improvements and fixes to indentation handling.
+  
+  o You can now double/tripple-click and drag to select in
+    increments of words/lines.
+    
+  o Fixed delay when returning focus to app and checking for
+    changes on network drives.
+    
+  o You can now start completion with Ctrl-Space. Multible
+    presses cycles through the choices.
+    
+  o Pressing space during completion inserts the choice
+    and follows it with a space.
+    
+  o Using the context menu key now works.
+  
+  o Plist files in bundles are now saved without quotes being
+    encoded.
+    
+  o Updated bundles to latest versions from ebundles.
+  
+  o Many minor bugfixes.
+  
+25-jul-2007 (133)
+  o Fixed some selections bugs (caused by introduction of the
+    column select shortcuts).
+
+25-jul-2007 (132)
+  o You can now do column selections from the keyboard,
+    just hold down alt and use the arrow keys.
+    
+  o Improved path conversion in HTML output.
+    
+  o Added option to disable change checking.
+  
+  o Added option to disable auto wrapping of selections.
+  
+  o Fixed use of # as bunde shortcut.
+  
+  o Added menu item for 'Complete Word'.
+  
+  o Fixed some case where path was compared case-sensitive.
+  
+  o Bundle and Theme editor is now more resizeable.
+  
+  o Fixed use of non-alnum snippet triggers inside quotes.
+  
+  o Fixed problem with deleting project env vars.
+  
+  o Some performance improvements on startup time.
+  
+  o Lots of minor bugfixes.
+
+16-jul-2007 (130)
+  o Undo now only scrolls if the change is not visible.
+  
+  o Del current line is now single undo step.
+  
+  o Fixed fold rendering for Python files.
+  
+  o Fixed occasional delay when activating window.
+  
+  o Fixed regex bug in Ruby/folding.
+  
+  o Fixed some duplicate uuid's in bundles.
+  
+  o Updated regex engine to pcre 7.2.
+  
+  o Updated the cygwin installer.
+  
+  o Help now open the manual in the wiki.
+  
+  o Lots of minor bugfixes.
+
+4-jul-2007 (129)
+  o Undo and Redo now moves caret to the position of
+    the last change.
+    
+  o Writing of timestamps is now more robust (shold
+    work better on networked drives).
+  
+  o Fixed restore bug when opening new files while
+    window was maximized.
+      
+  o Fixed bug when folding the last line in doc.
+
+  o Fixed bug when symbollist in statusbar contained
+    empty items.
+    
+  o Lots of minor bugfixes.
+
+28-jun-2007 (128)
+  o Fixed some folding related rendering bugs.
+  
+  o Alt key now works for menu navigation.
+  
+  o File/Exit now has x as shortcut.
+  
+  o Fixed bug that made PageUp loop when hitting top.
+  
+  o Tripple click now also selects the ending newline.
+  
+  o Fixed case conversions for chars outside default
+    locale.
+    
+  o When opening files from the shell, e will now be
+    restored if it was minimized.
+    
+  o Open/Save dialogs now set current dir after this
+    priority: current tab, project dir, last used dir,
+    current working dir.
+    
+  o Added 'Save All' and 'Close All'.
+  
+  o Added 'Fold Others' command, that opens current
+    fold and closes all others (shortcut Alt-F1).
+    
+  o Added shortcut for select fold (Shift-F1).
+  
+  o You can now also select by clicking the fold end.
+  
+  o Fixed search highlighting when theme contain
+    colored backgrounds.
+    
+  o Improved handling of links in html output.
+  
+  o Updated the the search icon (thanks to Charles
+    Roper).
+  
+22-jun-2007 (127)
+	o Folding! You can now fold logical pieces of text
+	  by cliking on the fold indicators next to the
+	  line numbers. The rules for folding is defined
+	  in the bundles syntax files and depend on
+	  matching indentation.
+	  
+	o When you have a closed fold, you can mouse over
+	  the fold marker at the end of the line to see
+	  a preview (tooltip).
+	  
+	o When mousing over the fold indicator, it will be
+	  highlighted. This helps when there are several
+	  folds within eachother.
+	  
+	o Click a fold indicator anywhere but on the button
+	  and it will select the entire fold.
+	  
+	o Doubleclick a fold indicator to fold it.
+	
+	o You can toggle folds with F1.
+	
+	o You can Fold All (Shift-F1) and Unfold All (Alt-
+	  Shift-F1), these are also available from the View
+	  menu.
+	  
+	o Select Fold is also available from the context
+	  menu.
+
+4-jun-2007 (126)
+	o Added 'Insert websafe color' command to the html
+	  bundle. See more details at:
+	  http://e-texteditor.com/blog/2007/html_dialog
+
+	o Added the ability to search in the symbol list
+	  (using same algorithm as 'Go to file').
+	  
+	o Added shortcut to switch between symbol list and
+	  editor (Ctrl-L). You can also hold down shift
+	  when making a selection in the symbol list. This
+	  will close it before moving to symbol in editor.
+	  
+	o Symbol list is now better at remembering pane
+	  position between sessions.
+	  
+	o Fixed replace bug that triggered 'wrap selections'.
+	
+	o Several minor bugfixes.
+
+25-may-2007 (125)
+	o Fixed conflicting menus that prevented changing
+	  syntax from status bar.
+
+25-may-2007 (124)
+	o Added support for Symbol Lists. You can now see
+	  the current symbol in the statusbar and if you
+	  click on it you get a menu where you can quickly
+	  jump to other symbols. It is also possible to
+	  keep a pane open that shows you a live list of
+	  symbols in the document.
+	  Which symbols to show is defined in the bundles
+	  preference files so it can easy be customized.
+	  
+	o You can now navigate between tabs with ctrl-tab
+	  and ctrl-shift-tab. Pressing ctrl-tab will move
+	  you to the last active tab, and any subsequent
+	  presses (without letting go of ctrl) will
+	  advance through the next tabs.
+	  
+	o The completion popup can now extend beyond the
+	  editing area.
+	  
+	o Input of native chars should now work in all
+	  locales.
+	  
+	o Some minor performance improvements.
+	
+16-may-2007 (123)
+	o Added Completion when pressing esc. By default
+	  it offers a list of other matching words in the
+	  document (sorted by distance), but the bundles
+	  can also supply lists of words or generate them
+	  from a command depending on scope.
+
+	o Added context menu when right-clicking in editor.
+
+	o The project pane no longer checks closed sub-dirs
+	  for the case where the filters removes all items.
+	  This may occasionally result in an expand button in
+	  front of an 'empty' dir, but it makes the project
+	  pane much more responsive, especially over network.
+	  
+	o Shift-Tab now always dedents current line / selection.
+	
+	o Added key diagnostics mode to find out why some
+	  key don't work in certain locales.
+	  
+	o Fixed some env paths in native mode that still was
+	  in unix format.
+	  
+	o Fixed bug that prevent deletion of bundles.
+	
+	o Added preferences for comments in html & xhtml.
+
+	o Uninstaller now also removes context menu entries.
+
+	o Further improvements to Vista compatibility.
+
+9-may-2007 (122)
+	o wxCocoaDialog windows will now seem like they are
+	  child windows of e. This should fix focus issues and
+	  look more elegant (no separate taskbar entry).
+	  
+	o wxCocoaDialog now has a html runmode that allows you
+	  to create a ui in html and get feedback when links
+	  are clicked.
+	  
+	o Windows native commands will no longer ask for cygwin
+	  if it is not installed.
+	  
+	o Fixed bug that could make the preview window steal focus.
+
+3-may-2007 (121)
+	o It is now possible to create bundle commands that run
+	  in the native windows environment (without cygwin).
+	  This is done by selecting 'Windows native' in the 
+	  environment dropdown. When run in native mode, scripts
+	  are executed as bat scripts, unless starting with a
+	  shebang (#!) that defines another interpreter. 
+	
+	o The live web preview can now be docked and it's state
+	  is remembered between sessions.
+	  
+	o You can now select current scope with alt-doubleclick.
+	
+	o Many minor bugfixes.
+
+20-apr-2007 (120)
+	o Added selection of current scope on Ctrl-Shift-Space
+	  (also available from menu). If you keep hitting it,
+	  it will cycle through the available scopes.
+	  
+	o Add shortcuts for Select Word (Ctrl-Shift-W) and Select
+	  Line (Ctrl-Shift-L).
+	  
+	o Fixed bug when searching with regex in text with unicode
+	  chars.
+	  
+	o Bundles can now also get the contents of current scope
+	  as input.
+	  
+	o Fixed bug that made all restored documents open with
+	  same syntax.
+	  
+	o Some further improvements to Vista compatibility.
+
+18-apr-2007 (119)
+	o Added support for auto-pairing of characters like quotes
+	  and brackets. It can be disabled in the settings dialog.
+	  
+	o Auto-pairing can also be used to wrap selections. Just
+	  type the first char of the pair and all selections will
+	  be wrapped.
+	  
+	o Keeping state between sessions is now default.
+	  This could always be done by holding down shift when
+	  closing e. It can be disabled in the settings dialog.
+	
+	o New colors that can be configured in the Theme Editor:
+		- Search highlighting
+	  	- Gutter (line numbers)
+	  	- Multi-edit background
+	  
+	o Ctrl-0 now shows the dropdown with list of tabs.
+	
+	o Ctrl-9 now always takes you to the last tab.
+	
+	o Double-clicking the background of the tabbar now adds a
+	  new tab.
+	  
+	o The env for bundle commands now includes the full windows
+	  environment.
+
+10-apr-2007 (118)
+	o Improved application startup time.
+	
+	o Added confirmation dialog when deleting bundles in Bundle
+	  Editor.
+	  
+	o Editing area now shows a text cursor.
+	  
+	o Fixed some text rendering bugs. Underlines does no longer
+	  get overwritten by highligted backgrounds on lines below
+	  and leading spaces in embedded syntaxes also gets
+	  highlighted.
+	
+	o The collaboration features has been disabled. They will
+	  return in a much more powerful version, when the TextMate
+	  support has stabilized.
+	  
+	o Removed toolbar. The icons needed updating and where mostly
+	  related to collaboration.
+	  
+	o Many improvements to Vista compatibility. Settings and
+	  bundle changes are now kept in the users app data dir
+	  (the installer will move existing files).
+	  
+	o There is now an entry in the registry with the full path
+	  to e.exe.
+	  
+	o Many minor bugfixes.
+
+30-mar-2007 (117)
+	o Reworked the regex engine so it now supports multi-line
+	  matches in search and replace.
+	  
+	o Replace All is much faster now.
+	
+	o If a search does not find a match following the caret, it
+	  now starts over from the top. If this happens the background
+	  of the search field turns light blue to let you know that
+	  it has restarted from top.
+	  
+	o You can now triple-click to select a line.
+	
+	o Pressing Ctrl-K deletes to end-of-line. If the caret already
+	  is at end-of-line, it now deletes the newline.
+	  
+	o Added Redo command (Ctrl-Y). If there are multible branches
+	  to choose from it will show a dialog with the undo history.
+	  
+	o Shifting text left (de-indenting) will now also remove
+	  leading whitespace that is less than tab width.
+
+	o Ctrl-Shift-P switches focus between editor and project pane
+	  (opening it if needed).
+	  
+	o 'Go to File' now also works when the project pane is hidden.
+	
+	o Keyboard shortcuts in project pane:
+		Arrow keys: Up, down and open, close folder
+		Enter: Open file in editor
+		F2: Rename
+		Shift-F10: Show context menu
+
+26-mar-2007 (116)
+	o Added 'Go to File' dialog (Ctrl-Shift-T), to allow you 
+	  to quickly open files in your project. It learns from the
+	  shortcuts you use to open files, so the more you use it
+	  the faster it will get.
+	  
+	o Fixed snippet expansion bug, when the same tabtrigger was
+	  used in multible scopes.
+	  
+	o Bugfix: sometimes the 'reload modified files' files dialog
+	  was shown twice.
+	  
+	o Bugfix: sometimes after switching windows the mouse could
+	  lock to the editor window.
+	  
+	o Fixed drawing bug that in some cases could make parts of
+	  the editor window transparent.
+	  
+	o Bugfix: reordering of tabs was accidentally broken in 115.
+	
+	o Fixed some search highlighting bugs.
+	
+	o Many minor bug fixes and improvements.
+
+20-mar-2007 (115)
+	o Added ability to filter which files and dirs are shown in
+	  the project pane.
+	  
+	o You can now set project specific env variables.
+
+	o Fixed crash when refreshing empty project.
+	
+	o Extensions in drag commands are now case insensitive.
+	
+	o Added two new env variables TM_CARET_XPOS and TM_CARET_YPOS.
+	  They contain the position of the caret (in screen coords),
+	  and are only set if the caret is visible.
+	  
+	o Fixed some bugs in snippet handling, when having multible
+	  tabstops contained inside eachother.
+	  
+	o Fixed some cases where the project panes dnd got hyper-
+	  sensitive (easily causing accidental moves).
+	  
+	o Updated wxCocoaDialog to v0.5.
+	
+	o Added ImageInfo command to Support dir.
+	
+	o Updated standard bundles with latest changes from ebundles.
+
+13-mar-2007 (114)
+	o Added smart word wrap option where all wrapped lines are
+	  indented as start. It can be enabled from the menu 'View >
+	  Word Wrap'.
+	
+	o Improved updating of icons in project pane.
+	
+	o When starting e from explorer, it should now always pop to 
+	  front.
+	  
+	o Fixed middle-click on tab so it closes the clicked tab
+	  instead of the selected tab.
+	  
+	o You can now toogle show/hide of project pane with Ctrl-P.
+	
+	o If the project pane is active you can refresh it with F5.
+	
+9-mar-2007 (113)
+	o Icons in project view is now drawn with overlays. So if you
+	  use explorer extensions like TortoiseSVN, you can now see the
+	  files status directly in the project view.
+	  
+	o Project view now supports right clicking to get a full
+	  explorer context menu.
+	  
+	o Many improvements to drag'n'drop and file handling in project.
+	
+	o When you drag files the the text area, and there are drag commands
+	  that matches the files, you now always get a popup menu so you
+	  can choose between opening the files and doing drag commands.
+	  
+	o Added 'Go to Line' dialog (in navigation menu).
+	
+6-mar-2007 (112)
+	o To the system AltGr equals Alt+Ctrl, which gave a lot of conflicts
+	  between bundle shortcuts and national chars in certain locales.
+	  It took a bit of low-level hacking, but now it is detected if
+	  AltGr is the source, and if that is the case it won't trigger
+	  bundle shortcuts.
+	  
+	o Fixed a crash if a saved state had toolbar set.
+	
+	o Bugfix: switching tab type had no effect.
+	
+	o Fixed some issues with clearing and setting shortcuts in bundle
+	  editor.
+	  
+	o Updated the cygwin postinstall script to make correct links to
+	  pbcopy and pbpaste (they were swapped in wrong order).
+
+5-mar-2007 (111)
+	o Bugfix: after reordering tabs and saving state (by holding down
+	  shift when closing), the wrong active tab was saved.
+	
+	o Bugfix: In some cases the pinned webpreview did not get updated
+	  on save in other tabs.
+	
+	o Reworked crash reporting to remove dependency on psapi.dll. This
+	  was the cause of many crashes on system with conflicting versions
+	  of the dll.
+	
+	o Many minor bugfixes.
+	
+3-mar-2007 (110)
+	o You can now drag tabs to reorder them.
+	
+	o Each tab button now has it's own close button.
+	
+	o If you have many tabs open, you can now use the button at
+	  the right end of the tabs to get a drop-down list.
+	  
+	o A pinned web preview now also gets refreshed when other
+	  pages are saved.
+	  
+	o Fixed bug when deleting commands in bundle editor.
+
+27-feb-2007 (109)
+	o You can now pin the web preview to a specific tab. This is
+	  useful for case like when you edit a css file and want to
+	  see a live preview of it's effect on a html file.
+	  
+	o Added support for selecting syntax language via keyboard
+	  shortcut.
+	  
+	o Fixed imagelist problem when doing fast creation/deletion
+	  of files in project.
+	  
+	o e now also accepts events from outside programs (like 'open'
+	  calling via txmt protocol), while in process of executing
+	  commmands.
+	  
+	o Fixed problem with pasting from e, while in process of
+	  executing a bundle command.
+	  
+	o Fixed bug in bundle editor where only first extension in
+	  dragcommands would be saved.
+	  
+	o Updated wxCocoaDialog to v0.4.
+
+23-feb-2007 (108)
+	o Added live web preview.
+	
+	o txmt protocol now also works outside e (it used to only work
+	  in the html output window). You can now use it directly from
+	  any browser or from cygwin with commands like:
+	  	open "txmt://open/?url=file:///cygdrive/c/text.txt&line=11
+	  	
+	o When bundle commands are set to save all files (in project),
+	  and there is no open project, they now save the current tab.
+	  
+	o Ctrl-K now deletes to end-of-line (Ctrl-Shift-K for entire
+	  line).
+	  
+	o You can now swap words by transposing (Ctrl-T) between them.
+	
+	o If cygwin needs to be installed/updated, e will now notify
+	  the user on startup, to avoid breaking the wordflow later.
+	  
+21-feb-2007 (107)
+	o Fixed bug that could keep DragCommands from being saved.
+	
+	o After recieving doing a DragCommand the window now gets focus
+	  and gets activated.
+	  
+20-feb-2007 (106)
+	o Added Support for Drag Commands.
+
+	o Made the check for modifications a bit less sensitive.
+	
+	o Removed some drawing artifacts from indent guides in selected
+	  text.
+	  
+	o Some performance improvements to screen redrawing.
+	
+	o Bugfix: Commands that asked for a word as input where none was
+	  available, did not get executed.
+	  
+	o Fixed some some cases where the editor client window ended
+	  up with a wrong width (most notably with font changes).
+	  
+	o The xml encoding used when saving plist files is now a lot
+	  less strict. So chars like tabs and newlines are no longer
+	  entity encoded, making it a lot more readable.
+	  
+	o When searching, it will now also scroll horizontally to show
+	  selections.
+	  
+	o Fixed problem with menu disappearing after bundle reload.
+	
+	o Removed psapi.dll from installation as it caused all kinds
+	  of conflicts if the user had IE7 installed. 
+	  
+	o Updated wxCocoaDialog to v0.3.
+	
+	o Made some small fixes to cygwin-post-install.sh
+	
+	o When e is launched after install/upgrade it now shows release
+	  notes.
+
+13-feb-2007 (105)
+	o E now detects cygwin install status, and allow the user to
+	  do an automatic install/update with all the needed packages.
+	  
+	o If bundle commands are marked to 'save all' before execution
+	  they now only save files that belong to current project.
+	  
+	o Added plist.rb to Support/lib.
+	
+	o Fixed textmate.rb so that it works even if mac pref files
+	  are not present.
+	  
+	o Removed some flicker when opening and closing tabs.
+	
+	o Updated application icons.
+	
+	o You can now extend selections by shift-clicking linenumbers.
+	
+	o Tab-triggers now also work when they span multible lines
+	  in snippets.
+	  
+	o When transposing multible selections, they now stay selected.
+	
+	o Added the option to show indent guides.
+
+10-feb-2007 (104)
+	o Fixed bug which could make the bundle menu could stop
+	  working after editing items in the bundle editor,
+	  
+	o Fixed some problems with syntax highlighting in embedded
+	  sources.
+	  
+	o Fixed some bugs with dublicate actions when using shortcuts.
+
+	o Slightly increased the size of trigger text in menus.
+	
+	o Selecting with Ctrl-Shift-Left/Right went too far when
+	  reaching end-of-line.
+	  
+9-feb-2007 (103)
+    o You can now edit the menu structure of the bundles in the
+      Bundle Editor.
+    
+    o Fixed some cases where the linenumbers became italic.
+    
+    o The choice of env values from bundles are now more
+      selective. It now only get the one with the best matching
+      scope.
+      
+    o txmt: locators now handles being url encoded.
+
+7-feb-2007 (102)
+    o Env variables from the bundle preferences are now set.
+    
+    o TM_LINE_INDEX was of by one (should be zero-based).
+    
+    o A few minor bugfixes.
+
+4-feb-2007 (101)
+    o If cygwin was already on the path, the path would not get
+      defined in the env for commands.
+      
+    o WordWrap can now be toggled on and off.
+    
+    o It is now detected if open documents have been changed by
+      external programs.
+      
+    o Bundles are now shown in the menu even if they do not have
+      an explicit menu structure in their info.plist.
+      
+    o Shift-clicking can now extend previous selection.
+      
+    o Commands that replace the entire document now keeps the same
+      caret position if possible.
+      
+    o Many minor bugfixes.
+
+29-jan-2007 (100)
+	o 'Save As' now adds files to the recent files list.
+	
+	o Fixed an encoding conversion bug which could make a save
+	  fail halfway.
+	  
+	o Searching now works with the Regular Expression '^' and
+	  generally works much better with zero-length matches.
+	  
+	o Undo and Revision History now supports mouse wheel scrolling.
+	
+	o Popup menus now have numbers as shortcuts for the first items.
+	
+	o Copy and Paste of large amounts of text is now much faster.
+	
+	o Improved error reporting when language syntaxes contain 
+	  regular expressions with errors.
+	  
+	o Clicking with shift down now selects from last position.
+	
+	o Fixed some bugs in syntax parser which would report that
+	  some regexes was invalid. This should also improve
+	  performance a bit.
+	  
+	o Tabs in snippets now respects current tab settings.
+	
+	o Tab triggers for snippets now also work if preceded by
+	  a non-alphanumeric char (like '>' in html).
+	  
+	o 'Open Dir as Project' now remember where it last opened.
+	
+	o Project root can no longer be collapsed.
+	
+	o Project pane is now better at detecting external changes.
+	
+	o Added CocoaDialog.exe to /Support/bin/
+
+26-jan-2007 (99)
+	o Bundle Editor! This is very early release so there are
+	  still some rough edges, but it should give a good feel
+	  for where it is going.
+	  
+	o Bugfix: De-indenting (shift-left) in empty doc crashed.
+
+	o Bugfix: Killing (with esc) a cygwin process while it was
+	  piping back text could cause a crash.
+	  
+	o The linenumber bar is now at least 2 columns wide.
+	
+	o Further fixes to input from local charsets.
+	
+	o Disabled syntax elements are now _really_ disabled again.
+	  (this caused some problems in the python syntax).
+	  
+	o If a bundle has a local support dir, it will now have
+	  precedence over the original.
+	
+22-jan-2007 (98)
+	o When editing labels in the project pane, it was easy
+	  to accidentally trigger drag'n'drop, and move the file/
+	  dir to neighboring directory.
+	  
+	o Fixed a bug that mangled numpad chars.
+
+21-jan-2007 (97)
+	o Fixed a few syntax highlighting bugs
+	
+	o In some locales certain local chars got filtered out.
+	
+	o Added bundle reload command (in bundle menu).
+
+	o Added option to get debug output from bundle commands.
+	  (found in tmcmd.log in e's install dir)
+	  
+	o Fixed a bug that could disable indentation rules.
+	
+	o Fixed bug that could get up and down cursor movement
+	  out of sync.
+	  
+	o Fixed some cases where running bundle commands could
+	  freeze the updating of the underlying windows.
+	  
+	o It is now possible to keep using the program beyond
+	  the trial period. This will stay possible for as
+	  long as the program is in beta.
+	  
+	o Local changes to bundles can now be kept in their
+	  own directory to avoid getting overwritten on every
+	  update.
+	  To do this you just need to create a dir with the
+	  name 'local', under the 'Bundles' dir. In there
+	  you can replicate the needed parts of the bundles
+	  directory structure and add the new or modified
+	  bundle items.
+	  When the bundle editor comes, this will all be
+	  handled automatically.
+	  
+	o Execution of bundle commands is a lot more stable.
+	
+	o Added Ctrl-Shift-S as shortcut for 'Save As'.
+
+16-jan-2007 (96)
+	o Fixed cases where cygwin was not added to path.
+	
+	o Fixed bug that could delete first part of snippet. 
+
+16-jan-2007 (95)
+    o Major performance improvement for bundle commands.
+    
+    o Fixed tranformation bug in snippets.
+    
+    o Fixed some minor syntax highlighting bugs
+    
+    o Ctrl-Delete and Ctrl-Back now deletes one word at a time.
+    
+    o Bundle items can now have a windows specific section
+      (winCommand for Commands and winContent for snippets).
+      This allows bundles to be modified with windows specific
+      commands without messing them up for TextMate users.
+      
+    o Now includes full Java bundle.
+
+12-jan-2007 (94)
+    o Added keyboard shortcuts for case conv. commands.
+    
+    o Added caching of bundle info between sessions. This makes
+      subsequent startups much faster.
+      
+    o Fixed a minor transpose bug.
+
+8-jan-2007 (93)
+	o Added 'Open as e Project' to shell context menu.
+	
+	o Slight improvement of cygwin detection.
+	
+	o Added case conversion commands.
+	
+	o Added Transpose command.
+	
+	o Added menu items for indentation (can also be done with
+	  Tab and Shift-Tab).
+	
+	o You can now close tabs with Ctrl-W.
+	
+	o Ctrl-Shift-Home/End now selects to start/end of document.
+	
+	o Home now moves to first text after indentation (on current
+	  line).
+	  
+	o Removed the 'Retrieve document' dialog, which was very
+	  confusing for users. It will be redesigned and added again
+	  when I start extending the collaboration features.
+
+3-jan-2007 (92)
+	o TM_INPUT_START_LINE_INDEX had a wrong offset.
+	
+	o Now uses embedded internet explorer for html output. This
+	  greatly improves the quality of the output :-)
+
+2-jan-2007 (91)
+	o Bugfix: In some locales extended chars would not get inserted.
+	
+	o The caret now gets the right size after font change.
+	
+	o Added TM_INPUT_START_LINE_INDEX env variable.
+	
+	o Fixed a few snippet bugs that mostly influenced the python
+	  bundle.
+	  
+	o Fixed bug in case-sensitive searching.
+
+29-dec-2006 (90)
+	o Added theme editor. Now you can finally change the font :-)
+	
+	o Many improvements to editor redrawing.
+
+15-dec-2006 (89)
+	o Loading of themes is now much faster.
+	
+	o Files in project should now be sorted correct even if the
+	  filesystem fails to give them in order.
+	
+	o Bugfix: Using char based bundle commands on empty documents.
+	  
+	o Bugfix: Deleting outside active snippet.
+
+13-dec-2006 (88)
+	o Changed version number scheme to major.minor.build
+	
+	o The installer now only install psapi.dll, if it is not already
+	  installed.
+
+	o Added Latex syntaxes.
+
+	o The list of syntax modes is now sorted alphabetically.
+	
+	o TM_BUNDLE_SUPPORT was mistaken with TM_BUNDLE_PATH, overwriting
+	  the other variable. It has been returned to the correct name.
+	  
+	o 'Yes' and 'No' in TM_SOFT_TABS has been changed to all uppercase
+	  to comply with TextMate.
+	
+	o Column counter is now correct with multi-byte chars.
+	
+	o Removed some caret drag.
+	
+	o Some small improvements to syntax highlighting.
+
+12-dec-2006 (87)
+	o Hidden files are no longer shown in projects.
+
+	o Fixed bug in indentation when decreasing right after an increase.
+	
+	o Major speedup of shell command startup time. etc/profile was
+	  very slow (and was run before every command). It has been
+	  replaced with a minimal initialization using TM_BASH_INIT.
+
+	o Increased speed of syntax-highlighting with about 30%.
+	
+	o The environment variables TM_SOFT_TABS and TM_TAB_SIZE are now
+	  set to the correct values.
+
+	o Fixed a few syntax-highlighting bugs.	
+
+11-dec-2006 (86)
+	o Added a few project specific environment variables.
+
+	o When double-clicking a file in the project pane, it now checks
+	  the first few kb to see if it is a text file. If it is a binary
+	  file, and not explicitly associated with e, it will try to open
+	  it with whichever application it is associated with. You can
+	  force it to open in e by holding down shift when clicking or
+	  dragging it to the text area.
+
+	o Diagnosed the maximize problem with help from nnc and kamal.
+	  It should be fixed now.
+
+	o Slight increase in startup speed of shell scripts.
+
+9-dec-2006 (85)
+	o Basic project managment now works.
+	
+	o Fixed missing label for untitled tabs in "Go to tab" menu.
+	
+	o Fixed a few soft-tab bugs
+	
+	o Some old versions could save wrong window size to the config
+	  when maximized. This was fixed long ago but, if you had
+	  the wrong size in your config the problem would persist.
+	  I have fixed this so that it always verifies that the saved
+	  window size fit on the screen (this should also help if
+	  you change resolution).
+
+5-dec-2006 (84)
+	o Added support for soft tabs and different tab sizes.
+	
+	o You can now close tabs with the middle mouse button.
+
+	o Fixed some faulty shortcuts in bundles.
+
+	o Fixed bug with regex replacements in snippets.
+
+	o Fixed dirname bug with bash_init.sh
+
+	o Ctrl-Home and Ctrl-End now moves to top and end of doc.
+
+30-nov-2006 (83)
+
+	o Fixed some minor syntax highlighting bugs.
+	
+29-nov-2006 (82)
+
+	o Finished phase 2 of syntax highlighting performance
+	  improvements. There may still be a slight lag when
+	  editing large files, but it will all disapear with
+	  phase 3.
+	  
+	o Added link to Support Forum in Help menu.
+	
+	o Fixed trailing backtick from shell commands in snippets.
+	
+	o Default text for env varibles in snippets are now inserted
+	  correct (it's behaviour was reversed).
+	  
+	o Fixed removal of search highlighting when the last char
+	  in search field was deleted.
+
+27-nov-2006 (81)
+
+	o Added Rails bundle.
+	
+	o Fixed usage of backtics to execute shell commands
+	  in snippets.
+
+	o Fixed bug when deleting out of tabstop in snippets.
+	
+	o Snippets are now indented correct.
+
+	o Fixed a few indentation bugs.
+
+	o Added navigation menu for quick movement between tabs.
+
+23-nov-2006 (80)
+
+	o Added basic support for transparency in themes.
+	
+	o Fixed many small syntax highlighting bugs.
+	
+	o Changed default theme to 'Mac Classic'.
+
+22-nov-2006	(79)	Many Small bugfixes
+
+	o Pressing esc to cancel a running shell command could cause
+	  a delayed crash.
+	
+	o Now always shows busy cursor when running shell commands.
+	
+	o Numpad keys now work.
+	
+	o Support for XML input for commands.

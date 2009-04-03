@@ -1,12 +1,17 @@
 To build you will need to:
 * Have Visual Studio 2008 C++
-* Get and build everything listed in the "external" folder.
 * Download and install wxWidgets, version 2.8.x
-** Download and run the installer for wxWidgets.
-** We'll assume the standard install location for 2.8.10.
-** See C:\wxWidgets-2.8.10\docs\msw\install.txt for wxWidgets build instructions.
-** If you build with Visual Studio GUI:
-*** When you open build\msw\wx.dsw, you'll be prompted to upgrade to a .sln; do this.
-*** Compile the appropriate library version for the version of "e" you're working:
-*** For Debug versions of "e": Win32 Unicode Debug  (NOT the .DLL version)
-** Create a system environmental variable named "WXWIN28" set to "C:\wxWidgets-2.8.10\"  (without quotes)
+* Get and build everything listed in the "external" folder.
+
+= wxWidgets =
+* Download the installer for wxWidgets 2.8.10 (wxMSW)
+** http://www.wxwidgets.org/downloads/
+* Run the installer.
+* We'll assume the standard install location of "C:\wxWidgets-2.8.10\"
+* Reference C:\wxWidgets-2.8.10\docs\msw\install.txt for wxWidgets build instructions.
+* If you build with Visual Studio GUI:
+** When you open build\msw\wx.dsw, you'll be prompted to upgrade to a .sln; do this.
+** Compile the appropriate library version for the version of "e" you're working:
+** For Debug versions of "e": Win32 Unicode Debug  (NOT the .DLL version)
+* Create a system environmental variable named "WXWIN28" set to "C:\wxWidgets-2.8.10\"  (without quotes)
+** Make sure it's a system variable, and not a personal one.

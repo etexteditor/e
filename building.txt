@@ -1,3 +1,10 @@
 To build you will need to:
+* Have Visual Studio 2008 C++
 * Get and build everything listed in the "external" folder.
-* Download and install WxWidgets, version 2.8.x
+* Download and install wxWidgets, version 2.8.x
+** Download and run the installer for wxWidgets.
+** We'll assume the standard install location for 2.8.10.
+** See C:\wxWidgets-2.8.10\docs\msw\install.txt for wxWidgets build instructions.
+** When you open build\msw\wx.dsw, you'll be prompted to upgrade to a .sln; do this.
+** Compile the appropriate library version for the version of "e" you're working:
+*** Win32 Debug for Debug versions of "e".

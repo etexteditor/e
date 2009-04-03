@@ -1,0 +1,8 @@
+Debug/
+Release/
+*.ncb
+*.obj
+external/
+
+!external/patches/
+!externa/readme.txt

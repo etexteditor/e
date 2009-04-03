@@ -19,7 +19,7 @@ They can be downloaded from the following sites:
   tinyxml
   http://sourceforge.net/projects/tinyxml
 
-They all need to be build as static libraries. If you have problems
+They all need to be built as static libraries. If you have problems
 with any of these libs, you should be able to upgrade to a later version.
 
 A few libaries need to be patched to be used in e. The patches can be

@@ -52,6 +52,12 @@ e is currently using version 7.6.
 Website: http://pcre.org/
 
 == Installation ==
+
+=== CMake ===
+* To compile PCRE with Visual Studio, you will need to download, install and run "CMake"
+* Use the Windows installer from here: http://www.cmake.org/cmake/resources/software.html
+
+=== PCRE ===
 * Get the 7.6 source package from either:
 ** http://sourceforge.net/project/showfiles.php?group_id=10194&package_id=9960&release_id=572108
 ** ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/

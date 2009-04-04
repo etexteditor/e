@@ -6,7 +6,7 @@ To build you will need to:
 = wxWidgets =
 wxWidgets is a cross-platform GUI toolkit.
 
-* Go to http://www.wxwidgets.org/downloads/
+Website: http://www.wxwidgets.org/downloads/
 
 == Installation ==
 * Download the installer for wxWidgets 2.8.10 (wxMSW)
@@ -31,7 +31,7 @@ TODO: Notes on using the supplied patches.
 = Metakit =
 Metakit is a lightweight embedded database.
 
-* Read about Metakit at http://www.equi4.com/metakit/overview.html
+Website: http://www.equi4.com/metakit/overview.html
 
 == Installation ==
 * The easiest way to get Metakit sources is to use Subversion.
@@ -43,3 +43,60 @@ Metakit is a lightweight embedded database.
 * Change the configuration to "Debug" (not Debug MFC or Debug STD, just plain "Debug")
 * The Python and Tcl bindings for Metakit will fail to build (unless you set them up);
   that's OK as e doesn't use them.
+
+
+= PCRE =
+PRCE is a library for Perl-compatible regular expressions.
+e is currently using version 7.6.
+
+Website: http://pcre.org/
+
+== Installation ==
+* Get the 7.6 source package from either:
+** http://sourceforge.net/project/showfiles.php?group_id=10194&package_id=9960&release_id=572108
+** ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/
+* Unzip / decompress the download so you end up with external/pcre-7.6
+
+== Building ==
+* PCRE doesn't have a Visual Studio .sln, you'll need to use the command line.
+* TO-DO ???
+
+= cURL =
+cURL is a library for retreiving files from URLs.
+
+Website: http://curl.haxx.se/download.html
+Download Archive: http://curl.haxx.se/download/
+
+== Installation ==
+* Download the source archive for version 7.18.23
+* Unzip / decompress the download so you end up with external/libcurl-7.18.2
+
+== Building ==
+* Review the build instructions in: external\curl-7.18.2\packages\Win32\README
+* TO-DO ???
+
+
+= libtommath =
+"LibTomMath provides highly optimized and portable routines for a vast majority of integer based number theoretic applications (including public key cryptography)."
+LibTomMath is a dependency of LibTomCrypt, not e directly.
+
+== Installation ==
+* Download 0.4.1 from: http://www.atarininja.org/~wxs/distfiles/ltm-0.41.tar.bz2
+* TO-DO ???
+
+== Building ==
+* TO-DO ???
+
+
+= libtomcrypt =
+"LibTomCrypt is a public domain open source cryptographic toolkit written in portable C."
+
+Website: http://libtomcrypt.com/download.html
+Mirror of version 1.17: http://www.atarininja.org/~wxs/distfiles/crypt-1.17.tar.bz2
+
+== Installation ==
+* Download version 1.17
+* Unzip / decompress the download so you end up with external/libtomcrypt-1.17
+
+== Building ==
+* TO-DO ???

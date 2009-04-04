@@ -6,6 +6,7 @@ They can be downloaded from the following sites:
 
   libtomcrypt-1.11
   http://libtom.org/?page=download&newsitems=5&whatfile=crypt
+  Alternate URL: http://libtomcrypt.com/download.html
 
   libtommath-0.39
   http://libtom.org/?page=download&newsitems=5&whatfile=ltm

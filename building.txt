@@ -8,6 +8,8 @@ wxWidgets is a cross-platform GUI toolkit.
 
 Website: http://www.wxwidgets.org/downloads/
 
+TODO: Patches assume version 2.8.7, so redo below with that version.
+
 == Installation ==
 * Download the installer for wxWidgets 2.8.10 (wxMSW)
 * Run the installer.

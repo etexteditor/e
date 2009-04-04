@@ -1,0 +1,295 @@
+diff -urp pcre-7.6/pcre_compile.c pcre-7.6.new/pcre_compile.c
+--- pcre-7.6/pcre_compile.c	2008-01-21 18:20:18.000000000 +0300
++++ pcre-7.6.new/pcre_compile.c	2008-09-24 15:46:43.000000000 +0400
+@@ -295,8 +295,8 @@ static const char error_texts[] =
+   /* 55 */
+   "repeating a DEFINE group is not allowed\0"
+   "inconsistent NEWLINE options\0"
+-  "\\g is not followed by a braced name or an optionally braced non-zero number\0"
+-  "(?+ or (?- or (?(+ or (?(- must be followed by a non-zero number\0"
++  "\\g is not followed by a braced, angle-bracketed, or quoted name/number or by a plain number\0"
++  "a numbered reference must not be zero\0"
+   "(*VERB) with an argument is not supported\0"
+   /* 60 */
+   "(*VERB) not recognized\0"
+@@ -531,14 +531,31 @@ else
+     *errorcodeptr = ERR37;
+     break;
+ 
+-    /* \g must be followed by a number, either plain or braced. If positive, it
+-    is an absolute backreference. If negative, it is a relative backreference.
+-    This is a Perl 5.10 feature. Perl 5.10 also supports \g{name} as a
+-    reference to a named group. This is part of Perl's movement towards a
+-    unified syntax for back references. As this is synonymous with \k{name}, we
+-    fudge it up by pretending it really was \k. */
++    /* \g must be followed by one of a number of specific things:
++    
++    (1) A number, either plain or braced. If positive, it is an absolute
++    backreference. If negative, it is a relative backreference. This is a Perl
++    5.10 feature.
++    
++    (2) Perl 5.10 also supports \g{name} as a reference to a named group. This
++    is part of Perl's movement towards a unified syntax for back references. As
++    this is synonymous with \k{name}, we fudge it up by pretending it really
++    was \k.
++    
++    (3) For Oniguruma compatibility we also support \g followed by a name or a 
++    number either in angle brackets or in single quotes. However, these are 
++    (possibly recursive) subroutine calls, _not_ backreferences. Just return 
++    the -ESC_g code (cf \k). */
+ 
+     case 'g':
++    if (ptr[1] == '<' || ptr[1] == '\'')
++      {
++      c = -ESC_g;
++      break;  
++      }  
++
++    /* Handle the Perl-compatible cases */
++ 
+     if (ptr[1] == '{')
+       {
+       const uschar *p;
+@@ -565,17 +582,23 @@ else
+     while ((digitab[ptr[1]] & ctype_digit) != 0)
+       c = c * 10 + *(++ptr) - '0';
+ 
+-    if (c < 0)
++    if (c < 0)   /* Integer overflow */
+       {
+       *errorcodeptr = ERR61;
+       break;
+       }
+-
+-    if (c == 0 || (braced && *(++ptr) != '}'))
++      
++    if (braced && *(++ptr) != '}')
+       {
+       *errorcodeptr = ERR57;
+       break;
+       }
++      
++    if (c == 0)
++      {
++      *errorcodeptr = ERR58;
++      break;
++      }     
+ 
+     if (negated)
+       {
+@@ -4568,7 +4591,7 @@ we set the flag only if there is a liter
+         references (?P=name) and recursion (?P>name), as well as falling
+         through from the Perl recursion syntax (?&name). We also come here from
+         the Perl \k<name> or \k'name' back reference syntax and the \k{name}
+-        .NET syntax. */
++        .NET syntax, and the Oniguruma \g<...> and \g'...' subroutine syntax. */
+ 
+         NAMED_REF_OR_RECURSE:
+         name = ++ptr;
+@@ -4646,6 +4669,15 @@ we set the flag only if there is a liter
+         case '5': case '6': case '7': case '8': case '9':   /* subroutine */
+           {
+           const uschar *called;
++          terminator = ')';
++          
++          /* Come here from the \g<...> and \g'...' code (Oniguruma 
++          compatibility). However, the syntax has been checked to ensure that 
++          the ... are a (signed) number, so that neither ERR63 nor ERR29 will 
++          be called on this path, nor with the jump to OTHER_CHAR_AFTER_QUERY
++          ever be taken. */
++          
++          HANDLE_NUMERICAL_RECURSION: 
+ 
+           if ((refsign = *ptr) == '+')
+             {
+@@ -4667,7 +4699,7 @@ we set the flag only if there is a liter
+           while((digitab[*ptr] & ctype_digit) != 0)
+             recno = recno * 10 + *ptr++ - '0';
+ 
+-          if (*ptr != ')')
++          if (*ptr != terminator)
+             {
+             *errorcodeptr = ERR29;
+             goto FAILED;
+@@ -5090,6 +5122,64 @@ we set the flag only if there is a liter
+ 
+       zerofirstbyte = firstbyte;
+       zeroreqbyte = reqbyte;
++      
++      /* \g<name> or \g'name' is a subroutine call by name and \g<n> or \g'n' 
++      is a subroutine call by number (Oniguruma syntax). In fact, the value 
++      -ESC_g is returned only for these cases. So we don't need to check for <
++      or ' if the value is -ESC_g. For the Perl syntax \g{n} the value is
++      -ESC_REF+n, and for the Perl syntax \g{name} the result is -ESC_k (as
++      that is a synonym for a named back reference). */
++      
++      if (-c == ESC_g)
++        {
++        const uschar *p;
++        save_hwm = cd->hwm;   /* Normally this is set when '(' is read */ 
++        terminator = (*(++ptr) == '<')? '>' : '\'';
++        
++        /* These two statements stop the compiler for warning about possibly
++        unset variables caused by the jump to HANDLE_NUMERICAL_RECURSION. In 
++        fact, because we actually check for a number below, the paths that 
++        would actually be in error are never taken. */
++          
++        skipbytes = 0;
++        reset_bracount = FALSE; 
++        
++        /* Test for a name */
++        
++        if (ptr[1] != '+' && ptr[1] != '-')
++          { 
++          BOOL isnumber = TRUE; 
++          for (p = ptr + 1; *p != 0 && *p != terminator; p++)
++            {  
++            if ((cd->ctypes[*p] & ctype_digit) == 0) isnumber = FALSE;
++            if ((cd->ctypes[*p] & ctype_word) == 0) break;
++            }
++          if (*p != terminator)
++            {
++            *errorcodeptr = ERR57;
++            break; 
++            }    
++          if (isnumber) 
++            {
++            ptr++; 
++            goto HANDLE_NUMERICAL_RECURSION;
++            } 
++          is_recurse = TRUE;
++          goto NAMED_REF_OR_RECURSE;
++          }
++        
++        /* Test a signed number in angle brackets or quotes. */
++        
++        p = ptr + 2;
++        while ((digitab[*p] & ctype_digit) != 0) p++;
++        if (*p != terminator)
++          {
++          *errorcodeptr = ERR57;
++          break;
++          }
++        ptr++;   
++        goto HANDLE_NUMERICAL_RECURSION;
++        }    
+ 
+       /* \k<name> or \k'name' is a back reference by name (Perl syntax).
+       We also support \k{name} (.NET syntax) */
+diff -urp pcre-7.6/pcre_exec.c pcre-7.6.new/pcre_exec.c
+--- pcre-7.6/pcre_exec.c	2008-01-20 23:00:20.000000000 +0300
++++ pcre-7.6.new/pcre_exec.c	2008-09-24 15:43:01.000000000 +0400
+@@ -296,9 +296,9 @@ typedef struct heapframe {
+ 
+   /* Function arguments that may change */
+ 
+-  const uschar *Xeptr;
++  USPTR Xeptr;
+   const uschar *Xecode;
+-  const uschar *Xmstart;
++  USPTR Xmstart;
+   int Xoffset_top;
+   long int Xims;
+   eptrblock *Xeptrb;
+@@ -307,13 +307,13 @@ typedef struct heapframe {
+ 
+   /* Function local variables */
+ 
+-  const uschar *Xcallpat;
+-  const uschar *Xcharptr;
+-  const uschar *Xdata;
+-  const uschar *Xnext;
+-  const uschar *Xpp;
+-  const uschar *Xprev;
+-  const uschar *Xsaved_eptr;
++  USPTR Xcallpat;
++  USPTR Xcharptr;
++  USPTR Xdata;
++  USPTR Xnext;
++  USPTR Xpp;
++  USPTR prev;
++  USPTR saved_eptr;
+ 
+   recursion_info Xnew_recursive;
+ 
+@@ -399,7 +399,7 @@ Returns:       MATCH_MATCH if matched   
+ */
+ 
+ static int
+-match(REGISTER USPTR eptr, REGISTER const uschar *ecode, const uschar *mstart,
++match(REGISTER USPTR eptr, REGISTER const uschar *ecode, USPTR mstart,
+   int offset_top, match_data *md, unsigned long int ims, eptrblock *eptrb,
+   int flags, unsigned int rdepth)
+ {
+@@ -1387,7 +1387,7 @@ for (;;)
+         {
+         if (eptr == md->start_subject) prev_is_word = FALSE; else
+           {
+-          const uschar *lastptr = eptr - 1;
++          USPTR lastptr = eptr - 1;
+           while((*lastptr & 0xc0) == 0x80) lastptr--;
+           GETCHAR(c, lastptr);
+           prev_is_word = c < 256 && (md->ctypes[c] & ctype_word) != 0;
+@@ -4540,11 +4540,11 @@ back the character offset. */
+ #ifdef SUPPORT_UTF8
+ if (utf8 && (options & PCRE_NO_UTF8_CHECK) == 0)
+   {
+-  if (_pcre_valid_utf8((uschar *)subject, length) >= 0)
++  if (_pcre_valid_utf8(subject, length) >= 0)
+     return PCRE_ERROR_BADUTF8;
+   if (start_offset > 0 && start_offset < length)
+     {
+-    int tb = ((uschar *)subject)[start_offset];
++    int tb = subject[start_offset];
+     if (tb > 127)
+       {
+       tb &= 0xc0;
+diff -urp pcre-7.6/pcre_internal.h pcre-7.6.new/pcre_internal.h
+--- pcre-7.6/pcre_internal.h	2008-01-20 22:59:21.000000000 +0300
++++ pcre-7.6.new/pcre_internal.h	2008-09-24 15:46:40.000000000 +0400
+@@ -613,7 +613,7 @@ character, that code will have to change
+ 
+ enum { ESC_A = 1, ESC_G, ESC_K, ESC_B, ESC_b, ESC_D, ESC_d, ESC_S, ESC_s,
+        ESC_W, ESC_w, ESC_dum1, ESC_C, ESC_P, ESC_p, ESC_R, ESC_H, ESC_h,
+-       ESC_V, ESC_v, ESC_X, ESC_Z, ESC_z, ESC_E, ESC_Q, ESC_k, ESC_REF };
++       ESC_V, ESC_v, ESC_X, ESC_Z, ESC_z, ESC_E, ESC_Q, ESC_g, ESC_k, ESC_REF };
+ 
+ 
+ /* Opcode table: Starting from 1 (i.e. after OP_END), the values up to
+diff -urp pcre-7.6/pcre_newline.c pcre-7.6.new/pcre_newline.c
+--- pcre-7.6/pcre_newline.c	2008-01-20 22:59:02.000000000 +0300
++++ pcre-7.6.new/pcre_newline.c	2008-09-24 15:44:40.000000000 +0400
+@@ -73,7 +73,7 @@ Returns:       TRUE or FALSE
+ */
+ 
+ BOOL
+-_pcre_is_newline(const uschar *ptr, int type, const uschar *endptr,
++_pcre_is_newline(USPTR ptr, int type, USPTR endptr,
+   int *lenptr, BOOL utf8)
+ {
+ int c;
+@@ -123,7 +123,7 @@ Returns:       TRUE or FALSE
+ */
+ 
+ BOOL
+-_pcre_was_newline(const uschar *ptr, int type, const uschar *startptr,
++_pcre_was_newline(USPTR ptr, int type, USPTR startptr,
+   int *lenptr, BOOL utf8)
+ {
+ int c;
+diff -urp pcre-7.6/pcre_valid_utf8.c pcre-7.6.new/pcre_valid_utf8.c
+--- pcre-7.6/pcre_valid_utf8.c	2008-01-20 22:57:43.000000000 +0300
++++ pcre-7.6.new/pcre_valid_utf8.c	2008-09-24 15:46:46.000000000 +0400
+@@ -75,10 +75,10 @@ Returns:       < 0    if the string is a
+ */
+ 
+ int
+-_pcre_valid_utf8(const uschar *string, int length)
++_pcre_valid_utf8(USPTR string, int length)
+ {
+ #ifdef SUPPORT_UTF8
+-register const uschar *p;
++register USPTR p;
+ 
+ if (length < 0)
+   {

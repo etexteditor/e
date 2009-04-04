@@ -105,4 +105,8 @@ Mirror of version 1.17: http://www.atarininja.org/~wxs/distfiles/crypt-1.17.tar.
 * Unzip / decompress the download so you end up with external/libtomcrypt-1.17
 
 == Building ==
-* TO-DO ???
+* Open "libtomcrypt.dsp" as a solution/project.
+* Allow Visual Studio to upgrade the project.
+* If prompted, remove source control bindings.
+* Build the solution, Debug version.
+* (Save the .SLN file if prompted.)

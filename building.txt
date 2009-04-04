@@ -82,10 +82,16 @@ LibTomMath is a dependency of LibTomCrypt, not e directly.
 
 == Installation ==
 * Download 0.4.1 from: http://www.atarininja.org/~wxs/distfiles/ltm-0.41.tar.bz2
-* TO-DO ???
+* Decompress the archive.
+* Rename the folder "libtommath-0.41" to just "libtommath"
+* Move the folder so you end up with externa/libtommath
 
 == Building ==
-* TO-DO ???
+* Open "libtommath.dsp" as a solution/project.
+* Allow Visual Studio to upgrade the project.
+* If prompted, remove source control bindings.
+* Build the solution, Debug version.
+* (Save the .SLN file if prompted.)
 
 
 = libtomcrypt =

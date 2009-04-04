@@ -68,16 +68,20 @@ Website: http://curl.haxx.se/download.html
 Download Archive: http://curl.haxx.se/download/
 
 == Installation ==
-* Download the source archive for version 7.18.23
-* Unzip / decompress the download so you end up with external/libcurl-7.18.2
+* Download the source archive for version 7.19.4
+* Unzip / decompress the download so you end up with external/libcurl-7.19.4
 
 == Building ==
-* Review the build instructions in: external\curl-7.18.2\packages\Win32\README
-* TO-DO ???
+* Open "vc6curl.dsw" and allow Visual Studio to upgrade the project.
+* Build the Debug version of the "libcurl" project.
+* If you build the solution, curlsrc may fail but that's OK; e doesn't depend on it.
 
 
 = libtommath =
-"LibTomMath provides highly optimized and portable routines for a vast majority of integer based number theoretic applications (including public key cryptography)."
+"LibTomMath provides highly optimized and portable routines for a vast 
+majority of integer based number theoretic applications (including public 
+key cryptography)."
+
 LibTomMath is a dependency of LibTomCrypt, not e directly.
 
 == Installation ==
@@ -120,6 +124,9 @@ Website: http://www.grinninglizard.com/tinyxml/
 = Installation =
 * Download the source archive from SourceForge: http://sourceforge.net/projects/tinyxml
 * Unzip / decompress the download so you end up with external/tinyxml
+
+== Patching ==
+TODO: Notes on using the supplied patches.
 
 = Building =
 * Open "tinyxml.sln" with Visual Studio 2008.

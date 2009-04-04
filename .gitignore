@@ -4,6 +4,10 @@
 *.suo
 *.user
 
+# ReSharper is a .NET coding add-in, but likes to 
+# drop files in C++ projects too
+_ReSharper*
+
 # Build results
 Debug/
 Release/

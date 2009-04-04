@@ -1,7 +1,7 @@
 To build you will need to:
 * Have Visual Studio 2008 C++
 ** You can get the free express edition at http://www.microsoft.com/express/vc/
-* Download and install wxWidgets, version 2.8.x
+* Download and install wxWidgets, version 2.8.7
 * Get and build everything listed in the "external" folder.
 
 = wxWidgets =
@@ -54,10 +54,15 @@ e is currently using version 7.6.
 
 Website: http://pcre.org/
 
+PCRE can be compiled with Visual Studio by using CMake, a cross-platform configure/make tool.
+CMake can be downloaded from: http://www.cmake.org/cmake/resources/software.html
+
+However, a pre-configured .sln is provided in: external/build_msvc/pcre
+
 == Installation ==
 
 === CMake ===
-* To compile PCRE with Visual Studio, you will need to download, install and run "CMake"
+* If you are not using the pre-configured .sln, you will need to download, install and run "CMake"
 * Use the Windows installer from here: http://www.cmake.org/cmake/resources/software.html
 
 === PCRE ===
@@ -67,8 +72,16 @@ Website: http://pcre.org/
 * Unzip / decompress the download so you end up with external/pcre-7.6
 
 == Building ==
-* PCRE doesn't have a Visual Studio .sln, you'll need to use the command line.
+* If you are using CMake:
+** Use CMake as described in pcre-7.6/NOT-UNIX-USE
+
+* If you are using the pre-generated .sln:
+** Copy the files from external/build_msvc/pcre to external/pcre-7.6
+
+* Build the solution, Debug version.
+* If you used CMake, you will need to copy certain build products the proper location.
 * TO-DO ???
+
 
 = cURL =
 cURL is a library for retreiving files from URLs.

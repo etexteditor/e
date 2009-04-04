@@ -14,6 +14,9 @@ Release/
 *.ncb
 *.obj
 
+# ReSharper stuff
+_ReSharper*
+
 ## Ignore most things in external, except what we permit below
 external/
 

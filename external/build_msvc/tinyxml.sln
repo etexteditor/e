@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyXmlTest", "tinyXmlTest.vcproj", "{BA9E465F-366D-4761-A0DF-604179231CE1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{59C196FA-0132-4974-BED8-C6271957665F} = {59C196FA-0132-4974-BED8-C6271957665F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyXmlTestSTL", "tinyXmlTestSTL.vcproj", "{7BAD1DED-7045-4D00-AF64-5C5F731072E1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3313001B-F079-4A71-801F-95AD23B5641A} = {3313001B-F079-4A71-801F-95AD23B5641A}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml", "tinyxml_lib.vcproj", "{59C196FA-0132-4974-BED8-C6271957665F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxmlSTL", "tinyxmlSTL.vcproj", "{3313001B-F079-4A71-801F-95AD23B5641A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA9E465F-366D-4761-A0DF-604179231CE1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BA9E465F-366D-4761-A0DF-604179231CE1}.Debug|Win32.Build.0 = Debug|Win32
+		{BA9E465F-366D-4761-A0DF-604179231CE1}.Release|Win32.ActiveCfg = Release|Win32
+		{BA9E465F-366D-4761-A0DF-604179231CE1}.Release|Win32.Build.0 = Release|Win32
+		{7BAD1DED-7045-4D00-AF64-5C5F731072E1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7BAD1DED-7045-4D00-AF64-5C5F731072E1}.Debug|Win32.Build.0 = Debug|Win32
+		{7BAD1DED-7045-4D00-AF64-5C5F731072E1}.Release|Win32.ActiveCfg = Release|Win32
+		{7BAD1DED-7045-4D00-AF64-5C5F731072E1}.Release|Win32.Build.0 = Release|Win32
+		{59C196FA-0132-4974-BED8-C6271957665F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{59C196FA-0132-4974-BED8-C6271957665F}.Debug|Win32.Build.0 = Debug|Win32
+		{59C196FA-0132-4974-BED8-C6271957665F}.Release|Win32.ActiveCfg = Release|Win32
+		{59C196FA-0132-4974-BED8-C6271957665F}.Release|Win32.Build.0 = Release|Win32
+		{3313001B-F079-4A71-801F-95AD23B5641A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3313001B-F079-4A71-801F-95AD23B5641A}.Debug|Win32.Build.0 = Debug|Win32
+		{3313001B-F079-4A71-801F-95AD23B5641A}.Release|Win32.ActiveCfg = Release|Win32
+		{3313001B-F079-4A71-801F-95AD23B5641A}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

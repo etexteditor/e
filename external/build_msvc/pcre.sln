@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dftables", "dftables\dftables.vcproj", "{F27055A2-EF5C-42B3-8799-5D421BE52397}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "pcre.vcproj", "{60A82A34-F3F5-423D-B20B-ED2D9E5428A7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F27055A2-EF5C-42B3-8799-5D421BE52397}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F27055A2-EF5C-42B3-8799-5D421BE52397}.Debug|Win32.Build.0 = Debug|Win32
+		{F27055A2-EF5C-42B3-8799-5D421BE52397}.Release|Win32.ActiveCfg = Release|Win32
+		{F27055A2-EF5C-42B3-8799-5D421BE52397}.Release|Win32.Build.0 = Release|Win32
+		{60A82A34-F3F5-423D-B20B-ED2D9E5428A7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{60A82A34-F3F5-423D-B20B-ED2D9E5428A7}.Debug|Win32.Build.0 = Debug|Win32
+		{60A82A34-F3F5-423D-B20B-ED2D9E5428A7}.Release|Win32.ActiveCfg = Release|Win32
+		{60A82A34-F3F5-423D-B20B-ED2D9E5428A7}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -23,5 +23,9 @@ They can be downloaded from the following sites:
 They all need to be built as static libraries. If you have problems
 with any of these libs, you should be able to upgrade to a later version.
 
+There are project files for Visual C++ in the subdir "build_msvc".
+If you choose to use these, they will have to be copied into the source
+directories of the individual projects.
+
 A few libaries need to be patched to be used in e. The patches can be
 found in the "patches" subdirectory.

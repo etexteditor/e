@@ -13,5 +13,6 @@ Release/
 ## Ignore most things in external, except what we permit below
 external/
 
+!external/build_msvc/
 !external/patches/
 !external/readme.txt

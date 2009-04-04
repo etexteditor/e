@@ -1,5 +1,6 @@
 To build you will need to:
 * Have Visual Studio 2008 C++
+** You can get the free express edition at http://www.microsoft.com/express/vc/
 * Download and install wxWidgets, version 2.8.x
 * Get and build everything listed in the "external" folder.
 

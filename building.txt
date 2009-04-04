@@ -110,3 +110,18 @@ Mirror of version 1.17: http://www.atarininja.org/~wxs/distfiles/crypt-1.17.tar.
 * If prompted, remove source control bindings.
 * Build the solution, Debug version.
 * (Save the .SLN file if prompted.)
+
+
+= TinyMXL =
+"TinyXML is a simple, small, C++ XML parser that can be easily integrating into other programs."
+
+Website: http://www.grinninglizard.com/tinyxml/
+
+= Installation =
+* Download the source archive from SourceForge: http://sourceforge.net/projects/tinyxml
+* Unzip / decompress the download so you end up with external/tinyxml
+
+= Building =
+* Open "tinyxml.sln" with Visual Studio 2008.
+* Allow Visual Studio to upgrade the project.
+* Build the solution, Debug version.

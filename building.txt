@@ -217,8 +217,14 @@ Website: http://www.grinninglizard.com/tinyxml/
 ** patch < tinyxml.cpp.patch
 ** patch < tinyxml.h.patch
 
-= Building =
+== Building ==
 * Copy "tinyxml.sln" & "tinyxml_lib.vcproj" from external/build_msvc.
 ** (Or you can build using the existing .sln, letting it be upgraded to VS2008 format.)
 * Open "tinyxml.sln" with Visual Studio 2008.
 * Build the solution, Debug version.
+
+
+= e itself =
+* After building all the dependencies, open "e.sln" and build the Debug target.
+* Note that the resulting e.exe in "Debug" has no idea where Themes/Bundles/Support/etc. are.
+* If you want to run the new "e.exe", you'll need to provide it with the support files.

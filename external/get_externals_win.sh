@@ -47,6 +47,7 @@ echo
 cp build_msvc/curllib* curl/lib
 cp build_msvc/libtomcrypt* libtomcrypt
 cp build_msvc/libtommath* libtommath
+cp build_msvc/tinyxml* tinyxml
 cp -r build_msvc/metakit/* metakit/win
 cp -r build_msvc/pcre/* pcre
 

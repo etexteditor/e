@@ -1,4 +1,4 @@
 To-do:
-* Stable build instructions.
-* Automate dependency gathering.
+* Revamp build instructions (the easy way vs. the hard way)
+* Get a working build; build currently succeeds but menus paint incorrectly.
 * Unit/regression test suites.

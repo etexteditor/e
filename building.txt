@@ -8,8 +8,9 @@ To build e you will need a copy of Visual C++ 2008.
 * Note that opening a 2008 .sln file created with the Express version may still
   prompt you to "upgrade" the .sln if you open it with a full Visual Studio SKU.
 
-To apply patches to dependencies you will need a patch tool.
-* One is available in msys (a set of Unix tools for Windows.)
+To apply patches to dependencies you will need a copy of "patch" for Windows.
+* One is available in msys.
+* There is also a cygwin version.
 
 
 The following dependencies are required:
@@ -21,24 +22,31 @@ The following dependencies are required:
 * libtomcrypt (1.17)
 * TinyXML
 
-Many of the dependencies below can be retrieved all-at-once from git at:
-http://github.com/adamv/e-externals/tree/master
+
+The wxWidgets installer should be downloaded from the official site.
+
+The other dependencies can be retreived the easy way or the hard way.
+* The easy way:
+** Run "get_externals_win.sh" in a cygwin shell.
+** Run "build_externals_win.cmd" in a VS2008 Command Prompt.
+* The hard way is to download, unarchive, rename, patch and compile the externals manually.
+
+"The easy way" is strongly recommended.
+
 
 Later versions of these projects may work with e, but have not been tested.
-To use a later version of a dependency, the appropriate include and lib paths
-must be altered in the e project.
+Consult the "get_externals_win.sh" script to see what the expected version of a dependency is.
 
 
-
-Note that many of these dependencies do not compile quite "out of the box" 
-on Visual Studio 2008. Where they do include project files for Visual Studio,
+If you build the hard way, note that many of these dependencies do not compile quite 
+"out of the box" on Visual Studio 2008. Where they do include project files for Visual Studio,
 they are usually for older versions. These project files will typically 
 upgrade when you open them, and build OK but with caveats noted below.
 
 If you plan to build using upgraded projects, then you should make sure to copy
 any outputs of those builds to the places that e.sln expects them to be.
 
-The other, easier alternative is to use the VS2008 projects provided in
+The alternative to upgrading the projects is to use the VS2008 projects provided in
 "external/build_msvc".
 
 

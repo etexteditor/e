@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="src\headers,..\libtommath-0.39"
+				AdditionalIncludeDirectories="src\headers;..\libtommath"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LTC_SOURCE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -120,7 +120,7 @@
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="src\headers,..\libtommath-0.39"
+				AdditionalIncludeDirectories="src\headers,..\libtommath"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LTC_SOURCE"
 				StringPooling="true"
 				RuntimeLibrary="0"

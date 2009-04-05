@@ -1,0 +1,76 @@
+diff -urp metakit-latest/src/view.cpp metakit-latest.new/src/view.cpp
+--- metakit-latest/src/view.cpp	2008-06-19 11:30:45.000000000 +0400
++++ metakit-latest.new/src/view.cpp	2008-09-24 16:15:40.000000000 +0400
+@@ -857,18 +857,39 @@ int start_  ///< the index to start with
+ }
+ 
+ /** Search for a key, using the native sort order of the view
++ *
++ * The search is done as a binary search. The result will be
++ * incorrect if the properties being searched on are not in
++ * sequential order.
++ * .
+  * @return position where found, or where it may be inserted,
+  *  this position can also be just past the last row
+  */
+ int c4_View::Search(const c4_RowRef &crit_)const {
++  const c4_Sequence* const refSeq = c4_Cursor(&crit_)._seq;
++  c4_Bytes data;
+   int l =  - 1, u = GetSize();
++
+   while (l + 1 != u) {
+-    const int m = (l + u) >> 1;
+-    if (_seq->Compare(m, &crit_) < 0)
+-    //if (crit_ > (*this)[m]) // Dec 2001: see comments below
+-      l = m;
+-    else
++    const int m = ((unsigned)(l + u)) >> 1;
++    
++    // Compare properties
++    int result = 0;
++    for (int i = 0; i < refSeq->NumHandlers(); ++i) {
++      c4_Handler& h = refSeq->NthHandler(i);
++
++      if (!_seq->Get(m, h.PropId(), data))
++        h.ClearBytes(data);
++      
++      result = h.Compare(0, data); // always row 0
++      if (result != 0)
++        break;
++    }
++
++    if (result < 0)
+       u = m;
++    else
++      l = m;
+   }
+ 
+   return u;
+diff -urp metakit-latest/tests/tbasic2.cpp metakit-latest.new/tests/tbasic2.cpp
+--- metakit-latest/tests/tbasic2.cpp	2008-06-19 11:31:46.000000000 +0400
++++ metakit-latest.new/tests/tbasic2.cpp	2008-09-24 16:18:16.000000000 +0400
+@@ -12,13 +12,18 @@ void TestBasics2() {
+   B(b20, Search sorted view, 0) {
+     c4_IntProp p1("p1");
+     c4_StringProp p2("p2");
++    c4_IntProp p3("p3");
+     c4_View v1;
+-    v1.Add(p1[111] + p2["one"]);
+-    v1.Add(p1[222] + p2["two"]);
+-    v1.Add(p1[333] + p2["three"]);
+-    v1.Add(p1[345] + p2["four"]);
+-    v1.Add(p1[234] + p2["five"]);
+-    v1.Add(p1[123] + p2["six"]);
++    v1.Add(p1[111] + p2["one"]   + p3[2]);
++    v1.Add(p1[222] + p2["two"]   + p3[4]);
++    v1.Add(p1[333] + p2["three"] + p3[8]);
++    v1.Add(p1[345] + p2["four"]  + p3[16]);
++    v1.Add(p1[234] + p2["five"]  + p3[32]);
++    v1.Add(p1[123] + p2["six"]   + p3[64]);
++    A(v1.Search(p3[4]) == 1);
++    A(v1.Search(p3[0]) == 0);
++    A(v1.Search(p3[6]) == 2);
++    A(v1.Search(p3[128]) == 6);
+     c4_View v2 = v1.Sort();
+     A(v2.GetSize() == 6);
+     A(p1(v2[0]) == 111);

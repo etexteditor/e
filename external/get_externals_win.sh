@@ -37,6 +37,7 @@ mv pcre-* pcre
 echo "Applying patches..."
 echo
 patch -d libtomcrypt/src/headers < patches/libtomcrypt.patch
+patch -Np1 -d metakit < patches/metakit.patch
 patch -d pcre < patches/pcre.patch
 patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
 patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch

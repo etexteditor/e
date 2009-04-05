@@ -28,6 +28,20 @@ Later versions of these projects may work with e, but have not been tested.
 To use a later version of a dependency, the appropriate include and lib paths
 must be altered in the e project.
 
+
+
+Note that many of these dependencies do not compile quite "out of the box" 
+on Visual Studio 2008. Where they do include project files for Visual Studio,
+they are usually for older versions. These project files will typically 
+upgrade when you open them, and build OK but with caveats noted below.
+
+If you plan to build using upgraded projects, then you should make sure to copy
+any outputs of those builds to the places that e.sln expects them to be.
+
+The other, easier alternative is to use the VS2008 projects provided in
+"external/build_msvc".
+
+
 = wxWidgets =
 wxWidgets is a cross-platform GUI toolkit.
 
@@ -121,10 +135,15 @@ Download Archive: http://curl.haxx.se/download/
 * Unzip / decompress the download and rename the folder so you end up with external/libcurl-7.19.4
 
 == Building ==
-* Open "vc6curl.dsw" and allow Visual Studio to upgrade the project.
+* Copy "curllib.sln" & "curllib.vcproj" from external/build_msvc to external/libcurl-7.19.4/lib.
+** (Or you can use the exsting "vc6curl.dsw" and let Visual Studio upgrade the project.)
 * Build the Debug version of the "libcurl" project.
-* If you build the solution, curlsrc may fail but that's OK; e doesn't depend on it.
+** If you build from an upgraded "vc6curl.dsw", curlsrc will probably fail but that's OK; e doesn't depend on it.
+* Copy the built library from libcurl-7.19.4/lib/Debug/libcurd.lib to ??? where e expects it to be.
 
+== To-Do ==
+* There are some "missing" header files in the project that don't seem to break the build.
+  These should probably be removed from the .sln.
 
 = libtommath =
 "LibTomMath provides highly optimized and portable routines for a vast 
@@ -145,7 +164,6 @@ LibTomMath is a dependency of LibTomCrypt.
 ** (If prompted, remove source control bindings.)
 * Build the solution, Debug version.
 
-
 = libtomcrypt =
 "LibTomCrypt is a public domain open source cryptographic toolkit written in portable C."
 
@@ -157,12 +175,20 @@ Mirror of version 1.17: http://www.atarininja.org/~wxs/distfiles/crypt-1.17.tar.
 * Unzip / decompress the download so you end up with external/libtomcrypt-1.17
 
 == Building ==
-* Open "libtomcrypt.dsp" as a solution/project.
-* Allow Visual Studio to upgrade the project.
-* If prompted, remove source control bindings.
+* Copy "libtomcrypt.sln" & "libtomcrypt.vcproj" from external/build_msvc.
+** (Or you can build using the exsting "libtomcrypt.dsp", letting it be upgraded.)
+** (If prompted, remove source control bindings.)
+* Verify that the correct folders are being used for extra "include" paths.
+** Open the project properties.
+** Verify the "Additional Include Directories" under "C/C++ | General"
+** The libtommath path name should match the version of libtommath used above; it if doesn't
+   then edit the path to have the correct verison.
+** (Linking in libtommath is done in the e project, not this one, so we will verify the library
+   path later.)
 * Build the solution, Debug version.
-* (Save the .SLN file if prompted.)
 
+== To-Do ==
+* Fix incorrect linkage warnings in this project. (Build succeeds but with 740 warnigns!)
 
 = TinyMXL =
 "TinyXML is a simple, small, C++ XML parser that can be easily integrating into other programs."

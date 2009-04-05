@@ -5,6 +5,8 @@ This document describes how to build e, including its dependencies.
 To build e you will need a copy of Visual C++ 2008.
 * You can get the free express edition at http://www.microsoft.com/express/vc/
 * Any version of Visual Studio 2008 will also work, of course.
+* Note that opening a 2008 .sln file created with the Express version may still
+  prompt you to "upgrade" the .sln if you open it with a full Visual Studio SKU.
 
 To apply patches to dependencies you will need a patch tool.
 * One is available in msys (a set of Unix tools for Windows.)
@@ -173,9 +175,13 @@ Website: http://www.grinninglizard.com/tinyxml/
 * Unzip / decompress the download so you end up with external/tinyxml
 
 == Patching ==
-TODO: Notes on using the supplied patches.
+* Copy the supplied patches for TinyXML into external/tinyxml
+* Open a terminal to external/tinyxml and run:
+** patch <  tinyxml.cpp.patch
+** patch <  tinyxml.h.patch
 
 = Building =
+* Copying "tinyxml.sln" and "tinyxml_lib.vcproj" from external/build_msvc.
+** (Or you can build using the existing .sln and letting it be upgraded to VS2008 format.)
 * Open "tinyxml.sln" with Visual Studio 2008.
-* Allow Visual Studio to upgrade the project.
 * Build the solution, Debug version.

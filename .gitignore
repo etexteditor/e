@@ -17,6 +17,9 @@ Release/
 # ReSharper stuff
 _ReSharper*
 
+# OS X stuff (if you're working in a VM)
+.DS_Store
+
 ## Ignore most things in external, except what we permit below
 external/
 

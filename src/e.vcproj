@@ -83,7 +83,7 @@
 				OutputFile=".\Debug/e.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(WXWIN28)\lib\vc_lib&quot;;&quot;..\external\pcre-7.6&quot;;&quot;..\external\libtomcrypt-1.17&quot;;..\external\libtommath;..\external\tinyxml\Debug;&quot;..\external\libcurl-7.19.4\lib\Debug&quot;;..\external\metakit\builds;..\ecore"
+				AdditionalLibraryDirectories="&quot;$(WXWIN28)\lib\vc_lib&quot;;&quot;..\external\pcre-7.6&quot;;&quot;..\external\libtomcrypt-1.17&quot;;&quot;..\external\libtommath-0.41&quot;;..\external\tinyxml\Debug;&quot;..\external\libcurl-7.19.4\lib\Debug&quot;;..\external\metakit\builds;..\ecore"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/e.pdb"

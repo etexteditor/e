@@ -9,6 +9,7 @@ To build e you will need a copy of Visual C++ 2008.
 To apply patches to dependencies you will need a patch tool.
 * One is available in msys (a set of Unix tools for Windows.)
 
+
 The following dependencies are required:
 * wxWidgets (2.8.7)
 * Metakit
@@ -37,7 +38,11 @@ Installer for 2.8.7: http://sourceforge.net/project/downloading.php?group_id=986
 * We'll assume the standard install location of "C:\wxWidgets-2.8.7\"
 
 == Patching ==
-TODO: Notes on using the supplied patches.
+If you installed version 2.8.7 in the default location, you can apply the patches as follows.
+Open a terminal to: external/patches/widgets
+Run:
+* patch -p0 < auibook.h.patch
+* patch -p0 < auibook.cpp.patch
 
 == Building ==
 * Reference C:\wxWidgets-2.8.7\docs\msw\install.txt for wxWidgets build instructions.

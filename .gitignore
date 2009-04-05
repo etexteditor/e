@@ -25,5 +25,6 @@ external/
 
 !external/build_msvc/
 !external/patches/
+!external/*.cmd
 !external/*.sh
 !external/*.txt

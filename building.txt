@@ -181,7 +181,7 @@ Website: http://www.grinninglizard.com/tinyxml/
 ** patch < tinyxml.h.patch
 
 = Building =
-* Copying "tinyxml.sln" and "tinyxml_lib.vcproj" from external/build_msvc.
-** (Or you can build using the existing .sln and letting it be upgraded to VS2008 format.)
+* Copy "tinyxml.sln" & "tinyxml_lib.vcproj" from external/build_msvc.
+** (Or you can build using the existing .sln, letting it be upgraded to VS2008 format.)
 * Open "tinyxml.sln" with Visual Studio 2008.
 * Build the solution, Debug version.

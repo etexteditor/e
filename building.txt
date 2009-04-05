@@ -85,8 +85,10 @@ Website: http://www.equi4.com/metakit/overview.html
 == Building ==
 * Open "metakit\win\msvc60\mksrc.dsw" and allow the .sln to be upgraded for VS2008.
 * Change the configuration to "Debug" (not Debug MFC or Debug STD, just plain "Debug")
-* The Python and Tcl bindings for Metakit will fail to build (unless you set them up);
-  that's OK as e doesn't use them.
+
+The Python and Tcl bindings for Metakit will fail to build (unless you set them up);
+that's OK as e doesn't use them. The distribution project will also fail after that,
+but again, that's OK.
 
 
 = PCRE =

@@ -131,7 +131,7 @@ Download Archive: http://curl.haxx.se/download/
 majority of integer based number theoretic applications (including public 
 key cryptography)."
 
-LibTomMath is a dependency of LibTomCrypt, not e directly.
+LibTomMath is a dependency of LibTomCrypt.
 
 == Installation ==
 * Download 0.4.1 from: http://www.atarininja.org/~wxs/distfiles/ltm-0.41.tar.bz2
@@ -140,11 +140,10 @@ LibTomMath is a dependency of LibTomCrypt, not e directly.
 * Move the folder so you end up with externa/libtommath
 
 == Building ==
-* Open "libtommath.dsp" as a solution/project.
-* Allow Visual Studio to upgrade the project.
-* If prompted, remove source control bindings.
+* Copy "libtommath.sln" & "libtommath.vcproj" from external/build_msvc.
+** (Or you can build using the exsting "libtommath.dsp", letting it be upgraded.)
+** (If prompted, remove source control bindings.)
 * Build the solution, Debug version.
-* (Save the .SLN file if prompted.)
 
 
 = libtomcrypt =

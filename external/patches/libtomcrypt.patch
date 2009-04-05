@@ -1,0 +1,36 @@
+--- tomcrypt_cfg.h	Wed Apr 05 04:51:47 2006
++++ tomcrypt_cfg.h	Fri Apr 21 13:16:28 2006
+@@ -8,16 +8,16 @@
+ #define TOMCRYPT_CFG_H
+ 
+ /* you can change how memory allocation works ... */
+-void *XMALLOC(size_t n);
+-void *XREALLOC(void *p, size_t n);
+-void *XCALLOC(size_t n, size_t s);
+-void XFREE(void *p);
++_CRTIMP void *XMALLOC(size_t n);
++_CRTIMP void *XREALLOC(void *p, size_t n);
++_CRTIMP void *XCALLOC(size_t n, size_t s);
++_CRTIMP void XFREE(void *p);
+ 
+-void XQSORT(void *base, size_t nmemb, size_t size, int(*compar)(const void *, const void *));
++_CRTIMP void XQSORT(void *base, size_t nmemb, size_t size, int(*compar)(const void *, const void *));
+ 
+ 
+ /* change the clock function too */
+-clock_t XCLOCK(void);
++_CRTIMP clock_t XCLOCK(void);
+ 
+ /* various other functions */
+ void *XMEMCPY(void *dest, const void *src, size_t n);
+--- tomcrypt_custom.h	Wed Apr 05 04:51:47 2006
++++ tomcrypt_custom.h	Fri Apr 21 13:15:26 2006
+@@ -243,7 +243,7 @@
+ #ifndef LTC_NO_MATH
+ 
+ /* LibTomMath */
+-/* #define LTM_DESC */
++#define LTM_DESC
+ 
+ /* TomsFastMath */
+ /* #define TFM_DESC */

@@ -1,37 +1,53 @@
 = Building e =
-To build you will need to:
-* Have Visual Studio 2008 C++
-** You can get the free express edition at http://www.microsoft.com/express/vc/
-* Download and install wxWidgets, version 2.8.7
-* Get and build everything listed in the "external" folder.
+
+This document describes how to build e, including its dependencies.
+
+To build e you will need a copy of Visual C++ 2008.
+* You can get the free express edition at http://www.microsoft.com/express/vc/
+* Any version of Visual Studio 2008 will also work, of course.
+
+To apply patches to dependencies you will need a patch tool.
+* One is available in msys (a set of Unix tools for Windows.)
+
+The following dependencies are required:
+* wxWidgets (2.8.7)
+* Metakit
+* PCRE (7.6)
+* libcurl (7.19.4)
+* libtommath (0.4.1)
+* libtomcrypt (1.17)
+* TinyXML
 
 Many of the dependencies below can be retrieved all-at-once from git at:
 http://github.com/adamv/e-externals/tree/master
+
+Later versions of these projects may work with e, but have not been tested.
+To use a later version of a dependency, the appropriate include and lib paths
+must be altered in the e project.
 
 = wxWidgets =
 wxWidgets is a cross-platform GUI toolkit.
 
 Website: http://www.wxwidgets.org/downloads/
-
-TODO: Patches assume version 2.8.7, so redo below with that version.
+Installer for 2.8.7: http://sourceforge.net/project/downloading.php?group_id=9863&use_mirror=softlayer&filename=wxMSW-2.8.7-Setup.exe&a=8859437
 
 == Installation ==
-* Download the installer for wxWidgets 2.8.10 (wxMSW)
+* Download the installer for wxWidgets 2.8.7 (wxMSW)
 * Run the installer.
-* We'll assume the standard install location of "C:\wxWidgets-2.8.10\"
+* We'll assume the standard install location of "C:\wxWidgets-2.8.7\"
 
 == Patching ==
 TODO: Notes on using the supplied patches.
 
 == Building ==
-* Reference C:\wxWidgets-2.8.10\docs\msw\install.txt for wxWidgets build instructions.
+* Reference C:\wxWidgets-2.8.7\docs\msw\install.txt for wxWidgets build instructions.
 * If you build with Visual Studio GUI:
 ** When you open build\msw\wx.dsw, you'll be prompted to upgrade to a .sln; do this.
 ** Compile the appropriate library version for the version of "e" you're working:
 ** For Debug versions of "e": Win32 Unicode Debug  (NOT the .DLL version)
 
 == Configuration ==
-* Create a system environmental variable named "WXWIN28" set to "C:\wxWidgets-2.8.10\"  (without quotes)
+* Create a system environmental variable named "WXWIN28" set to "C:\wxWidgets-2.8.7\"  (without quotes)
 ** Make sure it's a system variable, and not a personal one.
 
 

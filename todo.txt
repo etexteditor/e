@@ -1,0 +1,4 @@
+To-do:
+* Stable build instructions.
+* Automate dependency gathering.
+* Unit/regression test suites.

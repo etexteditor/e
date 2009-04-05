@@ -906,7 +906,7 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 
 	// Build a list of paths and dates in current documents
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-		wxWindow* win_page = m_tabBar->GetPage(i);
+		//wxWindow* win_page = m_tabBar->GetPage(i);
 		//if (win_page->IsKindOf(CLASSINFO(DiffPanel))) continue; // ignore diff for now
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
 		
@@ -3500,7 +3500,7 @@ void EditorFrame::SaveState() {
 	const unsigned int pageCount = m_tabBar->GetPageCount();
 	if (pageCount > 1 || !editorCtrl->IsEmpty()) { // don't save state if just a single empty page
 		for (unsigned int i = 0; i < pageCount; ++i) {
-			wxWindow* page = m_tabBar->GetPage(i);
+			//wxWindow* page = m_tabBar->GetPage(i);
 			EditorCtrl* editor = GetEditorCtrlFromPage(i);
 
 			const wxString& path = editor->GetPath();

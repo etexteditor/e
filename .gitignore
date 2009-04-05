@@ -15,4 +15,5 @@ external/
 
 !external/build_msvc/
 !external/patches/
-!external/readme.txt
+!external/*.sh
+!external/*.txt

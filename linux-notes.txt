@@ -1,0 +1,28 @@
+Before building:
+
+- libtomcrypt patch should NOT be applied
+- src/stdint.h needs to be moved or deleted
+    
+Ubuntu packages required before building:
+
+- libwxgtk2.8-dev
+- libglib2.0-dev
+- libatk1.0-dev
+
+These files do not compile, probably due to Windows dependencies:
+
+- CygwinDlg.cpp
+- ExceptionHandler.cpp
+- ExceptionAttacher.cpp
+- GetWinVer.cpp
+- IEHtmlWin.cpp
+- MiniVersion.cpp
+- ShellContextMenu.cpp
+- wxactivex.cpp
+
+These files do not compile for other reasons:
+
+- styler-users.cpp
+- MozillaHtmlWnd.cpp
+- Utf.cpp
+

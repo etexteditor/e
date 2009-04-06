@@ -12,6 +12,7 @@ _download()
   wget http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
   wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.6.tar.gz
   wget http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
+  wget http://biolpc22.york.ac.uk/pub/2.8.9/wxWidgets-2.8.9.tar.bz2
   popd
 }
 
@@ -39,6 +40,7 @@ _extract_and_patch()
   tar -xzf arch/metakit-*
   tar -xzf arch/pcre-*
   tar -xzf arch/tinyxml_*
+  tar -xjf arch/wxWidgets-*
 
   # Rename directories to generic names
   echo "Renaming dirs..."
@@ -48,6 +50,7 @@ _extract_and_patch()
   mv libtommath-* libtommath
   mv metakit-* metakit
   mv pcre-* pcre
+  mv wxWidgets-* wxwidgets
 
   # Apply patches
   echo "Applying patches..."
@@ -57,6 +60,8 @@ _extract_and_patch()
   patch -d pcre < patches/pcre.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
+  patch wxwidgets/src/aui/auibook.cpp < patches/wxwidgets/auibook.cpp.patch
+  patch wxwidgets/include/wx/aui/auibook.h < patches/wxwidgets/auibook.h.patch
 
   # Copy msvc specific project files
   echo "Copying msvc specific project files..."
@@ -80,6 +85,7 @@ _next_steps()
   echo "metakit\win\msvc90\mksrc.sln (mklib)"
   echo "pcre\pcre.sln (pcre)"
   echo "tinyxml\tinyxml.sln (tinyxml)"
+  echo "wxwidgets\build\msw\wx.dsw (wx)"
   echo
   echo "Run build_externals_win.cmd in a Visual Studio 2008 Command Prompt to compile from the command-line."
 }

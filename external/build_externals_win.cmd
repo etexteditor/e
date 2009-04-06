@@ -1,17 +1,13 @@
 @echo off
 
 call :BUILD libtommath\libtommath.sln
-echo %RET%
 call :BUILD libtomcrypt\libtomcrypt.sln
-echo %RET%
 call :BUILD curl\lib\curllib.sln
-echo %RET%
 call :BUILD metakit\win\msvc90\mksrc.sln
-echo %RET%
 call :BUILD pcre\pcre.sln
-echo %RET%
 call :BUILD tinyxml\tinyxml.sln
-echo %RET%
+
+echo Builds complete, check build_logs for possible issues.
 
 goto :EOF
 

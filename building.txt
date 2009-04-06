@@ -1,19 +1,25 @@
-= Building e =
+= Introduction =
 
 This document describes how to build e, including its dependencies.
 
+To build e you will need:
+
+* A copy of Visual C++ 2008
+** You can get the free express edition at http://www.microsoft.com/express/vc/
+** Full Visual Studio versions also work fine.
+** Note that opening a 2008 .sln file created with the Express version may still
+   prompt you to "upgrade" the .sln if you open it with a full Visual Studio SKU.
+
+* A set of GNU tools for Windows (including bash, patch, wget, etc.)
+** Cygwin is a good choice, since it is used by e anyway.
+** Msys also provides this toolset.
+
 To build e you will need a copy of Visual C++ 2008.
-* You can get the free express edition at http://www.microsoft.com/express/vc/
 * Any version of Visual Studio 2008 will also work, of course.
 * Note that opening a 2008 .sln file created with the Express version may still
-  prompt you to "upgrade" the .sln if you open it with a full Visual Studio SKU.
+  prompt you to upgrade the .sln if you open it with a full Visual Studio SKU.
 
-To apply patches to dependencies you will need a copy of "patch" for Windows.
-* One is available in msys.
-* There is also a cygwin version.
-
-
-The following dependencies are required:
+e's code dependencies are:
 * wxWidgets (2.8.7)
 * Metakit
 * PCRE (7.6)
@@ -33,7 +39,6 @@ The other dependencies can be retreived the easy way or the hard way.
 
 "The easy way" is strongly recommended.
 
-
 Later versions of these projects may work with e, but have not been tested.
 Consult the "get_externals_win.sh" script to see what the expected version of a dependency is.
 
@@ -50,47 +55,56 @@ The alternative to upgrading the projects is to use the VS2008 projects provided
 "external/build_msvc".
 
 
-= wxWidgets =
+= Building the Dependencies (the Easy Way) =
+
+* In a bash (cygwin) terminal, run:
+** get_externals_win.sh
+* In a Visual Studio 2008 Command Prompt run:
+** build_externals_win.cmd
+
+= Building the Dependencies (the Hard Way) =
+
+== wxWidgets ==
 wxWidgets is a cross-platform GUI toolkit.
 
 Website: http://www.wxwidgets.org/downloads/
 Installer for 2.8.7: http://sourceforge.net/project/downloading.php?group_id=9863&use_mirror=softlayer&filename=wxMSW-2.8.7-Setup.exe&a=8859437
 
-== Installation ==
+=== Installation ===
 * Download the installer for wxWidgets 2.8.7 (wxMSW)
 * Run the installer.
 * We'll assume the standard install location of "C:\wxWidgets-2.8.7\"
 
-== Patching ==
+=== Patching ===
 If you installed version 2.8.7 in the default location, you can apply the patches as follows.
 Open a terminal to: external/patches/widgets
 Run:
 * patch -p0 < auibook.h.patch
 * patch -p0 < auibook.cpp.patch
 
-== Building ==
+=== Building ===
 * Reference C:\wxWidgets-2.8.7\docs\msw\install.txt for wxWidgets build instructions.
 * If you build with Visual Studio GUI:
 ** When you open build\msw\wx.dsw, you'll be prompted to upgrade to a .sln; do this.
 ** Compile the appropriate library version for the version of "e" you're working:
 ** For Debug versions of "e": Win32 Unicode Debug  (NOT the .DLL version)
 
-== Configuration ==
+=== Configuration ===
 * Create a system environmental variable named "WXWIN28" set to "C:\wxWidgets-2.8.7\"  (without quotes)
 ** Make sure it's a system variable, and not a personal one.
 
 
-= Metakit =
+== Metakit ==
 Metakit is a lightweight embedded database.
 
 Website: http://www.equi4.com/metakit/overview.html
 
-== Installation ==
+=== Installation ===
 * The easiest way to get Metakit sources is to use Subversion.
 * In e/external:
 * svn export svn://www.equi4.com/metakit/trunk metakit
 
-== Building ==
+=== Building ===
 * Open "metakit\win\msvc60\mksrc.dsw" and allow the .sln to be upgraded for VS2008.
 * Change the configuration to "Debug" (not Debug MFC or Debug STD, just plain "Debug")
 
@@ -99,7 +113,7 @@ that's OK as e doesn't use them. The distribution project will also fail after t
 but again, that's OK.
 
 
-= PCRE =
+== PCRE ==
 PRCE is a library for Perl-compatible regular expressions.
 e is currently using version 7.6.
 
@@ -108,23 +122,23 @@ Website: http://pcre.org/
 PCRE can be compiled with Visual Studio by using CMake, a cross-platform configure/make tool.
 CMake can be downloaded from: http://www.cmake.org/cmake/resources/software.html
 
-== CMake ==
+=== CMake ===
 * If you are not using the pre-configured .sln, you will need to download, install and run "CMake"
 * Use the Windows installer from here: http://www.cmake.org/cmake/resources/software.html
 
 However, a pre-configured .sln is provided in: external/build_msvc/pcre
 
-== Installation ==
+=== Installation ===
 * Get the 7.6 source package from either:
 ** http://sourceforge.net/project/showfiles.php?group_id=10194&package_id=9960&release_id=572108
 ** ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/
 * Unzip / decompress the download so you end up with external/pcre-7.6
 
-== Patches ==
+=== Patches ===
 * Open a terminal to external
 * patch -p0 < patches/pcre.patch
 
-== Building ==
+=== Building ===
 * If you are using CMake:
 ** Use CMake as described in pcre-7.6/NOT-UNIX-USE
 
@@ -136,57 +150,57 @@ However, a pre-configured .sln is provided in: external/build_msvc/pcre
 * TO-DO ???
 
 
-= libcurl =
+== libcurl ==
 cURL is a library for retrieving files from URLs.
 
 Website: http://curl.haxx.se/download.html
 Download Archive: http://curl.haxx.se/download/
 
-== Installation ==
+=== Installation ===
 * Download the source archive for "curl-7.19.4.zip"
 * Unzip / decompress the download and rename the folder so you end up with external/libcurl-7.19.4
 
-== Building ==
+=== Building ===
 * Copy "curllib.sln" & "curllib.vcproj" from external/build_msvc to external/libcurl-7.19.4/lib.
 ** (Or you can use the exsting "vc6curl.dsw" and let Visual Studio upgrade the project.)
 * Build the Debug version of the "libcurl" project.
 ** If you build from an upgraded "vc6curl.dsw", curlsrc will probably fail but that's OK; e doesn't depend on it.
 * Copy the built library from libcurl-7.19.4/lib/Debug/libcurd.lib to ??? where e expects it to be.
 
-== To-Do ==
+=== To-Do ===
 * There are some "missing" header files in the project that don't seem to break the build.
   These should probably be removed from the .sln.
 
-= libtommath =
+== libtommath ==
 "LibTomMath provides highly optimized and portable routines for a vast 
 majority of integer based number theoretic applications (including public 
 key cryptography)."
 
 LibTomMath is a dependency of LibTomCrypt.
 
-== Installation ==
+=== Installation ===
 * Download 0.4.1 from: http://www.atarininja.org/~wxs/distfiles/ltm-0.41.tar.bz2
 * Decompress the archive.
 * Rename the folder "libtommath-0.41" to just "libtommath"
 * Move the folder so you end up with externa/libtommath
 
-== Building ==
+=== Building ===
 * Copy "libtommath.sln" & "libtommath.vcproj" from external/build_msvc.
 ** (Or you can build using the exsting "libtommath.dsp", letting it be upgraded.)
 ** (If prompted, remove source control bindings.)
 * Build the solution, Debug version.
 
-= libtomcrypt =
+== libtomcrypt ==
 "LibTomCrypt is a public domain open source cryptographic toolkit written in portable C."
 
 Website: http://libtomcrypt.com/download.html
 Mirror of version 1.17: http://www.atarininja.org/~wxs/distfiles/crypt-1.17.tar.bz2
 
-== Installation ==
+=== Installation ===
 * Download version 1.17
 * Unzip / decompress the download so you end up with external/libtomcrypt-1.17
 
-== Building ==
+=== Building ===
 * Copy "libtomcrypt.sln" & "libtomcrypt.vcproj" from external/build_msvc.
 ** (Or you can build using the exsting "libtomcrypt.dsp", letting it be upgraded.)
 ** (If prompted, remove source control bindings.)
@@ -199,32 +213,30 @@ Mirror of version 1.17: http://www.atarininja.org/~wxs/distfiles/crypt-1.17.tar.
    path later.)
 * Build the solution, Debug version.
 
-== To-Do ==
-* Fix incorrect linkage warnings in this project. (Build succeeds but with 740 warnigns!)
-
-= TinyMXL =
+== TinyMXL ==
 "TinyXML is a simple, small, C++ XML parser that can be easily integrating into other programs."
 
 Website: http://www.grinninglizard.com/tinyxml/
 
-= Installation =
+=== Installation ===
 * Download the source archive from SourceForge: http://sourceforge.net/projects/tinyxml
 * Unzip / decompress the download so you end up with external/tinyxml
 
-== Patching ==
+=== Patching ===
 * Copy the supplied patches for TinyXML into external/tinyxml
 * Open a terminal to external/tinyxml and run:
 ** patch < tinyxml.cpp.patch
 ** patch < tinyxml.h.patch
 
-== Building ==
+=== Building ===
 * Copy "tinyxml.sln" & "tinyxml_lib.vcproj" from external/build_msvc.
 ** (Or you can build using the existing .sln, letting it be upgraded to VS2008 format.)
 * Open "tinyxml.sln" with Visual Studio 2008.
 * Build the solution, Debug version.
 
 
-= e itself =
+= Building e Itself =
 * After building all the dependencies, open "e.sln" and build the Debug target.
 * Note that the resulting e.exe in "Debug" has no idea where Themes/Bundles/Support/etc. are.
 * If you want to run the new "e.exe", you'll need to provide it with the support files.
+** One way to do this is to copy over the support folders from your licensed copy in "C:\Program Files\e".

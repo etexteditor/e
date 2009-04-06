@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="dftables"
 	ProjectGUID="{F27055A2-EF5C-42B3-8799-5D421BE52397}"
+	RootNamespace="dftables"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -44,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;SUPPORT_UTF8"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;SUPPORT_UTF8;HAVE_CONFIG_H"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

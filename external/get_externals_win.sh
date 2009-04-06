@@ -30,8 +30,6 @@ _backup_existing_patches()
 
 _extract_and_patch()
 {
-  _backup_existing_patches
-
   # Extract
   echo "Extracting libraries.."
   echo
@@ -95,6 +93,7 @@ if [[ "$1" != "repatch" ]]; then
       _download
 fi
 
+_backup_existing_patches
 _extract_and_patch
 _next_steps
 

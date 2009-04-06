@@ -2,3 +2,4 @@ To-do:
 * Revamp build instructions (the easy way vs. the hard way)
 * Get a working build; build currently succeeds but menus paint incorrectly.
 * Unit/regression test suites.
+* Allow wget or curl to get dependencies.

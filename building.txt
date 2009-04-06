@@ -11,8 +11,8 @@ To build e you will need:
    prompt you to "upgrade" the .sln if you open it with a full Visual Studio SKU.
 
 * A set of GNU tools for Windows (including bash, patch, wget, etc.)
-** Cygwin is a good choice, since it is used by e anyway.
-** Msys also provides this toolset.
+** Cygwin and Msys both support these tools.
+** You'll probably end up with both anyway, Cygwin for e support and Msys for git support.
 
 To build e you will need a copy of Visual C++ 2008.
 * Any version of Visual Studio 2008 will also work, of course.

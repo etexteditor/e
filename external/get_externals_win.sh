@@ -61,5 +61,5 @@ echo "libtommath\libtommath.sln (libtommath)"
 echo "metakit\win\msvc90\mksrc.sln (mklib)"
 echo "pcre\pcre.sln (pcre)"
 echo "tinyxml\tinyxml.sln (tinyxml)"
-
-
+echo
+echo "Run build_externals_win.cmd in a Visual Studio 2008 Command Prompt to compile from the command-line."

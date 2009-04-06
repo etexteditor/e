@@ -11,7 +11,7 @@ echo Builds complete, check build_logs for possible issues.
 
 REM Using a .sln might be faster, but don't want to keep all the .vcprojs up-to-date
 pushd wxwidgets\build\msw
-nmake -f makefile.vc BUILD=debug UNICODE=1
+nmake -f makefile.vc BUILD=debug UNICODE=1 > build_logs\wxwidgets.log
 popd
 
 goto :EOF

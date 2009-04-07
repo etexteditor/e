@@ -59,4 +59,3 @@ private:
 
 
 #endif // __SETTINGSDLG_H__
-

@@ -275,7 +275,7 @@ wxJSONWriter::DoWrite( const wxJSONValue& value, const wxString* key,
   int t = value.GetType();
   switch ( t )  {
     case wxJSONTYPE_EMPTY :
-      wxFAIL_MSG( _T("wxJSONWriter::WriteEmpty() cannot be called (not a valid JSON text"));
+      wxFAIL_MSG( _T("wxJSONWriter::WriteEmpty() cannot be called (not a valid JSON type)"));
       break;
 
     case wxJSONTYPE_NULL :
@@ -838,7 +838,7 @@ wxJSONWriter::WriteKey( const wxString& key )
 int
 wxJSONWriter::WriteEmpty()
 {
-  wxFAIL_MSG( _T("wxJSONWriter::WriteEmpty() cannot be called (not a valid JSON text"));
+  wxFAIL_MSG( _T("wxJSONWriter::WriteEmpty() cannot be called (not a valid JSON type)"));
   wxString s( _T( "<empty>" ));
   return WriteString( s );
 }

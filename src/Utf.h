@@ -15,6 +15,7 @@
 #define __UTF_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include <wx/sstream.h>
 
 // UTF-8 Support functions
 

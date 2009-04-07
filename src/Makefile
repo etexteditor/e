@@ -5,7 +5,7 @@ LIBINCLUDES = -I../external/out/include -I../external/out/usr/include -I/usr/inc
 INCLUDES = $(WXINCLUDES) $(GTKINCLUDES) $(LIBINCLUDES) -I../ecore -I.
 
 CMPOPTS = -Wno-write-strings -DHAVE_CONFIG_H
-EXCEPT = CygwinDlg.cpp ExceptionHandler.cpp ExceptionAttacher.cpp GetWinVer.cpp IEHtmlWin.cpp MiniVersion.cpp ShellContextMenu.cpp wxactivex.cpp
+EXCEPT = CygwinDlg.cpp ExceptionHandler.cpp ExceptionAttacher.cpp GetWinVer.cpp IEHtmlWin.cpp MiniVersion.cpp MozillaHtmlWnd.cpp ShellContextMenu.cpp wxactivex.cpp
 SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp)) 
 OBJS = $(SRCS:.cpp=.o)
 

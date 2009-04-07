@@ -3,6 +3,7 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
+#include "Document.h"
 #include "StyleRun.h"
 #include "styler.h"
 

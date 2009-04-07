@@ -11,18 +11,16 @@ Ubuntu packages required before building:
 
 These files do not compile, probably due to Windows dependencies:
 
-- CygwinDlg.cpp
-- ExceptionHandler.cpp
-- ExceptionAttacher.cpp
-- GetWinVer.cpp
-- IEHtmlWin.cpp
-- MiniVersion.cpp
-- ShellContextMenu.cpp
-- wxactivex.cpp
+- CygwinDlg.cpp - not needed, all uses are commented out
+- ExceptionHandler.cpp - never used?
+- ExceptionAttacher.cpp - never used?
+- GetWinVer.cpp - only used by ExceptionHandler
+- IEHtmlWin.cpp - cannot be compiled, replaced by MozillaHtmlWnd? all use is commented out
+- MiniVersion.cpp - only used by ExceptionHandler
+- ShellContextMenu.cpp - cannot be compiled, should be replaced with Gnome/KDE equivalent
+- wxactivex.cpp - only used by IEHtmlWin, cannot be compiled
 
 These files do not compile for other reasons:
 
-- styler-users.cpp
-- MozillaHtmlWnd.cpp
-- Utf.cpp
+- MozillaHtmlWnd.cpp - incomplete?
 

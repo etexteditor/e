@@ -33,7 +33,7 @@ class FastDC : public wxDC {
 public:
 	void FastDrawText(const wxString& text, wxCoord x, wxCoord y, wxCoord textwidth, wxCoord charheight) {
 		// fontheight includes room for underline, so if the background
-		// is solid, we have to first draw it manually to avoid missing buttom
+		// is solid, we have to first draw it manually to avoid missing bottom
 		if (GetBackgroundMode() != wxTRANSPARENT) {
 			SetPen(GetTextBackground());
 			SetBrush(wxBrush(GetTextBackground(), wxSOLID));

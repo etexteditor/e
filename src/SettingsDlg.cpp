@@ -80,13 +80,15 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 					settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
 				settingsPage->SetSizer(settingsSizer);
 
-				bool doAutoPair = true;  // default
-				bool doAutoWrap = true;  // default
-				bool doKeepState = true; // default
-				bool doCheckChange = true;  // default
-				bool doShowMargin = false;  // default
-				bool doWrapMargin = false; // default
-				int marginChars = 80;  // default
+				// Settings defaults.
+				bool doAutoPair = true;
+				bool doAutoWrap = true;
+				bool doKeepState = true;
+				bool doCheckChange = true;
+				bool doShowMargin = false;
+				bool doWrapMargin = false;
+				int marginChars = 80;  
+
 				cxLOCK_READ(m_catalyst)
 					catalyst.GetSettingBool(wxT("autoPair"), doAutoPair);
 					catalyst.GetSettingBool(wxT("autoWrap"), doAutoWrap);
@@ -187,7 +189,7 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 	SetSizerAndFit(mainSizer);
 
 	// Manually set size hints
-	// This should be removed when there are multible pages
+	// This should be removed when there are multiple pages
 	const wxSize size = GetSize();
 	SetSizeHints(size.x, size.y, -1, size.y);
 
@@ -282,8 +284,7 @@ void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
 	cxENDLOCK
 }
 
-void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
-	
+void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {	
 	wxString name = m_ctrlUserName->GetLabel();
 	cxLOCK_READ(m_catalyst)
 		if (name == catalyst.GetUserName(0)) name.clear(); // empty string means no change
@@ -327,7 +328,7 @@ void SettingsDlg::OnCheckAutoPair(wxCommandEvent& event) {
 		catalyst.SetSettingBool(wxT("autoPair"), event.IsChecked());
 	cxENDLOCK
 
-	// Notify that the settings has changed
+	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
 	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
 }
@@ -337,7 +338,7 @@ void SettingsDlg::OnCheckAutoWrap(wxCommandEvent& event) {
 		catalyst.SetSettingBool(wxT("autoWrap"), event.IsChecked());
 	cxENDLOCK
 
-	// Notify that the settings has changed
+	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
 	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
 }
@@ -351,7 +352,7 @@ void SettingsDlg::OnCheckShowMargin(wxCommandEvent& event) {
 	m_marginSpin->Enable(doShowMargin);
 	m_wrapMargin->Enable(doShowMargin);
 
-	// Notify that the settings has changed
+	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
 	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
 }
@@ -362,7 +363,7 @@ void SettingsDlg::OnCheckWrapMargin(wxCommandEvent& event) {
 		catalyst.SetSettingBool(wxT("wrapMargin"), doWrapMargin);
 	cxENDLOCK
 
-	// Notify that the settings has changed
+	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
 	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
 }
@@ -374,7 +375,7 @@ void SettingsDlg::OnMarginSpin(wxSpinEvent& event) {
 		catalyst.SetSettingInt(wxT("marginChars"), marginChars);
 	cxENDLOCK
 
-	// Notify that the settings has changed
+	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
 	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
 }

@@ -138,7 +138,7 @@ BundleEditor::BundleEditor(wxWindow *parent)
 }
 
 void BundleEditor::LoadBundles() {
-	// Add an empty root node (will not be shown
+	// Add an empty root node (will not be shown)
 	m_bundleTree->DeleteAllItems();
 	const wxTreeItemId rootItem = m_bundleTree->AddRoot(wxEmptyString);
 

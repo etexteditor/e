@@ -14,12 +14,6 @@ make
 make install
 popd
 
-# libtomcrypt
-#pushd libtomcrypt
-#make DESTDIR=$output
-#make install
-#popd
-
 # Metakit
 pushd metakit
 cd builds
@@ -49,6 +43,6 @@ popd
 # libtomcrypt
 pushd libtomcrypt
 make
-make install INSTALL_GROUP=`id -gn` INSTALL_USER=`id -un` LIBPATH=$output/lib INCPATH=$output/include NODOCS=1
+make install INSTALL_GROUP=`id -gn` INSTALL_USER=`id -un` LIBPATH=$output/lib INCPATH=$output/include DATAPATH=$output/share/doc/libtomcrypt/pdf NODOCS=1
 popd
 

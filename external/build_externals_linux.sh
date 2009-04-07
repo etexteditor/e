@@ -17,7 +17,7 @@ popd
 # Metakit
 pushd metakit
 cd builds
-../unix/configure --prefix=$output 
+../unix/configure --prefix=$output --enable-shared=no
 make
 make install
 popd
@@ -44,5 +44,12 @@ popd
 pushd libtomcrypt
 make
 make install INSTALL_GROUP=`id -gn` INSTALL_USER=`id -un` LIBPATH=$output/lib INCPATH=$output/include DATAPATH=$output/share/doc/libtomcrypt/pdf NODOCS=1
+popd
+
+# wxwidgets
+pushd wxwidgets
+./configure --prefix=$output --enable-monolithic=yes --enable-shared=no
+make
+make install
 popd
 

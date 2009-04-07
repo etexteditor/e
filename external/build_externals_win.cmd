@@ -1,5 +1,9 @@
 @echo off
 
+if not EXIST build_logs mkdir build_logs
+
+goto :EOF
+
 call :BUILD libtommath\libtommath.sln
 call :BUILD libtomcrypt\libtomcrypt.sln
 call :BUILD curl\lib\curllib.sln

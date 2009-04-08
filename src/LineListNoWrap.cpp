@@ -272,9 +272,7 @@ void LineListNoWrap::Print() {
 	wxLogDebug(wxT(" height:     %u"), height());
 
 	for (unsigned int i = 0; i < size(); ++i) {
-		const unsigned int offset = m_textOffsets[i];
-		const unsigned int lineWidth = m_lineWidths[i];
-		wxLogDebug(wxT("  %u: %u %u"), i, offset, lineWidth);
+		wxLogDebug(wxT("  %u: %u %u"), i, m_textOffsets[i], m_lineWidths[i]);
 	}
 }
 

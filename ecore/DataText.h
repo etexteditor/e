@@ -85,3 +85,4 @@ private:
 };
 
 #endif // __CDATATEXT_H__
+

@@ -1,5 +1,5 @@
 /* XPM */ 
-static char * close_down_xpm[] = {
+static const char * close_down_xpm[] = {
 "14 14 137 2",
 "  	c None",
 "! 	c black",

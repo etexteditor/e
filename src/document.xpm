@@ -1,5 +1,5 @@
 /* XPM */
-static char * document_xpm[] = {
+static const char * document_xpm[] = {
 "16 16 45 1",
 " 	c None",
 "!	c black",

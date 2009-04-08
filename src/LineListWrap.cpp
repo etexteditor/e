@@ -673,12 +673,10 @@ void LineListWrap::Print() {
 	wxLogDebug(wxT(" height:     %u"), height());
 	unsigned int h = height();
 	if (lastLoadedPos == 0) wxLogDebug(wxT("  _linelist: %d-%d"), firstLoadedPos, lastLoadedPos);
-	else wxLogDebug(wxT("  linelist: %d %d (%d-%d -> %d-%d) %u"), lastValidOffset, lastValidPos, firstLoadedPos, lastLoadedPos, approxTop, yPositions[lastLoadedPos-1], h);
+	else wxLogDebug(wxT("  linelist: %d %d (%d-%d -> %d-%d) %u"), lastValidOffset, lastValidPos, firstLoadedPos, lastLoadedPos, approxTop, yPositions[lastLoadedPos-1], height());
 	
 	for (unsigned int i = 0; i < size(); ++i) {
-		unsigned int offset = textOffsets[i];
-		unsigned int position = yPositions[i];
-		wxLogDebug(wxT("  %u: %u %u"), i, offset, position);
+		wxLogDebug(wxT("  %u: %u %u"), i, textOffsets[i], yPositions[i]);
 	}
 }
 

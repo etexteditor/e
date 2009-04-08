@@ -1,5 +1,5 @@
 /* XPM */
-static char * right_arrow_xpm[] = {
+static const char * right_arrow_xpm[] = {
 "20 20 143 2",
 "  	c None",
 "! 	c black",

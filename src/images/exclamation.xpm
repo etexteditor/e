@@ -1,5 +1,5 @@
 /* XPM */
-static char * exclamation_xpm[] = {
+static const char * exclamation_xpm[] = {
 "16 16 114 2",
 "  	c None",
 "! 	c black",

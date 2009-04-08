@@ -1,5 +1,5 @@
 /* XPM */
-static char * tmsnippet_xpm[] = {
+static const char * tmsnippet_xpm[] = {
 "16 16 85 1",
 " 	c None",
 "!	c black",

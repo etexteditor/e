@@ -1,5 +1,5 @@
 /* XPM */
-static char * accept_xpm[] = {
+static const char * accept_xpm[] = {
 "16 16 144 2",
 "  	c None",
 "! 	c black",

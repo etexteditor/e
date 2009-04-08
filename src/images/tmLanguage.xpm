@@ -1,5 +1,5 @@
 /* XPM */
-static char * tmlanguage_xpm[] = {
+static const char * tmlanguage_xpm[] = {
 "16 16 38 1",
 " 	c None",
 "!	c black",

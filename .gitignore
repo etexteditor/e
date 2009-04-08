@@ -22,6 +22,7 @@ _ReSharper*
 
 # Linux stuff
 *.o
+*.d
 
 
 ## Ignore most things in external, except what we permit below

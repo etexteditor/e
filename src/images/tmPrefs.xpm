@@ -1,5 +1,5 @@
 /* XPM */
-static char * tmprefs_xpm[] = {
+static const char * tmprefs_xpm[] = {
 "16 16 46 1",
 " 	c None",
 "!	c black",

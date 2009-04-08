@@ -1,5 +1,5 @@
 /* XPM */
-static char * pin2_xpm[] = {
+static const char * pin2_xpm[] = {
 "20 20 19 1",
 " 	c None",
 "!	c black",

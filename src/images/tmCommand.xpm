@@ -1,5 +1,5 @@
 /* XPM */
-static char * tmcommand_xpm[] = {
+static const char * tmcommand_xpm[] = {
 "16 16 84 1",
 " 	c None",
 "!	c black",

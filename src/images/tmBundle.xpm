@@ -1,5 +1,5 @@
 /* XPM */
-static char * tmbundle_xpm[] = {
+static const char * tmbundle_xpm[] = {
 "16 16 159 2",
 "  	c None",
 "! 	c #FEFEFE",

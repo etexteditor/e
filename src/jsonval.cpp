@@ -528,17 +528,18 @@ wxJSONValue::IsObject() const
 int
 wxJSONValue::AsInt() const
 {
-  wxJSONRefData* data = GetRefData();
-  wxASSERT( data );
   int i;
 
   // on 64-bits platforms check if the value fits in 32-bits
 #if defined( wxJSON_64BIT_INT )
     wxInt32 i32;
+    wxASSERT( GetRefData() );
     bool success = AsInt32( &i32 );
     wxASSERT( success );
     i = (int) i32;
 #else
+  wxJSONRefData* data = GetRefData();
+  wxASSERT( data );
   switch ( data->m_type )  {
     case wxJSONTYPE_BOOL :
       i = (int) data->m_value.m_valBool;
@@ -719,15 +720,16 @@ unsigned int
 wxJSONValue::AsUInt() const
 {
   unsigned int ui;
-  wxJSONRefData* data = GetRefData();
-  wxASSERT( data );
 
 #if defined( wxJSON_64BIT_INT )
+    wxASSERT( GetRefData() );
     wxUint32 ui32;
     bool success = AsUInt32( &ui32 );
     wxASSERT( success );
     ui = (unsigned int) ui32;
 #else
+  wxJSONRefData* data = GetRefData();
+  wxASSERT( data );
   ui = data->m_value.m_valUInt;
   switch ( data->m_type )  {
     case wxJSONTYPE_BOOL :

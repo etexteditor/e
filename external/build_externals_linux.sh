@@ -31,7 +31,7 @@ popd
 
 # tinyxml
 pushd tinyxml
-make
+make TINYXML_USE_STL=NO
 popd
 
 # libtommath

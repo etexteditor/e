@@ -57,6 +57,7 @@ _extract_and_patch()
   # Apply patches
   echo "Applying patches..."
   echo
+  patch -d libtomcrypt/src/headers < patches/libtomcrypt.linux.patch
   patch -Np1 -d metakit < patches/metakit.patch
   patch -d pcre < patches/pcre.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch

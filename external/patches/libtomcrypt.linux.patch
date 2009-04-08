@@ -1,0 +1,11 @@
+--- tomcrypt_custom.h	Wed Apr 05 04:51:47 2006
++++ tomcrypt_custom.h	Fri Apr 21 13:15:26 2006
+@@ -243,7 +243,7 @@
+ #ifndef LTC_NO_MATH
+ 
+ /* LibTomMath */
+-/* #define LTM_DESC */
++#define LTM_DESC
+ 
+ /* TomsFastMath */
+ /* #define TFM_DESC */

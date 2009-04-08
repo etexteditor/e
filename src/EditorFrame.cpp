@@ -766,7 +766,9 @@ void EditorFrame::ResetSyntaxMenu() {
 	sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
 
 	for (unsigned int i = 0; i < syntaxes.size(); ++i) {
-		m_syntaxMenu->Append(new BundleMenuItem(m_syntaxMenu, 1000+i, *syntaxes[i], wxITEM_CHECK));
+        BundleMenuItem *item = new BundleMenuItem(m_syntaxMenu, 1000+i, *syntaxes[i], wxITEM_CHECK);
+		m_syntaxMenu->Append(item);
+        item->AfterInsert();
 	}
 }
 

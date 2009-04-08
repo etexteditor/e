@@ -34,9 +34,17 @@ public:
 	bool OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxODStatus stat);
 #endif
 
+#ifdef __WXGTK__
+	void AfterInsert();
+#else
+	void AfterInsert() {}
+#endif
+
 private:
 	const tmAction& m_action;
+#ifdef __WXMSW__
 	wxFont m_unifont;
+#endif
 };
 
 class PopupMenuItem : public wxMenuItem {

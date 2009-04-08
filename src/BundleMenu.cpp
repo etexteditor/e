@@ -14,6 +14,47 @@
 #include "BundleMenu.h"
 #include "tm_syntaxhandler.h"
 
+#ifdef __WXGTK__
+#include <gtk/gtk.h>
+
+void BundleMenuItem::AfterInsert(void) {
+     GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+     gtk_widget_show(hbox);
+     GtkWidget *menu = GetMenuItem();
+     GtkWidget *old_label = gtk_bin_get_child(GTK_BIN(menu));
+     if (old_label)
+     {
+         g_object_ref(old_label);
+         gtk_container_remove(GTK_CONTAINER(menu), old_label);
+         gtk_misc_set_alignment(GTK_MISC(old_label), 0.0, 0.5);
+         gtk_container_add(GTK_CONTAINER(hbox), old_label);
+         g_object_unref(old_label);
+     }
+     gtk_container_add(GTK_CONTAINER(menu), hbox);
+
+	if ( !m_action.trigger.empty() )
+    {
+		const wxString trig =  m_action.trigger + wxT(" \x21E5");
+
+        GtkWidget* label = gtk_label_new(trig.utf8_str());
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_misc_set_padding(GTK_MISC(label), 8, 1);
+        gtk_widget_show(label);
+        gtk_container_add(GTK_CONTAINER(hbox), label);
+
+	}
+	else if (!m_action.key.shortcut.empty()) {
+		const wxString& shortcut = m_action.key.shortcut;
+
+        GtkWidget* label = gtk_label_new(shortcut.utf8_str());
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_misc_set_padding(GTK_MISC(label), 5, 0);
+        gtk_widget_show(label);
+        gtk_container_add(GTK_CONTAINER(hbox), label);
+    }
+}
+#endif
+
 BundleMenuItem::BundleMenuItem(wxMenu* parentMenu, int id, const tmAction& action, wxItemKind kind)
 : wxMenuItem(parentMenu, id, action.name, action.name, kind), m_action(action) {
 #ifdef __WXMSW__
@@ -96,7 +137,6 @@ bool BundleMenuItem::OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxOD
 		int accel_width, accel_height;
         dc.GetTextExtent(shortcut, &accel_width, &accel_height);
 
-#ifdef __WXMSW__
 		HDC hdc = GetHdcOf(dc);
 		const int nPrevMode = SetBkMode(hdc, TRANSPARENT);
 
@@ -130,7 +170,6 @@ bool BundleMenuItem::OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxOD
 		// Restore state
 		(void)SetBkMode(hdc, nPrevMode);
 		::SetTextColor(hdc, colOldText);
-#endif // __WXMSW__
     }
 
 	return true;

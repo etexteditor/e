@@ -1803,7 +1803,9 @@ wxMenu* TmSyntaxHandler::ParseMenu(const PListArray& itemsArray, const PListDict
 				tmAction* action = s->second;
 				wxASSERT(action);
 
-				menu->Append(new BundleMenuItem(menu, m_nextMenuID, *action));
+                BundleMenuItem *item = new BundleMenuItem(menu, m_nextMenuID, *action);
+				menu->Append(item);
+                item->AfterInsert();
 				m_menuActions[m_nextMenuID] = action->uuid;
 				++m_nextMenuID;
 			}

@@ -20,11 +20,17 @@ _ReSharper*
 # OS X stuff (if you're working in a VM)
 .DS_Store
 
-## Ignore most things in external, except what we permit below
-external/
+## Ignore non-source-controlled things in external
+# 'arch' contains downloaded dependency archives
+external/arch/
+# 'build_logs' contains logs from command-line build scripts
+external/build_logs/
 
-!external/build_msvc/
-!external/patches/
-!external/*.cmd
-!external/*.sh
-!external/*.txt
+# These are the unzipped dependency folders
+external/curl/
+external/libtomcrypt/
+external/libtommath/
+external/metakit/
+external/pcre/
+external/tinyxml/
+external/wxwidgets/

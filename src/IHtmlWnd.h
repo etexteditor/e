@@ -1,6 +1,11 @@
 #ifndef __I_HTML_WND_H__
 #define __I_HTML_WND_H__
 
+#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#ifdef __WXGTK__
+   #include <wx/wx.h>
+#endif
+
 enum wxHtmlRefreshLevel
 {
 	wxHTML_REFRESH_NORMAL = 0,
@@ -13,6 +18,7 @@ enum wxHtmlRefreshLevel
 class IHtmlWnd {
 public:
 	virtual ~IHtmlWnd() {};
+	virtual wxWindow* GetWindow() = 0;
 	virtual bool LoadString(wxString html) = 0;
 	virtual void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false) = 0;
 	virtual bool Refresh(wxHtmlRefreshLevel level) = 0;

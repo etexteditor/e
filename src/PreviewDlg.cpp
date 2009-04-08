@@ -19,7 +19,7 @@
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"
 #elif defined (__WXGTK__)
-    #include "MozillaHtmlWnd.h"
+    #include "WebKitHtmlWnd.h"
 #endif
 
 #include "images/left_arrow.xpm"
@@ -98,8 +98,8 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 	// IE Control
 	m_browser = new wxIEHtmlWin(this, ID_MSHTML);
 #elif defined (__WXGTK__)
-	// Mozilla control
-	m_browser = new wxMozillaHtmlWin(this, ID_MSHTML);
+	// WebKit control
+	m_browser = new wxBrowser(this, ID_MSHTML);
 #endif
 
 #endif //FEAT_BROWSER
@@ -119,7 +119,7 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 			addressSizer->Add(m_showOptions, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 			m_mainSizer->Add(addressSizer, 0, wxEXPAND);
 #ifdef FEAT_BROWSER
-		m_mainSizer->Add(m_browser, 1, wxEXPAND);
+		m_mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND);
 #endif
 		m_optionSizer = new wxBoxSizer(wxHORIZONTAL);
 			m_optionSizer->Add(m_pipeCheck, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);

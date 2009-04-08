@@ -41,6 +41,8 @@ public:
         const wxString& name = wxPanelNameStr);
 	virtual ~wxIEHtmlWin();
 
+	wxWindow* GetWindow();
+
 	void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false);
     bool LoadString(const wxString& html);
     bool LoadStream(istream *strm);

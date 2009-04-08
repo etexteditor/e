@@ -55,7 +55,7 @@
     #include "IEHtmlWin.h"
 #elif defined (__WXGTK__)
     #ifdef FEAT_BROWSER
-        #include "MozillaHtmlWnd.h"
+        #include "WebKitHtmlWnd.h"
     #endif
 #endif
 
@@ -3929,11 +3929,11 @@ EditorFrame::HtmlOutputWin::HtmlOutputWin(EditorFrame& parent)
 	// IE Control
 	m_browser = new wxIEHtmlWin(this, ID_MSHTML);
 #elif defined (__WXGTK__)
-	// Mozilla control
-	m_browser = new wxMozillaHtmlWin(this, ID_MSHTML);
+	// WebKit control
+	m_browser = new wxBrowser(this, ID_MSHTML);
 #endif
 
-	mainSizer->Add(m_browser, 1, wxEXPAND);
+	mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND);
 #endif // FEAT_BROWSER
 
 	SetSizer(mainSizer);

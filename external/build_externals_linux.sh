@@ -42,13 +42,13 @@ popd
 
 # libtomcrypt
 pushd libtomcrypt
-make
+CFLAGS="-I../out/include -DLTC_NO_ROLC" make
 make install INSTALL_GROUP=`id -gn` INSTALL_USER=`id -un` LIBPATH=$output/lib INCPATH=$output/include DATAPATH=$output/share/doc/libtomcrypt/pdf NODOCS=1
 popd
 
 # wxwidgets
 pushd wxwidgets
-./configure --prefix=$output --enable-monolithic=yes --enable-shared=no
+./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile --disable-largefile
 make
 make install
 popd

@@ -22,7 +22,8 @@ _ReSharper*
 
 # Linux stuff
 *.o
-
+e
+src/stdint.h.bak
 
 ## Ignore most things in external, except what we permit below
 external/

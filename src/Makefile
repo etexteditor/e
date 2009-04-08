@@ -10,15 +10,18 @@ EXCEPT = CygwinDlg.cpp ExceptionHandler.cpp ExceptionAttacher.cpp GetWinVer.cpp 
 SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp)) 
 OBJS = $(SRCS:.cpp=.o)
 
-LOPTS = $(WXLIBS) -lpcre -lcurl -ltomcrypt -lmk4
+LOPTS = $(WXLIBS) -lcurl -ltomcrypt -ltommath -lmk4 -lssl -lidn
 
 CPP = g++
 EXE = e
 
 all: $(EXE)
 
-$(EXE): $(OBJS)
-	$(CPP) $(LOPTS) -o $(EXE) $(OBJS) $(shell ../external/out/bin/wx-config --linkdeps) ../external/tinyxml/tinystr.o ../external/tinyxml/tinyxmlerror.o ../external/tinyxml/tinyxml.o ../external/tinyxml/tinyxmlparser.o
+$(EXE): stdint.h.bak $(OBJS)
+	$(CPP) -o $(EXE) $(OBJS) ../external/tinyxml/tinystr.o ../external/tinyxml/tinyxmlerror.o ../external/tinyxml/tinyxml.o ../external/tinyxml/tinyxmlparser.o ../ecore/libecore.so $(LOPTS)
+
+stdint.h.bak:
+	mv stdint.h stdint.h.bak
 
 %.o: %.cpp
 	$(CPP) $(INCLUDES) $(CMPOPTS) -c -o $@ $<

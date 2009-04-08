@@ -783,8 +783,8 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 		wxTextFileType eol = GetPropertyEOL();
 		if (eol == wxTextFileType_None || forceNativeEOL) eol = wxTextBuffer::typeDefault;
 		wxFontEncoding propEncoding = GetPropertyEncoding();
-		char* nl = "";
-		char* nulls = "\0\0\0\0";
+		const char* nl = "";
+		const char* nulls = "\0\0\0\0";
 		unsigned int nl_len = 0;
 		unsigned int char_len = 0;
 		switch (propEncoding) {

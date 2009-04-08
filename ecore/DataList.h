@@ -50,3 +50,4 @@ private:
 };
 
 #endif // __CDATALIST_H__
+

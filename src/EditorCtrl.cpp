@@ -699,8 +699,7 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	}
 	wxASSERT(scrollPos >= 0);
 
-	int height = m_lines.GetHeight();
-	wxASSERT(scrollPos <= height);
+	wxASSERT(scrollPos <= m_lines.GetHeight());
 
 	// Check if we need to adjust scrollbar
 	if (UpdateScrollbars(editorSizeX, size.y)) return; // adding/removing scrollbars send size event
@@ -727,7 +726,7 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 			const int new_height = size.y - overlap_height;
 			const int newtop = (top == scrollPos ? bottom : scrollPos);
 			rect = wxRect(0,newtop,editorSizeX,new_height);
-			wxASSERT(newtop <= height);
+			wxASSERT(newtop <= m_lines.GetHeight());
 		}
 	}*/
 

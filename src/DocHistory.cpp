@@ -580,8 +580,7 @@ void DocHistory::OnScroll(wxScrollWinEvent& event) {
 }
 
 void DocHistory::OnVersionTreeSel(VersionTreeEvent& event) {
-	const int item_id = event.GetItem();
-	wxASSERT(item_id >= 0 && item_id < (int)m_items.size());
+	wxASSERT(event.GetItem() >= 0 && event.GetItem() < (int)m_items.size());
 
 	// Do not return a reference. The events might modify
 	// m_items underneath it.
@@ -602,8 +601,7 @@ void DocHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 }
 
 void DocHistory::OnVersionTreeTooltip(VersionTreeEvent& event) {
-	const int item_id = event.GetItem();
-	wxASSERT(item_id >= 0 && item_id < (int)m_items.size());
+	wxASSERT(event.GetItem() >= 0 && event.GetItem() < (int)m_items.size());
 	const doc_id& hot_doc = m_items[event.GetItem()].doc;
 
 	cxLOCK_READ(m_catalyst)
@@ -628,8 +626,7 @@ void DocHistory::OnVersionTreeTooltip(VersionTreeEvent& event) {
 }
 
 void DocHistory::OnVersionTreeDrawitem(VersionTreeEvent& event) {
-	const int item_id = event.GetItem();
-	wxASSERT(item_id >= 0 && item_id < (int)m_items.size());
+	wxASSERT(event.GetItem() >= 0 && event.GetItem() < (int)m_items.size());
 
 	const doc_id& hot_doc = m_items[event.GetItem()].doc;
 	int style = 0;

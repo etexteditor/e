@@ -19,7 +19,7 @@ popd
 
 # PCRE
 pushd pcre
-./configure --prefix=$output --enable-shared=no --enable-static=yes
+./configure --prefix=$output --enable-shared=no --enable-static=yes --enable-utf8 --enable-unicode-properties --enable-newline-is-any
 make
 make install
 popd

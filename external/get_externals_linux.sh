@@ -14,6 +14,7 @@ _download()
   wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.6.tar.gz
   wget http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
   wget http://biolpc22.york.ac.uk/pub/2.8.9/wxWidgets-2.8.9.tar.bz2
+  wget http://builds.nightly.webkit.org/files/trunk/src/WebKit-r42260.tar.bz2
   popd
 }
 
@@ -40,6 +41,7 @@ _extract_and_patch()
   tar -xzf arch/pcre-*
   tar -xzf arch/tinyxml_*
   tar -xjf arch/wxWidgets-*
+  tar -xjf arch/WebKit-*
 
   # Rename directories to generic names
   echo "Renaming dirs..."
@@ -49,6 +51,7 @@ _extract_and_patch()
   mv metakit-* metakit
   mv pcre-* pcre
   mv wxWidgets-* wxwidgets
+  mv WebKit-* webkit
 
   # Apply patches
   echo "Applying patches..."
@@ -57,6 +60,7 @@ _extract_and_patch()
   patch -d pcre < patches/pcre.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
+  patch -Np0 -d webkit < patches/webkit.patch
   patch wxwidgets/src/aui/auibook.cpp < patches/wxwidgets/auibook.cpp.patch
   patch wxwidgets/include/wx/aui/auibook.h < patches/wxwidgets/auibook.h.patch
 }

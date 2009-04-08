@@ -8,6 +8,8 @@ Ubuntu packages required before building:
 - libglib2.0-dev
 - libatk1.0-dev
 
+- bakefile
+
 These files do not compile, probably due to Windows dependencies:
 
 - CygwinDlg.cpp - not needed, all uses are commented out

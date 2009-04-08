@@ -43,8 +43,16 @@ popd
 
 # wxwidgets
 pushd wxwidgets
-./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile --disable-largefile CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=32" # ecore was built agains non-largefile aware wxWidgets so our wxWidgets has to be configured same way
+./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile \
+                     --without-libtiff --enable-graphics_ctx \
+                     --disable-largefile CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=32" # ecore was built agains non-largefile aware wxWidgets so our wxWidgets has to be configured same way
 make
 make install
+popd
+
+# wxwebkit
+pushd webkit
+PATH="$output/bin:${PATH}" ./WebKitTools/Scripts/build-webkit --wx wxgc --no-svg --no-coverage --no-workers \
+      --no-video --no-wml --no-database --no-icon-database --no-xpath --no-xslt --prefix=$output --enable-static --disable-shared
 popd
 

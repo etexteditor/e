@@ -37,14 +37,13 @@ popd
 
 # libtomcrypt
 pushd libtomcrypt
-CC=${CC:-gcc}
-make CC="$CC -DLTM_DESC -I../libtomcrypt" # unfortunately CFLAGS cannot be used as it will break the compilation
+CFLAGS="-I../out/include -DLTC_NO_ROLC -DLTM_DESC" make
 make install INSTALL_GROUP=`id -gn` INSTALL_USER=`id -un` LIBPATH=$output/lib INCPATH=$output/include DATAPATH=$output/share/doc/libtomcrypt/pdf NODOCS=1
 popd
 
 # wxwidgets
 pushd wxwidgets
-./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --disable-largefile CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=32" # ecore was built agains non-largefile aware wxWidgets so our wxWidgets has to be configured same way
+./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile --disable-largefile CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=32" # ecore was built agains non-largefile aware wxWidgets so our wxWidgets has to be configured same way
 make
 make install
 popd

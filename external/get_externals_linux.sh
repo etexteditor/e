@@ -8,7 +8,6 @@ _download()
   echo "Downloading external libraries..."
   echo
   pushd arch
-  wget http://curl.haxx.se/download/curl-7.18.2.tar.gz
   wget http://libtomcrypt.com/files/crypt-1.11.tar.bz2
   wget http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2
   wget http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
@@ -23,7 +22,6 @@ _backup_existing_patches()
   # Removing previous folders
   tempdir=`mktemp -d back.XXXXXX` || exit 1
   echo "Moving existing folders to $tempdir"
-  mv curl $tempdir/curl
   mv libtomcrypt $tempdir/libtomcrypt
   mv libtommath $tempdir/libtommath
   mv metakit $tempdir/metakit
@@ -36,7 +34,6 @@ _extract_and_patch()
   # Extract
   echo "Extracting libraries.."
   echo
-  tar -xzf arch/curl-*
   tar -xjf arch/crypt-*
   tar -xjf arch/ltm-*
   tar -xzf arch/metakit-*
@@ -47,7 +44,6 @@ _extract_and_patch()
   # Rename directories to generic names
   echo "Renaming dirs..."
   echo
-  mv curl-* curl
   mv libtomcrypt-* libtomcrypt
   mv libtommath-* libtommath
   mv metakit-* metakit

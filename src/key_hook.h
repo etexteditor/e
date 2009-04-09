@@ -61,12 +61,16 @@ public:
 		{
 			wxWindow* wnd = ((wxWindowCreateEvent*)&event)->GetWindow();
 			if (wnd == this)
-				_key_binder.Register(this);
+				RegisterKeyHook();
 		}
 		return Base::ProcessEvent(event);
 	}
 
 protected:
+	void RegisterKeyHook(void)
+	{
+		_key_binder.Register(this);
+	}
 	virtual bool OnPreKeyDown(wxKeyEvent& WXUNUSED(event)){return false;}
 	virtual bool OnPreKeyUp(wxKeyEvent& WXUNUSED(event)){return false;}
 #ifdef __WXMSW__
@@ -90,10 +94,12 @@ private:
 	public:
 		keyBind() : delegate(NULL) {} // no default constructor
 		void Register(KeyHookable<Base>* delegate) {
-			this->delegate = delegate;
+			if (!this->delegate) {
+				this->delegate = delegate;
 #ifdef __WXGTK__
-			KeyHooks::Register(this, delegate->GetHandle());
+				KeyHooks::Register(this, delegate->GetHandle());
 #endif
+			}
 		}
 		virtual ~keyBind() {
 #ifdef __WXGTK__

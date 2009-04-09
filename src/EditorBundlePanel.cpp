@@ -644,6 +644,7 @@ void EditorBundlePanel::OnChildFocus(wxChildFocusEvent& event) {
 
 EditorBundlePanel::ShortcutCtrl::ShortcutCtrl(wxWindow* parent, wxWindowID id) {
 	Create(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY|wxTE_CENTRE);
+    RegisterKeyHook(); // TextCtrl isn't automatically hooked, hook now
 }
 
 void EditorBundlePanel::ShortcutCtrl::Clear() {

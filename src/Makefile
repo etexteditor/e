@@ -36,7 +36,7 @@ WXLIBS = $(shell ../external/out/bin/wx-config --libs)
 WEBKIT_LIBS = -lwxwebkit -lwebcore-wx -ljscore
 WEBKIT_LIBS += $(shell pkg-config --libs libxml-2.0 sqlite3 libxslt) $(shell icu-config --ldflags)
 
-LIBS = $(OURLIBPATHS) -L../ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 $(WEBKIT_LIBS) $(WXLIBS)
+LIBS = $(OURLIBPATHS) -L../ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre $(WEBKIT_LIBS) $(WXLIBS)
 
 # Exceptions which do not need to be compiled on linux
 EXCEPT = CygwinDlg.cpp \

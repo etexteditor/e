@@ -60,7 +60,8 @@ _extract_and_patch()
   patch -d pcre < patches/pcre.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
-  patch -Np0 -d webkit < patches/webkit.patch
+  patch -Np0 -d webkit < patches/webkit/remove-targets.patch
+  patch -Np0 -d webkit < patches/webkit/fully-static.patch
   patch wxwidgets/src/aui/auibook.cpp < patches/wxwidgets/auibook.cpp.patch
   patch wxwidgets/include/wx/aui/auibook.h < patches/wxwidgets/auibook.h.patch
 }

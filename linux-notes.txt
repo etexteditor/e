@@ -8,7 +8,12 @@ Ubuntu packages required before building:
 - libglib2.0-dev
 - libatk1.0-dev
 
+Packages required by WebKit:
 - bakefile
+- libxml-2.0
+- libxslt
+- sqlite3
+- icu
 
 These files do not compile, probably due to Windows dependencies:
 

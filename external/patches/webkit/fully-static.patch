@@ -1,0 +1,84 @@
+--- WebKit/wx/wxwebkit.bkl.bak	2009-04-09 08:44:49.000000000 +0400
++++ WebKit/wx/wxwebkit.bkl	2009-04-09 08:51:59.000000000 +0400
+@@ -34,7 +34,7 @@ This file builds the wxWebKit library.
+ <makefile>
+     <include file="wxwk-settings.bkl"/>
+     
+-    <dll id="wxwebkit-dynamic" template="wxwk,jscore,webcore,xml2,iconv,xslt,icu,curl,sqlite3,gtk,pthreads">
++    <lib id="wxwebkit-static" template="wxwk,jscore,webcore,xml2,iconv,xslt,icu,curl,sqlite3,gtk,pthreads">
+         <!-- make sure we relink wxwebkit if either webcore or jscore change -->
+         <if cond="FORMAT=='gnu'">
+             <depends-on-file>$(WKOUTPUTDIR)/libjscore.a</depends-on-file>
+@@ -44,8 +44,6 @@ This file builds the wxWebKit library.
+             <depends-on-file>$(WKOUTPUTDIR)/jscore.lib</depends-on-file>
+             <depends-on-file>$(WKOUTPUTDIR)/webcore-wx.lib</depends-on-file>
+         </if>
+-        <runtime-libs>dynamic</runtime-libs>
+-        <dllname>wxwebkit</dllname>
+         <libname>wxwebkit</libname>
+         
+         <include>$(WK_ROOT)/WebCore/platform/graphics/wx</include>
+@@ -59,13 +57,6 @@ This file builds the wxWebKit library.
+         <sys-lib>webcore-wx</sys-lib>
+         <sys-lib>jscore</sys-lib>
+         
+-        <if cond="FORMAT in ['msvc','msvs2005prj']">
+-            <sys-lib>winmm</sys-lib> <!-- for timeGetTime -->
+-            <sys-lib>gdiplus</sys-lib>
+-            <sys-lib>libpng</sys-lib>
+-            <sys-lib>libjpeg</sys-lib>
+-        </if>
+-        
+         <sources>
+             WebKitSupport/ChromeClientWx.cpp
+             WebKitSupport/ContextMenuClientWx.cpp
+@@ -78,6 +69,6 @@ This file builds the wxWebKit library.
+             WebView.cpp
+             WebBrowserShell.cpp
+         </sources>   
+-    </dll>
++    </lib>
+ 
+ </makefile>
+--- WebKit/wx/wxwk-settings.bkl.bak	2009-04-09 08:48:02.000000000 +0400
++++ WebKit/wx/wxwk-settings.bkl	2009-04-09 08:49:55.000000000 +0400
+@@ -31,7 +31,7 @@ JavaScriptCore Bakefile project file.
+ 
+ <makefile>
+     <set var="WX_UNICODE">1</set>
+-    <set var="WX_SHARED">1</set>
++    <set var="WX_SHARED">0</set>
+ 
+     <include file="presets/wx.bkl"/>
+     <include file="presets/wxwebkit.bkl"/>
+@@ -99,8 +99,6 @@ JavaScriptCore Bakefile project file.
+             </if>
+         </set>
+         <sys-lib>$(WEBCORE_LIBS)</sys-lib>
+-        <wx-lib>core</wx-lib>
+-        <wx-lib>base</wx-lib>
+         <if cond="PLATFORM_WIN32=='1'">
+             <define>WXUSINGDLL=1</define>
+         </if>
+--- WebCore/webcore-base.bkl.bak	2009-04-09 09:10:24.000000000 +0400
++++ WebCore/webcore-base.bkl	2009-04-09 09:11:28.000000000 +0400
+@@ -60,7 +60,7 @@ wxWebCore port Bakefile project file.
+         $(WEBCORE_SOURCES_JPEG)
+     </set>
+ 
+-    <template id="webcore_base" template="xml2,iconv,xslt,icu,jscore,curl,sqlite3">
++    <template id="webcore_base" template="jscore,xslt,xml2,sqlite3,iconv,icu,curl">
+         <include>$(SRCDIR)</include>
+         <include>$(SRCDIR)/bindings/js</include>
+         <include>$(SRCDIR)/bridge</include>
+--- WebCore/webcore-wx.bkl.bak	2009-04-09 09:11:36.000000000 +0400
++++ WebCore/webcore-wx.bkl	2009-04-09 09:12:25.000000000 +0400
+@@ -34,7 +34,7 @@ wxWebCore port Bakefile project file.
+ <makefile>
+     <include file="webcore-base.bkl"/>
+ 
+-    <template id="webcore-wx" template="wxwk_build_settings,webcore_base,curl,gtk,pthreads">
++    <template id="webcore-wx" template="webcore_base,wxwk_build_settings,curl,gtk,pthreads">
+         <pic>on</pic>
+         <threading>multi</threading>
+         

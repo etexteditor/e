@@ -52,7 +52,6 @@ popd
 
 # wxwebkit
 pushd webkit
-PATH="$output/bin:${PATH}" ./WebKitTools/Scripts/build-webkit --wx wxgc --no-svg --no-coverage --no-workers \
-      --no-video --no-wml --no-database --no-icon-database --no-xpath --no-xslt --prefix=$output --enable-static --disable-shared
+PATH="$output/bin:${PATH}" ./WebKitTools/Scripts/build-webkit --wx --wx-args=wxgc,ENABLE_OFFLINE_WEB_APPLICATIONS=0,ENABLE_DOM_STORAGE=1,ENABLE_DATABASE=0,ENABLE_ICONDATABASE=0,ENABLE_XPATH=1,ENABLE_XSLT=1,ENABLE_VIDEO=0,ENABLE_SVG=0,ENABLE_COVERAGE=0,ENABLE_WML=0,ENABLE_WORKERS=0
 popd
 

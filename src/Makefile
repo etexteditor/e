@@ -12,7 +12,8 @@ endif
 WXINCLUDES = $(shell ../external/out/bin/wx-config --cppflags)
 WXLIBS = $(shell ../external/out/bin/wx-config --libs)
 WEBKIT_INCLUDES = -I../external/webkit/WebKit
-WEBKIT_LIBS = ../external/webkit/WebKitBuild/Release/libwxwebkit.so ../external/webkit/WebKitBuild/Release/libjscore.a ../external/webkit/WebKitBuild/Release/libwebcore-wx.a
+WEBKIT_LIBS = -L../external/webkit/WebKitBuild/Release/ -lwxwebkit -lwebcore-wx -ljscore
+WEBKIT_LIBS += $(shell pkg-config --libs libxml-2.0 sqlite3 libxslt) $(shell icu-config --ldflags)
 GTKINCLUDES = -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/atk-1.0
 LIBINCLUDES = -I../external/out/include -I../external/out/usr/include -I/usr/include/out/include/curl -I../external/tinyxml -I../external/pcre -I../external/libtomcrypt -I../external/libtommath
 
@@ -24,7 +25,7 @@ SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp))
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
-LOPTS = $(WXLIBS) $(WEBKIT_LIBS) -lpcre -lcurl -ltomcrypt -ltommath -lmk4
+LOPTS = -L../external/out/lib $(WEBKIT_LIBS) $(WXLIBS) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre
 
 CPP = g++
 EXE = e

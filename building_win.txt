@@ -1,0 +1,41 @@
+= Introduction =
+
+This document describes how to build e & its dependencies.
+
+To build e you will need:
+
+* A copy of Visual C++ 2008
+** You can get the free express edition at http://www.microsoft.com/express/vc/
+** Full Visual Studio versions also work fine.
+
+* A set of GNU tools for Windows (including bash, patch, wget, etc.)
+** Cygwin and Msys both support these tools.
+** You'll probably end up with both anyway, Cygwin for e support and Msys for git support.
+
+
+= Building the Dependencies =
+
+e's dependencies are:
+* wxWidgets
+* Metakit
+* PCRE
+* libcurl
+* libtommath
+* libtomcrypt
+* TinyXML
+
+
+To download, patch and compile these dependencies:
+* Run "get_externals_win.sh" in a cygwin shell.
+* Run "build_externals_win.cmd" in a VS2008 Command Prompt.
+** If you do not have the full Visual Studio, you will have to compile the
+** dependencies separately in the GUI, for now.
+
+Later versions of these projects may work with e, but have not been tested.
+Consult the "get_externals_win.sh" script to see what the expected versions are.
+
+
+= Building e Itself =
+* After building all the dependencies, open "e.sln" and build the Debug target.
+* The newly build "e" will use configuration in the registry from an installed
+  license or trial version.

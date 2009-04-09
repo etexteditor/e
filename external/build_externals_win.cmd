@@ -23,15 +23,18 @@ goto :EOF
 
 REM **** Subroutines start here ****
 
+REM  Usage: call :BUILD path_to_sln [, config_to_build=DEBUG]
 :BUILD
 setlocal
-REM Args are: path_to_sln, [config_to_build=DEBUG]
 set CONFIG=%2
 if {%CONFIG%}=={} set CONFIG="DEBUG"
 
 echo Building %1...
 devenv %1 /Build %CONFIG% > build_logs\%~n1.log
 set RET=%ERRORLEVEL%
+REM "mspdbsrv.exe" can hang, which prevents new .pdb's from
+REM being created and causes subsequent command-line builds to fail.
+REM Explicitly try to kill it after a command-line build.
 taskkill.exe /f /t /im mspdbsrv.exe > nul 2> nul
 endlocal & set RET=%RET%
 goto :EOF

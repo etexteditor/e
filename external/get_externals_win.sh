@@ -83,18 +83,18 @@ _extract_and_patch()
 
 _next_steps()
 {
-  echo "** The libraries have been installed. **"
-  echo "Now you just need to build the following projects in msvc:"
+  echo "** The libraries have been downloaded and patched. **"
+  echo "Now build the following projects in Visual Studio:"
   echo
-  echo "curl\lib\curllib.sln (curllib)"
-  echo "libtomcrypt\libtomcrypt.sln (libtomcrypt)"
-  echo "libtommath\libtommath.sln (libtommath)"
-  echo "metakit\win\msvc90\mksrc.sln (mklib)"
-  echo "pcre\pcre.sln (pcre)"
-  echo "tinyxml\tinyxml.sln (tinyxml)"
-  echo "wxwidgets\build\msw\wx.dsw (wx)"
+  echo "curl\lib\curllib.sln"
+  echo "libtomcrypt\libtomcrypt.sln"
+  echo "libtommath\libtommath.sln"
+  echo "metakit\win\msvc90\mksrc.sln"
+  echo "pcre\pcre.sln"
+  echo "tinyxml\tinyxml.sln"
+  echo "wxwidgets\build\msw\wx.dsw"
   echo
-  echo "Run build_externals_win.cmd in a Visual Studio 2008 Command Prompt to compile from the command-line."
+  echo "For an automated build, run build_externals_win.cmd in a Visual Studio 2008 Command Prompt."
 }
 
 

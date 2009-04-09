@@ -1080,10 +1080,6 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath="e_icon.ico"
-			>
-		</File>
-		<File
 			RelativePath="eAbout.cpp"
 			>
 			<FileConfiguration

@@ -10,24 +10,56 @@ else
 endif
 
 WXINCLUDES = $(shell ../external/out/bin/wx-config --cppflags)
+
+GTKINCLUDES = -I/usr/include/gtk-2.0 \
+              -I/usr/include/cairo \
+              -I/usr/include/pango-1.0 \
+              -I/usr/include/atk-1.0 \
+              -I/usr/include/glib-2.0 \
+              -I/usr/lib/glib-2.0/include \
+              -I/usr/lib/gtk-2.0/include \
+
+OURINCLUDES = -I../external/out/include \
+              -I../external/out/usr/include \
+              -I../external/tinyxml \
+              -I../external/pcre \
+              -I../external/libtomcrypt \
+              -I../external/libtommath \
+              -I../external/webkit/WebKit
+
+INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I../ecore -I.
+
+OURLIBPATHS = -L../external/out/lib \
+              -L../external/webkit/WebKitBuild/Release
+
 WXLIBS = $(shell ../external/out/bin/wx-config --libs)
-WEBKIT_INCLUDES = -I../external/webkit/WebKit
-WEBKIT_LIBS = -L../external/webkit/WebKitBuild/Release/ -lwxwebkit -lwebcore-wx -ljscore
+WEBKIT_LIBS = -lwxwebkit -lwebcore-wx -ljscore
 WEBKIT_LIBS += $(shell pkg-config --libs libxml-2.0 sqlite3 libxslt) $(shell icu-config --ldflags)
-GTKINCLUDES = -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/atk-1.0
-LIBINCLUDES = -I../external/out/include -I../external/out/usr/include -I/usr/include/out/include/curl -I../external/tinyxml -I../external/pcre -I../external/libtomcrypt -I../external/libtommath
 
-INCLUDES = $(WXINCLUDES) $(WEBKIT_INCLUDES) $(GTKINCLUDES) $(LIBINCLUDES) -I../ecore -I.
+LIBS = $(OURLIBPATHS) -L../ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 $(WEBKIT_LIBS) $(WXLIBS)
 
-CMPOPTS = -Wall  -fno-strict-aliasing -DHAVE_CONFIG_H -O2 -DFEAT_BROWSER
-EXCEPT = CygwinDlg.cpp ExceptionHandler.cpp ExceptionAttacher.cpp GetWinVer.cpp IEHtmlWin.cpp MiniVersion.cpp MozillaHtmlWnd.cpp ShellContextMenu.cpp wxactivex.cpp
+# Exceptions which do not need to be compiled on linux
+EXCEPT = CygwinDlg.cpp \
+         ExceptionHandler.cpp \
+         ExceptionAttacher.cpp \
+         GetWinVer.cpp \
+         IEHtmlWin.cpp \
+         MiniVersion.cpp \
+         ShellContextMenu.cpp \
+         wxactivex.cpp
+
 SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp)) 
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(OBJS:.o=.d)
 
-LOPTS = -L../external/out/lib $(WEBKIT_LIBS) $(WXLIBS) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre
+EXTOBJS = $(shell ../external/out/bin/wx-config --linkdeps) \
+          ../external/tinyxml/tinystr.o \
+          ../external/tinyxml/tinyxmlerror.o \
+          ../external/tinyxml/tinyxml.o \
+          ../external/tinyxml/tinyxmlparser.o
 
-CPP = g++
+CXXFLAGS = -Wall -fno-strict-aliasing -DHAVE_CONFIG_H -DFEAT_BROWSER -O2 -MD
+
 EXE = e
 
 .PHONY: all clean
@@ -35,14 +67,15 @@ EXE = e
 all: $(EXE)
 
 $(EXE): $(OBJS)
-	@$(ECHO) "LD $@"
-	$(SILENT)$(CPP) -o $(EXE) $(OBJS) -L../ecore -l$(ECORE) $(LOPTS) $(shell ../external/out/bin/wx-config --linkdeps) ../external/tinyxml/tinystr.o ../external/tinyxml/tinyxmlerror.o ../external/tinyxml/tinyxml.o ../external/tinyxml/tinyxmlparser.o
+	@$(ECHO) "[LD] $@"
+	$(SILENT)$(CXX) -o $(EXE) $(OBJS) $(EXTOBJS) $(LIBS)
 
 %.o: %.cpp
-	@$(ECHO) "CC $<"
-	$(SILENT)$(CPP) $(INCLUDES) $(CMPOPTS) -MD -c -o $@ $<
+	@$(ECHO) "[CC] $<"
+	$(SILENT)$(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@ $<
 
 clean:
 	rm -f $(OBJS) $(EXE) $(DEPS)
 
 -include $(DEPS)
+

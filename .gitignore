@@ -31,6 +31,8 @@ external/arch/
 # 'build_logs' contains logs from command-line build scripts
 external/build_logs/
 
+# 'out' contains installations of several dependant libraries
+external/out/
 # These are the unzipped dependency folders
 external/curl/
 external/libtomcrypt/

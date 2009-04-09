@@ -71,7 +71,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN28)\include"
+				AdditionalIncludeDirectories="..\external\wxwidgets\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -169,7 +169,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\include"
+				AdditionalIncludeDirectories="..\external\wxwidgets\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -271,7 +271,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN28)\include"
+				AdditionalIncludeDirectories="..\external\wxwidgets\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"

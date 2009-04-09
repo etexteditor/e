@@ -325,15 +325,11 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\application.ico"
+			>
+		</File>
+		<File
 			RelativePath="auto_vector.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\blank.cur"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\bullseye.cur"
 			>
 		</File>
 		<File
@@ -482,10 +478,6 @@
 		</File>
 		<File
 			RelativePath="..\ecore\Catalyst.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\cdrom.ico"
 			>
 		</File>
 		<File
@@ -664,15 +656,7 @@
 			>
 		</File>
 		<File
-			RelativePath="wx\msw\computer.ico"
-			>
-		</File>
-		<File
 			RelativePath="CrashFileNames.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\cross.cur"
 			>
 		</File>
 		<File
@@ -1062,10 +1046,6 @@
 		</File>
 		<File
 			RelativePath="document.xpm"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\drive.ico"
 			>
 		</File>
 		<File
@@ -1493,10 +1473,6 @@
 			>
 		</File>
 		<File
-			RelativePath="wx\msw\file1.ico"
-			>
-		</File>
-		<File
 			RelativePath="FileActionThread.cpp"
 			>
 			<FileConfiguration
@@ -1599,18 +1575,6 @@
 		</File>
 		<File
 			RelativePath="FixedLine.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\floppy.ico"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\folder1.ico"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\folder2.ico"
 			>
 		</File>
 		<File
@@ -1751,10 +1715,6 @@
 		</File>
 		<File
 			RelativePath="GutterCtrl.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\hand.cur"
 			>
 		</File>
 		<File
@@ -2015,10 +1975,6 @@
 			>
 		</File>
 		<File
-			RelativePath="wx\msw\magnif1.cur"
-			>
-		</File>
-		<File
 			RelativePath="matchers.cpp"
 			>
 			<FileConfiguration
@@ -2101,10 +2057,6 @@
 			>
 		</File>
 		<File
-			RelativePath="wx\msw\noentry.cur"
-			>
-		</File>
-		<File
 			RelativePath="OpenDocDlg.cpp"
 			>
 			<FileConfiguration
@@ -2140,14 +2092,6 @@
 			>
 		</File>
 		<File
-			RelativePath="wx\msw\pbrush.cur"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\pencil.cur"
-			>
-		</File>
-		<File
 			RelativePath="plistHandler.cpp"
 			>
 			<FileConfiguration
@@ -2180,14 +2124,6 @@
 		</File>
 		<File
 			RelativePath="plistHandler.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\pntleft.cur"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\pntright.cur"
 			>
 		</File>
 		<File
@@ -2297,10 +2233,6 @@
 		</File>
 		<File
 			RelativePath="ProjectSettings.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\query.cur"
 			>
 		</File>
 		<File
@@ -2448,10 +2380,6 @@
 			>
 		</File>
 		<File
-			RelativePath="wx\msw\removble.ico"
-			>
-		</File>
-		<File
 			RelativePath="RevTooltip.cpp"
 			>
 			<FileConfiguration
@@ -2484,14 +2412,6 @@
 		</File>
 		<File
 			RelativePath="RevTooltip.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\rightarr.cur"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\roller.cur"
 			>
 		</File>
 		<File
@@ -2702,10 +2622,6 @@
 		</File>
 		<File
 			RelativePath="ShellContextMenu.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\size.cur"
 			>
 		</File>
 		<File
@@ -3107,10 +3023,6 @@
 		</File>
 		<File
 			RelativePath="VersionTree.h"
-			>
-		</File>
-		<File
-			RelativePath="wx\msw\watch1.cur"
 			>
 		</File>
 		<File

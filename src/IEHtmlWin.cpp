@@ -198,6 +198,11 @@ public:
 	};
 };
 
+wxWindow* wxIEHtmlWin::GetWindow()
+{
+    return static_cast<wxWindow*>(this);
+}
+
 void wxIEHtmlWin::LoadUrl(const wxString &_url, const wxString &_frame, bool keepHistory)
 {
 	VARIANTARG navFlag, targetFrame, postData, headers;

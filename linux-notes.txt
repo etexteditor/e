@@ -1,7 +1,3 @@
-Before building:
-
-- src/stdint.h needs to be moved or deleted
-
 Ubuntu packages required before building:
 
 - libwxgtk2.8-dev

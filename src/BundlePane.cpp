@@ -873,10 +873,10 @@ wxTreeItemId BundlePane::FindItemInMenu(wxTreeItemId menuItem, BundleItemType ty
 		if (childData->m_type == BUNDLE_SUBDIR) {
 			wxTreeItemId res = FindItemInMenu(c, type, itemId);
 			if (res.IsOk()) return res;
-
-			c = m_bundleTree->GetNextChild(menuItem, cookie);
 		}
 		else if (childData->m_type == type && childData->m_itemId == itemId) return c;
+
+		c = m_bundleTree->GetNextChild(menuItem, cookie);
 	}
 	
 	return wxTreeItemId(); // Not in menu

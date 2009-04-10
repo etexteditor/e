@@ -17,6 +17,7 @@
 #include "matchers.h"
 #include "Dispatcher.h"
 #include <wx/tokenzr.h>
+#include <wx/ffile.h>
 #include "BundleMenu.h"
 #include "pcre.h"
 #include "EditorCtrl.h"
@@ -1128,9 +1129,9 @@ const cxSyntaxInfo* TmSyntaxHandler::GetSyntax(const DocumentWrapper& document) 
 }
 
 bool TmSyntaxHandler::GetThemeName(const wxFileName& path, wxString& name) {
-	TiXmlDocument doc(path.GetFullPath().mb_str());
-	bool loadOkay = doc.LoadFile();
-	if (!loadOkay) return false;
+	wxFFile tempfile(path.GetFullPath(), wxT("rb"));
+	TiXmlDocument doc;
+	if (!tempfile.IsOpened() || !doc.LoadFile(tempfile.fp())) return false;
 
 	const TiXmlHandle docHandle(&doc);
 

@@ -17,6 +17,7 @@
 #include "eApp.h"
 #include <wx/progdlg.h>
 #include <wx/stdpaths.h>
+#include <wx/ffile.h>
 #include "urlencode.h"
 
 #include "images/accept.xpm"
@@ -340,8 +341,9 @@ void BundleManager::OnRemoteAction(cxRemoteAction& event) {
 	if (!event.GetTarget() == m_tempFile) return;
 
 	// Get the description
-	TiXmlDocument doc(m_tempFile.mb_str());
-	if (!doc.LoadFile()) return;
+	wxFFile tempfile(m_tempFile, wxT("rb"));
+	TiXmlDocument doc;
+	if (!tempfile.IsOpened() || !doc.LoadFile(tempfile.fp())) return;
 	TiXmlHandle docHandle( &doc );
 	const TiXmlElement* child = docHandle.FirstChildElement("plist").FirstChildElement("dict").FirstChildElement().Element();
 	while (child) {

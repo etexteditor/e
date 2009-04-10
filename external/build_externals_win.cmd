@@ -2,8 +2,6 @@
 
 if not EXIST build_logs mkdir build_logs
 
-goto :EOF
-
 call :BUILD libtommath\libtommath.sln
 call :BUILD libtomcrypt\libtomcrypt.sln
 call :BUILD curl\lib\curllib.sln
@@ -11,10 +9,7 @@ call :BUILD metakit\win\msvc90\mksrc.sln
 call :BUILD pcre\pcre.sln
 call :BUILD tinyxml\tinyxml.sln
 
-REM Using a .sln might be faster, but don't want to keep all the .vcprojs up-to-date
-pushd wxwidgets\build\msw
-nmake -f makefile.vc BUILD=debug UNICODE=1 > build_logs\wxwidgets.log
-popd
+call build_wxwidgets_win.cmd
 
 echo Builds complete, check build_logs for possible issues.
 

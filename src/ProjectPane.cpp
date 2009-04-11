@@ -593,7 +593,7 @@ void ProjectPane::ExpandDir(wxTreeItemId parentId) {
     if (data->m_isExpanded)
         return;
 
-	wxLogDebug(wxT("Expanding: %s"), data->m_path);
+	wxLogDebug(wxT("Expanding: %s"), data->m_path.c_str());
 
 	if (m_isRemote) {
 		SetBusy();
@@ -772,7 +772,7 @@ void ProjectPane::ExpandAndSelect(wxTreeItemId item, wxArrayString& expandedDirs
 void ProjectPane::CollapseDir(wxTreeItemId parentId) {
     DirItemData *data = (DirItemData *) m_prjTree->GetItemData(parentId);
 
-	wxLogDebug(wxT("Collapsing: %s"), data->m_path);
+	wxLogDebug(wxT("Collapsing: %s"), data->m_path.c_str());
 
     if (!data->m_isExpanded)
         return;

@@ -1499,7 +1499,7 @@ bool PListHandler::RestoreBundle(unsigned int bundleId) {
 	m_dbChanged = true; // Mark for commit in next idle time
 
 	const c4_RowRef rBundle = m_vBundles[bundleId];
-	wxASSERT(pLocality(rBundle) & PLIST_PRISTINE|PLIST_DISABLED);
+	wxASSERT(pLocality(rBundle) & (PLIST_PRISTINE|PLIST_DISABLED));
 
 	// Get paths
 	wxFileName bundlePath = m_bundleDir;

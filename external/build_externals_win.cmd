@@ -1,4 +1,6 @@
 @echo off
+REM If we're not running under a VS prompt, try to get one.
+if {%VCInstallDir%}=={} call "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 
 if not EXIST build_logs mkdir build_logs
 

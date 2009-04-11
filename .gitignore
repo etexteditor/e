@@ -12,6 +12,7 @@ _ReSharper*
 Debug/
 Release/
 *.ncb
+*.aps
 *.obj
 
 # ReSharper stuff

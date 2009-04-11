@@ -1,15 +1,18 @@
 Ubuntu packages required before building:
 
+- build-essential
 - libwxgtk2.8-dev
 - libglib2.0-dev
 - libatk1.0-dev
+- libcurl-dev
 
 Packages required by WebKit:
-- bakefile
-- libxml-2.0
-- libxslt
-- sqlite3
-- icu
+- bakefile (ubuntu: http://www.bakefile.org/wiki/Debian)
+- libxml-2.0 (ubuntu: libxml2-dev)
+- libxslt (ubuntu: libxslt1-dev)
+- sqlite3 (ubuntu: libsqlite3-dev)
+- icu (ubuntu: libicu-dev)
+- libjpeg (ubuntu: libjpeg62-dev)
 
 These files do not compile, probably due to Windows dependencies:
 

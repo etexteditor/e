@@ -91,9 +91,7 @@ them both to 0; an emulation function will be used. */
 #endif
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#ifndef HAVE_STDINT_H
-#define HAVE_STDINT_H 1
-#endif
+/* #undef HAVE_STDINT_H */
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #ifndef HAVE_STDLIB_H

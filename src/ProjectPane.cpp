@@ -15,6 +15,7 @@
 #include "EditorFrame.h"
 #include <wx/mimetype.h>
 #include <wx/progdlg.h>
+#include <wx/ffile.h>
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
 
@@ -592,7 +593,7 @@ void ProjectPane::ExpandDir(wxTreeItemId parentId) {
     if (data->m_isExpanded)
         return;
 
-	wxLogDebug(wxT("Expanding: %s"), data->m_path);
+	wxLogDebug(wxT("Expanding: %s"), data->m_path.c_str());
 
 	if (m_isRemote) {
 		SetBusy();
@@ -771,7 +772,7 @@ void ProjectPane::ExpandAndSelect(wxTreeItemId item, wxArrayString& expandedDirs
 void ProjectPane::CollapseDir(wxTreeItemId parentId) {
     DirItemData *data = (DirItemData *) m_prjTree->GetItemData(parentId);
 
-	wxLogDebug(wxT("Collapsing: %s"), data->m_path);
+	wxLogDebug(wxT("Collapsing: %s"), data->m_path.c_str());
 
     if (!data->m_isExpanded)
         return;
@@ -924,11 +925,9 @@ bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProj
 	if (!projectPath.FileExists()) return false;
 
 	// Load plist file
-	TiXmlDocument doc(projectPath.GetFullPath().mb_str());
-	if (!doc.LoadFile()) {
-		wxASSERT(false);
-		return false;
-	}
+	TiXmlDocument doc;
+	wxFFile docffile(projectPath.GetFullPath(), _T("rb"));
+	wxCHECK(docffile.IsOpened() && doc.LoadFile(docffile.fp()), false);
 
 	// Get top dict
 	const TiXmlHandle docHandle(&doc);
@@ -1105,9 +1104,8 @@ void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {
 
 	// Save the file
 	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
-	if (!doc.SaveFile(filepath.mb_str(wxConvUTF8))) {
-		wxLogDebug(wxT("  save failed"));
-	}
+	wxFFile docffile(filepath, _T("wb"));
+	wxCHECK_RET(docffile.IsOpened() && doc.SaveFile(docffile.fp()), wxT("  save failed"));
 
 #ifdef __WXMSW__
 	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());

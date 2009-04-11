@@ -1499,7 +1499,7 @@ bool PListHandler::RestoreBundle(unsigned int bundleId) {
 	m_dbChanged = true; // Mark for commit in next idle time
 
 	const c4_RowRef rBundle = m_vBundles[bundleId];
-	wxASSERT(pLocality(rBundle) & PLIST_PRISTINE|PLIST_DISABLED);
+	wxASSERT(pLocality(rBundle) & (PLIST_PRISTINE|PLIST_DISABLED));
 
 	// Get paths
 	wxFileName bundlePath = m_bundleDir;
@@ -2180,10 +2180,10 @@ bool PListHandler::SavePList(unsigned int ndx, const wxFileName& path) {
 	// Build path
 	wxFileName fullpath(path);
 	fullpath.SetFullName(filename);
-	const wxString pathStr = fullpath.GetFullPath();
 
 	// Save the file
-	if (!doc.SaveFile(pathStr.mb_str(wxConvUTF8))) return false;
+	wxFFile tempfile(fullpath.GetFullPath(), wxT("wb"));
+	if (!tempfile.IsOpened() || !doc.SaveFile(tempfile.fp())) return false;
 
 	// Update mod date
 	//const wxDateTime modDate(wxFileModificationTime(pathStr));

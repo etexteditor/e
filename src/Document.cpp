@@ -505,7 +505,7 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 		return cxFILE_OPEN_ERROR;
 	}
 	bufferfile.SeekEnd();
-	int buff_offset = bufferfile.Tell();
+	wxFileOffset buff_offset = bufferfile.Tell();
 
 	// Pre-reserve entries to avoid unneeded allocs in vector
 	offsets.reserve(len/35);

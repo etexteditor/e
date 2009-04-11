@@ -671,7 +671,6 @@ void LineListWrap::Print() {
 	wxLogDebug(wxT(" posDiff:    %d"), posDiff);
 	wxLogDebug(wxT(" approxTop:   %d"), approxTop);
 	wxLogDebug(wxT(" height:     %u"), height());
-	unsigned int h = height();
 	if (lastLoadedPos == 0) wxLogDebug(wxT("  _linelist: %d-%d"), firstLoadedPos, lastLoadedPos);
 	else wxLogDebug(wxT("  linelist: %d %d (%d-%d -> %d-%d) %u"), lastValidOffset, lastValidPos, firstLoadedPos, lastLoadedPos, approxTop, yPositions[lastLoadedPos-1], height());
 	

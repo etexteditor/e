@@ -5364,7 +5364,7 @@ void EditorCtrl::DoRepParse(RepParseState& state, const wxChar* start, const wxC
 							if (!otEnd) goto error;
 							else if (*otEnd == wxT('\\')) ++otEnd; // ignore escaped chars
 							else if (*otEnd == wxT('(')) ++pcount; // count parens
-							else if (*otEnd == wxT(')')) if (pcount) --pcount; else break;
+							else if (*otEnd == wxT(')')) {if (pcount) --pcount; else break;}
 							++otEnd;
 						}
 						break;
@@ -9609,7 +9609,7 @@ void EditorCtrl::BookmarksApplyDiff(const vector<cxChange>& changes) {
 
 			vector<cxBookmark>::iterator p = m_bookmarks.begin();
 			while (p != m_bookmarks.end()) {
-				if (p->start > start && p->start <= end || p->start == start && ch->lines > 0) {
+				if ((p->start > start && p->start <= end) || (p->start == start && ch->lines > 0)) {
 					p = m_bookmarks.erase(p);
 					continue;
 				}

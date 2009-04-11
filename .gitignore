@@ -23,7 +23,8 @@ _ReSharper*
 # Linux stuff
 *.o
 *.d
-e
+src/e
+src/e.debug
 
 ## Ignore non-source-controlled things in external
 # 'arch' contains downloaded dependency archives
@@ -32,7 +33,8 @@ external/arch/
 external/build_logs/
 
 # 'out' contains installations of several dependant libraries
-external/out/
+external/out.debug/
+external/out.release/
 # These are the unzipped dependency folders
 external/curl/
 external/libtomcrypt/

@@ -1,5 +1,5 @@
 VERBOSE=0
-ECORE=ecore
+DEBUG=0
 
 ifeq ($(VERBOSE),0)
 	ECHO=echo
@@ -9,7 +9,23 @@ else
 	SILENT=
 endif
 
-WXINCLUDES = $(shell ../external/out/bin/wx-config --cppflags)
+ifeq ($(DEBUG),0)
+	ECORE    = ecore
+	CXXFLAGS = -O2
+	LDFLAGS  =
+	EXT_DIR  = ../external/out.release
+	OUTDIR   = .objs.release
+	EXE      = e
+else
+	ECORE    = ecored
+	CXXFLAGS = -O0 -g
+	LDFLAGS  = -g
+	EXT_DIR  = ../external/out.debug
+	OUTDIR   = .objs.debug
+	EXE      = e.debug
+endif
+
+WXINCLUDES = $(shell $(EXT_DIR)/bin/wx-config --cppflags)
 
 GTKINCLUDES = -I/usr/include/gtk-2.0 \
               -I/usr/include/cairo \
@@ -19,24 +35,15 @@ GTKINCLUDES = -I/usr/include/gtk-2.0 \
               -I/usr/lib/glib-2.0/include \
               -I/usr/lib/gtk-2.0/include \
 
-OURINCLUDES = -I../external/out/include \
-              -I../external/out/usr/include \
-              -I../external/tinyxml \
-              -I../external/pcre \
-              -I../external/libtomcrypt \
-              -I../external/libtommath \
-              -I../external/webkit/WebKit
+OURINCLUDES = -I$(EXT_DIR)/include
 
 INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I../ecore -I.
 
-OURLIBPATHS = -L../external/out/lib \
-              -L../external/webkit/WebKitBuild/Release
-
-WXLIBS = $(shell ../external/out/bin/wx-config --libs)
+OURLIBPATHS = -L$(EXT_DIR)/lib
+WXLIBS = $(shell $(EXT_DIR)/bin/wx-config --libs)
 WEBKIT_LIBS = -lwxwebkit -lwebcore-wx -ljscore
-WEBKIT_LIBS += $(shell pkg-config --libs libxml-2.0 sqlite3 libxslt) $(shell icu-config --ldflags)
 
-LIBS = $(OURLIBPATHS) -L../ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre $(WEBKIT_LIBS) $(WXLIBS)
+LIBS = $(OURLIBPATHS) -L../ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre -ltinyxml $(WEBKIT_LIBS) $(WXLIBS)
 
 # Exceptions which do not need to be compiled on linux
 EXCEPT = CygwinDlg.cpp \
@@ -49,18 +56,12 @@ EXCEPT = CygwinDlg.cpp \
          wxactivex.cpp
 
 SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp)) 
-OBJS = $(SRCS:.cpp=.o)
-DEPS = $(OBJS:.o=.d)
+OBJS = $(SRCS:%.cpp=$(OUTDIR)/%.o)
+DEPS = $(SRCS:%.cpp=$(OUTDIR)/%.d)
 
-EXTOBJS = $(shell ../external/out/bin/wx-config --linkdeps) \
-          ../external/tinyxml/tinystr.o \
-          ../external/tinyxml/tinyxmlerror.o \
-          ../external/tinyxml/tinyxml.o \
-          ../external/tinyxml/tinyxmlparser.o
+EXTOBJS = $(shell $(EXT_DIR)/bin/wx-config --linkdeps) $(shell pkg-config --libs libxml-2.0 sqlite3 libxslt) $(shell icu-config --ldflags)
 
-CXXFLAGS = -Wall -fno-strict-aliasing -DHAVE_CONFIG_H -DFEAT_BROWSER -O2 -MD
-
-EXE = e
+CXXFLAGS += -Wall -fno-strict-aliasing -DHAVE_CONFIG_H -DFEAT_BROWSER -MD
 
 .PHONY: all clean
 
@@ -68,9 +69,10 @@ all: $(EXE)
 
 $(EXE): $(OBJS)
 	@$(ECHO) "[LD] $@"
-	$(SILENT)$(CXX) -o $(EXE) $(OBJS) $(EXTOBJS) $(LIBS)
+	$(SILENT)$(CXX) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS) $(EXTOBJS)
 
-%.o: %.cpp
+$(OUTDIR)/%.o: %.cpp
+	@-mkdir -p $(OUTDIR)
 	@$(ECHO) "[CC] $<"
 	$(SILENT)$(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@ $<
 

@@ -18,14 +18,14 @@ goto :EOF
 
 REM **** Subroutines start here ****
 
-REM  Usage: call :BUILD path_to_sln [, config_to_build=DEBUG]
+REM  Usage: call :BUILD path_to_sln [, config_to_build="DEBUG|Win32"]
 :BUILD
 setlocal
 set CONFIG=%2
-if {%CONFIG%}=={} set CONFIG="DEBUG"
+if {%CONFIG%}=={} set CONFIG="DEBUG|Win32"
 
 echo Building %1...
-devenv %1 /Build %CONFIG% > build_logs\%~n1.log
+vcbuild %1 "%CONFIG%" > build_logs\%~n1.log
 set RET=%ERRORLEVEL%
 REM "mspdbsrv.exe" can hang, which prevents new .pdb's from
 REM being created and causes subsequent command-line builds to fail.

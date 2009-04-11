@@ -1676,9 +1676,7 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 }
 
 bool EditorFrame::IsRemotePath(const wxString& path) { // static
-	if (path.StartsWith(wxT("ftp://"))) return true;
-	else if (path.StartsWith(wxT("http://"))) return true;
-	else return false;
+	return path.StartsWith(wxT("ftp://")) || path.StartsWith(wxT("http://"));
 }
 
 bool EditorFrame::IsBundlePath(const wxString& path) { // static
@@ -2266,27 +2264,28 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
                         lastDir, _T(""), filters,
                         wxFD_OPEN|wxFD_MULTIPLE);
 
-	if (dlg.ShowModal() == wxID_OK) {
-		((eApp*)wxTheApp)->SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
+	if (dlg.ShowModal() != wxID_OK)
+		return;
 
-		wxArrayString filenames;
-		dlg.GetPaths(filenames);
+	((eApp*)wxTheApp)->SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
 
-		// Check if we have to conv from a custom encoding
-		wxFontEncoding enc = wxFONTENCODING_SYSTEM;
-		if (event.GetId() != wxID_OPEN) {
-			unsigned int encoding_id = event.GetId() % 3000;
-			enc = wxFontMapper::GetEncoding(encoding_id);
-		}
+	wxArrayString filenames;
+	dlg.GetPaths(filenames);
 
-		SetCursor(wxCURSOR_WAIT);
-		for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
-			wxFileName newpath = filenames[i];
-			if (OpenFile(newpath, enc) == false) break;
-			Update();
-		}
-		SetCursor(*wxSTANDARD_CURSOR);
+	// Check if we have to conv from a custom encoding
+	wxFontEncoding enc = wxFONTENCODING_SYSTEM;
+	if (event.GetId() != wxID_OPEN) {
+		unsigned int encoding_id = event.GetId() % 3000;
+		enc = wxFontMapper::GetEncoding(encoding_id);
 	}
+
+	SetCursor(wxCURSOR_WAIT);
+	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
+		wxFileName newpath = filenames[i];
+		if (OpenFile(newpath, enc) == false) break;
+		Update();
+	}
+	SetCursor(*wxSTANDARD_CURSOR);
 }
 
 void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {

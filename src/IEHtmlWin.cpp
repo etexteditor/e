@@ -83,7 +83,7 @@ void wxIEHtmlWin::SetCharset(wxString charset)
 {
 	// HTML Document ?
 	IDispatch *pDisp = NULL;
-	HRESULT hret = m_webBrowser->get_Document(&pDisp);
+	m_webBrowser->get_Document(&pDisp);
 	wxAutoOleInterface<IDispatch> disp(pDisp);
 
 	if (disp.Ok())
@@ -131,18 +131,18 @@ public:
 		return S_OK;
 	};
 
-    HRESULT STDMETHODCALLTYPE Write(const void __RPC_FAR *pv, ULONG cb, ULONG __RPC_FAR *pcbWritten) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE Write(const void __RPC_FAR *WXUNUSED(pv), ULONG WXUNUSED(cb), ULONG __RPC_FAR *WXUNUSED(pcbWritten)) {return E_NOTIMPL;}
 
     // IStream
-    HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER __RPC_FAR *plibNewPosition) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE SetSize(ULARGE_INTEGER libNewSize) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE CopyTo(IStream __RPC_FAR *pstm, ULARGE_INTEGER cb, ULARGE_INTEGER __RPC_FAR *pcbRead, ULARGE_INTEGER __RPC_FAR *pcbWritten) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE Commit(DWORD grfCommitFlags) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER WXUNUSED(dlibMove), DWORD WXUNUSED(dwOrigin), ULARGE_INTEGER __RPC_FAR *WXUNUSED(plibNewPosition)) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE SetSize(ULARGE_INTEGER WXUNUSED(libNewSize)) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE CopyTo(IStream __RPC_FAR *WXUNUSED(pstm), ULARGE_INTEGER WXUNUSED(cb), ULARGE_INTEGER __RPC_FAR *WXUNUSED(pcbRead), ULARGE_INTEGER __RPC_FAR *WXUNUSED(pcbWritten)) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE Commit(DWORD WXUNUSED(grfCommitFlags)) {return E_NOTIMPL;}
     HRESULT STDMETHODCALLTYPE Revert(void) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE LockRegion(ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE UnlockRegion(ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE Stat(STATSTG __RPC_FAR *pstatstg, DWORD grfStatFlag) {return E_NOTIMPL;}
-    HRESULT STDMETHODCALLTYPE Clone(IStream __RPC_FAR *__RPC_FAR *ppstm) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE LockRegion(ULARGE_INTEGER WXUNUSED(libOffset), ULARGE_INTEGER WXUNUSED(cb), DWORD WXUNUSED(dwLockType)) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE UnlockRegion(ULARGE_INTEGER WXUNUSED(libOffset), ULARGE_INTEGER WXUNUSED(cb), DWORD WXUNUSED(dwLockType)) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE Stat(STATSTG __RPC_FAR *WXUNUSED(pstatstg), DWORD WXUNUSED(grfStatFlag)) {return E_NOTIMPL;}
+    HRESULT STDMETHODCALLTYPE Clone(IStream __RPC_FAR *__RPC_FAR *WXUNUSED(ppstm)) {return E_NOTIMPL;}
 };
 
 DEFINE_OLE_TABLE(IStreamAdaptorBase)
@@ -271,7 +271,7 @@ bool wxIEHtmlWin::LoadStream(IStreamAdaptorBase *pstrm)
 
     // Document Interface
     IDispatch *pDisp = NULL;
-    HRESULT hret = m_webBrowser->get_Document(&pDisp);
+    m_webBrowser->get_Document(&pDisp);
 	if (! pDisp)
 		return false;
 	wxAutoOleInterface<IDispatch> disp(pDisp);

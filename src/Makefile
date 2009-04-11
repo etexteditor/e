@@ -27,13 +27,7 @@ endif
 
 WXINCLUDES = $(shell $(EXT_DIR)/bin/wx-config --cppflags)
 
-GTKINCLUDES = -I/usr/include/gtk-2.0 \
-              -I/usr/include/cairo \
-              -I/usr/include/pango-1.0 \
-              -I/usr/include/atk-1.0 \
-              -I/usr/include/glib-2.0 \
-              -I/usr/lib/glib-2.0/include \
-              -I/usr/lib/gtk-2.0/include \
+GTKINCLUDES = $(shell pkg-config --cflags gtk+-2.0 cairo pango atk glib-2.0)
 
 OURINCLUDES = -I$(EXT_DIR)/include
 

@@ -1966,7 +1966,7 @@ void EditorFrame::SetSoftTab(bool isSoft)  {
 void EditorFrame::SetTabWidth(unsigned int width) {
 	wxASSERT(width > 0);
 
-	if ((int)width != m_tabWidth) return;
+	if ((int)width == m_tabWidth) return;
 
 	// Save setting
 	cxLOCK_WRITE(m_catalyst)

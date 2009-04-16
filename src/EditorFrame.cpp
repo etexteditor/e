@@ -1664,15 +1664,15 @@ const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool wit
 
 bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	RemoteLoginDlg dlg(this, rp->m_username, rp->m_address, rp->IsTemp());
-	if (dlg.ShowModal() == wxID_OK) {
-		// this also updates rp with the new login
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
-		cxENDLOCK
+	if (dlg.ShowModal() != wxID_OK)
+		return false;
 
-		return true;
-	}
-	else return false;
+	// this also updates rp with the new login
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
+	cxENDLOCK
+
+	return true;
 }
 
 bool EditorFrame::IsRemotePath(const wxString& path) { // static

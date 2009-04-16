@@ -1,6 +1,6 @@
 @echo off
 REM If we're not running under a VS prompt, try to get one.
-if {%VCInstallDir%}=={} call "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
+if "%VCInstallDir%"=="" call "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 
 if not EXIST build_logs mkdir build_logs
 
@@ -27,7 +27,7 @@ set CONFIG=%2
 if {%CONFIG%}=={} set CONFIG="DEBUG|Win32"
 
 echo Building %1...
-vcbuild %1 "%CONFIG%" > build_logs\%~n1.log
+vcbuild %1 %CONFIG% > build_logs\%~n1.log
 set RET=%ERRORLEVEL%
 REM "mspdbsrv.exe" can hang, which prevents new .pdb's from
 REM being created and causes subsequent command-line builds to fail.

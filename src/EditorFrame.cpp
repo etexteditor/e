@@ -1839,6 +1839,10 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 	return true;
 }
 
+// When multiple documents are unsaved, ask the user which ones to save,
+// and allow the user to cancel the operation.
+//
+// Returns: false if the operation was cancelled, else true
 bool EditorFrame::AskToSaveMulti(int keep_tab) {
 	wxASSERT(keep_tab == -1 || (keep_tab >= 0 && (unsigned int)keep_tab < m_tabBar->GetPageCount()));
 
@@ -1858,26 +1862,33 @@ bool EditorFrame::AskToSaveMulti(int keep_tab) {
 		}
 	}
 
-	// Ask the user if he wants to save them
-	if (!paths.IsEmpty()) {
-		SaveDlg savedlg(this, paths);
-		int result = savedlg.ShowModal();
+	if (paths.IsEmpty())
+		return true;
 
-		if (result == wxID_CANCEL) {
+	// Prompt the user to save some documents or cancel the operation.
+	SaveDlg savedlg(this, paths);
+	int result = savedlg.ShowModal();
+
+	// User chose to cancel operation
+	if (result == wxID_CANCEL)
+		return false;
+
+	// User chose not to save unsaved documents.
+	if (result == wxID_NO)
+		return true;
+	
+	// Otherwise, result == wxID_YES
+	wxASSERT(result == wxID_YES);
+
+	for (int i=0; i < savedlg.GetCount(); ++i) {
+		if (!savedlg.IsChecked(i)) continue;
+
+		m_tabBar->SetSelection(paths_to_pages[i]);
+
+		EditorCtrl* page = GetEditorCtrlFromPage(paths_to_pages[i]);
+		if (!page->SaveText()) {
+			// Cancel if save failed
 			return false;
-		}
-		else if (result == wxID_YES) {
-			for (int i=0; i < savedlg.GetCount(); ++i) {
-				if (savedlg.IsChecked(i)) {
-					m_tabBar->SetSelection(paths_to_pages[i]);
-
-					EditorCtrl* page = GetEditorCtrlFromPage(paths_to_pages[i]);
-					if (!page->SaveText()) {
-						// Cancel if save failed
-						return false;
-					}
-				}
-			}
 		}
 	}
 

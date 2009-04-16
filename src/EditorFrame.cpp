@@ -2312,18 +2312,18 @@ void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
 	RemoteProfileDlg dlg(this, m_catalyst);
-	if (dlg.ShowModal() == wxID_OPEN) {
-		const int profile_id = dlg.GetCurrentProfile();
-		if (profile_id == -1) return;
+	if (dlg.ShowModal() != wxID_OPEN) return;
 
-		// Get the profile from db
-		const RemoteProfile* rp = NULL;
-		cxLOCK_WRITE(m_catalyst)
-			rp = catalyst.GetRemoteProfile(profile_id);
-		cxENDLOCK
+	const int profile_id = dlg.GetCurrentProfile();
+	if (profile_id == -1) return;
 
-		if (rp) OpenRemoteProject(rp);
-	}
+	// Get the profile from db
+	const RemoteProfile* rp = NULL;
+	cxLOCK_WRITE(m_catalyst)
+		rp = catalyst.GetRemoteProfile(profile_id);
+	cxENDLOCK
+
+	if (rp) OpenRemoteProject(rp);
 }
 
 void EditorFrame::OnMenuOpenRecentFile(wxCommandEvent& event) {

@@ -1948,42 +1948,40 @@ void EditorFrame::SetSetting(const wxString& name, bool value) {
 }
 
 void EditorFrame::SetSoftTab(bool isSoft)  {
-	if (isSoft != m_softTabs) {
-		// Save setting
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.SetSettingBool(wxT("softtabs"), isSoft);
-		cxENDLOCK
-		m_softTabs = isSoft;
+	if (isSoft == m_softTabs) return;
 
-		// update all editor pages
-		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-			EditorCtrl* page = GetEditorCtrlFromPage(i);
+	// Save setting
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("softtabs"), isSoft);
+	cxENDLOCK
+	m_softTabs = isSoft;
 
-			page->SetTabWidth(m_tabWidth);
-		}
+	// update all editor pages
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+		page->SetTabWidth(m_tabWidth);
 	}
 }
 
 void EditorFrame::SetTabWidth(unsigned int width) {
 	wxASSERT(width > 0);
 
-	if ((int)width != m_tabWidth) {
-		// Save setting
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.SetSettingInt(wxT("tabwidth"), width);
-		cxENDLOCK
-		m_tabWidth = width;
+	if ((int)width != m_tabWidth) return;
 
-		// Invalidate all editor pages
-		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-			EditorCtrl* page = GetEditorCtrlFromPage(i);
+	// Save setting
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingInt(wxT("tabwidth"), width);
+	cxENDLOCK
+	m_tabWidth = width;
 
-			page->SetTabWidth(width);
-		}
-
-		// Redraw current
-		editorCtrl->ReDraw();
+	// Invalidate all editor pages
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+		page->SetTabWidth(width);
 	}
+
+	// Redraw current
+	editorCtrl->ReDraw();
 }
 
 void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {

@@ -7,6 +7,7 @@ To build e you will need:
 * A copy of Visual C++ 2008
 ** You can get the free express edition at http://www.microsoft.com/express/vc/
 ** Full Visual Studio versions also work fine.
+** Make sure you have VS2008 SP1 and any applicable Vista-related hot-fixes.
 
 * A set of GNU tools for Windows (including bash, patch, wget, etc.)
 ** Cygwin and Msys both support these tools.

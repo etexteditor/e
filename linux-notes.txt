@@ -9,6 +9,7 @@ sudo ./get-packages-ubuntu.sh bakefile
 cd ..
 cd src
 make DEBUG=1
+./e.debug
 
 == Packages ==
 

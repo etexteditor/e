@@ -10,4 +10,4 @@ if [ "$1" = "bakefile" ] ; then
 	apt-get update
 fi
 
-apt-get install build-essential libwxgtk2.8-dev libglib2.0-dev libatk1.0-dev libcurl4-openssl-dev libxml2-dev libxslt1-dev libsqlite3-dev libicu36-dev libjpeg62-dev flex bison gperf bakefile
+apt-get install build-essential libwxgtk2.8-dev libglib2.0-dev libatk1.0-dev libcurl4-openssl-dev libxml2-dev libxslt1-dev libsqlite3-dev libicu-dev libjpeg62-dev flex bison gperf bakefile 

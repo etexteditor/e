@@ -11,7 +11,13 @@
  *
  ******************************************************************************/
 
+#ifdef FEAT_BROWSER
 #include "WebKitHtmlWnd.h"
+
+DEFINE_EVENT_TYPE(wxEVT_HTMLWND_BEFORE_LOAD)
+BEGIN_EVENT_TABLE(wxBrowser, wxWebView)
+	EVT_WEBVIEW_BEFORE_LOAD(wxID_ANY, wxBrowser::OnBeforeLoad)
+END_EVENT_TABLE()
 
 wxBrowser::wxBrowser(wxWindow *parent, wxWindowID id) : wxWebView(parent, id), m_realLocation(wxT("")) {
 }
@@ -52,3 +58,27 @@ wxString wxBrowser::GetRealLocation() {
 
 wxBrowser::~wxBrowser() {
 }
+
+void wxBrowser::OnBeforeLoad(wxWebViewBeforeLoadEvent& event)
+{
+	if (event.GetNavigationType() != wxWEBVIEW_NAV_LINK_CLICKED)
+		return;
+
+	IHtmlWndBeforeLoadEvent anEvent(GetWindow());
+	anEvent.SetURL(event.GetURL());
+
+	GetWindow()->GetEventHandler()->ProcessEvent(anEvent);
+	if (anEvent.IsCancelled())
+		event.Cancel(true);
+}
+
+
+IMPLEMENT_DYNAMIC_CLASS(IHtmlWndBeforeLoadEvent, wxCommandEvent)
+IHtmlWndBeforeLoadEvent::IHtmlWndBeforeLoadEvent(wxWindow* win)
+{
+	m_cancelled = false;
+	SetEventType(wxEVT_HTMLWND_BEFORE_LOAD);
+	SetEventObject(win);
+}
+#endif
+

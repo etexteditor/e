@@ -4,8 +4,10 @@
 #ifndef _IEHTMLWIN_H_
 #define _IEHTMLWIN_H_
 
+#if defined(_MSC_VER)
 #pragma warning( disable : 4101 4786)
 #pragma warning( disable : 4786)
+#endif
 
 
 #include <wx/setup.h>
@@ -68,14 +70,15 @@ public:
 	void RegisterAsDropTarget(bool _register);
 
 	void FreezeRedraw(bool on);
-
-	DECLARE_EVENT_TABLE();
-
 protected:
     void SetupBrowser();
     bool LoadStream(IStreamAdaptorBase *pstrm);
 
 	wxAutoOleInterface<IWebBrowser2>		m_webBrowser;
+private:
+	void OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event);
+
+	DECLARE_EVENT_TABLE()
 };
 
 #endif /* _IEHTMLWIN_H_ */

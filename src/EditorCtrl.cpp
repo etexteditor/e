@@ -9398,9 +9398,7 @@ void EditorCtrl::ToggleFold() {
 
 	if (!foldStack.empty()) {
 		const cxFold* f = foldStack.back();
-		if (f->type == cxFOLD_START_FOLDED) {
-			UnFold(f->line_id);
-		}
+		if (f->type == cxFOLD_START_FOLDED) UnFold(f->line_id);
 		else Fold(f->line_id);
 	}
 }
@@ -9438,11 +9436,7 @@ bool EditorCtrl::IsLineFolded(unsigned int line_id) const {
 
 	const cxFold target(line_id);
 	vector<cxFold>::const_iterator p = lower_bound(m_folds.begin(), m_folds.end(), target);
-	if (p != m_folds.end() && p->line_id == line_id && p->type == cxFOLD_START_FOLDED) {
-		return true;
-	}
-
-	return false;
+	return p != m_folds.end() && p->line_id == line_id && p->type == cxFOLD_START_FOLDED;
 }
 
 bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigned int* fold_end) {
@@ -9581,7 +9575,6 @@ void EditorCtrl::BookmarksDelete(unsigned int start, unsigned int end) {
 
 		++p;
 	}
-
 }
 
 void EditorCtrl::BookmarksApplyDiff(const vector<cxChange>& changes) {

@@ -49,6 +49,7 @@
 #include "EditorBundlePanel.h"
 #include "BundlePane.h"
 #include "UndoHistory.h"
+#include "eDocumentPath.h"
 
 #if defined (__WXMSW__)
     #include <wx/msw/registry.h>
@@ -1389,7 +1390,7 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 
 #ifdef __WXMSW__
 		// path may be in unix format, so we have to convert it
-		if (!isBundleItem) file = EditorCtrl::CygwinPathToWin(file);
+		if (!isBundleItem) file = eDocumentPath::CygwinPathToWin(file);
 #endif // __WXMSW__
 
 		if (isBundleItem) {
@@ -3969,7 +3970,7 @@ void EditorFrame::HtmlOutputWin::SetPage(const wxString& text) {
 
 		// Convert the path
 		wxString path = html.substr(startpos, endpos - startpos);
-		path = EditorCtrl::CygwinPathToWin(path);
+		path = eDocumentPath::CygwinPathToWin(path);
 		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
 		html.replace(startpos, endpos - startpos, path);
@@ -4009,7 +4010,7 @@ void EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event)
 	else if (url.StartsWith(wxT("tm-file://"))) {
 
 		wxString path = url.substr(10);
-		path = EditorCtrl::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
+		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
 		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
 		m_browser->LoadUrl(path);

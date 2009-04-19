@@ -15,6 +15,7 @@
 #include "EditorCtrl.h"
 #include "eApp.h"
 #include "Execute.h"
+#include "eDocumentPath.h"
 
 BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CygwinDlg::OnButtonOk)
@@ -72,7 +73,7 @@ CygwinDlg::CygwinInstallThread::CygwinInstallThread(CatalystWrapper& cw, cxCygwi
 }
 
 void* CygwinDlg::CygwinInstallThread::Entry() {
-	wxString cygPath = EditorCtrl::GetCygwinDir();
+	wxString cygPath = eDocumentPath::GetCygwinDir();
 	if (cygPath.empty()) {
 		// Make sure it get eventual proxy settings from IE
 		wxFileName::Mkdir(wxT("C:\\cygwin\\etc\\setup\\"), 0777, wxPATH_MKDIR_FULL);
@@ -109,13 +110,13 @@ void* CygwinDlg::CygwinInstallThread::Entry() {
 	}
 
 	// Path may have been changed during install
-	cygPath = EditorCtrl::GetCygwinDir();
+	cygPath = eDocumentPath::GetCygwinDir();
 	if (cygPath.empty()) return NULL;
 
 	// Setup environment
 	cxEnv env;
 	env.SetToCurrent();
-	env.SetEnv(wxT("TM_SUPPORT_PATH"), EditorCtrl::WinPathToCygwin(m_appPath + wxT("Support"))); // needed by post-install
+	env.SetEnv(wxT("TM_SUPPORT_PATH"), eDocumentPath::WinPathToCygwin(m_appPath + wxT("Support"))); // needed by post-install
 
 	// Run postinstall
 	cxExecute exec(env);

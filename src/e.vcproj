@@ -1298,6 +1298,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\eDocumentPath.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\eDocumentPath.h"
+			>
+		</File>
+		<File
 			RelativePath="eIpcServer.cpp"
 			>
 			<FileConfiguration

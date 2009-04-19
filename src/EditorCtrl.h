@@ -354,14 +354,10 @@ public:
 
 #ifdef __WXMSW__
 	bool InitCygwin(bool silent=false);
-	static wxString GetCygwinDir();
-	static wxString CygwinPathToWin(const wxString& path);
 #endif // __WXMSW__
 
 	virtual bool OnPreKeyDown(wxKeyEvent& event);
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
-
-    static wxString WinPathToCygwin(const wxFileName& path);
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -701,10 +697,6 @@ private:
 	static wxString s_bashCmd;
 	static wxString s_bashEnv;
 	static wxString s_tmBashInit;
-#ifdef __WXMSW__
-	static bool s_isCygwinInitialized;
-	static wxString s_cygPath;
-#endif // __WXMSW__
 
 	// Auto-pair brackets
 	bool m_doAutoPair;

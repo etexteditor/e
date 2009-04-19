@@ -32,6 +32,7 @@
 #include "EditorBundlePanel.h"
 #include <wx/tokenzr.h>
 #include "jsonreader.h"
+#include "eDocumentPath.h"
 
 #ifdef __WXMSW__
     #include "CygwinDlg.h"
@@ -74,10 +75,6 @@ bool EditorCtrl::s_altGrDown = false;
 wxString EditorCtrl::s_bashCmd;
 wxString EditorCtrl::s_bashEnv;
 wxString EditorCtrl::s_tmBashInit;
-#ifdef __WXMSW__
-bool EditorCtrl::s_isCygwinInitialized = false;
-wxString EditorCtrl::s_cygPath;
-#endif //__WXMSW__
 
 /// Open a page saved from a previous session
 EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
@@ -1314,7 +1311,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-			if( isUnix && !s_isCygwinInitialized && !InitCygwin()) return;
+		if( isUnix && !eDocumentPath::s_isCygwinInitialized && !InitCygwin()) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -7154,12 +7151,12 @@ wxString EditorCtrl::GetSelText() const {
 
 #ifdef __WXMSW__
 bool EditorCtrl::InitCygwin(bool silent) {
-	if (s_isCygwinInitialized) return true;
+	if (eDocumentPath::s_isCygwinInitialized) return true;
 
 	// Check if we have a cygwin installation
-	s_cygPath = GetCygwinDir();
+	eDocumentPath::s_cygPath = eDocumentPath::GetCygwinDir();
 
-	if (s_cygPath.empty()) {
+	if (eDocumentPath::s_cygPath.empty()) {
 		if (!silent) {
 			// Notify user that he should install cygwin
 			CygwinDlg dlg(this, m_catalyst, cxCYGWIN_INSTALL);
@@ -7185,7 +7182,7 @@ bool EditorCtrl::InitCygwin(bool silent) {
 
 		// In older versions it could be saved as filestamp
 		if (!stampTime.IsValid()) {
-			const wxFileName timestamp(s_cygPath + wxT("\\etc\\setup\\last-e-update"));
+			const wxFileName timestamp(eDocumentPath::s_cygPath + wxT("\\etc\\setup\\last-e-update"));
 			if (timestamp.FileExists()) {
 				stampTime = timestamp.GetModificationTime();
 
@@ -7229,139 +7226,21 @@ bool EditorCtrl::InitCygwin(bool silent) {
 
 				// Cancel this command, but let the user try again without
 				// getting this dialog
-				s_isCygwinInitialized = true;
+				eDocumentPath::s_isCygwinInitialized = true;
 			}
 			return false;
 		}
 	}
 
-	s_isCygwinInitialized = true;
+	eDocumentPath::s_isCygwinInitialized = true;
 	return true;
 }
-
-wxString EditorCtrl::GetCygwinDir() { // static
-	wxString cygPath;
-
-	// Check if we have a cygwin installation
-	wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-	if( cygKey.Exists() ) {
-		if (cygKey.HasValue(wxT("native"))) {
-			cygKey.QueryValue(wxT("native"), cygPath);
-		}
-	}
-
-	// Also check "current user" (might be needed if user did not have admin rights during install)
-	if (cygPath.empty()) {
-		wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
-
-		wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-		if( cygKey2.Exists() ) {
-			wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
-
-			if (cygKey2.HasValue(wxT("native"))) {
-				wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
-				cygKey2.QueryValue(wxT("native"), cygPath);
-			}
-		}
-	}
-
-	return cygPath;
-}
-
-
-wxString EditorCtrl::CygwinPathToWin(const wxString& path) { // static
-	if (path.empty()) {
-		wxASSERT(false);
-		return wxEmptyString;
-	}
-	wxString newpath;
-
-	if (path.StartsWith(wxT("/cygdrive/"))) {
-
-		// Get drive letter
-		const wxChar drive = wxToupper(path[10]);
-		if (drive < wxT('A') || drive > wxT('Z')) {
-			wxASSERT(false);
-			return wxEmptyString;
-		}
-
-		// Build new path
-		newpath += drive;
-		newpath += wxT(':');
-		if (path.size() > 11) newpath += path.substr(11);
-		else newpath += wxT('\\');
-	}
-	else if (path.StartsWith(wxT("/usr/bin/"))) {
-		newpath = s_cygPath + wxT("\\bin\\");
-		newpath += path.substr(9);
-	}
-	else if (path.StartsWith(wxT("/usr/lib/"))) {
-		newpath = s_cygPath + wxT("\\lib\\");
-		newpath += path.substr(9);
-	}
-	else if (path.StartsWith(wxT("//"))) {
-		newpath = path; // unc path
-	}
-	else if (path.GetChar(0) == wxT('/')) {
-		newpath = s_cygPath;
-		newpath += path;
-	}
-	else return path; // no conversion
-
-	// Convert path seperators
-	for (unsigned int i = 0; i < newpath.size(); ++i) {
-		if (newpath[i] == wxT('/')) newpath[i] = wxT('\\');
-	}
-
-	return newpath;
-}
-
 #endif // __WXMSW__
 
-wxString EditorCtrl::WinPathToCygwin(const wxFileName& path) { // static
-	wxASSERT(path.IsOk() && path.IsAbsolute());
-
-#ifdef __WXMSW__
-    wxString fullpath = path.GetFullPath();
-
-	// Check if we have an unc path
-	if (fullpath.StartsWith(wxT("//"))) {
-		return fullpath; // cygwin can handle unc paths directly
-	}
-	else if (fullpath.StartsWith(wxT("\\\\"))) {
-		// Convert path seperators
-		for (unsigned int i = 0; i < fullpath.size(); ++i) {
-			if (fullpath[i] == wxT('\\')) fullpath[i] = wxT('/');
-		}
-		return fullpath; // cygwin can handle unc paths directly
-	}
-
-	// Quick conversion
-	wxString unixPath = wxT("/cygdrive/");
-	unixPath += path.GetVolume().Lower(); // Drive
-
-	// Dirs
-	const wxArrayString& dirs = path.GetDirs();
-	for (unsigned int i = 0; i < dirs.GetCount(); ++i) {
-		unixPath += wxT('/') + dirs[i];
-	}
-
-	// Filename
-	if (path.HasName()) {
-		unixPath += wxT('/') + path.GetFullName();
-	}
-
-	//unixPath += wxT('\"');
-
-	return unixPath;
-#else
-    return path.GetFullPath();
-#endif
-}
 
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 #ifdef __WXMSW__
-	if (isUnix && !s_isCygwinInitialized) InitCygwin(true);
+	if (isUnix && !eDocumentPath::s_isCygwinInitialized) InitCygwin(true);
 #endif // __WXMSW__
 
 	// Load current env (app)
@@ -7372,7 +7251,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	supportPath.AppendDir(wxT("Support"));
 	const bool supportPathExists = supportPath.DirExists();
 	if (supportPathExists) {
-		const wxString tmSupportPath = isUnix ? WinPathToCygwin(supportPath) : supportPath.GetPath();
+		const wxString tmSupportPath = isUnix ? eDocumentPath::WinPathToCygwin(supportPath) : supportPath.GetPath();
 		env.SetEnv(wxT("TM_SUPPORT_PATH"), tmSupportPath);
 
 		// TM_BASH_INIT
@@ -7381,7 +7260,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 			bashInit.AppendDir(wxT("lib"));
 			bashInit.SetFullName(wxT("cygwin_bash_init.sh"));
 			if (bashInit.FileExists()) {
-				s_tmBashInit = WinPathToCygwin(bashInit);
+				s_tmBashInit = eDocumentPath::WinPathToCygwin(bashInit);
 				env.SetEnv(wxT("TM_BASH_INIT"), s_tmBashInit);
 			}
 		}
@@ -7392,10 +7271,10 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	if (wxGetEnv(wxT("PATH"), &envPath)) {
 #ifdef __WXMSW__
 		// Check if cygwin is on the path
-		if (!s_cygPath.empty()) {
-			if (!envPath.Contains(s_cygPath)) {
-				const wxString binPath = s_cygPath + wxT("\\bin");
-				const wxString x11Path = s_cygPath + wxT("\\usr\\X11R6\\bin");
+		if (!eDocumentPath::s_cygPath.empty()) {
+			if (!envPath.Contains(eDocumentPath::s_cygPath)) {
+				const wxString binPath = eDocumentPath::s_cygPath + wxT("\\bin");
+				const wxString x11Path = eDocumentPath::s_cygPath + wxT("\\usr\\X11R6\\bin");
 
 				if (!envPath.empty()) {
 					envPath = binPath + wxT(";") + x11Path + wxT(";") + envPath;
@@ -7418,7 +7297,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_APPPATH
 	wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
-	if (isUnix) appPath = WinPathToCygwin(appPath);
+	if (isUnix) appPath = eDocumentPath::WinPathToCygwin(appPath);
 	env.SetEnv(wxT("TM_APPPATH"), appPath);
 
 	// TM_FULLNAME
@@ -7434,9 +7313,9 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	if (m_path.IsOk()) {
 		if (m_tmFilePath.empty()) {
 			if (isUnix) {
-				m_tmFilePath = WinPathToCygwin(m_path);
+				m_tmFilePath = eDocumentPath::WinPathToCygwin(m_path);
 				wxFileName dir(m_path.GetPath(), wxEmptyString);
-				m_tmDirectory = WinPathToCygwin(dir);
+				m_tmDirectory = eDocumentPath::WinPathToCygwin(dir);
 			}
 			else {
 				m_tmFilePath = m_path.GetFullPath();
@@ -7500,7 +7379,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_PROJECT_DIRECTORY
 	if (m_parentFrame.HasProject() && !m_parentFrame.IsProjectRemote()) {
 		const wxFileName& prjPath = m_parentFrame.GetProject();
-		if (isUnix) env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), WinPathToCygwin(prjPath));
+		if (isUnix) env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), eDocumentPath::WinPathToCygwin(prjPath));
 		else env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), prjPath.GetPath());
 
 		// Set project specific env vars
@@ -7510,14 +7389,14 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_SELECTED_FILE & TM_SELECTED_FILES
 	const wxArrayString selections = m_parentFrame.GetSelectionsInProject();
 	if (!selections.IsEmpty()) {
-		if (isUnix) env.SetEnv(wxT("TM_SELECTED_FILE"), WinPathToCygwin(selections[0]));
+		if (isUnix) env.SetEnv(wxT("TM_SELECTED_FILE"), eDocumentPath::WinPathToCygwin(selections[0]));
 		else env.SetEnv(wxT("TM_SELECTED_FILE"), selections[0]);
 
 		wxString sels;
 		for (unsigned int i = 0; i < selections.GetCount(); ++i) {
 			if (i) sels += wxT(" '");
 			else sels += wxT('\'');
-			if (isUnix) sels += WinPathToCygwin(selections[i]);
+			if (isUnix) sels += eDocumentPath::WinPathToCygwin(selections[i]);
 			else sels += selections[0];
 			sels += wxT('\'');
 		}
@@ -7534,12 +7413,12 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// Set bundle specific env
 	if (bundle) {
-		if (isUnix) env.SetEnv(wxT("TM_BUNDLE_PATH"), WinPathToCygwin(bundle->path));
+		if (isUnix) env.SetEnv(wxT("TM_BUNDLE_PATH"), eDocumentPath::WinPathToCygwin(bundle->path));
 		else env.SetEnv(wxT("TM_BUNDLE_PATH"), bundle->path.GetPath());
 
 		const wxFileName bsupportPath = m_syntaxHandler.GetBundleSupportPath(bundle->bundleRef);
 		if (bsupportPath.IsOk()) {
-			if (isUnix) env.SetEnv(wxT("TM_BUNDLE_SUPPORT"), WinPathToCygwin(bsupportPath));
+			if (isUnix) env.SetEnv(wxT("TM_BUNDLE_SUPPORT"), eDocumentPath::WinPathToCygwin(bsupportPath));
 			else env.SetEnv(wxT("TM_BUNDLE_SUPPORT"), bsupportPath.GetPath());
 		}
 	}
@@ -7549,7 +7428,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 	if (command.empty()) return -1;
 
 #ifdef __WXMSW__
-	if( isUnix && !s_isCygwinInitialized && !InitCygwin()) return -1;
+	if( isUnix && !eDocumentPath::s_isCygwinInitialized && !InitCygwin()) return -1;
 #endif // __WXMSW__
 
 	// Create temp file with command
@@ -7582,7 +7461,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 
 #ifdef __WXMSW__
 		// Convert possible unix path to windows
-		const wxString newpath = CygwinPathToWin(cmd);
+		const wxString newpath = eDocumentPath::CygwinPathToWin(cmd);
 		if (newpath.empty()) return -1;
 		execCmd = newpath + args;
 #else
@@ -7593,7 +7472,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 	else if (isUnix) {
 		if (s_bashCmd.empty()) {
 #ifdef __WXMSW__
-			s_bashCmd = s_cygPath + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
+			s_bashCmd = eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #else
             s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #endif
@@ -7639,7 +7518,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 
 wxString EditorCtrl::GetBashCommand(const wxString& cmd, cxEnv& env) {
 #ifdef __WXMSW__
-	if( !s_isCygwinInitialized && !InitCygwin()) return wxEmptyString;
+	if( !eDocumentPath::s_isCygwinInitialized && !InitCygwin()) return wxEmptyString;
 #endif
 
 	if (s_bashEnv.empty()) {
@@ -7654,7 +7533,7 @@ wxString EditorCtrl::GetBashCommand(const wxString& cmd, cxEnv& env) {
 	env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
 
 #ifdef __WXMSW__
-	return s_cygPath + wxT("\\bin\\bash.exe -c \"") + cmd + wxT("\"");
+	return eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe -c \"") + cmd + wxT("\"");
 #else
     return wxT("bash -c \"") + cmd + wxT("\"");
 #endif
@@ -8635,16 +8514,16 @@ void EditorCtrl::DoDragCommand(const tmDragCommand &cmd, const wxString& path) {
 	// Make path relative to document dir
 	const wxFileName& docPath = GetFilePath();
 	if (docPath.IsOk()) {
-		wxFileName unixDocPath(WinPathToCygwin(docPath), wxPATH_UNIX);
-		wxFileName filePath(WinPathToCygwin(path), wxPATH_UNIX);
+		wxFileName unixDocPath(eDocumentPath::WinPathToCygwin(docPath), wxPATH_UNIX);
+		wxFileName filePath(eDocumentPath::WinPathToCygwin(path), wxPATH_UNIX);
 		filePath.MakeRelativeTo(unixDocPath.GetPath(0, wxPATH_UNIX), wxPATH_UNIX);
 
 		env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath(wxPATH_UNIX);
 	}
-	else env[wxT("TM_DROPPED_FILE")] = WinPathToCygwin(path);
+	else env[wxT("TM_DROPPED_FILE")] = eDocumentPath::WinPathToCygwin(path);
 
 	// Full path
-	env[wxT("TM_DROPPED_FILEPATH")] = WinPathToCygwin(path);
+	env[wxT("TM_DROPPED_FILEPATH")] = eDocumentPath::WinPathToCygwin(path);
 
 	// Modifiers
 	wxString modifiers;
@@ -9581,7 +9460,6 @@ void EditorCtrl::BookmarksDelete(unsigned int start, unsigned int end) {
 
 		++p;
 	}
-
 }
 
 void EditorCtrl::BookmarksApplyDiff(const vector<cxChange>& changes) {

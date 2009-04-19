@@ -8779,48 +8779,48 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 			// No matches. Open new doc
 			m_parentFrame.Open(filenames[i]);
 			newTabs = true;
+			continue;
 		}
-		else {
-			// Create the menu
-			wxMenu listMenu;
-			int menuId = 1010; // first 10 are reserved for commands
 
-			if (filenames.GetCount() > 1) {
-				const wxFileName name(filenames[i]);
-				listMenu.Append(1000, name.GetFullName());
-				listMenu.Enable(1000, false);
-				listMenu.AppendSeparator();
-			}
+		// Create the menu
+		wxMenu listMenu;
+		int menuId = 1010; // first 10 are reserved for commands
 
-			// Add drag actions
-			wxArrayString actionList;
-			for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
-				listMenu.Append(menuId++, (*p)->name);
-			}
-
-			// Add commands
+		if (filenames.GetCount() > 1) {
+			const wxFileName name(filenames[i]);
+			listMenu.Append(1000, name.GetFullName());
+			listMenu.Enable(1000, false);
 			listMenu.AppendSeparator();
-			listMenu.Append(1001, _("Open"));
-			if (i < filenames.GetCount()-1) listMenu.Append(1002, _("Open All"));
+		}
 
-			// Show menu
-			const int result = ShowPopupList(listMenu);
-			if (result == 1001-1000) {
-				// Open
+		// Add drag actions
+		wxArrayString actionList;
+		for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
+			listMenu.Append(menuId++, (*p)->name);
+		}
+
+		// Add commands
+		listMenu.AppendSeparator();
+		listMenu.Append(1001, _("Open"));
+		if (i < filenames.GetCount()-1) listMenu.Append(1002, _("Open All"));
+
+		// Show menu
+		const int result = ShowPopupList(listMenu);
+		if (result == 1001-1000) {
+			// Open
+			m_parentFrame.Open(filenames[i]);
+			newTabs = true;
+		}
+		else if (result == 1002-1000) {
+			// Open all
+			for (; i < filenames.GetCount(); ++i) {
 				m_parentFrame.Open(filenames[i]);
-				newTabs = true;
 			}
-			else if (result == 1002-1000) {
-				// Open all
-				for (; i < filenames.GetCount(); ++i) {
-					m_parentFrame.Open(filenames[i]);
-				}
-				newTabs = true;
-				break;
-			}
-			else if (result >= 1010-1000) {
-				DoDragCommand(*actions[result-10], filenames[i]);
-			}
+			newTabs = true;
+			break;
+		}
+		else if (result >= 1010-1000) {
+			DoDragCommand(*actions[result-10], filenames[i]);
 		}
 	}
 

@@ -9287,26 +9287,28 @@ unsigned int EditorCtrl::GetLastLineInFold(const vector<cxFold*>& fStack) const 
 	const unsigned int foldLine = p->line_id;
 
 	for (vector<cxFold>::const_iterator f = p+1; f != m_folds.end(); ++f) {
-		if (f->type == cxFOLD_END) {
-			// Check if end marker matches any starter on the stack (ignore unmatched)
-			for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
-				if (f->indent == (*fr)->indent) {
-					if ((*fr)->line_id == foldLine) {
-						return f->line_id; // end matches current
-					}
-					else if ((*fr)->line_id < foldLine) {
-						return f->line_id-1; // end matches previous (ending fold prematurely)
-					}
-					else {
-						// skip subfolds
-						vector<const cxFold*>::iterator fb = (++fr).base();
-						foldStack.erase(fb, foldStack.end()); // pop
-						break;
-					}
+		if (f->type != cxFOLD_END){
+			foldStack.push_back(&*f);
+			continue;
+		}
+
+		// Check if end marker matches any starter on the stack (ignore unmatched)
+		for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
+			if (f->indent == (*fr)->indent) {
+				if ((*fr)->line_id == foldLine) {
+					return f->line_id; // end matches current
+				}
+				else if ((*fr)->line_id < foldLine) {
+					return f->line_id-1; // end matches previous (ending fold prematurely)
+				}
+				else {
+					// skip subfolds
+					vector<const cxFold*>::iterator fb = (++fr).base();
+					foldStack.erase(fb, foldStack.end()); // pop
+					break;
 				}
 			}
 		}
-		else foldStack.push_back(&*f);
 	}
 
 	return m_foldLineCount-1; // default is to end-of-doc

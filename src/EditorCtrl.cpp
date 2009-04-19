@@ -8658,48 +8658,48 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 			// No matches. Open new doc
 			m_parentFrame.Open(filenames[i]);
 			newTabs = true;
+			continue;
 		}
-		else {
-			// Create the menu
-			wxMenu listMenu;
-			int menuId = 1010; // first 10 are reserved for commands
 
-			if (filenames.GetCount() > 1) {
-				const wxFileName name(filenames[i]);
-				listMenu.Append(1000, name.GetFullName());
-				listMenu.Enable(1000, false);
-				listMenu.AppendSeparator();
-			}
+		// Create the menu
+		wxMenu listMenu;
+		int menuId = 1010; // first 10 are reserved for commands
 
-			// Add drag actions
-			wxArrayString actionList;
-			for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
-				listMenu.Append(menuId++, (*p)->name);
-			}
-
-			// Add commands
+		if (filenames.GetCount() > 1) {
+			const wxFileName name(filenames[i]);
+			listMenu.Append(1000, name.GetFullName());
+			listMenu.Enable(1000, false);
 			listMenu.AppendSeparator();
-			listMenu.Append(1001, _("Open"));
-			if (i < filenames.GetCount()-1) listMenu.Append(1002, _("Open All"));
+		}
 
-			// Show menu
-			const int result = ShowPopupList(listMenu);
-			if (result == 1001-1000) {
-				// Open
+		// Add drag actions
+		wxArrayString actionList;
+		for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
+			listMenu.Append(menuId++, (*p)->name);
+		}
+
+		// Add commands
+		listMenu.AppendSeparator();
+		listMenu.Append(1001, _("Open"));
+		if (i < filenames.GetCount()-1) listMenu.Append(1002, _("Open All"));
+
+		// Show menu
+		const int result = ShowPopupList(listMenu);
+		if (result == 1001-1000) {
+			// Open
+			m_parentFrame.Open(filenames[i]);
+			newTabs = true;
+		}
+		else if (result == 1002-1000) {
+			// Open all
+			for (; i < filenames.GetCount(); ++i) {
 				m_parentFrame.Open(filenames[i]);
-				newTabs = true;
 			}
-			else if (result == 1002-1000) {
-				// Open all
-				for (; i < filenames.GetCount(); ++i) {
-					m_parentFrame.Open(filenames[i]);
-				}
-				newTabs = true;
-				break;
-			}
-			else if (result >= 1010-1000) {
-				DoDragCommand(*actions[result-10], filenames[i]);
-			}
+			newTabs = true;
+			break;
+		}
+		else if (result >= 1010-1000) {
+			DoDragCommand(*actions[result-10], filenames[i]);
 		}
 	}
 
@@ -9166,26 +9166,28 @@ unsigned int EditorCtrl::GetLastLineInFold(const vector<cxFold*>& fStack) const 
 	const unsigned int foldLine = p->line_id;
 
 	for (vector<cxFold>::const_iterator f = p+1; f != m_folds.end(); ++f) {
-		if (f->type == cxFOLD_END) {
-			// Check if end marker matches any starter on the stack (ignore unmatched)
-			for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
-				if (f->indent == (*fr)->indent) {
-					if ((*fr)->line_id == foldLine) {
-						return f->line_id; // end matches current
-					}
-					else if ((*fr)->line_id < foldLine) {
-						return f->line_id-1; // end matches previous (ending fold prematurely)
-					}
-					else {
-						// skip subfolds
-						vector<const cxFold*>::iterator fb = (++fr).base();
-						foldStack.erase(fb, foldStack.end()); // pop
-						break;
-					}
+		if (f->type != cxFOLD_END){
+			foldStack.push_back(&*f);
+			continue;
+		}
+
+		// Check if end marker matches any starter on the stack (ignore unmatched)
+		for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
+			if (f->indent == (*fr)->indent) {
+				if ((*fr)->line_id == foldLine) {
+					return f->line_id; // end matches current
+				}
+				else if ((*fr)->line_id < foldLine) {
+					return f->line_id-1; // end matches previous (ending fold prematurely)
+				}
+				else {
+					// skip subfolds
+					vector<const cxFold*>::iterator fb = (++fr).base();
+					foldStack.erase(fb, foldStack.end()); // pop
+					break;
 				}
 			}
 		}
-		else foldStack.push_back(&*f);
 	}
 
 	return m_foldLineCount-1; // default is to end-of-doc
@@ -9277,9 +9279,7 @@ void EditorCtrl::ToggleFold() {
 
 	if (!foldStack.empty()) {
 		const cxFold* f = foldStack.back();
-		if (f->type == cxFOLD_START_FOLDED) {
-			UnFold(f->line_id);
-		}
+		if (f->type == cxFOLD_START_FOLDED) UnFold(f->line_id);
 		else Fold(f->line_id);
 	}
 }
@@ -9317,11 +9317,7 @@ bool EditorCtrl::IsLineFolded(unsigned int line_id) const {
 
 	const cxFold target(line_id);
 	vector<cxFold>::const_iterator p = lower_bound(m_folds.begin(), m_folds.end(), target);
-	if (p != m_folds.end() && p->line_id == line_id && p->type == cxFOLD_START_FOLDED) {
-		return true;
-	}
-
-	return false;
+	return p != m_folds.end() && p->line_id == line_id && p->type == cxFOLD_START_FOLDED;
 }
 
 bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigned int* fold_end) {

@@ -7,24 +7,12 @@
 
 #include "eApp.h"
 
-eDocumentPath::eDocumentPath(void)
-{
-}
+eDocumentPath::eDocumentPath(void){}
+eDocumentPath::~eDocumentPath(void){}
 
-eDocumentPath::~eDocumentPath(void)
-{
-}
-
-// Initialize statics
-#ifdef __WXMSW__
-bool eDocumentPath::s_isCygwinInitialized = false;
-wxString eDocumentPath::s_cygPath;
-#endif //__WXMSW__
-
-
-// static
 wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) { 
 	wxASSERT(path.IsOk() && path.IsAbsolute());
+
 #ifdef __WXMSW__
     wxString fullpath = path.GetFullPath();
 
@@ -62,6 +50,11 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 }
 
 #ifdef __WXMSW__
+
+// Initialize static data.
+bool eDocumentPath::s_isCygwinInitialized = false;
+wxString eDocumentPath::s_cygPath;
+
 wxString eDocumentPath::GetCygwinDir() { 
 	wxString cygPath;
 

@@ -7349,8 +7349,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 
 	// Create temp file with command
 	wxFileName tmpfilePath = ((eApp*)wxTheApp)->GetAppDataPath();
-	if (isUnix)	tmpfilePath.SetFullName(wxT("tmcmd"));
-	else tmpfilePath.SetFullName(wxT("tmcmd.bat"));
+	tmpfilePath.SetFullName(isUnix ? wxT("tmcmd") : wxT("tmcmd.bat"));
 	wxFile tmpfile(tmpfilePath.GetFullPath(), wxFile::write);
 	if (tmpfile.IsOpened() && !command.empty()) {
 		tmpfile.Write(&command[0], command.size());

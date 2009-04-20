@@ -705,17 +705,18 @@ void EditorFrame::RestoreState() {
 
 #ifdef __WXMSW__
 void EditorFrame::InitCygwin() {
-	bool cygUpdate = true;
+	bool shouldPromptUserForCygUpdate = true;
 	cxLOCK_READ(m_catalyst)
-		catalyst.GetSettingBool(wxT("cygupdate"), cygUpdate);
+		catalyst.GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
 	cxENDLOCK
 
 	// If user has previously chosen not to install/update cygwin, then
 	// we will not bother him on startup (it will still show
 	// up later if using a command that need cygwin).
-	if (!cygUpdate) return;
 
-	if (editorCtrl) editorCtrl->InitCygwin();
+	if (shouldPromptUserForCygUpdate){
+		if (editorCtrl) editorCtrl->InitCygwin();
+	}
 }
 #endif //__WXMSW__
 

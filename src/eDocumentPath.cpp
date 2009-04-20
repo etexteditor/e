@@ -28,9 +28,9 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 #ifdef __WXMSW__
     wxString fullpath = path.GetFullPath();
 
-	// Check if we have an unc path
+	// Check if we have an unc path; cygwin can handle these directly.
 	if (fullpath.StartsWith(wxT("//"))) {
-		return fullpath; // cygwin can handle unc paths directly
+		return fullpath;
 	}
 	
 	if (fullpath.StartsWith(wxT("\\\\"))) {
@@ -41,9 +41,8 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 		return fullpath; // cygwin can handle unc paths directly
 	}
 
-	// Quick conversion
-	wxString unixPath = wxT("/cygdrive/");
-	unixPath += path.GetVolume().Lower(); // Drive
+	// Convert C:\... to /cygdrive/c/...
+	wxString unixPath = wxT("/cygdrive/") +path.GetVolume().Lower();
 
 	// Dirs
 	const wxArrayString& dirs = path.GetDirs();
@@ -72,6 +71,9 @@ wxString eDocumentPath::GetCygwinDir() {
 	if( cygKey.Exists() && cygKey.HasValue(wxT("native"))) {
 		cygKey.QueryValue(wxT("native"), cygPath);
 	}
+
+	if (!cygPath.empty())
+		return cygPath;
 
 	// Also check "current user" (might be needed if user did not have admin rights during install)
 	if (cygPath.empty()) {

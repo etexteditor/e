@@ -13,7 +13,9 @@ eDocumentPath::~eDocumentPath(void){}
 wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) { 
 	wxASSERT(path.IsOk() && path.IsAbsolute());
 
-#ifdef __WXMSW__
+#ifndef __WXMSW__
+    return path.GetFullPath();
+#else
     wxString fullpath = path.GetFullPath();
 
 	// Check if we have an unc path; cygwin can handle these directly.
@@ -44,8 +46,6 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 	}
 
 	return unixPath;
-#else
-    return path.GetFullPath();
 #endif
 }
 

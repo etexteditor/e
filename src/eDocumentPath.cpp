@@ -23,7 +23,7 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 		return fullpath;
 	}
 	
-	// Check if we have a backslash uncpath; convert to forward slash and pass on.
+	// Check if we have a backslash unc path; convert to forward slash and pass on.
 	if (fullpath.StartsWith(wxT("\\\\"))) {
 		for (unsigned int i = 0; i < fullpath.size(); ++i) {
 			if (fullpath[i] == wxT('\\')) fullpath[i] = wxT('/');

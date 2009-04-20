@@ -349,7 +349,6 @@ unsigned int EditorCtrl::GetPos() const {
 unsigned int EditorCtrl::GetCurrentLineNumber() {
 	// Line index start from 1
 	return m_lines.GetCurrentLine() +1 ;
-
 }
 
 unsigned int EditorCtrl::GetCurrentColumnNumber() {
@@ -584,6 +583,9 @@ void EditorCtrl::SetGutterRight(bool doMove) {
 	DrawLayout();
 }
 
+//
+// Returns true if a scrollbar was added or removed, else false.
+//
 bool EditorCtrl::UpdateScrollbars(unsigned int x, unsigned int y) {
 	// Check if we need a vertical scrollbar
 	const int scroll_thumb = GetScrollThumb(wxVERTICAL);

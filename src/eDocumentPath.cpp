@@ -25,7 +25,8 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 	if (fullpath.StartsWith(wxT("//"))) {
 		return fullpath; // cygwin can handle unc paths directly
 	}
-	else if (fullpath.StartsWith(wxT("\\\\"))) {
+	
+	if (fullpath.StartsWith(wxT("\\\\"))) {
 		// Convert path seperators
 		for (unsigned int i = 0; i < fullpath.size(); ++i) {
 			if (fullpath[i] == wxT('\\')) fullpath[i] = wxT('/');
@@ -48,8 +49,6 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 		unixPath += wxT('/') + path.GetFullName();
 	}
 
-	//unixPath += wxT('\"');
-
 	return unixPath;
 #else
     return path.GetFullPath();
@@ -63,10 +62,8 @@ wxString eDocumentPath::GetCygwinDir() {
 
 	// Check if we have a cygwin installation
 	wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-	if( cygKey.Exists() ) {
-		if (cygKey.HasValue(wxT("native"))) {
-			cygKey.QueryValue(wxT("native"), cygPath);
-		}
+	if( cygKey.Exists() && cygKey.HasValue(wxT("native"))) {
+		cygKey.QueryValue(wxT("native"), cygPath);
 	}
 
 	// Also check "current user" (might be needed if user did not have admin rights during install)
@@ -93,10 +90,10 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 		wxASSERT(false);
 		return wxEmptyString;
 	}
+
 	wxString newpath;
 
 	if (path.StartsWith(wxT("/cygdrive/"))) {
-
 		// Get drive letter
 		const wxChar drive = wxToupper(path[10]);
 		if (drive < wxT('A') || drive > wxT('Z')) {

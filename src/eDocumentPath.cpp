@@ -18,17 +18,17 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 #else
     wxString fullpath = path.GetFullPath();
 
-	// Check if we have an unc path; cygwin can handle these directly.
+	// Check if we have a foward-slash unc path; cygwin can handle these directly.
 	if (fullpath.StartsWith(wxT("//"))) {
 		return fullpath;
 	}
 	
+	// Check if we have a backslash uncpath; convert to forward slash and pass on.
 	if (fullpath.StartsWith(wxT("\\\\"))) {
-		// Convert path seperators
 		for (unsigned int i = 0; i < fullpath.size(); ++i) {
 			if (fullpath[i] == wxT('\\')) fullpath[i] = wxT('/');
 		}
-		return fullpath; // cygwin can handle unc paths directly
+		return fullpath;
 	}
 
 	// Convert C:\... to /cygdrive/c/...

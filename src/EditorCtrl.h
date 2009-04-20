@@ -352,10 +352,6 @@ public:
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
-#ifdef __WXMSW__
-	bool InitCygwin(bool silent=false);
-#endif // __WXMSW__
-
 	virtual bool OnPreKeyDown(wxKeyEvent& event);
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
 

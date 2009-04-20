@@ -2,11 +2,8 @@
 #define __EDOCUMENTPATH_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "Catalyst.h"
 #include <wx/filename.h>
-
-#ifdef __WXMSW__
-#include <wx/msw/registry.h>
-#endif // __WXMSW__
 
 class eDocumentPath
 {
@@ -20,6 +17,10 @@ public:
 #endif // __WXMSW__
 
 	static wxString WinPathToCygwin(const wxFileName& path);
+
+#ifdef __WXMSW__
+	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
+#endif // __WXMSW__
 
 	// Todo: these are public so change the naming style.
 #ifdef __WXMSW__

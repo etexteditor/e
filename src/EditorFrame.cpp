@@ -715,7 +715,7 @@ void EditorFrame::InitCygwin() {
 	// up later if using a command that need cygwin).
 
 	if (shouldPromptUserForCygUpdate){
-		if (editorCtrl) editorCtrl->InitCygwin();
+		if (editorCtrl) eDocumentPath::InitCygwin(m_catalyst, editorCtrl);
 	}
 }
 #endif //__WXMSW__

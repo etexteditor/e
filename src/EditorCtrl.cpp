@@ -1311,7 +1311,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-		if( isUnix && !eDocumentPath::s_isCygwinInitialized && !InitCygwin()) return;
+		if (isUnix && !eDocumentPath::InitCygwin(m_catalyst, this)) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -7149,98 +7149,10 @@ wxString EditorCtrl::GetSelText() const {
 	else return wxT("");
 }
 
-#ifdef __WXMSW__
-bool EditorCtrl::InitCygwin(bool silent) {
-	if (eDocumentPath::s_isCygwinInitialized) return true;
-
-	// Check if we have a cygwin installation
-	eDocumentPath::s_cygPath = eDocumentPath::GetCygwinDir();
-
-	if (eDocumentPath::s_cygPath.empty()) {
-		if (!silent) {
-			// Notify user that he should install cygwin
-			CygwinDlg dlg(this, m_catalyst, cxCYGWIN_INSTALL);
-
-			const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-			cxLOCK_WRITE(m_catalyst)
-				catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-			cxENDLOCK
-		}
-		return false;
-	}
-	else {
-		const wxString supportPath = ((eApp*)wxTheApp)->GetAppPath() + wxT("support\\bin\\cygwin-post-install.sh");
-		const wxFileName supportFile(supportPath);
-
-		// Get last updatetime
-		wxDateTime stampTime;
-		cxLOCK_READ(m_catalyst)
-			wxLongLong dateVal;
-			if (catalyst.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
-		cxENDLOCK
-
-		// In older versions it could be saved as filestamp
-		if (!stampTime.IsValid()) {
-			const wxFileName timestamp(eDocumentPath::s_cygPath + wxT("\\etc\\setup\\last-e-update"));
-			if (timestamp.FileExists()) {
-				stampTime = timestamp.GetModificationTime();
-
-				// Save in new location
-				cxLOCK_WRITE(m_catalyst)
-					catalyst.SetSettingLong(wxT("cyg_date"), stampTime.GetValue());
-				cxENDLOCK
-			}
-		}
-
-		// Check if we should update cygwin
-		bool doUpdate = false;
-		if (stampTime.IsValid()) {
-			wxDateTime updateTime = supportFile.GetModificationTime();
-
-			// Windows does not really handle the minor parts of file dates
-			updateTime.SetMillisecond(0);
-			updateTime.SetSecond(0);
-			stampTime.SetMillisecond(0);
-			stampTime.SetSecond(0);
-
-			if (updateTime != stampTime) {
-				wxLogDebug(wxT("InitCygwin: Diff dates"));
-				wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());
-				wxLogDebug(wxT("  last-e-update: %s"), stampTime.FormatTime());
-				doUpdate = true;
-			}
-		}
-		else doUpdate = true; // first time
-
-		if (doUpdate) {
-			if (!silent) {
-				// Notify user that he should update cygwin
-				CygwinDlg dlg(this, m_catalyst, cxCYGWIN_UPDATE);
-
-				const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-				cxLOCK_WRITE(m_catalyst)
-					catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-				cxENDLOCK
-
-				// Cancel this command, but let the user try again without
-				// getting this dialog
-				eDocumentPath::s_isCygwinInitialized = true;
-			}
-			return false;
-		}
-	}
-
-	eDocumentPath::s_isCygwinInitialized = true;
-	return true;
-}
-#endif // __WXMSW__
-
 
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 #ifdef __WXMSW__
-	if (isUnix && !eDocumentPath::s_isCygwinInitialized) InitCygwin(true);
+	if (isUnix) eDocumentPath::InitCygwin(m_catalyst, this, true);
 #endif // __WXMSW__
 
 	// Load current env (app)
@@ -7428,7 +7340,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 	if (command.empty()) return -1;
 
 #ifdef __WXMSW__
-	if( isUnix && !eDocumentPath::s_isCygwinInitialized && !InitCygwin()) return -1;
+	if (isUnix && !eDocumentPath::InitCygwin(m_catalyst, this)) return -1;
 #endif // __WXMSW__
 
 	// Create temp file with command
@@ -7518,7 +7430,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 
 wxString EditorCtrl::GetBashCommand(const wxString& cmd, cxEnv& env) {
 #ifdef __WXMSW__
-	if( !eDocumentPath::s_isCygwinInitialized && !InitCygwin()) return wxEmptyString;
+	if (!eDocumentPath::InitCygwin(m_catalyst, this)) return wxEmptyString;
 #endif
 
 	if (s_bashEnv.empty()) {

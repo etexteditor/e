@@ -62,7 +62,6 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 }
 
 #ifdef __WXMSW__
-// static
 wxString eDocumentPath::GetCygwinDir() { 
 	wxString cygPath;
 
@@ -76,17 +75,15 @@ wxString eDocumentPath::GetCygwinDir() {
 		return cygPath;
 
 	// Also check "current user" (might be needed if user did not have admin rights during install)
-	if (cygPath.empty()) {
-		wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
+	wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
 
-		wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-		if( cygKey2.Exists() ) {
-			wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
+	wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
+	if( cygKey2.Exists() ) {
+		wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
 
-			if (cygKey2.HasValue(wxT("native"))) {
-				wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
-				cygKey2.QueryValue(wxT("native"), cygPath);
-			}
+		if (cygKey2.HasValue(wxT("native"))) {
+			wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
+			cygKey2.QueryValue(wxT("native"), cygPath);
 		}
 	}
 

@@ -11,25 +11,22 @@ public:
 	eDocumentPath(void);
 	~eDocumentPath(void);
 
-#ifdef __WXMSW__
-	static wxString GetCygwinDir();
-	static wxString CygwinPathToWin(const wxString& path);
-#endif // __WXMSW__
-
 	static wxString WinPathToCygwin(const wxFileName& path);
 	static void ConvertPathToWin(wxString& path);
 
 #ifdef __WXMSW__
+
+	static wxString GetCygwinDir();
+	static wxString CygwinPathToWin(const wxString& path);
+
 	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
 	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
-#endif // __WXMSW__
 
 	// Todo: these are public so change the naming style.
-#ifdef __WXMSW__
 	static bool s_isCygwinInitialized;
 	static wxString s_cygPath;
-#endif // __WXMSW__
 
+#endif // __WXMSW__
 };
 
 #endif // __EDOCUMENTPATH_H__

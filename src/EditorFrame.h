@@ -286,7 +286,6 @@ private:
 	void ShowBundlePane();
 
 	// Utility functions
-	static void ConvertPathToWin(wxString& path);
 	static wxString URLDecode(const wxString& value);
 	static int ParseHex(const wxString& hexStr);
 

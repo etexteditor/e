@@ -54,4 +54,3 @@ private:
 };
 
 #endif // __CYGWINDDLG_H__
-

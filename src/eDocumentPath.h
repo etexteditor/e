@@ -17,10 +17,11 @@ public:
 #endif // __WXMSW__
 
 	static wxString WinPathToCygwin(const wxFileName& path);
+	static void ConvertPathToWin(wxString& path);
 
 #ifdef __WXMSW__
 	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
-	static void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
+	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 #endif // __WXMSW__
 
 	// Todo: these are public so change the naming style.

@@ -3821,26 +3821,6 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 	self->CheckForModifiedFilesAsync();
 }
 
-void EditorFrame::ConvertPathToWin(wxString& path) { // static
-	if (!path.StartsWith(wxT("/cygdrive/"))) return;
-
-	// Get drive letter
-	const wxChar drive = wxToupper(path[10]);
-	if (drive < wxT('A') || drive > wxT('Z')) return;
-
-	// Build new path
-	wxString newpath(drive);
-	newpath += wxT(':');
-	if (path.size() > 11) newpath += path.substr(11);
-	else newpath += wxT('\\');
-	path = newpath;
-
-	// Convert path seperators
-	for (unsigned int i = 0; i < path.size(); ++i) {
-		if (path[i] == wxT('/')) path[i] = wxT('\\');
-	}
-}
-
 //! URL Decode a string.
 wxString EditorFrame::URLDecode(const wxString &value) { // static
 	wxString szDecoded;

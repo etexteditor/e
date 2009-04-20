@@ -91,7 +91,6 @@ wxString eDocumentPath::GetCygwinDir() {
 	return cygPath;
 }
 
-// static
 wxString eDocumentPath::CygwinPathToWin(const wxString& path) { 
 	if (path.empty()) {
 		wxASSERT(false);
@@ -137,6 +136,27 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 	}
 
 	return newpath;
+}
+
+// This function was taken from EditorFrame, but is not called from anywhere.
+void eDocumentPath::ConvertPathToWin(wxString& path) {
+	if (!path.StartsWith(wxT("/cygdrive/"))) return;
+
+	// Get drive letter
+	const wxChar drive = wxToupper(path[10]);
+	if (drive < wxT('A') || drive > wxT('Z')) return;
+
+	// Build new path
+	wxString newpath(drive);
+	newpath += wxT(':');
+	if (path.size() > 11) newpath += path.substr(11);
+	else newpath += wxT('\\');
+	path = newpath;
+
+	// Convert path seperators
+	for (unsigned int i = 0; i < path.size(); ++i) {
+		if (path[i] == wxT('/')) path[i] = wxT('\\');
+	}
 }
 
 void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow) {

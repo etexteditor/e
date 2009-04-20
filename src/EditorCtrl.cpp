@@ -7336,6 +7336,10 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	}
 }
 
+//
+// Runs the given command in an appropriate shell, returning stdout, stderr and the result code.
+// If an internal error occurs, such as invalid inputs to this fuction, -1 is returned.
+//
 long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix, const wxString& cwd) {
 	if (command.empty()) return -1;
 

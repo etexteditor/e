@@ -23,8 +23,10 @@ public:
 	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 
 	// Todo: these are public so change the naming style.
-	static bool s_isCygwinInitialized;
 	static wxString s_cygPath;
+
+private:
+	static bool s_isCygwinInitialized;
 
 #endif // __WXMSW__
 };

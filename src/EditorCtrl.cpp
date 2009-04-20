@@ -7351,11 +7351,10 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 	wxFileName tmpfilePath = ((eApp*)wxTheApp)->GetAppDataPath();
 	tmpfilePath.SetFullName(isUnix ? wxT("tmcmd") : wxT("tmcmd.bat"));
 	wxFile tmpfile(tmpfilePath.GetFullPath(), wxFile::write);
-	if (tmpfile.IsOpened()) {
-		tmpfile.Write(&command[0], command.size());
-		tmpfile.Close();
-	}
-	else return -1;
+	if (!tmpfile.IsOpened) return -1;
+
+	tmpfile.Write(&command[0], command.size());
+	tmpfile.Close();
 
 	wxString execCmd;
 

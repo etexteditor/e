@@ -1508,7 +1508,6 @@ wxJSONReader::ReadValue( int ch, wxJSONValue& val )
         return nextCh;
       }
   }
-  return nextCh;
 }
 
 

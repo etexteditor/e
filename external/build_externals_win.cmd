@@ -1,8 +1,8 @@
 @echo off
+REM If we're not running under a VS prompt, try to get one.
+if "%VCInstallDir%"=="" call "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 
 if not EXIST build_logs mkdir build_logs
-
-goto :EOF
 
 call :BUILD libtommath\libtommath.sln
 call :BUILD libtomcrypt\libtomcrypt.sln
@@ -11,10 +11,7 @@ call :BUILD metakit\win\msvc90\mksrc.sln
 call :BUILD pcre\pcre.sln
 call :BUILD tinyxml\tinyxml.sln
 
-REM Using a .sln might be faster, but don't want to keep all the .vcprojs up-to-date
-pushd wxwidgets\build\msw
-nmake -f makefile.vc BUILD=debug UNICODE=1 > build_logs\wxwidgets.log
-popd
+call build_wxwidgets_win.cmd
 
 echo Builds complete, check build_logs for possible issues.
 
@@ -23,14 +20,14 @@ goto :EOF
 
 REM **** Subroutines start here ****
 
-REM  Usage: call :BUILD path_to_sln [, config_to_build=DEBUG]
+REM  Usage: call :BUILD path_to_sln [, config_to_build="DEBUG|Win32"]
 :BUILD
 setlocal
 set CONFIG=%2
-if {%CONFIG%}=={} set CONFIG="DEBUG"
+if {%CONFIG%}=={} set CONFIG="DEBUG|Win32"
 
 echo Building %1...
-devenv %1 /Build %CONFIG% > build_logs\%~n1.log
+vcbuild %1 %CONFIG% > build_logs\%~n1.log
 set RET=%ERRORLEVEL%
 REM "mspdbsrv.exe" can hang, which prevents new .pdb's from
 REM being created and causes subsequent command-line builds to fail.

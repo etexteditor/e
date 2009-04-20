@@ -1664,21 +1664,19 @@ const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool wit
 
 bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	RemoteLoginDlg dlg(this, rp->m_username, rp->m_address, rp->IsTemp());
-	if (dlg.ShowModal() == wxID_OK) {
-		// this also updates rp with the new login
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
-		cxENDLOCK
+	if (dlg.ShowModal() != wxID_OK)
+		return false;
 
-		return true;
-	}
-	else return false;
+	// this also updates rp with the new login
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
+	cxENDLOCK
+
+	return true;
 }
 
 bool EditorFrame::IsRemotePath(const wxString& path) { // static
-	if (path.StartsWith(wxT("ftp://"))) return true;
-	else if (path.StartsWith(wxT("http://"))) return true;
-	else return false;
+	return path.StartsWith(wxT("ftp://")) || path.StartsWith(wxT("http://"));
 }
 
 bool EditorFrame::IsBundlePath(const wxString& path) { // static
@@ -1841,6 +1839,10 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 	return true;
 }
 
+// When multiple documents are unsaved, ask the user which ones to save,
+// and allow the user to cancel the operation.
+//
+// Returns: false if the operation was cancelled, else true
 bool EditorFrame::AskToSaveMulti(int keep_tab) {
 	wxASSERT(keep_tab == -1 || (keep_tab >= 0 && (unsigned int)keep_tab < m_tabBar->GetPageCount()));
 
@@ -1860,26 +1862,33 @@ bool EditorFrame::AskToSaveMulti(int keep_tab) {
 		}
 	}
 
-	// Ask the user if he wants to save them
-	if (!paths.IsEmpty()) {
-		SaveDlg savedlg(this, paths);
-		int result = savedlg.ShowModal();
+	if (paths.IsEmpty())
+		return true;
 
-		if (result == wxID_CANCEL) {
+	// Prompt the user to save some documents or cancel the operation.
+	SaveDlg savedlg(this, paths);
+	int result = savedlg.ShowModal();
+
+	// User chose to cancel operation
+	if (result == wxID_CANCEL)
+		return false;
+
+	// User chose not to save unsaved documents.
+	if (result == wxID_NO)
+		return true;
+	
+	// Otherwise, result == wxID_YES
+	wxASSERT(result == wxID_YES);
+
+	for (int i=0; i < savedlg.GetCount(); ++i) {
+		if (!savedlg.IsChecked(i)) continue;
+
+		m_tabBar->SetSelection(paths_to_pages[i]);
+
+		EditorCtrl* page = GetEditorCtrlFromPage(paths_to_pages[i]);
+		if (!page->SaveText()) {
+			// Cancel if save failed
 			return false;
-		}
-		else if (result == wxID_YES) {
-			for (int i=0; i < savedlg.GetCount(); ++i) {
-				if (savedlg.IsChecked(i)) {
-					m_tabBar->SetSelection(paths_to_pages[i]);
-
-					EditorCtrl* page = GetEditorCtrlFromPage(paths_to_pages[i]);
-					if (!page->SaveText()) {
-						// Cancel if save failed
-						return false;
-					}
-				}
-			}
 		}
 	}
 
@@ -1939,42 +1948,40 @@ void EditorFrame::SetSetting(const wxString& name, bool value) {
 }
 
 void EditorFrame::SetSoftTab(bool isSoft)  {
-	if (isSoft != m_softTabs) {
-		// Save setting
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.SetSettingBool(wxT("softtabs"), isSoft);
-		cxENDLOCK
-		m_softTabs = isSoft;
+	if (isSoft == m_softTabs) return;
 
-		// update all editor pages
-		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-			EditorCtrl* page = GetEditorCtrlFromPage(i);
+	// Save setting
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingBool(wxT("softtabs"), isSoft);
+	cxENDLOCK
+	m_softTabs = isSoft;
 
-			page->SetTabWidth(m_tabWidth);
-		}
+	// update all editor pages
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+		page->SetTabWidth(m_tabWidth);
 	}
 }
 
 void EditorFrame::SetTabWidth(unsigned int width) {
 	wxASSERT(width > 0);
 
-	if ((int)width != m_tabWidth) {
-		// Save setting
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.SetSettingInt(wxT("tabwidth"), width);
-		cxENDLOCK
-		m_tabWidth = width;
+	if ((int)width == m_tabWidth) return;
 
-		// Invalidate all editor pages
-		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-			EditorCtrl* page = GetEditorCtrlFromPage(i);
+	// Save setting
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetSettingInt(wxT("tabwidth"), width);
+	cxENDLOCK
+	m_tabWidth = width;
 
-			page->SetTabWidth(width);
-		}
-
-		// Redraw current
-		editorCtrl->ReDraw();
+	// Invalidate all editor pages
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+		page->SetTabWidth(width);
 	}
+
+	// Redraw current
+	editorCtrl->ReDraw();
 }
 
 void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
@@ -2266,27 +2273,28 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
                         lastDir, _T(""), filters,
                         wxFD_OPEN|wxFD_MULTIPLE);
 
-	if (dlg.ShowModal() == wxID_OK) {
-		((eApp*)wxTheApp)->SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
+	if (dlg.ShowModal() != wxID_OK)
+		return;
 
-		wxArrayString filenames;
-		dlg.GetPaths(filenames);
+	((eApp*)wxTheApp)->SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
 
-		// Check if we have to conv from a custom encoding
-		wxFontEncoding enc = wxFONTENCODING_SYSTEM;
-		if (event.GetId() != wxID_OPEN) {
-			unsigned int encoding_id = event.GetId() % 3000;
-			enc = wxFontMapper::GetEncoding(encoding_id);
-		}
+	wxArrayString filenames;
+	dlg.GetPaths(filenames);
 
-		SetCursor(wxCURSOR_WAIT);
-		for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
-			wxFileName newpath = filenames[i];
-			if (OpenFile(newpath, enc) == false) break;
-			Update();
-		}
-		SetCursor(*wxSTANDARD_CURSOR);
+	// Check if we have to conv from a custom encoding
+	wxFontEncoding enc = wxFONTENCODING_SYSTEM;
+	if (event.GetId() != wxID_OPEN) {
+		unsigned int encoding_id = event.GetId() % 3000;
+		enc = wxFontMapper::GetEncoding(encoding_id);
 	}
+
+	SetCursor(wxCURSOR_WAIT);
+	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
+		wxFileName newpath = filenames[i];
+		if (OpenFile(newpath, enc) == false) break;
+		Update();
+	}
+	SetCursor(*wxSTANDARD_CURSOR);
 }
 
 void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
@@ -2304,18 +2312,18 @@ void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
 	RemoteProfileDlg dlg(this, m_catalyst);
-	if (dlg.ShowModal() == wxID_OPEN) {
-		const int profile_id = dlg.GetCurrentProfile();
-		if (profile_id == -1) return;
+	if (dlg.ShowModal() != wxID_OPEN) return;
 
-		// Get the profile from db
-		const RemoteProfile* rp = NULL;
-		cxLOCK_WRITE(m_catalyst)
-			rp = catalyst.GetRemoteProfile(profile_id);
-		cxENDLOCK
+	const int profile_id = dlg.GetCurrentProfile();
+	if (profile_id == -1) return;
 
-		if (rp) OpenRemoteProject(rp);
-	}
+	// Get the profile from db
+	const RemoteProfile* rp = NULL;
+	cxLOCK_WRITE(m_catalyst)
+		rp = catalyst.GetRemoteProfile(profile_id);
+	cxENDLOCK
+
+	if (rp) OpenRemoteProject(rp);
 }
 
 void EditorFrame::OnMenuOpenRecentFile(wxCommandEvent& event) {

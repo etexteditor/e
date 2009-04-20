@@ -1,4 +1,18 @@
-Ubuntu packages required before building:
+== Building e ==
+
+The easiest way to build is to use the supplied scripts (example shows debug build):
+
+cd external
+sudo ./get-packages-ubuntu.sh bakefile
+./get_externals_linux.sh
+./build_externals_linux.sh debug
+cd ..
+cd src
+make DEBUG=1
+
+== Packages ==
+
+If you choose to install packages manually, these are the Ubuntu packages required before building:
 
 - build-essential
 - libwxgtk2.8-dev
@@ -16,6 +30,8 @@ Packages required by WebKit:
 - bison
 - flex
 - gperf
+
+== Windows Files ==
 
 These files do not compile, probably due to Windows dependencies:
 

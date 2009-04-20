@@ -66,6 +66,13 @@ public:
 	const wxString& RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();};
 	const wxString& RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();};
 
+    // Suppress default console handling even if wxWidgets was compiled with --enable-cmdline
+#if wxUSE_CMDLINE_PARSER
+    virtual bool OnCmdLineParsed(wxCmdLineParser&) {return true;}
+    virtual bool OnCmdLineHelp(wxCmdLineParser&) {return true;}
+    virtual bool OnCmdLineError(wxCmdLineParser&) {return true;}
+#endif // wxUSE_CMDLINE_PARSER
+        
 	// Member variables
 	EditorFrame* frame;
 	wxString m_version_name;

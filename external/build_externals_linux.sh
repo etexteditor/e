@@ -39,8 +39,7 @@ pushd pcre
     make clean &&
     make &&
     make install &&
-    cp config.h ucp.h $output/include &&
-    ||
+    cp config.h ucp.h $output/include ||
         ( echo "Cannot compile pcre" ; exit 1 )
 popd
 

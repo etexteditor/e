@@ -10,7 +10,9 @@ _download()
   pushd arch
 
   tempdir=`mktemp -d back.XXXXXX` || exit 1
-  mv * $tempdir
+  mv *.zip $tempdir
+  mv *.gz $tempdir
+  mv *.bz2 $tempdir
 
   wget http://curl.haxx.se/download/curl-7.18.2.tar.gz
   wget http://libtomcrypt.com/files/crypt-1.11.tar.bz2

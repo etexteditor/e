@@ -153,10 +153,34 @@ void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow) 
 		eDocumentPath::InitCygwin(cw, parentWindow);
 }
 
+
+bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &supportFile){
+	// Check if we should update cygwin
+	if (!stampTime.IsValid())
+		return true; // first time
+
+	wxDateTime updateTime = supportFile.GetModificationTime();
+
+	// Windows does not really handle the minor parts of file dates
+	updateTime.SetMillisecond(0);
+	updateTime.SetSecond(0);
+
+	stampTime.SetMillisecond(0);
+	stampTime.SetSecond(0);
+
+	if (updateTime == stampTime)
+		return false;
+
+	wxLogDebug(wxT("InitCygwin: Diff dates"));
+	wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());
+	wxLogDebug(wxT("  last-e-update: %s"), stampTime.FormatTime());
+	return true;
+}
+
 //
 // Checks to see if Cygwin is initalized, and prompts user to do it if not.
 //
-// Returns true if Cygwin is already initialized, otherwise false.
+// Returns true if Cygwin is initialized, otherwise false.
 //
 bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent) {
 	if (eDocumentPath::s_isCygwinInitialized)
@@ -202,27 +226,7 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 		}
 	}
 
-	// Check if we should update cygwin
-	bool doUpdate = false;
-	if (stampTime.IsValid()) {
-		wxDateTime updateTime = supportFile.GetModificationTime();
-
-		// Windows does not really handle the minor parts of file dates
-		updateTime.SetMillisecond(0);
-		updateTime.SetSecond(0);
-		stampTime.SetMillisecond(0);
-		stampTime.SetSecond(0);
-
-		if (updateTime != stampTime) {
-			wxLogDebug(wxT("InitCygwin: Diff dates"));
-			wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());
-			wxLogDebug(wxT("  last-e-update: %s"), stampTime.FormatTime());
-			doUpdate = true;
-		}
-	}
-	else doUpdate = true; // first time
-
-	if (doUpdate) {
+	if (eDocumentPath_shouldUpdateCygwin(stampTime, supportFile)) {
 		if (!silent) {
 			// Notify user that he should update cygwin
 			CygwinDlg dlg(parentWindow, cw, cxCYGWIN_UPDATE);
@@ -243,4 +247,5 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 	eDocumentPath::s_isCygwinInitialized = true;
 	return true;
 }
+
 #endif // __WXMSW__

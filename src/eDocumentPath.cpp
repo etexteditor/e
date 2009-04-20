@@ -34,13 +34,13 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 	// Convert C:\... to /cygdrive/c/...
 	wxString unixPath = wxT("/cygdrive/") +path.GetVolume().Lower();
 
-	// Dirs
+	// Convert slashs in path segments
 	const wxArrayString& dirs = path.GetDirs();
 	for (unsigned int i = 0; i < dirs.GetCount(); ++i) {
 		unixPath += wxT('/') + dirs[i];
 	}
 
-	// Filename
+	// Add the filename, if there is one
 	if (path.HasName()) {
 		unixPath += wxT('/') + path.GetFullName();
 	}

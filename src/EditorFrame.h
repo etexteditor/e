@@ -158,7 +158,6 @@ public:
 	~EditorFrame();
 
 	void RestoreState();
-	void InitCygwin();
 
 	// Tabs
 	void AddTab(wxWindow* page=NULL);

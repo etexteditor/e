@@ -703,23 +703,6 @@ void EditorFrame::RestoreState() {
 #endif // __WXMSW__
 }
 
-#ifdef __WXMSW__
-void EditorFrame::InitCygwin() {
-	bool shouldPromptUserForCygUpdate = true;
-	cxLOCK_READ(m_catalyst)
-		catalyst.GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
-	cxENDLOCK
-
-	// If user has previously chosen not to install/update cygwin, then
-	// we will not bother him on startup (it will still show
-	// up later if using a command that need cygwin).
-
-	if (shouldPromptUserForCygUpdate){
-		if (editorCtrl) eDocumentPath::InitCygwin(m_catalyst, editorCtrl);
-	}
-}
-#endif //__WXMSW__
-
 wxMenu* EditorFrame::GetBundleMenu() {
 	wxMenu* bundleMenu = ((eApp*)wxTheApp)->GetSyntaxHandler().GetBundleMenu(); // Uses IDs in range 9000-9999
 	if (!bundleMenu) bundleMenu = new wxMenu;

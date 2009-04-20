@@ -20,6 +20,7 @@ public:
 
 #ifdef __WXMSW__
 	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
+	static void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 #endif // __WXMSW__
 
 	// Todo: these are public so change the naming style.

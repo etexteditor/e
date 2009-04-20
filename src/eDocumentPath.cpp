@@ -138,10 +138,21 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 
 	return newpath;
 }
-#endif // __WXMSW__
 
-#ifdef __WXMSW__
-// static
+void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow) {
+	bool shouldPromptUserForCygUpdate = true;
+	cxLOCK_READ(cw)
+		catalyst.GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
+	cxENDLOCK
+
+	// If user has previously chosen not to install/update cygwin, then
+	// we will not bother him on startup (it will still show
+	// up later if using a command that need cygwin).
+
+	if (shouldPromptUserForCygUpdate && parentWindow)
+		eDocumentPath::InitCygwin(cw, parentWindow);
+}
+
 bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent) {
 	if (eDocumentPath::s_isCygwinInitialized)
 		return true;

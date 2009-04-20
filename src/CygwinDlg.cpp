@@ -53,13 +53,8 @@ CygwinDlg::CygwinDlg(wxWindow *parent, CatalystWrapper& cw, cxCygwinDlgMode mode
 
 void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	const wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
-
-	if (m_autoRadio->GetValue()) {
-		new CygwinInstallThread(m_catalyst, cxCYGWIN_AUTO, appPath);
-	}
-	else {
-		new CygwinInstallThread(m_catalyst, cxCYGWIN_MANUAL, appPath);
-	}
+	const cxCygwinInstallMode install_mode = m_autoRadio->GetValue() ? cxCYGWIN_AUTO : cxCYGWIN_MANUAL;
+	new CygwinInstallThread(m_catalyst, install_mode, appPath);
 
 	EndModal(wxID_OK);
 }

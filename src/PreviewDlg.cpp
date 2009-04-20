@@ -229,8 +229,8 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 			tempFile.Write(&*text.begin(), text.size());
 		}
 
-		if (mode == cxUPDATE_RELOAD || m_isFirst) RefreshBrowser(cxUPDATE_RELOAD);
-		else RefreshBrowser(cxUPDATE_REFRESH);
+		if (m_isFirst) mode = cxUPDATE_RELOAD;
+		RefreshBrowser(mode);
 	}
 	else {
 		cxEnv env;

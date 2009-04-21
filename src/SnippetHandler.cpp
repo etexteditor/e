@@ -464,25 +464,23 @@ void SnippetHandler::AdjustIndentUnit() {
 
 void SnippetHandler::AdjustIndent() {
 	m_indent = m_editor->GetLineIndentFromPos(m_offset);
+	if (m_indent.empty()) return;
 
-	// Indent entire snippet to match current indentation level in editor
-	if (!m_indent.empty()) {
-		// Convert indent to utf-8
-		const wxCharBuffer utfIndent = m_indent.mb_str();
-		const unsigned int indentLen = strlen(utfIndent.data());
+	// Convert indent to utf-8
+	const wxCharBuffer utfIndent = m_indent.mb_str();
+	const unsigned int indentLen = strlen(utfIndent.data());
 
-		// Insert indent after all newlines
-		for (unsigned int i = 0; i < m_snipText.size(); ++i) {
-			if (m_snipText[i] == '\n') {
-				// move all intervals following (or containing) insertion
-				UpdateIntervalsFromPos(i, indentLen);
+	// Insert indent after all newlines
+	for (unsigned int i = 0; i < m_snipText.size(); ++i) {
+		if (m_snipText[i] == '\n') {
+			// move all intervals following (or containing) insertion
+			UpdateIntervalsFromPos(i, indentLen);
 
-				// Insert the indent
-				++i;
-				m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
+			// Insert the indent
+			++i;
+			m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
 
-				i += indentLen;
-			}
+			i += indentLen;
 		}
 	}
 }

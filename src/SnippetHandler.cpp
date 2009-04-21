@@ -423,7 +423,7 @@ void SnippetHandler::DoPipe(const TabStop& ts) {
 	m_editor->GetTextPart(m_offset+iv.start, m_offset+iv.end, input);
 
 	vector<char> output;
-	const int pid = m_editor->RawShell(ts.pipeCmd, input, &output, NULL, env);
+	const int pid = EditorCtrl::RawShell(ts.pipeCmd, input, &output, NULL, env);
 	if (pid == 0 && !output.empty()) {		
 		if (output.back() == '\n') output.pop_back(); // Strip the ending newline
 
@@ -635,7 +635,7 @@ bool SnippetHandler::Parse(bool isWrapped) {
 							wxBusyCursor wait;
 
 							wxASSERT(m_env);
-							const int pid = m_editor->RawShell(cmd, vector<char>(), &output, NULL, *m_env);
+							const int pid = EditorCtrl::RawShell(cmd, vector<char>(), &output, NULL, *m_env);
 							if (pid == 0 && !output.empty()) {
 								// Strip the ending newline
 								if (output.back() == '\n') output.pop_back();

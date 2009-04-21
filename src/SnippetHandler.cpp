@@ -444,20 +444,20 @@ void SnippetHandler::AdjustIndentUnit() {
 	// This function should be called before Parse(), since it
 	// does not adjust intervals
 	const wxString& indentUnit = m_editor->GetIndentUnit();
-	if (indentUnit != wxT('\t')) {
-		// Convert indent to utf-8
-		const wxCharBuffer utfIndent = indentUnit.mb_str();
-		const unsigned int indentLen = strlen(utfIndent.data());
+	if (indentUnit == wxT('\t')) return;
 
-		// Replace all tabs
-		for (unsigned int i = 0; i < m_snipText.size(); ++i) {
-			if (m_snipText[i] == '\t') {
-				// Replace the tab
-				m_snipText.erase(m_snipText.begin()+i, m_snipText.begin()+i+1);
-				m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
+	// Convert indent to utf-8
+	const wxCharBuffer utfIndent = indentUnit.mb_str();
+	const unsigned int indentLen = strlen(utfIndent.data());
 
-				i += indentLen;
-			}
+	// Replace all tabs
+	for (unsigned int i = 0; i < m_snipText.size(); ++i) {
+		if (m_snipText[i] == '\t') {
+			// Replace the tab
+			m_snipText.erase(m_snipText.begin()+i, m_snipText.begin()+i+1);
+			m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
+
+			i += indentLen;
 		}
 	}
 }

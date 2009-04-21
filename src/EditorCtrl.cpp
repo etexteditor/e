@@ -7150,66 +7150,6 @@ wxString EditorCtrl::GetSelText() const {
 	else return wxT("");
 }
 
-
-void editor_ctrl_configure_system_env(cxEnv& env, const bool isUnix, const wxString &baseAppPath) {
-	// TM_SUPPORT_PATH
-	wxFileName supportPath = baseAppPath;
-	supportPath.AppendDir(wxT("Support"));
-	const bool supportPathExists = supportPath.DirExists();
-	if (supportPathExists) {
-		const wxString tmSupportPath = isUnix ? eDocumentPath::WinPathToCygwin(supportPath) : supportPath.GetPath();
-		env.SetEnv(wxT("TM_SUPPORT_PATH"), tmSupportPath);
-
-		// TM_BASH_INIT
-		if (isUnix) {
-			wxFileName bashInit = supportPath;
-			bashInit.AppendDir(wxT("lib"));
-			bashInit.SetFullName(wxT("cygwin_bash_init.sh"));
-			if (bashInit.FileExists()) {
-				wxString s_tmBashInit = eDocumentPath::WinPathToCygwin(bashInit);
-				env.SetEnv(wxT("TM_BASH_INIT"), s_tmBashInit);
-			}
-		}
-	}
-
-	// PATH
-	wxString envPath;
-	if (wxGetEnv(wxT("PATH"), &envPath)) {
-#ifdef __WXMSW__
-		// Check if cygwin is on the path
-		if (!eDocumentPath::s_cygPath.empty()) {
-			if (!envPath.Contains(eDocumentPath::s_cygPath)) {
-				const wxString binPath = eDocumentPath::s_cygPath + wxT("\\bin");
-				const wxString x11Path = eDocumentPath::s_cygPath + wxT("\\usr\\X11R6\\bin");
-
-				if (!envPath.empty()) {
-					envPath = binPath + wxT(";") + x11Path + wxT(";") + envPath;
-				}
-			}
-		}
-#endif // __WXMSW__
-
-		// Add TM_SUPPORT_PATH/bin to the PATH
-		if (supportPathExists) {
-			wxFileName supportBinPath = supportPath;
-			supportBinPath.AppendDir(wxT("bin"));
-			if (supportBinPath.DirExists()) {
-				envPath = supportBinPath.GetPath() + wxT(";") + envPath;
-			}
-		}
-
-		env.SetEnv(wxT("PATH"), envPath);
-	}
-
-	// TM_APPPATH
-	wxString appPath = baseAppPath;
-	if (isUnix) appPath = eDocumentPath::WinPathToCygwin(appPath);
-	env.SetEnv(wxT("TM_APPPATH"), appPath);
-
-	// TM_FULLNAME
-	env.SetEnv(wxT("TM_FULLNAME"), wxGetUserName());
-}
-
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 #ifdef __WXMSW__
 	if (isUnix) ((eApp*)wxTheApp)->InitCygwin(true);
@@ -7219,7 +7159,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetToCurrent();
 
 	// Add app keys
-	editor_ctrl_configure_system_env(env, isUnix, ((eApp*)wxTheApp)->GetAppPath());
+	env.AddSystemVars(isUnix, ((eApp*)wxTheApp)->GetAppPath());
 
 	// Add document/editor keys
 

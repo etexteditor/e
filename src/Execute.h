@@ -47,6 +47,8 @@ public:
 	void GetEnvBlock(wxString& env) const;
 	void WriteEnvToFile(wxFile& file) const;
 
+	void AddSystemVars(const bool isUnix, const wxString &baseAppPath);
+
 private:
 	class LineCmp {
 	public:

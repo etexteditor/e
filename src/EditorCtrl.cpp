@@ -7152,8 +7152,10 @@ wxString EditorCtrl::GetSelText() const {
 
 
 void editor_ctrl_configure_system_env(cxEnv& env, bool isUnix) {
+	const wxString baseAppPath = ((eApp*)wxTheApp)->GetAppPath();
+
 	// TM_SUPPORT_PATH
-	wxFileName supportPath = ((eApp*)wxTheApp)->GetAppPath();
+	wxFileName supportPath = baseAppPath;
 	supportPath.AppendDir(wxT("Support"));
 	const bool supportPathExists = supportPath.DirExists();
 	if (supportPathExists) {
@@ -7202,7 +7204,7 @@ void editor_ctrl_configure_system_env(cxEnv& env, bool isUnix) {
 	}
 
 	// TM_APPPATH
-	wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
+	wxString appPath = baseAppPath;
 	if (isUnix) appPath = eDocumentPath::WinPathToCygwin(appPath);
 	env.SetEnv(wxT("TM_APPPATH"), appPath);
 

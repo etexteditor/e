@@ -7508,37 +7508,35 @@ void EditorCtrl::RunCurrent(bool doReplace) {
 		cxENDLOCK
 	}
 
+	if (command.empty()) return;
 
-	if (!command.empty()) {
-		RemoveAllSelections();
+	RemoveAllSelections();
 
-		Freeze();
-		if (doReplace) {
-			RawDelete(start, end);
-			end = start;
-		}
-		SetPos(end);
-
-		const wxString output = RunShellCommand(command);
-
-		if (!output.empty()) {
-			// If inserting at last (virtual) line we have to first add a newline
-			if (!doReplace && end == GetLength() && end) {
-				wxChar prevchar;
-				cxLOCKDOC_READ(m_doc)
-					const unsigned int prepos = doc.GetPrevCharPos(end);
-					prevchar = doc.GetChar(prepos);
-				cxENDLOCK
-				if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
-			}
-			const unsigned int bytelen = RawInsert(end, output);
-			SetPos(end + bytelen);
-		}
-		Freeze();
-
-		MakeCaretVisible();
-		DrawLayout();
+	Freeze();
+	if (doReplace) {
+		RawDelete(start, end);
+		end = start;
 	}
+	SetPos(end);
+
+	const wxString output = RunShellCommand(command);
+	if (!output.empty()) {
+		// If inserting at last (virtual) line we have to first add a newline
+		if (!doReplace && end == GetLength() && end) {
+			wxChar prevchar;
+			cxLOCKDOC_READ(m_doc)
+				const unsigned int prepos = doc.GetPrevCharPos(end);
+				prevchar = doc.GetChar(prepos);
+			cxENDLOCK
+			if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
+		}
+		const unsigned int bytelen = RawInsert(end, output);
+		SetPos(end + bytelen);
+	}
+	Freeze();
+
+	MakeCaretVisible();
+	DrawLayout();
 }
 
 void EditorCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {

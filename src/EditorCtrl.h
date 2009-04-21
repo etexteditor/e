@@ -283,7 +283,8 @@ public:
 	long RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix=true, const wxString& cwd=wxEmptyString);
 	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
 	void RunCurrent(bool doReplace);
-	wxString GetBashCommand(const wxString& cmd, cxEnv& env);
+
+	static wxString GetBashCommand(const wxString& cmd, cxEnv& env);
 
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};

@@ -235,7 +235,7 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 	else {
 		cxEnv env;
 		m_editorCtrl->SetEnv(env, true);
-		const wxString cmd = m_editorCtrl->GetBashCommand(m_pipeCmd, env);
+		const wxString cmd = EditorCtrl::GetBashCommand(m_pipeCmd, env);
 		if (cmd.empty()) return;
 
 		// Thread will send event and delete itself when done

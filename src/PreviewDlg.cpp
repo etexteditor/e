@@ -15,6 +15,7 @@
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include <wx/wfstream.h>
+#include "eDocumentPath.h"
 
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"
@@ -200,7 +201,7 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 		m_truePath = m_editorCtrl->GetPath();
 	}
 
-	m_uncPath = ConvertPathToUNC(m_truePath);
+	m_uncPath = eDocumentPath::ConvertPathToUncFileUrl(m_truePath);
 
 	// Make sure we only update when the editor changes
 	m_editorChangeToken = m_editorCtrl->GetChangeToken();
@@ -420,18 +421,6 @@ void PreviewDlg::InsertBase(vector<char>& html, const wxString& path) { // stati
 	}
 
 	html.insert(insertpos, base.begin(), base.end());
-}
-
-wxString PreviewDlg::ConvertPathToUNC(const wxString& path) { // static
-	if (path.empty()) return wxEmptyString;
-
-	wxString uncPath = path;
-
-	uncPath.Replace(wxT(" "), wxT("%20"));
-	uncPath.Replace(wxT("\\"), wxT("/"));
-	uncPath.Prepend(wxT("file:///"));
-
-	return uncPath;
 }
 
 void PreviewDlg::OnShowOptions(wxCommandEvent& event) {

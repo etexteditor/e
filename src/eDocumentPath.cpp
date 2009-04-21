@@ -261,3 +261,15 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 }
 
 #endif // __WXMSW__
+
+wxString eDocumentPath::ConvertPathToUncFileUrl(const wxString& path) {
+	if (path.empty()) return wxEmptyString;
+
+	wxString uncPath = path;
+
+	uncPath.Replace(wxT(" "), wxT("%20"));
+	uncPath.Replace(wxT("\\"), wxT("/"));
+	uncPath.Prepend(wxT("file:///"));
+
+	return uncPath;
+}

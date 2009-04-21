@@ -44,7 +44,6 @@ public:
 	// Utility functions
 	bool InsertStyle(vector<char>& html);
 	static void InsertBase(vector<char>& html, const wxString& path);
-	static wxString ConvertPathToUNC(const wxString& path);
 
 private:
 	class CommandThread : public wxThread {

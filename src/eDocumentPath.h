@@ -14,6 +14,8 @@ public:
 	static wxString WinPathToCygwin(const wxFileName& path);
 	static void ConvertPathToWin(wxString& path);
 
+	static wxString ConvertPathToUncFileUrl(const wxString& path);
+
 #ifdef __WXMSW__
 
 	static wxString GetCygwinDir();

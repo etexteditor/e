@@ -2138,7 +2138,12 @@ bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 	if (NULL == (FileType = wxTheMimeTypesManager->GetFileTypeFromExtension(FileExt))) {
 		wxLogDebug(wxT("ProjectPane::%s() Can't get file type from ext=%s"),
 			wxString(__FUNCTION__, wxConvUTF8).c_str(), FileExt.c_str());
-		return false;
+		// FIX: use default icon here as well.
+		icon = wxArtProvider::GetIcon(wxART_NORMAL_FILE);
+                if (!icon.IsOk()) {
+                        return false;
+                }
+                return true;
 	}
 	if ((!FileType->GetIcon(&IconLoc)) || !IconLoc.IsOk()) {
 		wxLogDebug(wxT("ProjectPane::%s() Can't get icon location"),

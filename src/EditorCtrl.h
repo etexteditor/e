@@ -693,7 +693,6 @@ private:
 	wxString m_indent;
 	static wxString s_bashCmd;
 	static wxString s_bashEnv;
-	static wxString s_tmBashInit;
 
 	// Auto-pair brackets
 	bool m_doAutoPair;

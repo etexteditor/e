@@ -74,7 +74,6 @@ unsigned long EditorCtrl::s_ctrlDownTime = 0;
 bool EditorCtrl::s_altGrDown = false;
 wxString EditorCtrl::s_bashCmd;
 wxString EditorCtrl::s_bashEnv;
-wxString EditorCtrl::s_tmBashInit;
 
 /// Open a page saved from a previous session
 EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
@@ -7152,14 +7151,7 @@ wxString EditorCtrl::GetSelText() const {
 }
 
 
-void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
-#ifdef __WXMSW__
-	if (isUnix) ((eApp*)wxTheApp)->InitCygwin(true);
-#endif // __WXMSW__
-
-	// Load current env (app)
-	env.SetToCurrent();
-
+void editor_ctrl_configure_system_env(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_SUPPORT_PATH
 	wxFileName supportPath = ((eApp*)wxTheApp)->GetAppPath();
 	supportPath.AppendDir(wxT("Support"));
@@ -7174,7 +7166,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 			bashInit.AppendDir(wxT("lib"));
 			bashInit.SetFullName(wxT("cygwin_bash_init.sh"));
 			if (bashInit.FileExists()) {
-				s_tmBashInit = eDocumentPath::WinPathToCygwin(bashInit);
+				wxString s_tmBashInit = eDocumentPath::WinPathToCygwin(bashInit);
 				env.SetEnv(wxT("TM_BASH_INIT"), s_tmBashInit);
 			}
 		}
@@ -7216,6 +7208,17 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_FULLNAME
 	env.SetEnv(wxT("TM_FULLNAME"), wxGetUserName());
+}
+
+void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
+#ifdef __WXMSW__
+	if (isUnix) ((eApp*)wxTheApp)->InitCygwin(true);
+#endif // __WXMSW__
+
+	// Load current env (app)
+	env.SetToCurrent();
+
+	editor_ctrl_configure_system_env(env, isUnix, bundle);
 
 	// TM_FILENAME
 	// note: in case of remote files, this is of the buffer file
@@ -7474,7 +7477,7 @@ wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv)
 	wxString outputStr;
 	if (!output.empty()) outputStr += wxString(&*output.begin(), wxConvUTF8, output.size());
 #ifdef __WXMSW__
-	// WINDOWS ONLY!! newline conversion
+	// Do newline conversion for Windows only.
 	outputStr.Replace(wxT("\r\n"), wxT("\n"));
 #endif // __WXMSW__
 

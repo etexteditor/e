@@ -529,20 +529,20 @@ void SnippetHandler::UpdateIntervals(unsigned int id, int diff) {
 }
 
 void SnippetHandler::UpdateIntervalsFromPos(unsigned int pos, int diff) {
-	if (diff != 0) {
-		// Move invervals containing or beyond pos
-		vector<TabInterval>::iterator vi = m_intervals.begin();
-		for (; vi != m_intervals.end(); ++vi) {
-			if (pos < vi->end) {
+	if (diff == 0) return;
 
-				if (pos < vi->start) vi->start += diff; // If contained, only resize
-				vi->end += diff;
-			}
+	// Move invervals containing or beyond pos
+	vector<TabInterval>::iterator vi = m_intervals.begin();
+	for (; vi != m_intervals.end(); ++vi) {
+		if (pos < vi->end) {
+
+			if (pos < vi->start) vi->start += diff; // If contained, only resize
+			vi->end += diff;
 		}
-
-		// Move endpos
-		if (m_endpos > pos) m_endpos += diff;
 	}
+
+	// Move endpos
+	if (m_endpos > pos) m_endpos += diff;
 }
 
 void SnippetHandler::RemoveChildren(TabStop& ts) {

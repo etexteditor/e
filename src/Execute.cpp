@@ -71,10 +71,9 @@ bool cxEnv::GetEnv(const wxString& key, wxString& value) {
 	map<wxString, wxString>::const_iterator p = m_env.find(key);
 
 	if (p == m_env.end()) return false;
-	else {
-		value = p->second;
-		return true;
-	}
+
+	value = p->second;
+	return true;
 }
 
 #include <wx/file.h>

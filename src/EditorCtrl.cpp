@@ -1313,7 +1313,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-		if (isUnix && !eDocumentPath::InitCygwin(m_catalyst, this)) return;
+		if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -7154,7 +7154,7 @@ wxString EditorCtrl::GetSelText() const {
 
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 #ifdef __WXMSW__
-	if (isUnix) eDocumentPath::InitCygwin(m_catalyst, this, true);
+	if (isUnix) ((eApp*)wxTheApp)->InitCygwin(true);
 #endif // __WXMSW__
 
 	// Load current env (app)
@@ -7346,7 +7346,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 	if (command.empty()) return -1;
 
 #ifdef __WXMSW__
-	if (isUnix && !eDocumentPath::InitCygwin(m_catalyst, this)) return -1;
+	if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return -1;
 #endif // __WXMSW__
 
 	// Create temp file with command
@@ -7434,7 +7434,7 @@ long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input
 
 wxString EditorCtrl::GetBashCommand(const wxString& cmd, cxEnv& env) {
 #ifdef __WXMSW__
-	if (!eDocumentPath::InitCygwin(m_catalyst, this)) return wxEmptyString;
+	if (!((eApp*)wxTheApp)->InitCygwin()) return wxEmptyString;
 #endif
 
 	if (s_bashEnv.empty()) {

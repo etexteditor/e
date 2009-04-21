@@ -233,7 +233,7 @@ bool eApp::OnInit() {
 
 #ifdef __WXMSW__
 	wxLogDebug(wxT("Initializing cygwin"));
-	eDocumentPath::InitCygwinOnce(*m_catalyst, frame);
+	eDocumentPath::InitCygwinOnce(*m_catalyst, this->frame);
 #endif
 
 	wxLogDebug(wxT("Checking for modified files"));
@@ -245,6 +245,13 @@ bool eApp::OnInit() {
 
     return true;
 }
+
+#ifdef __WXMSW__
+bool eApp::InitCygwin(bool silent){
+	return eDocumentPath::InitCygwin(*m_catalyst, this->frame, silent);
+}
+#endif
+
 
 void eApp::ClearState() {
 	cxLOCK_WRITE((*m_catalyst))

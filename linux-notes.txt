@@ -29,6 +29,15 @@ Packages required by WebKit:
 - icu (ubuntu: libicu-dev)
 - libjpeg (ubuntu: libjpeg62-dev)
 
+== Bundling e into tar.gz, rpm or deb packages
+
+1. Build e (release build) as described above
+2. Checkout ebundles tree as described in http://code.google.com/p/ebundles/source/checkout
+3. Export svn working tree into ./external/stuff (Bundles, Support and Themes directories must be present)
+4. To create tar.gz archive run make -C src tar
+5. To create RPM package run sudo make -C src rpm 
+6. To create Deb package run make -C src deb
+
 == Windows Files ==
 
 These files do not compile, probably due to Windows dependencies:

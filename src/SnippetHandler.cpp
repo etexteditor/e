@@ -29,12 +29,12 @@ void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippe
 
 	// Convert indents in snippet to match current tab settings
 	const wxString& indentUnit = m_editor->GetIndentUnit();
-	if (indentUnit != wxT('\t')) {
+	if (indentUnit == wxT('\t')) m_indentUnit.clear();
+	else {
 		const wxCharBuffer utfIndent = indentUnit.mb_str();
 		const unsigned int indentLen = strlen(utfIndent.data());
 		m_indentUnit.assign(utfIndent.data(), utfIndent.data()+indentLen);
 	}
-	else m_indentUnit.clear();
 
 	if (Parse()) {
 		m_offset = m_editor->GetPos();

@@ -501,31 +501,31 @@ void SnippetHandler::IndentString(wxString& text) const {
 void SnippetHandler::UpdateIntervals(unsigned int id, int diff) {
 	wxASSERT(id < m_intervals.size());
 
-	if (diff != 0) {
-		// Update the changed interval
-		TabInterval& iv = m_intervals[id];
-		iv.end += diff;
+	if (diff == 0) return;
 
-		// Resize parents
-		int parent = iv.parent;
-		while (parent != -1) {
-			TabInterval& tp = m_intervals[parent];
-			tp.end += diff;
-			parent = tp.parent;
-		}
+	// Update the changed interval
+	TabInterval& iv = m_intervals[id];
+	iv.end += diff;
 
-		// Move intervals following pos
-		for (vector<TabInterval>::iterator vi = m_intervals.begin()+id+1; vi != m_intervals.end(); ++vi) {
-			// children are resized rather than moved
-			if (vi->start != iv.start || vi->parent < (int)id) {
-				vi->start += diff;
-			}
-			vi->end += diff;
-		}
-
-		// Move endpos
-		if (m_endpos >= iv.start) m_endpos += diff;
+	// Resize parents
+	int parent = iv.parent;
+	while (parent != -1) {
+		TabInterval& tp = m_intervals[parent];
+		tp.end += diff;
+		parent = tp.parent;
 	}
+
+	// Move intervals following pos
+	for (vector<TabInterval>::iterator vi = m_intervals.begin()+id+1; vi != m_intervals.end(); ++vi) {
+		// children are resized rather than moved
+		if (vi->start != iv.start || vi->parent < (int)id) {
+			vi->start += diff;
+		}
+		vi->end += diff;
+	}
+
+	// Move endpos
+	if (m_endpos >= iv.start) m_endpos += diff;
 }
 
 void SnippetHandler::UpdateIntervalsFromPos(unsigned int pos, int diff) {

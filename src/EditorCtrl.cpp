@@ -7151,9 +7151,7 @@ wxString EditorCtrl::GetSelText() const {
 }
 
 
-void editor_ctrl_configure_system_env(cxEnv& env, bool isUnix) {
-	const wxString baseAppPath = ((eApp*)wxTheApp)->GetAppPath();
-
+void editor_ctrl_configure_system_env(cxEnv& env, const bool isUnix, const wxString &baseAppPath) {
 	// TM_SUPPORT_PATH
 	wxFileName supportPath = baseAppPath;
 	supportPath.AppendDir(wxT("Support"));
@@ -7217,10 +7215,13 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	if (isUnix) ((eApp*)wxTheApp)->InitCygwin(true);
 #endif // __WXMSW__
 
-	// Load current env (app)
+	// Load existing enviroment
 	env.SetToCurrent();
 
-	editor_ctrl_configure_system_env(env, isUnix);
+	// Add app keys
+	editor_ctrl_configure_system_env(env, isUnix, ((eApp*)wxTheApp)->GetAppPath());
+
+	// Add document/editor keys
 
 	// TM_FILENAME
 	// note: in case of remote files, this is of the buffer file

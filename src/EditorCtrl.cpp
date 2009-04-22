@@ -6029,7 +6029,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	else 
 #endif
 	{
-
 		if (commandMode) {
 			DoCommand(key);
 			switch (key) {
@@ -6294,7 +6293,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 				lastaction = ACTION_NONE;
 				break;
-
 
 			case WXK_PAGEUP:
 			case WXK_NUMPAD_PAGEUP:
@@ -7098,20 +7096,18 @@ void EditorCtrl::MakeSelectionVisible(unsigned int sel_id) {
 
 wxString EditorCtrl::GetSelFirstLine() {
 	// returns the first line of the selection (if there is *one* selection)
+	if (!m_lines.IsSelected()) return wxT("");
 
-	if (m_lines.IsSelected()) {
-		const vector<interval>& selections = m_lines.GetSelections();
-		if (selections.size() != 1) return wxT("");
+	const vector<interval>& selections = m_lines.GetSelections();
+	if (selections.size() != 1) return wxT("");
 
-		// Get text
-		const unsigned int start_pos = selections[0].start;
-		const unsigned int line_id = m_lines.GetLineFromCharPos(start_pos);
-		const unsigned int line_end = m_lines.GetLineEndpos(line_id);
-		cxLOCKDOC_READ(m_doc)
-			return doc.GetTextPart(start_pos, wxMin(selections[0].end, line_end));
-		cxENDLOCK
-	}
-	else return wxT("");
+	// Get text
+	const unsigned int start_pos = selections[0].start;
+	const unsigned int line_id = m_lines.GetLineFromCharPos(start_pos);
+	const unsigned int line_end = m_lines.GetLineEndpos(line_id);
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(start_pos, wxMin(selections[0].end, line_end));
+	cxENDLOCK
 }
 
 wxString EditorCtrl::GetFirstSelection() const {

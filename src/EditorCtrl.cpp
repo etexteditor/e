@@ -3229,11 +3229,10 @@ unsigned int EditorCtrl::GetChangePos(const doc_id& old_version_id) const {
 
 	// Return the position of the first change
 	if (matchlist.empty()) return 0; // everything changed
-	else if (matchlist[0].iv1_start_pos > 0) return 0; // insertion at top
-	else if (matchlist[0].iv2_start_pos > 0) return 0; // deletion at top
-	else {
-		return matchlist[0].iv1_end_pos;
-	}
+	if (matchlist[0].iv1_start_pos > 0) return 0; // insertion at top
+	if (matchlist[0].iv2_start_pos > 0) return 0; // deletion at top
+
+	return matchlist[0].iv1_end_pos;
 }
 
 void EditorCtrl::RemapPos(const doc_id& old_version_id, unsigned int old_pos, const vector<interval>& old_sel, unsigned int toppos) {

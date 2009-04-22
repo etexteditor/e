@@ -5011,16 +5011,16 @@ void EditorCtrl::SetSearchRange() {
 }
 
 void EditorCtrl::ClearSearchRange(bool reset) {
-	if (!m_searchRanges.empty()) {
-		if (reset && !m_lines.IsSelected()) {
-			// Reset selection
-			for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
-				m_lines.AddSelection(p->start, p->end);
-			}
+	if (m_searchRanges.empty()) return;
+
+	if (reset && !m_lines.IsSelected()) {
+		// Reset selection
+		for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
+			m_lines.AddSelection(p->start, p->end);
 		}
-		m_searchRanges.clear();
-		DrawLayout();
 	}
+	m_searchRanges.clear();
+	DrawLayout();
 }
 
 bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int options, bool dir_forward) {

@@ -316,7 +316,8 @@ void SettingsDlg::OnButtonLoadPic(wxCommandEvent& WXUNUSED(event)) {
 	// Load the image
 	m_userImage.LoadFile(dlg.GetPath());
 	if (!m_userImage.Ok()){
-		// TODO: Notify user
+		wxMessageBox(wxT("The selected image could not be opened, sorry."), wxT("Invalid image file"),
+			wxOK | wxICON_ERROR, this);
 		return;
 	}
 

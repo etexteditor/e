@@ -7111,15 +7111,14 @@ wxString EditorCtrl::GetSelFirstLine() {
 }
 
 wxString EditorCtrl::GetFirstSelection() const {
-	if (m_lines.IsSelected()) {
-		const interval& sel = m_lines.GetSelections()[0];
+	if (!m_lines.IsSelected()) return wxT("");
 
-		// Get text
-		cxLOCKDOC_READ(m_doc)
-			return doc.GetTextPart(sel.start, sel.end);
-		cxENDLOCK
-	}
-	else return wxT("");
+	const interval& sel = m_lines.GetSelections()[0];
+
+	// Get text
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(sel.start, sel.end);
+	cxENDLOCK
 }
 
 wxString EditorCtrl::GetSelText() const {

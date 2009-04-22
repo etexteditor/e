@@ -262,7 +262,7 @@ void SettingsDlg::OnComboEol(wxCommandEvent& event) {
 	wxString eolStr;
 	if (event.GetSelection() == 0) eolStr = wxT("crlf");
 	else if (event.GetSelection() == 1) eolStr = wxT("lf");
-	else if (event.GetSelection() == 0) eolStr = wxT("cr");
+	else if (event.GetSelection() == 2) eolStr = wxT("cr");
 
 	cxLOCK_WRITE(m_catalyst)
 		catalyst.SetSettingString(wxT("formatEol"), eolStr);

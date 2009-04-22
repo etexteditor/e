@@ -16,6 +16,11 @@
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 
+inline bool encoding_allows_bom(wxFontEncoding enc) {
+	return (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
+		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE);
+}
+
 // Ctrl id's
 enum {
 	CTRL_LOADPIC = 100,
@@ -250,11 +255,7 @@ void SettingsDlg::UpdateEncoding() {
 		}
 	}
 
-	// Set bom ctrl
-	if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
-		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE)
-		m_defBom->Enable(true);
-	else m_defBom->Enable(false);
+	m_defBom->Enable(encoding_allows_bom(enc));
 	m_defBom->SetValue(bom);
 }
 
@@ -280,10 +281,7 @@ void SettingsDlg::OnComboEncoding(wxCommandEvent& event) {
 	cxENDLOCK
 
 	// Check if bom ctrl should be enabled
-	if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
-		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE)
-		m_defBom->Enable(true);
-	else m_defBom->Enable(false);
+	m_defBom->Enable(encoding_allows_bom(enc));
 }
 
 void SettingsDlg::OnCheckBom(wxCommandEvent& event) {

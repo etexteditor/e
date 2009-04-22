@@ -7758,39 +7758,39 @@ void EditorCtrl::OnFoldTooltipTimer(wxTimerEvent& WXUNUSED(event)) {
 	const wxPoint m = ScreenToClient(wxGetMousePosition());
 	const wxPoint mpos = ClientPosToEditor(m.x, m.y);
 
-	if (mpos.y >= 0 && mpos.y < m_lines.GetHeight()) {
-		// Find out what is under mouse
-		const unsigned int line_id = m_lines.GetLineFromYPos(mpos.y);
+	if (mpos.y < 0 || m_lines.GetHeight() <= mpos.y) return;
 
-		// Check if we are still hovering over a fold indicator
-		if (line_id == m_foldTooltipLine) {
-			wxRect bRect = m_lines.GetFoldIndicatorRect(line_id);
-			if (bRect.Contains(mpos)) {
-				const vector<cxFold*> foldStack = GetFoldStack(line_id);
-				if (!foldStack.empty()) {
-					// Find start of fold
-					const cxFold* f = foldStack.back();
-					const unsigned int fold_start = m_lines.GetLineStartpos(f->line_id);
+	// Find out what is under mouse
+	const unsigned int line_id = m_lines.GetLineFromYPos(mpos.y);
 
-					// Find the end of fold
-					const unsigned int lastline = GetLastLineInFold(foldStack);
-					unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+	// Check if we are still hovering over a fold indicator
+	if (line_id != m_foldTooltipLine) return;
 
-					wxString text = GetText(fold_start, lastposinfold);
-					text.Replace(wxT("\t"), wxT("  ")); // replace tabs with spaces
+	wxRect bRect = m_lines.GetFoldIndicatorRect(line_id);
+	if (!bRect.Contains(mpos)) return;
 
-					// Calc bounding rect
-					wxPoint point = ClientToScreen(EditorPosToClient(bRect.x, bRect.y));
-					bRect.x = point.x;
-					bRect.y = point.y;
+	const vector<cxFold*> foldStack = GetFoldStack(line_id);
+	if (foldStack.empty()) return;
 
-					// Show tooltip
-					new wxTipWindow(this, text, 400, NULL, &bRect);
-					wxLogDebug(wxT("Show fold tooltip"));
-				}
-			}
-		}
-	}
+	// Find start of fold
+	const cxFold* f = foldStack.back();
+	const unsigned int fold_start = m_lines.GetLineStartpos(f->line_id);
+
+	// Find the end of fold
+	const unsigned int lastline = GetLastLineInFold(foldStack);
+	unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+
+	wxString text = GetText(fold_start, lastposinfold);
+	text.Replace(wxT("\t"), wxT("  ")); // replace tabs with spaces
+
+	// Calc bounding rect
+	wxPoint point = ClientToScreen(EditorPosToClient(bRect.x, bRect.y));
+	bRect.x = point.x;
+	bRect.y = point.y;
+
+	// Show tooltip
+	new wxTipWindow(this, text, 400, NULL, &bRect);
+	wxLogDebug(wxT("Show fold tooltip"));
 }
 
 

@@ -2629,6 +2629,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ShellRunner.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ShellRunner.h"
+			>
+		</File>
+		<File
 			RelativePath="SnippetHandler.cpp"
 			>
 			<FileConfiguration

@@ -280,11 +280,8 @@ public:
 	// Shell
 	enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
-	static long RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix=true, const wxString& cwd=wxEmptyString);
 	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
 	void RunCurrent(bool doReplace);
-
-	static wxString GetBashCommand(const wxString& cmd, cxEnv& env);
 
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};
@@ -691,8 +688,6 @@ private:
 	vector<interval> m_searchRanges;
 
 	wxString m_indent;
-	static wxString s_bashCmd;
-	static wxString s_bashEnv;
 
 	// Auto-pair brackets
 	bool m_doAutoPair;

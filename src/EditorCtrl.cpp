@@ -33,6 +33,7 @@
 #include <wx/tokenzr.h>
 #include "jsonreader.h"
 #include "eDocumentPath.h"
+#include "ShellRunner.h"
 
 #ifdef __WXMSW__
     #include "CygwinDlg.h"
@@ -72,8 +73,6 @@ END_EVENT_TABLE()
 const unsigned int EditorCtrl::m_caretWidth = 2;
 unsigned long EditorCtrl::s_ctrlDownTime = 0;
 bool EditorCtrl::s_altGrDown = false;
-wxString EditorCtrl::s_bashCmd;
-wxString EditorCtrl::s_bashEnv;
 
 /// Open a page saved from a previous session
 EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
@@ -1434,7 +1433,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 			// will be reset when leaving scope
 			wxBusyCursor wait;
 
-			pid = RawShell(cmdContent, input, &output, &errout, env, isUnix, cwd);
+			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, isUnix, cwd);
 		}
 		if (pid != 0) wxLogDebug(wxT("shell returned pid = %d"), pid);
 
@@ -4943,7 +4942,7 @@ wxArrayString EditorCtrl::GetCompletionList() {
 				wxMilliSleep(50);
 			}
 
-			const long result = RawShell(completionCmd->cmd, input, &output, NULL, env);
+			const long result = ShellRunner::RawShell(completionCmd->cmd, input, &output, NULL, env);
 			if (result == -1) return wxArrayString();
 
 			// break output into lines
@@ -7273,123 +7272,6 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	}
 }
 
-//
-// Runs the given command in an appropriate shell, returning stdout, stderr and the result code.
-// If an internal error occurs, such as invalid inputs to this fuction, -1 is returned.
-//
-long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix, const wxString& cwd) {
-	if (command.empty()) return -1;
-
-#ifdef __WXMSW__
-	if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return -1;
-#endif // __WXMSW__
-
-	// Create temp file with command
-	wxFileName tmpfilePath = ((eApp*)wxTheApp)->GetAppDataPath();
-	tmpfilePath.SetFullName(isUnix ? wxT("tmcmd") : wxT("tmcmd.bat"));
-	wxFile tmpfile(tmpfilePath.GetFullPath(), wxFile::write);
-	if (!tmpfile.IsOpened()) return -1;
-
-	tmpfile.Write(&command[0], command.size());
-	tmpfile.Close();
-
-	wxString execCmd;
-
-	// Look for shebang
-	if (command.size() > 2 && command[0] == '#' && command[1] == '!') {
-		// Ignore leading whitespace
-		unsigned int i = 2;
-		for (; i < command.size() && isspace(command[i]); ++i);
-
-		// Get the interpreter path
-		unsigned int start = i;
-		for (; i < command.size() && !isspace(command[i]); ++i);
-		wxString cmd(&command[start], wxConvUTF8, i - start);
-
-		// Rest of line is argument for interpreter
-		for (start = i; i < command.size() && command[i] != '\n'; ++i);
-		wxString args(&command[start], wxConvUTF8, i - start);
-
-#ifdef __WXMSW__
-		// Convert possible unix path to windows
-		const wxString newpath = eDocumentPath::CygwinPathToWin(cmd);
-		if (newpath.empty()) return -1;
-		execCmd = newpath + args;
-#else
-		execCmd = cmd + args;
-#endif // __WXMSW__
-		execCmd += wxT(" \"") + tmpfilePath.GetFullPath() + wxT("\"");
-	}
-	else if (isUnix) {
-		if (s_bashCmd.empty()) {
-#ifdef __WXMSW__
-			s_bashCmd = eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
-#else
-            s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
-#endif
-
-			wxFileName initPath = ((eApp*)wxTheApp)->GetAppPath();
-			initPath.AppendDir(wxT("Support"));
-			initPath.AppendDir(wxT("lib"));
-			initPath.SetFullName(wxT("bash_init.sh"));
-			if (initPath.FileExists()) {
-				s_bashEnv = initPath.GetFullPath();
-			}
-		}
-
-		env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
-		execCmd = s_bashCmd;
-	}
-#ifdef __WXMSW__
-	else {
-		// Windows native runs as bat files
-		// (needs double quotes for path)
-		execCmd = wxT("cmd /C \"\"") + tmpfilePath.GetFullPath() + wxT("\"\"");
-	}
-#endif // __WXMSW__
-
-	// Get ready for execution
-	cxExecute exec(env, cwd);
-	bool debugOutput = false; // default setting
-	((eApp*)wxTheApp)->GetSettingBool(wxT("bundleDebug"), debugOutput);
-	exec.SetDebugLogging(debugOutput);
-
-	// Exec the command
-	wxLogDebug(wxT("Running command: %s"), execCmd.c_str());
-	int resultCode = exec.Execute(execCmd, input);
-
-	// Get the output
-	if (resultCode != -1) {
-		if (output) output->swap(exec.GetOutput());
-		if (errorOut) errorOut->swap(exec.GetErrorOut());
-	}
-
-	return resultCode;
-}
-
-wxString EditorCtrl::GetBashCommand(const wxString& cmd, cxEnv& env) {
-#ifdef __WXMSW__
-	if (!((eApp*)wxTheApp)->InitCygwin()) return wxEmptyString;
-#endif
-
-	if (s_bashEnv.empty()) {
-		wxFileName initPath = ((eApp*)wxTheApp)->GetAppPath();
-		initPath.AppendDir(wxT("Support"));
-		initPath.AppendDir(wxT("lib"));
-		initPath.SetFullName(wxT("bash_init.sh"));
-		if (initPath.FileExists()) {
-			s_bashEnv = initPath.GetFullPath();
-		}
-	}
-	env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
-
-#ifdef __WXMSW__
-	return eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe -c \"") + cmd + wxT("\"");
-#else
-    return wxT("bash -c \"") + cmd + wxT("\"");
-#endif
-}
-
 wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv) {
 	if (command.empty()) return wxEmptyString;
 
@@ -7403,7 +7285,7 @@ wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv)
 	// Run the command
 	vector<char> input;
 	vector<char> output;
-	const int resultCode = RawShell(command, input, &output, NULL, env);
+	const int resultCode = ShellRunner::RawShell(command, input, &output, NULL, env);
     if ( resultCode == -1) return wxEmptyString; // exec failed
 
 	wxString outputStr;

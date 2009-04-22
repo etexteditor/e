@@ -16,6 +16,7 @@
 #include "EditorCtrl.h"
 #include <wx/wfstream.h>
 #include "eDocumentPath.h"
+#include "ShellRunner.h"
 
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"
@@ -236,7 +237,7 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 	else {
 		cxEnv env;
 		m_editorCtrl->SetEnv(env, true);
-		const wxString cmd = EditorCtrl::GetBashCommand(m_pipeCmd, env);
+		const wxString cmd = ShellRunner::GetBashCommand(m_pipeCmd, env);
 		if (cmd.empty()) return;
 
 		// Thread will send event and delete itself when done

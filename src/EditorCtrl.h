@@ -278,7 +278,6 @@ public:
 	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 
 	// Shell
-	enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
 	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
 	void RunCurrent(bool doReplace);

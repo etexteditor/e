@@ -40,6 +40,8 @@
 	#include <wx/msw/registry.h>
 #endif
 
+enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
+
 // id's
 enum {
 	TIMER_FOLDTOOLTIP = 100

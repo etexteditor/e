@@ -185,8 +185,10 @@ void SearchPanel::InitSearch(const wxString& searchtext, bool replace) {
 		else searchbox->SetFocus();
 		return;
 	}
-	else if (!replace && focus_win == searchbox) {
-		FindNext(); return;
+	
+	if (!replace && focus_win == searchbox) {
+		FindNext(); 
+		return;
 	}
 
 	nosearch = true;
@@ -273,10 +275,9 @@ void SearchPanel::FindPrevious() {
 	if (m_use_regex) options |= FIND_USE_REGEX;
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
-	bool result = editorCtrl->FindPrevious(searchbox->GetValue(), options);
 
-	if (result) SetState(cxFOUND);
-	else SetState(cxNOT_FOUND);
+	bool result = editorCtrl->FindPrevious(searchbox->GetValue(), options);
+	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::Replace() {
@@ -289,10 +290,9 @@ void SearchPanel::Replace() {
 	if (m_use_regex) options |= FIND_USE_REGEX;
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
-	bool result = editorCtrl->Replace(searchbox->GetValue(), replaceBox->GetValue(), options);
 
-	if (result) SetState(cxFOUND);
-	else SetState(cxNOT_FOUND);
+	bool result = editorCtrl->Replace(searchbox->GetValue(), replaceBox->GetValue(), options);
+	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::ReplaceAll() {
@@ -303,10 +303,9 @@ void SearchPanel::ReplaceAll() {
 	int options = 0;
 	if (m_match_case) options |= FIND_MATCHCASE;
 	if (m_use_regex) options |= FIND_USE_REGEX;
-	bool result = editorCtrl->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
 
-	if (result) SetState(cxFOUND);
-	else SetState(cxNOT_FOUND);
+	bool result = editorCtrl->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
+	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::HidePanel() {
@@ -399,8 +398,7 @@ void SearchPanel::OnSysColourChanged(wxSysColourChangedEvent& event) {
 void SearchPanel::OnMenuRegex(wxCommandEvent& WXUNUSED(evt)) {
 	m_use_regex = !m_use_regex; // WORKAROUND: evt.IsChecked() returns wrong value
 
-	if (m_use_regex) searchButton->SetBitmapLabel(m_searchReBitmap);
-	else searchButton->SetBitmapLabel(m_searchBitmap);
+	searchButton->SetBitmapLabel(m_use_regex ? m_searchReBitmap : m_searchBitmap);
 
 	Find(); // Redo the search with the new settings
 }

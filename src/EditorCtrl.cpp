@@ -5133,12 +5133,11 @@ bool EditorCtrl::FindNextChar(wxChar c, unsigned int start_pos, unsigned int end
 		sr = doc.Find(c, start_pos, true, end_pos);
 	cxENDLOCK
 
-	if (sr.error_code >= 0) {
-		iv.start = sr.start;
-		iv.end = sr.end;
-		return true;
-	}
-	else return false;
+	if (sr.error_code < 0) return false;
+
+	iv.start = sr.start;
+	iv.end = sr.end;
+	return true;
 }
 
 cxFindResult EditorCtrl::Find(const wxString& text, int options) {

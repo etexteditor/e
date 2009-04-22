@@ -17,9 +17,13 @@
 
 void cxEnv::SetEnv(const wxString& key, const wxString& value) {
 	wxASSERT(!key.empty());
-
 	m_env[key] = value;
 }
+
+void cxEnv::SetIfValue(const wxString& key,  const wxString& value) {
+	if (!value.IsEmpty()) SetEnv(key,value);
+}
+
 
 void cxEnv::SetEnv(const map<wxString, wxString>& env) {
 	for (map<wxString, wxString>::const_iterator r = env.begin(); r != env.end(); ++r) {

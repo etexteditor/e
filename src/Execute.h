@@ -40,6 +40,7 @@ public:
 	bool GetEnv(const wxString& key, wxString& value);
 	void SetEnv(const wxString& key, const wxString& value);
 	void SetEnv(const map<wxString, wxString>& env);
+	void SetIfValue(const wxString& key, const wxString& value);
 
 	void SetToCurrent();
 

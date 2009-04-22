@@ -7154,7 +7154,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_FILENAME
 	// note: in case of remote files, this is of the buffer file
 	const wxString name = m_path.GetFullName();
-	if (!name.empty()) env.SetEnv(wxT("TM_FILENAME"), name);
+	env.SetIfValue(wxT("TM_FILENAME"), name);
 
 	// TM_FILEPATH & TM_DIRECTORY
 	// note: in case of remote files, this is of the buffer file
@@ -7182,11 +7182,11 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_CURRENT_WORD
 	const wxString word = GetCurrentWord();
-	if (!word.empty()) env.SetEnv(wxT("TM_CURRENT_WORD"), word);
+	env.SetIfValue(wxT("TM_CURRENT_WORD"), word);
 
 	// TM_CURRENT_LINE
 	const wxString line = GetCurrentLine();
-	if (!line.empty()) env.SetEnv(wxT("TM_CURRENT_LINE"), line);
+	env.SetIfValue(wxT("TM_CURRENT_LINE"), line);
 
 	const unsigned int lineNum = GetCurrentLineNumber();
 	const unsigned int columnIndex = GetCurrentColumnNumber();
@@ -7208,8 +7208,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(wxT("TM_TAB_SIZE"), tabsize);
 
 	// TM_SOFT_TABS
-	if (m_parentFrame.IsSoftTabs()) env.SetEnv(wxT("TM_SOFT_TABS"), wxT("YES"));
-	else env.SetEnv(wxT("TM_SOFT_TABS"), wxT("NO"));
+	env.SetEnv(wxT("TM_SOFT_TABS"), m_parentFrame.IsSoftTabs() ? wxT("YES") : wxT("NO"));
 
 	// TM_SCOPE
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
@@ -7222,7 +7221,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_MODE
 	const wxString& syntaxName = m_syntaxstyler.GetName();
-	if (!syntaxName.empty()) env.SetEnv(wxT("TM_MODE"), syntaxName);
+	env.SetIfValue(wxT("TM_MODE"), syntaxName);
 
 	// TM_PROJECT_DIRECTORY
 	if (m_parentFrame.HasProject() && !m_parentFrame.IsProjectRemote()) {

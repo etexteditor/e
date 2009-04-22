@@ -7123,22 +7123,21 @@ wxString EditorCtrl::GetFirstSelection() const {
 }
 
 wxString EditorCtrl::GetSelText() const {
-	if (m_lines.IsSelected()) {
-		wxString text;
-		const vector<interval>& selections = m_lines.GetSelections();
+	if (!m_lines.IsSelected()) return wxT("");
 
-		cxLOCKDOC_READ(m_doc)
-			// Get the selected text
-			for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-				if (iv > selections.begin()) text += wxT('\n'); // Add newline between multiple selections
+	wxString text;
+	const vector<interval>& selections = m_lines.GetSelections();
 
-				text += doc.GetTextPart((*iv).start, (*iv).end);
-			}
-		cxENDLOCK
+	cxLOCKDOC_READ(m_doc)
+		// Get the selected text
+		for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
+			if (iv > selections.begin()) text += wxT('\n'); // Add newline between multiple selections
 
-		return text;
-	}
-	else return wxT("");
+			text += doc.GetTextPart((*iv).start, (*iv).end);
+		}
+	cxENDLOCK
+
+	return text;
 }
 
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {

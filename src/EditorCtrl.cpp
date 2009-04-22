@@ -7300,7 +7300,7 @@ wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv)
 	return outputStr;
 }
 
-void EditorCtrl::RunCurrent(bool doReplace) {
+void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	vector<char> command;
 	unsigned int start;
 	unsigned int end;

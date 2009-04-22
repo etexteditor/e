@@ -2569,7 +2569,7 @@ void EditorFrame::OnMenuFilter(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuRunCurrent(wxCommandEvent& WXUNUSED(event)) {
-	editorCtrl->RunCurrent(false);
+	editorCtrl->RunCurrentSelectionAsCommand(false);
 }
 
 void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {

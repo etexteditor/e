@@ -280,7 +280,7 @@ public:
 	// Shell
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
 	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
-	void RunCurrent(bool doReplace);
+	void RunCurrentSelectionAsCommand(bool doReplace);
 
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};

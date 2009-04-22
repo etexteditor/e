@@ -800,31 +800,29 @@ void EditorFrame::UpdateEncodingMenu(wxMenu& menu) const {
 
 	// Set the current encoding
 	wxMenuItem* encodingItem = menu.FindItem(MENU_ENCODING); // "Encoding submenu item"
-	if (encodingItem) {
-		wxMenu* encodingMenu = encodingItem->GetSubMenu();
-		if (encodingMenu) {
-			wxFontEncoding enc = editorCtrl->GetEncoding();
+	if (!encodingItem) return;
 
-			// Set checkmarks
-			wxMenuItemList& items = encodingMenu->GetMenuItems();
-			for(unsigned int i = 0; i < items.GetCount(); ++i) {
-				if (wxFontMapper::GetEncoding(i) == enc) items[i]->Check(true);
-				else items[i]->Check(false);
-			}
+	wxMenu* encodingMenu = encodingItem->GetSubMenu();
+	if (!encodingMenu) return;
 
-			// Check if we can set BOM
-			wxMenuItem* bomItem = menu.FindItem(MENU_BOM); // "Byte-Order-Marker item"
-			if (bomItem) {
-				if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
-					enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE)
-					bomItem->Enable(true);
-				else bomItem->Enable(false);
+	wxFontEncoding enc = editorCtrl->GetEncoding();
 
-				bomItem->Check(editorCtrl->GetBOM());
-			}
-		}
+	// Set checkmarks
+	wxMenuItemList& items = encodingMenu->GetMenuItems();
+	for(unsigned int i = 0; i < items.GetCount(); ++i) {
+		items[i]->Check(wxFontMapper::GetEncoding(i) == enc);
 	}
 
+	// Check if we can set BOM
+	wxMenuItem* bomItem = menu.FindItem(MENU_BOM); // "Byte-Order-Marker item"
+	if (!bomItem) return;
+
+	const bool encodingAllowsBOM = (enc == wxFONTENCODING_UTF7 || 
+		enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
+		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE);
+
+	bomItem->Enable(encodingAllowsBOM);
+	bomItem->Check(editorCtrl->GetBOM());
 }
 
 /*

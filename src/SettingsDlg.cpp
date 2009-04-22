@@ -260,9 +260,11 @@ void SettingsDlg::UpdateEncoding() {
 
 void SettingsDlg::OnComboEol(wxCommandEvent& event) {
 	wxString eolStr;
-	if (event.GetSelection() == 0) eolStr = wxT("crlf");
-	else if (event.GetSelection() == 1) eolStr = wxT("lf");
-	else if (event.GetSelection() == 2) eolStr = wxT("cr");
+	switch(event.GetSelection()) {
+		case 0: eolStr = wxT("crlf"); break;
+		case 1: eolStr = wxT("lf"); break;
+		case 2: eolStr = wxT("cr"); break;
+	}
 
 	cxLOCK_WRITE(m_catalyst)
 		catalyst.SetSettingString(wxT("formatEol"), eolStr);

@@ -414,8 +414,7 @@ bool span_matcher::IsSpanEnd(unsigned int callout_id) {
 
 	//if (callout_id >= m_endrefs_start) return true;
 	//if (callout_id == m_endref) return true;
-	if (callout_id == 0) return true;
-	else return false;
+	return (callout_id == 0);
 }
 
 size_t span_matcher::GetMembers(vector<calloutref>& refs) {
@@ -431,9 +430,6 @@ size_t span_matcher::GetMembers(vector<calloutref>& refs) {
 
 	return count;
 }
-
-
-
 
 // -------------------------------------------------------------------------------------
 

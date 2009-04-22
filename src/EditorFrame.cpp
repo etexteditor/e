@@ -1978,32 +1978,23 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 
 	wxAuiPaneInfo& revHistoryPane = m_frameManager.GetPane(documentHistory);
 	wxMenuItem* rhItem = GetMenuBar()->FindItem(MENU_REVHIS); // "Revision History"
-	if (rhItem) {
-		if (revHistoryPane.IsShown()) rhItem->Check(true);
-		else rhItem->Check(false);
-	}
+	if (rhItem) rhItem->Check(revHistoryPane.IsShown());
 
 	wxAuiPaneInfo& undoHistoryPane = m_frameManager.GetPane(undoHistory);
 	wxMenuItem* uhItem = GetMenuBar()->FindItem(MENU_UNDOHIS); // "Undo History"
-	if (uhItem) {
-		if (undoHistoryPane.IsShown()) uhItem->Check(true);
-		else uhItem->Check(false);
-	}
+	if (uhItem) uhItem->Check(undoHistoryPane.IsShown());
 
 	// "Project Pane"
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
 	wxMenuItem* spItem = GetMenuBar()->FindItem(MENU_SHOWPROJECT);
 	if (spItem) {
-		if (projectPane.IsShown() && projectPane.window == m_projectPane) spItem->Check(true);
-		else spItem->Check(false);
+		const bool showingProjectPane = projectPane.IsShown() && projectPane.window == m_projectPane;
+		spItem->Check(showingProjectPane);
 	}
 
 	// "Show Symbol List"
 	wxMenuItem* slItem = GetMenuBar()->FindItem(MENU_SHOWSYMBOLS);
-	if (slItem) {
-		if (m_symbolList) slItem->Check(true);
-		else slItem->Check(false);
-	}
+	if (slItem) slItem->Check(m_symbolList != NULL);
 
 	// "Highlight Authors"
 	wxMenuItem* hlItem = GetMenuBar()->FindItem(MENU_HL_USERS);
@@ -2042,16 +2033,12 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	const unsigned int currentTab = m_tabBar->GetSelection();
 	for (unsigned int i = 0; i < tabItems.GetCount(); ++i) {
 		wxMenuItem* item = tabItems[i];
-
 		item->Check(item->GetId() - 40000 == (int)currentTab);
 	}
 
 	// Web preview
 	wxMenuItem* previewItem = GetMenuBar()->FindItem(MENU_PREVIEW);
-	if (previewItem) {
-		if (m_previewDlg) previewItem->Check(true);
-		else previewItem->Check(false);
-	}
+	if (previewItem) previewItem->Check(m_previewDlg != NULL);
 
 	// Save-As is not implemented for bundles items (yet)
 	wxMenuItem* saveasItem = GetMenuBar()->FindItem(wxID_SAVEAS);

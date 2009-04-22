@@ -481,14 +481,13 @@ void EditorCtrl::EndChange() {
 	// Invalidate all stylers
 	StylersInvalidate();
 
-	if (change_doc_id.type == di.type && change_doc_id.document_id == di.document_id) {
+	if (change_doc_id.SameDoc(di)) {
 		// If we are still in the same document, we want to find
 		// matching positions and selections
 
 		if (change_doc_id.version_id == di.version_id) return;
 
 		vector<interval> oldsel = m_lines.GetSelections();
-
 		m_lines.ReLoadText();
 
 		// re-set the width
@@ -498,7 +497,6 @@ void EditorCtrl::EndChange() {
 	}
 	else {
 		scrollPos = 0;
-
 		m_lines.ReLoadText();
 
 		// re-set the width

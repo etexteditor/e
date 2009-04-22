@@ -47,15 +47,21 @@ private:
 	// Change trackers
 	bool m_ctUserPic;
 
-	// ctrls
+	// Controls
+	// -- Profile page
 	wxTextCtrl* m_ctrlUserName;
 	wxStaticBitmap* m_ctrlUserPic;
+
+	// -- Encoding page
 	wxComboBox* m_defLine;
 	wxComboBox* m_defEnc;
 	wxCheckBox* m_defBom;
+
+	// -- Settings page
 	wxSpinCtrl* m_marginSpin;
 	wxCheckBox* m_wrapMargin;
-};
 
+	// -- Advanced page
+};
 
 #endif // __SETTINGSDLG_H__

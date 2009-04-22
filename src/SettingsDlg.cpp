@@ -176,6 +176,12 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 				}
 
 				notebook->AddPage(profilePage, _("Profile"), true);
+
+				// Create the advanced page
+				wxPanel* advancedPage = new wxPanel(notebook, wxID_ANY);
+				{
+				}
+				notebook->AddPage(advancedPage, _("Advanced"), true);
 			}
 			notebook->SetSelection(0);
 

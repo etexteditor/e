@@ -2838,22 +2838,21 @@ void EditorFrame::OnMenuDocShare(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuCommit(wxCommandEvent& WXUNUSED(event)) {
 	// Get optional Label & Description from user
 	CommitDlg dlg(this);
-	if (dlg.ShowModal() == wxID_OK) {
+	if (dlg.ShowModal() != wxID_OK) return;
 
-		editorCtrl->Commit(dlg.GetLabel(), dlg.GetDescription());
+	editorCtrl->Commit(dlg.GetLabel(), dlg.GetDescription());
 
-		// Save the page settings
-		SaveState();
+	// Save the page settings
+	SaveState();
 
-		// By commiting a user indicates that he wants us to protect his document,
-		// so we want to commit the db before continuing.
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.Commit();
-		cxENDLOCK
+	// By commiting a user indicates that he wants us to protect his document,
+	// so we want to commit the db before continuing.
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.Commit();
+	cxENDLOCK
 
-		// Notify that we are editing a new document
-		dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
-	}
+	// Notify that we are editing a new document
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
 }
 /*
 void EditorFrame::OnMenuRevTooltip(wxCommandEvent& WXUNUSED(event)) {
@@ -3263,14 +3262,13 @@ void EditorFrame::OnNotebook(wxAuiNotebookEvent& event) {
 
 void EditorFrame::UpdateNotebook() {
 	EditorCtrl* page = GetEditorCtrlFromPage(m_tabBar->GetSelection());
+	if (editorCtrl == page) return;
 
-	if (editorCtrl != page) {
-		editorCtrl = page;
-		SetPath();
+	editorCtrl = page;
+	SetPath();
 
-		// Notify that we are editing a new document
-		dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
-	}
+	// Notify that we are editing a new document
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
 }
 
 void EditorFrame::OnNotebookDragDone(wxAuiNotebookEvent& WXUNUSED(event)) {
@@ -3609,10 +3607,9 @@ bool EditorFrame::CloseTab(unsigned int tab_id, bool removetab) {
 		dlg.Centre();
 
 		int result = dlg.ShowModal();
-		if (result == wxID_CANCEL) {
-			return false; // Veto to close
-		}
-		else if (result == wxID_YES) {
+		if (result == wxID_CANCEL) return false; // Veto to close
+		
+		if (result == wxID_YES) {
 			if (!page->SaveText()) {
 				// Cancel if save failed
 				return false; // Veto to close;
@@ -3657,9 +3654,7 @@ void EditorFrame::OnCloseOtherTabs(wxCommandEvent& WXUNUSED(event)) {
 	const unsigned int keep_tab_id = m_contextTab;
 	wxASSERT(keep_tab_id >= 0 && keep_tab_id < m_tabBar->GetPageCount());
 
-	if (AskToSaveMulti(keep_tab_id) == false) {
-		return;
-	}
+	if (AskToSaveMulti(keep_tab_id) == false) return;
 
 	// Delete pages and close the tabs
 	Freeze(); // optimize redrawing
@@ -3677,9 +3672,7 @@ void EditorFrame::OnCloseAllTabs(wxCommandEvent& WXUNUSED(event)) {
 
 	if (m_tabBar->GetPageCount() == 1 && editorCtrl->IsEmpty()) return;
 
-	if (AskToSaveMulti() == false) {
-		return;
-	}
+	if (AskToSaveMulti() == false) return;
 
 	// Delete pages and close the tabs
 	Freeze(); // optimize redrawing
@@ -3698,40 +3691,38 @@ bool EditorFrame::DeletePage(unsigned int page_id, bool removetab) {
 	EditorCtrl* ec = GetEditorCtrlFromPage(page_id);
 	const doc_id di = ec->GetDocID();
 
-	if(ec->Close()) {
+	if(!ec->Close()) return false; //Vetoed close
 
-		// Notify PreviewDlg that the tab is closing (it might be pinned)
-		if (m_previewDlg) m_previewDlg->PageClosed(ec);
+	// Notify PreviewDlg that the tab is closing (it might be pinned)
+	if (m_previewDlg) m_previewDlg->PageClosed(ec);
 
-		if (ec == editorCtrl) editorCtrl = NULL; // Make sure we don't accidentally use deleted ctrl
+	if (ec == editorCtrl) editorCtrl = NULL; // Make sure we don't accidentally use deleted ctrl
 
-		//((eApp*)wxTheApp)->DeletePageSettings(page_id);
-		//pages.erase(pages.begin() + page_id);
+	//((eApp*)wxTheApp)->DeletePageSettings(page_id);
+	//pages.erase(pages.begin() + page_id);
 
-		if (di.IsDraft()) {
-			// Check if there are other pages that use the same document
-			bool document_in_use = false;
-			for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-				EditorCtrl* page = GetEditorCtrlFromPage(i);
+	if (di.IsDraft()) {
+		// Check if there are other pages that use the same document
+		bool document_in_use = false;
+		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+			EditorCtrl* page = GetEditorCtrlFromPage(i);
 
-				if (di.SameDoc(page->GetDocID())) document_in_use = true;
-			}
+			if (di.SameDoc(page->GetDocID())) document_in_use = true;
+		}
 
-			// Delete the document if this was the last ref
-			// and it is unmodified since creation/loading
-			if (!document_in_use) {
-				cxLOCK_WRITE(m_catalyst)
-					if (catalyst.IsDraftDeletableOnExit(di)) {
-						catalyst.DeleteDraft(di);
+		// Delete the document if this was the last ref
+		// and it is unmodified since creation/loading
+		if (!document_in_use) {
+			cxLOCK_WRITE(m_catalyst)
+				if (catalyst.IsDraftDeletableOnExit(di)) {
+					catalyst.DeleteDraft(di);
 
-						// Notify subscribers that the document has been deleted
-						dispatcher.Notify(wxT("DOC_DELETED"), &di, 0);
-					}
-				cxENDLOCK
-			}
+					// Notify subscribers that the document has been deleted
+					dispatcher.Notify(wxT("DOC_DELETED"), &di, 0);
+				}
+			cxENDLOCK
 		}
 	}
-	else return false; // Veto to close
 
 	if (removetab) m_tabBar->DeletePage(page_id);
 

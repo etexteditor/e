@@ -134,4 +134,3 @@ void* CygwinDlg::CygwinInstallThread::Entry() {
 
 	return NULL;
 }
-

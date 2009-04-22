@@ -34,40 +34,40 @@ wxRegEx matcher::s_backref(wxT("\\\\([[:digit:]]+)"));
 wxRegEx span_matcher::s_refToCapture(wxT("\\\\([[:digit:]]+)"));
 
 void matcher::OptimizeRegex(wxString& pattern) {
-	if (s_alternatives.Matches(pattern)) {
-		size_t start, len;
-		s_alternatives.GetMatch(&start, &len, 2);
-		size_t end = start+len;
+	if (!s_alternatives.Matches(pattern)) return;
 
-		// Build the tree
-		NodeMap* root = new NodeMap;
-		NodeMap* node = root;
-		NodeMap* prevNode = NULL;
-		wxChar prevChar = '\0';
-		for (size_t i = start; i < end; ++i) {
-			const wxChar c = pattern[i];
+	size_t start, len;
+	s_alternatives.GetMatch(&start, &len, 2);
+	size_t end = start+len;
 
-			if (!node) {
-				node = new map<wxChar, void*>;
-				(*prevNode)[prevChar] = node;
-			}
-			prevNode = node;
-			prevChar = c;
-			node = (NodeMap*)(*node)[c];
+	// Build the tree
+	NodeMap* root = new NodeMap;
+	NodeMap* node = root;
+	NodeMap* prevNode = NULL;
+	wxChar prevChar = '\0';
+	for (size_t i = start; i < end; ++i) {
+		const wxChar c = pattern[i];
 
-			if (c == wxT('|')) node = root;
+		if (!node) {
+			node = new map<wxChar, void*>;
+			(*prevNode)[prevChar] = node;
 		}
+		prevNode = node;
+		prevChar = c;
+		node = (NodeMap*)(*node)[c];
 
-		// Rebuild the pattern from tree
-		wxString newpattern;
-		RebuildPattern(newpattern, *root);
-
-		pattern.replace(start, len, newpattern);
-		//wxLogDebug(wxT("%s"), pattern);
-
-		// Clean up
-		DeleteNode(root);
+		if (c == wxT('|')) node = root;
 	}
+
+	// Rebuild the pattern from tree
+	wxString newpattern;
+	RebuildPattern(newpattern, *root);
+
+	pattern.replace(start, len, newpattern);
+	//wxLogDebug(wxT("%s"), pattern);
+
+	// Clean up
+	DeleteNode(root);
 }
 
 void matcher::DeleteNode(NodeMap* node) {

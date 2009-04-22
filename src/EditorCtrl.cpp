@@ -4995,11 +4995,10 @@ void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 		m_snippetHandler.Insert(word);
 		return;
 	}
-	else {
-		RawDelete(iv.start, iv.end);
-		unsigned int byte_len = RawInsert(iv.start, word, true);
-		SetPos(iv.start + byte_len);
-	}
+
+	RawDelete(iv.start, iv.end);
+	unsigned int byte_len = RawInsert(iv.start, word, true);
+	SetPos(iv.start + byte_len);
 
 	Freeze();
 }

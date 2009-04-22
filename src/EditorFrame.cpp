@@ -1410,31 +1410,27 @@ bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 		wxRegEx domain(wxT("^.*://[^/]+$")); // domains don't need ending slash
 
 		if (path.Last() == wxT('/')) return OpenRemoteProjectFromUrl(path);
-		else if (domain.Matches(path)) return OpenRemoteProjectFromUrl(path + wxT('/'));
-		else {
-			if (!OpenRemoteFile(path)) return false;
-			Update();
-		}
+		if (domain.Matches(path)) return OpenRemoteProjectFromUrl(path + wxT('/'));
+		if (!OpenRemoteFile(path)) return false;
+
+		Update();
 		return true;
 	}
 
-	if (path.StartsWith(wxT("bundle://"))) {
-		if (!OpenRemoteFile(path)) return false;
-	}
-	else if (wxDir::Exists(path)) {
+	if (path.StartsWith(wxT("bundle://"))) return OpenRemoteFile(path);
+
+	if (wxDir::Exists(path)) {
 		wxFileName dirPath(path, wxEmptyString);
 		dirPath.MakeAbsolute(); // Handle local paths
 		return OpenDirProject(dirPath);
 	}
-	else {
-		// Handle local paths
-		wxFileName filepath = path;
-		filepath.MakeAbsolute();
 
-		if (!OpenFile(filepath, wxFONTENCODING_SYSTEM, mate)) return false;
-		Update();
-	}
+	// Handle local paths
+	wxFileName filepath = path;
+	filepath.MakeAbsolute();
 
+	if (!OpenFile(filepath, wxFONTENCODING_SYSTEM, mate)) return false;
+	Update();
 	return true;
 }
 

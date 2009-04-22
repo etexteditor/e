@@ -152,17 +152,16 @@ bool matcher::RegExVerify(const wxString& pattern, bool matchcase) {
 		free(compiledPattern);
 		return true;
 	}
-	else {
-		wxLogDebug(wxT("RegEx error: %s"), error);
-		wxLogDebug(wxT("offset: %d\n%s"), erroffset, &pattern[erroffset]);
 
-		wxFile file(wxT("pattern.debug"), wxFile::write);
-		file.Write(pattern);
-		file.Close();
+	wxLogDebug(wxT("RegEx error: %s"), error);
+	wxLogDebug(wxT("offset: %d\n%s"), erroffset, &pattern[erroffset]);
 
-		wxASSERT(false);
-		return false;
-	}
+	wxFile file(wxT("pattern.debug"), wxFile::write);
+	file.Write(pattern);
+	file.Close();
+
+	wxASSERT(false);
+	return false;
 }
 #endif //__WXDEBUG__
 
@@ -190,20 +189,19 @@ bool match_matcher::RegExCompile(const wxString& pattern, bool matchcase) {
 		m_patternStudy = pcre_study(m_compiledPattern, 0, &error);
 		return true;
 	}
-	else {
-		wxLogDebug(wxT("RegEx error: %s"), wxString(error, wxConvUTF8).c_str());
-		wxLogDebug(wxT("Invalid pattern: %s"), pattern.c_str());
-		wxString loc = pattern;
-		loc.Remove(0, erroffset);
-		wxLogDebug(wxT("Location: %s"), loc.c_str());
 
-		// Notify user of error
-		wxString msg = m_name + _(" contains invalid regex pattern!\n");
-		msg += wxT("Error: ") + wxString(error, wxConvUTF8) + wxT("\n\n");
-		//msg += pattern;
-		wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
-		return false;
-	}
+	wxLogDebug(wxT("RegEx error: %s"), wxString(error, wxConvUTF8).c_str());
+	wxLogDebug(wxT("Invalid pattern: %s"), pattern.c_str());
+	wxString loc = pattern;
+	loc.Remove(0, erroffset);
+	wxLogDebug(wxT("Location: %s"), loc.c_str());
+
+	// Notify user of error
+	wxString msg = m_name + _(" contains invalid regex pattern!\n");
+	msg += wxT("Error: ") + wxString(error, wxConvUTF8) + wxT("\n\n");
+	//msg += pattern;
+	wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
+	return false;
 }
 
 

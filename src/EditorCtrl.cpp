@@ -2389,6 +2389,11 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	return result;
 }
 
+//
+// Returns true if the bundle item was modified, else false.
+//
+// NOTE: No callers found for this method.
+//
 bool EditorCtrl::CheckBundleItemModified() const {
 	wxASSERT(IsBundleItem());
 
@@ -2407,12 +2412,7 @@ bool EditorCtrl::CheckBundleItemModified() const {
 		if (!catalyst.GetFileMirror(m_remotePath, di, modDate)) return false;
 	cxENDLOCK
 
-	if (modDate != itemDict.GetModDate()) {
-		// Ask user if we should reload
-		return true;
-	}
-
-	return false;
+	return modDate != itemDict.GetModDate();
 }
 
 bool EditorCtrl::LoadBundleItem(const wxString& bundleUri) {

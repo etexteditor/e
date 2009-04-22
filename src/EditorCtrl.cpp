@@ -4708,7 +4708,8 @@ wxString EditorCtrl::GetCurrentWord() const {
 			return doc.GetTextPart(iv.start, iv.end);
 		cxENDLOCK
 	}
-	else return wxEmptyString;
+	
+	return wxEmptyString;
 }
 
 wxString EditorCtrl::GetCurrentLine() {

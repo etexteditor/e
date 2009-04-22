@@ -27,6 +27,17 @@ _ReSharper*
 src/e
 src/e.debug
 
+# Linux release stuff
+.deploy
+e-*.deb
+e-*.rpm
+e-*.tar.gz
+
+# ebundles
+external/stuff/Bundles
+external/stuff/Support
+external/stuff/Themes
+
 ## Ignore non-source-controlled things in external
 # 'arch' contains downloaded dependency archives
 external/arch/

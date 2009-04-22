@@ -20,6 +20,7 @@
 #include <wx/WebView.h>
 
 class wxBrowser : public wxWebView, public virtual IHtmlWnd {
+	DECLARE_EVENT_TABLE()
 public:
 	wxBrowser(wxWindow *parent, wxWindowID id);
 	virtual ~wxBrowser();
@@ -28,9 +29,11 @@ public:
 	virtual void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false);
 	virtual bool Refresh(wxHtmlRefreshLevel level);
 	virtual bool GoBack();
-        virtual bool GoForward();
+	virtual bool GoForward();
 	virtual wxString GetRealLocation();
 protected:
+	void OnBeforeLoad(wxWebViewBeforeLoadEvent& event);
+
 	wxString m_realLocation;
 
 };

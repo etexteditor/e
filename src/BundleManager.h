@@ -18,12 +18,11 @@
 #include <wx/listctrl.h>
 #include "plistHandler.h"
 #include "RemoteThread.h"
+#include "IHtmlWnd.h"
 
 // pre-definitions
 class TmSyntaxHandler;
 class EditorFrame;
-class wxIEHtmlWin;
-class wxActiveXEvent;
 class wxProgressDialog;
 
 class BundleManager : public wxDialog {
@@ -55,9 +54,8 @@ private:
 	void OnInstallButton(wxCommandEvent& event);
 	void OnDeleteButton(wxCommandEvent& event);
 	void OnClose(wxCloseEvent& event);
-#ifdef __WXMSW__
-	void OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event);
-#endif
+	void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
+
 	DECLARE_EVENT_TABLE()
 
 	enum BundleState {
@@ -106,7 +104,11 @@ private:
 	// Member ctrls
 	wxSizer* m_mainSizer;
 	wxListCtrl* m_bundleList;
-	wxIEHtmlWin* m_htmlDescription;
+#ifdef __WXMSW__
+	wxIEHtmlWin* m_browser;
+#else
+	IHtmlWnd* m_browser;
+#endif
 	wxStaticText* m_statusText;
 	wxButton* m_installButton;
 	wxButton* m_deleteButton;

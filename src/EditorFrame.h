@@ -310,17 +310,15 @@ private:
 		static void DecodePath(wxString& path);
 
 		// Event handlers
-#ifdef __WXMSW__
-		void OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event);
-#endif
-		DECLARE_EVENT_TABLE()
+		void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
 
 		EditorFrame& m_parentFrame;
 #ifdef __WXMSW__
-	wxIEHtmlWin* m_browser;
+		wxIEHtmlWin* m_browser;
 #else
-	IHtmlWnd* m_browser;
+		IHtmlWnd* m_browser;
 #endif
+		DECLARE_EVENT_TABLE()
 	};
 
 	// Event handlers

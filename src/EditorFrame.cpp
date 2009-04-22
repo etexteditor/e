@@ -3856,9 +3856,7 @@ enum
 };
 
 BEGIN_EVENT_TABLE(EditorFrame::HtmlOutputWin, wxPanel)
-#ifdef __WXMSW__
-	EVT_ACTIVEX(ID_MSHTML, "BeforeNavigate2", EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X)
-#endif
+	EVT_HTMLWND_BEFORE_LOAD(ID_MSHTML, EditorFrame::HtmlOutputWin::OnBeforeLoad)
 END_EVENT_TABLE()
 
 EditorFrame::HtmlOutputWin::HtmlOutputWin(EditorFrame& parent)
@@ -3928,10 +3926,8 @@ void EditorFrame::HtmlOutputWin::AppendText(const wxString& html) {
 #endif //FEAT_BROWSER
 }
 
-#ifdef __WXMSW__
-void EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event)
-{
-    wxString url = event[wxT("Url")];
+void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
+    const wxString url = event.GetURL();
 	if (url == wxT("about:blank"))
 		return;
 
@@ -3939,21 +3935,24 @@ void EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event)
 		m_parentFrame.OpenTxmtUrl(url);
 
 		// Don't try to open it in browser
-		event[wxT("Cancel")] = true;
+		event.Cancel(true);
 	}
 	else if (url.StartsWith(wxT("tm-file://"))) {
 
 		wxString path = url.substr(10);
-		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
+
+#ifdef __WXMSW__
+		path = EditorCtrl::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
+#endif
+
 		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
 		m_browser->LoadUrl(path);
 
 		// Don't try to open it in browser
-		event[wxT("Cancel")] = true;
+		event.Cancel(true);
 	}
 }
-#endif //__WXMSW__
 
 void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
 	// Spaces transformed to %20 in paths confuses ie
@@ -3963,3 +3962,4 @@ void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
 		}
 	}
 }
+

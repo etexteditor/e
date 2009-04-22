@@ -52,9 +52,7 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_BUTTON(ID_INSTALLBUTTON, BundleManager::OnInstallButton)
 	EVT_BUTTON(ID_DELETEBUTTON, BundleManager::OnDeleteButton)
 	EVT_CLOSE(BundleManager::OnClose)
-#ifdef __WXMSW
-	EVT_ACTIVEX(ID_HTML_DESC, "BeforeNavigate2", BundleManager::OnMSHTMLBeforeNavigate2X)
-#endif
+	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
 
 BundleManager::BundleManager(EditorFrame& parent)
@@ -366,18 +364,16 @@ void BundleManager::OnRemoteAction(cxRemoteAction& event) {
 	}
 }
 
-#ifdef __WXMSW__
-void BundleManager::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event) {
-    const wxString url = event[wxT("Url")];
+void BundleManager::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
+    const wxString url = event.GetURL();
 	if (url == wxT("about:blank")) return;
 	else {
 		wxLaunchDefaultBrowser(url);
 
 		// Don't try to open it in inline browser
-		event[wxT("Cancel")] = true;
+		event.Cancel(true);
 	}
 }
-#endif
 
 void BundleManager::OnInstallButton(wxCommandEvent& WXUNUSED(event)) {
 	switch (m_currentBundleState) {

@@ -3942,9 +3942,8 @@ void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 		wxString path = url.substr(10);
 
 #ifdef __WXMSW__
-		path = EditorCtrl::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
+		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
 #endif
-
 		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
 		m_browser->LoadUrl(path);

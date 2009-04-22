@@ -24,6 +24,9 @@
 class TmSyntaxHandler;
 class EditorFrame;
 class wxProgressDialog;
+#ifdef __WXMSW__
+class wxIEHtmlWin;
+#endif
 
 class BundleManager : public wxDialog {
 public:

@@ -1443,13 +1443,11 @@ bool EditorFrame::OpenProject(const wxString& prj) {
 		ShowBundlePane();
 		return true;
 	}
-	else if (IsRemotePath(prj)) {
-		return OpenRemoteProjectFromUrl(prj);
-	}
-	else {
-		const wxFileName path = prj;
-		return OpenDirProject(path);
-	}
+	
+	if (IsRemotePath(prj)) return OpenRemoteProjectFromUrl(prj);
+
+	const wxFileName path = prj;
+	return OpenDirProject(path);
 }
 
 bool EditorFrame::OpenDirProject(const wxFileName& path) {
@@ -1466,7 +1464,7 @@ bool EditorFrame::OpenRemoteProjectFromUrl(const wxString& url) {
 	const RemoteProfile* rp = GetRemoteProfile(url, true);
 
 	if (rp && rp->IsValid()) return OpenRemoteProject(rp);
-	else return false;
+	return false;
 }
 
 bool EditorFrame::OpenRemoteProject(const RemoteProfile* rp) {

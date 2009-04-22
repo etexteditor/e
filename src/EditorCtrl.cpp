@@ -5755,45 +5755,44 @@ search_result EditorCtrl::RegExFindBackwards(const wxString& searchtext, unsigne
 }
 
 bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext, int options) {
-	if (m_lines.IsSelected()) {
-		const interval iv = m_lines.GetSelections()[0];
-		m_lines.RemoveAllSelections();
-		unsigned int byte_len = 0;
-
-		if (options & FIND_USE_REGEX) {
-			// We need to search again to get captures
-			map<unsigned int,interval> captures;
-			const search_result result = RegExFind(searchtext, iv.start, options & FIND_MATCHCASE, &captures);
-
-			if (result.error_code >= 0) {
-				const wxString new_replacetext = ParseReplaceString(replacetext, captures);
-				RawDelete(iv.start, iv.end);
-				byte_len = RawInsert(iv.start, new_replacetext, false);
-				m_lines.SetPos(iv.start + byte_len); // move to end of insertion
-			}
-			else wxASSERT(false);
-		}
-		else {
-			RawDelete(iv.start, iv.end);
-			byte_len = RawInsert(iv.start, replacetext, false);
-			m_lines.SetPos(iv.start + byte_len); // move to end of insertion
-		}
-
-		// Adjust searchranges
-		if (!m_searchRanges.empty()) {
-			const int diff = byte_len - (iv.end - iv.start);
-			for (vector<interval>::iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
-				if (p->start > iv.start) p->start += diff;
-				if (p->end > iv.start) p->end += diff;
-			}
-		}
-
-		return DoFind(searchtext, m_lines.GetPos(), options);
-	}
-	else {
+	if (!m_lines.IsSelected()) {
 		int startpos = (options & FIND_RESTART) ? 0 : m_lines.GetPos();
 		return DoFind(searchtext, startpos, options);
 	}
+
+	const interval iv = m_lines.GetSelections()[0];
+	m_lines.RemoveAllSelections();
+	unsigned int byte_len = 0;
+
+	if (options & FIND_USE_REGEX) {
+		// We need to search again to get captures
+		map<unsigned int,interval> captures;
+		const search_result result = RegExFind(searchtext, iv.start, options & FIND_MATCHCASE, &captures);
+
+		if (result.error_code >= 0) {
+			const wxString new_replacetext = ParseReplaceString(replacetext, captures);
+			RawDelete(iv.start, iv.end);
+			byte_len = RawInsert(iv.start, new_replacetext, false);
+			m_lines.SetPos(iv.start + byte_len); // move to end of insertion
+		}
+		else wxASSERT(false);
+	}
+	else {
+		RawDelete(iv.start, iv.end);
+		byte_len = RawInsert(iv.start, replacetext, false);
+		m_lines.SetPos(iv.start + byte_len); // move to end of insertion
+	}
+
+	// Adjust searchranges
+	if (!m_searchRanges.empty()) {
+		const int diff = byte_len - (iv.end - iv.start);
+		for (vector<interval>::iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
+			if (p->start > iv.start) p->start += diff;
+			if (p->end > iv.start) p->end += diff;
+		}
+	}
+
+	return DoFind(searchtext, m_lines.GetPos(), options);
 }
 
 bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options) {

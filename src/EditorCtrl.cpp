@@ -8341,7 +8341,8 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 	}
 
 	if (actions.empty()) return false; // no matching shortcut
-	else if (actions.size() == 1) {
+	
+	if (actions.size() == 1) {
 		DoAction(*actions[0], NULL, false);
 	}
 	else {
@@ -8805,7 +8806,7 @@ void EditorCtrl::ParseFoldMarkers() {
 			const bool matchEndMarker = (sr2.error_code > 0);
 
 			if (matchStartMarker) {
-				if (!matchEndMarker) { // starter and ender on same line cancels eachother out
+				if (!matchEndMarker) { // starter and ender on same line cancels out
 					m_folds.push_back(cxFold(i, cxFOLD_START, GetLineIndentLevel(i)));
 				}
 			}
@@ -8842,7 +8843,7 @@ vector<EditorCtrl::cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line
 		const bool matchEndMarker = (sr2.error_code > 0);
 
 		if (matchStartMarker) {
-			if (!matchEndMarker) { // starter and ender on same line cancels eachother out
+			if (!matchEndMarker) { // starter and ender on same line cancels out
 				return m_folds.insert(insertPos, cxFold(line_id, (doFold ? cxFOLD_START_FOLDED : cxFOLD_START), GetLineIndentLevel(line_id)))+1;
 			}
 		}
@@ -8855,13 +8856,13 @@ vector<EditorCtrl::cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line
 }
 
 void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
-	// Find out which lines was affected
+	// Find out which lines were affected
 	const unsigned int lineCount = m_lines.GetLineCount(false/*includeVirtual*/);
 	const unsigned int firstline = m_lines.GetLineFromCharPos(pos);
 	unsigned int lastline = m_lines.GetLineFromCharPos(pos + len);
 	if (lastline && m_lines.isLineVirtual(lastline)) --lastline; // Don't try to parse last virtual line
 
-	// How many new lines was inserted?
+	// How many new lines were inserted?
 	unsigned int newLines = lastline - firstline;
 	if (firstline == m_foldLineCount) ++newLines; // adjust for first insertion in last line (creating it)
 	wxASSERT(newLines == lineCount - m_foldLineCount);
@@ -8880,7 +8881,7 @@ void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
 		p = ParseFoldLine(i, p, doRefold);
 	}
 
-	// Adjust line id's in following
+	// Adjust line ids in following
 	if (newLines) {
 		while (p != m_folds.end()) {
 			p->line_id += newLines;

@@ -311,22 +311,22 @@ void SettingsDlg::OnButtonLoadPic(wxCommandEvent& WXUNUSED(event)) {
 	const wxString filter = wxT("Image files (*.bmp,*.gif.*.ico,*.jpg,*.png)|*.bmp;*.gif;*.png;*.jpg;*.ico");
 	wxFileDialog dlg(this, _("Choose an image"), wxT(""), wxT(""), filter, wxFD_OPEN);
 
-	if (dlg.ShowModal() == wxID_OK) {
-		// Load the image
-		m_userImage.LoadFile(dlg.GetPath());
-		if (m_userImage.Ok()) {
-			// Resize to 48*48
-			if (m_userImage.GetWidth() != 48 || m_userImage.GetHeight() != 48) {
-				m_userImage.Rescale(48, 48);
-			}
+	if (dlg.ShowModal() != wxID_OK) return;
 
-			m_ctrlUserPic->SetBitmap(wxBitmap(m_userImage));
-			m_ctUserPic = true;
-		}
-		else {
-			// TODO: Notify user
-		}
+	// Load the image
+	m_userImage.LoadFile(dlg.GetPath());
+	if (!m_userImage.Ok()){
+		// TODO: Notify user
+		return;
 	}
+
+	// Resize to 48*48
+	if (m_userImage.GetWidth() != 48 || m_userImage.GetHeight() != 48) {
+		m_userImage.Rescale(48, 48);
+	}
+
+	m_ctrlUserPic->SetBitmap(wxBitmap(m_userImage));
+	m_ctUserPic = true;
 }
 
 void SettingsDlg::OnCheckAutoPair(wxCommandEvent& event) {

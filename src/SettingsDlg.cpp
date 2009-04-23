@@ -16,6 +16,11 @@
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 
+#ifdef __WXMSW__
+	#include "eDocumentPath.h"
+#endif
+
+
 inline bool encoding_allows_bom(wxFontEncoding enc) {
 	return (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
 		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE);
@@ -189,30 +194,33 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 				wxFlexGridSizer* sizer = new wxFlexGridSizer(2, 2, 0, 0);
 				sizer->AddGrowableCol(1); // col 2 is sizable
 
-				wxStaticText* labelCygdrive = new wxStaticText(unixPage, wxID_ANY, _("Cygdrive Prefix:"));
-				sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+				// Is Cygwin intialized?
+				wxStaticText* labelCygInit = new wxStaticText(unixPage, wxID_ANY, _("Cygwin initialized?"));
+				sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				m_ctrlCygdrivePrefix = new wxTextCtrl(unixPage, wxID_ANY);
-				sizer->Add(m_ctrlCygdrivePrefix, 1, wxEXPAND|wxALL, 5);
-				
+				wxStaticText* labelCygInitValue = new wxStaticText(unixPage, wxID_ANY, eDocumentPath::IsInitialized() ? _("Yes") : _("No"));
+				sizer->Add(labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+				// Bash path
 				wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash Path:"));
 				sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				m_ctrlBashPath = new wxTextCtrl(unixPage, wxID_ANY, _(".....\\bash.exe"));
-				sizer->Add(m_ctrlBashPath, 1, wxEXPAND|wxALL, 5);
+				//m_ctrlBashPath = new wxTextCtrl(unixPage, wxID_ANY, _(".....\\bash.exe"));
+				//sizer->Add(m_ctrlBashPath, 1, wxEXPAND|wxALL, 5);
 				
+				// Size and fit
 				unixPage->SetSizerAndFit(sizer);
 
-				// Read cygdrive-prefix setting and fill control.
-				wxString cygdrivePrefix;
-				cxLOCK_READ(m_catalyst)
-					catalyst.GetSettingString(wxT("cygdrive-prefix"), cygdrivePrefix);
-				cxENDLOCK
+				//// Read cygdrive-prefix setting and fill control.
+				//wxString cygdrivePrefix;
+				//cxLOCK_READ(m_catalyst)
+				//	catalyst.GetSettingString(wxT("cygdrive-prefix"), cygdrivePrefix);
+				//cxENDLOCK
 
-				if (cygdrivePrefix.IsEmpty())
-					cygdrivePrefix = wxT("/cygdrive/");
-					
-				m_ctrlCygdrivePrefix->SetValue(cygdrivePrefix);
+				//if (cygdrivePrefix.IsEmpty())
+				//	cygdrivePrefix = wxT("/cygdrive/");
+				//	
+				//m_ctrlCygdrivePrefix->SetValue(cygdrivePrefix);
 
 				// Read bash path setting and fill control.
 				// ....

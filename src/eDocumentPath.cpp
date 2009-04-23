@@ -59,7 +59,7 @@ wxString read_cygwin_registry_key(const wxString &key_path, const wxString &key,
 
 	// Check in "local machine", the "install for everyone" location.
 	{
-		wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\") + key_path);
+		wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\") + key_path);
 		if( cygKey.Exists() && cygKey.HasValue(key)) {
 			cygKey.QueryValue(key, value);
 		}
@@ -70,7 +70,7 @@ wxString read_cygwin_registry_key(const wxString &key_path, const wxString &key,
 
 	// Also check "current user" (might be needed if user did not have admin rights during install)
 	{
-		wxRegKey cygKey(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\") + key_path);
+		wxRegKey cygKey(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\") + key_path);
 		if( cygKey.Exists()  && cygKey.HasValue(key)) {
 			cygKey.QueryValue(key, value);
 		}

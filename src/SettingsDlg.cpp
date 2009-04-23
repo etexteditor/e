@@ -184,26 +184,39 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 
 #ifdef __WXMSW__
 			// Create the UNIX-on-Windws
-			wxPanel* unixPage = new wxPanel(notebook, wxID_ANY);
 			{
+				wxPanel* unixPage = new wxPanel(notebook, wxID_ANY);
 				wxFlexGridSizer* sizer = new wxFlexGridSizer(2, 2, 0, 0);
-				{
-					sizer->AddGrowableCol(1); // col 2 is sizable
+				sizer->AddGrowableCol(1); // col 2 is sizable
 
-					wxStaticText* labelCygdrive = new wxStaticText(unixPage, wxID_ANY, _("Cygdrive Prefix:"));
-					sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+				wxStaticText* labelCygdrive = new wxStaticText(unixPage, wxID_ANY, _("Cygdrive Prefix:"));
+				sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-					m_ctrlCygdrivePrefix = new wxTextCtrl(unixPage, wxID_ANY, _("/cygdrive/"));
-					sizer->Add(m_ctrlCygdrivePrefix, 1, wxEXPAND|wxALL, 5);
+				m_ctrlCygdrivePrefix = new wxTextCtrl(unixPage, wxID_ANY);
+				sizer->Add(m_ctrlCygdrivePrefix, 1, wxEXPAND|wxALL, 5);
+				
+				wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash Path:"));
+				sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+				m_ctrlBashPath = new wxTextCtrl(unixPage, wxID_ANY, _(".....\\bash.exe"));
+				sizer->Add(m_ctrlBashPath, 1, wxEXPAND|wxALL, 5);
+				
+				unixPage->SetSizerAndFit(sizer);
+
+				// Read cygdrive-prefix setting and fill control.
+				wxString cygdrivePrefix;
+				cxLOCK_READ(m_catalyst)
+					catalyst.GetSettingString(wxT("cygdrive-prefix"), cygdrivePrefix);
+				cxENDLOCK
+
+				if (cygdrivePrefix.IsEmpty())
+					cygdrivePrefix = wxT("/cygdrive/");
 					
-					wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash Path:"));
-					sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+				m_ctrlCygdrivePrefix->SetValue(cygdrivePrefix);
 
-					m_ctrlBashPath = new wxTextCtrl(unixPage, wxID_ANY, _(".....\\bash.exe"));
-					sizer->Add(m_ctrlBashPath, 1, wxEXPAND|wxALL, 5);
-					
-					unixPage->SetSizerAndFit(sizer);
-				}
+				// Read bash path setting and fill control.
+				// ....
+
 				notebook->AddPage(unixPage, _("UNIX"), true);
 			}
 #endif

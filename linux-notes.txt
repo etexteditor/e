@@ -28,6 +28,9 @@ Packages required by WebKit:
 - sqlite3 (ubuntu: libsqlite3-dev)
 - icu (ubuntu: libicu-dev)
 - libjpeg (ubuntu: libjpeg62-dev)
+- bison
+- flex
+- gperf
 
 == Bundling e into tar.gz, rpm or deb packages
 

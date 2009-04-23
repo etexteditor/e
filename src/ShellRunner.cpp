@@ -113,10 +113,12 @@ wxString ShellRunner::GetBashCommand(const wxString& cmd, cxEnv& env) {
 		initPath.AppendDir(wxT("Support"));
 		initPath.AppendDir(wxT("lib"));
 		initPath.SetFullName(wxT("bash_init.sh"));
+
 		if (initPath.FileExists()) {
 			s_bashEnv = initPath.GetFullPath();
 		}
 	}
+
 	env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
 
 #ifdef __WXMSW__

@@ -2110,10 +2110,7 @@ int ProjectPane::AddFileIcon(const wxString& path, bool isDir) {
 #ifdef __WXGTK__
 bool ProjectPane::GetDefaultIcon(wxIcon &icon) {
 	icon = wxArtProvider::GetIcon(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16));
-	if (!icon.IsOk()) {
-		return false;
- 	}
-        return true;
+	return icon.IsOk();
 }
 
 bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
@@ -2129,10 +2126,7 @@ bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 //	if (dir.Open(path)) {
 		// get icon for directory 
 		icon = wxArtProvider::GetIcon(wxART_FOLDER, wxART_OTHER, wxSize(16, 16));
-		if (!icon.IsOk()) {
-			return false;
-		}
-		return true;
+		return icon.IsOk();
 	}
 	wxString FileExt = wxFileName(path).GetExt();
 	if (wxT("") == FileExt) {

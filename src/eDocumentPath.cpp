@@ -279,11 +279,13 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, cons
 	if (eDocumentPath::s_isCygwinInitialized)
 		return true;
 
-	// Check if we have a cygwin installation
+	// Check if we have a cygwin installation and read out configuration
 	eDocumentPath::s_cygPath = eDocumentPath::GetCygwinDir();
 	eDocumentPath::s_cygdrivePrefix = eDocumentPath::GetCygdrivePrefix();
 
-	if (eDocumentPath::s_cygPath.empty()) {
+	const bool cygwin_is_installed = !s_cygPath.empty();
+
+	if (!cygwin_is_installed) {
 		if (!silent) run_cygwin_dlg(cw, parentWindow, cxCYGWIN_INSTALL);
 		return false;
 	}

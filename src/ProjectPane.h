@@ -102,6 +102,7 @@ private:
 
 #ifdef __WXGTK__
 	static bool GetIconFromFilePath(const wxString& path, wxIcon &icon);
+	static bool GetDefaultIcon(wxIcon &icon);
 	void WatchTree(const wxString &path);
 #endif
 	void Init();

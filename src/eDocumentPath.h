@@ -26,6 +26,8 @@ public:
 	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
 	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 
+	static bool IsInitialized() { return s_isCygwinInitialized; }
+
 	// Todo: these are public so change the naming style.
 	static wxString s_cygPath;
 

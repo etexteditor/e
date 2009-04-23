@@ -105,7 +105,13 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 
 	// Map cygdrive paths to standard Windows drive-letter.
 	// Don't handle mounts at root (yet)
-	if (s_cygdrivePrefix != wxT("/")) {
+	if (s_cygdrivePrefix == wxT("/")) {
+		// If we got here, then don't convert the path.
+		return path;
+
+		// TODO: Convert the path
+	}
+	else {
 		const size_t n = s_cygdrivePrefix.Len() + 1; // Cygdrive prefix length
 
 		if (path.StartsWith(s_cygdrivePrefix)) {

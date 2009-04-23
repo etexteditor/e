@@ -32,7 +32,7 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 	}
 
 	// Convert C:\... to /cygdrive/c/...
-	wxString unixPath = wxT("/cygdrive/") +path.GetVolume().Lower();
+	wxString unixPath = eDocumentPath::s_cygdrivePrefix + path.GetVolume().Lower();
 
 	// Convert slashs in path segments
 	const wxArrayString& dirs = path.GetDirs();
@@ -54,6 +54,7 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 // Initialize static data.
 bool eDocumentPath::s_isCygwinInitialized = false;
 wxString eDocumentPath::s_cygPath;
+wxString eDocumentPath::s_cygdrivePrefix = wxT("/cygdrive/");
 
 wxString eDocumentPath::GetCygwinDir() { 
 	wxString cygPath;
@@ -81,6 +82,34 @@ wxString eDocumentPath::GetCygwinDir() {
 	}
 
 	return cygPath;
+}
+
+wxString eDocumentPath::GetCygdrivePrefix() { 
+	wxString cygdrivePrefix;
+
+	// Check if we have a cygwin installation
+	wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\"));
+	if( cygKey.Exists() && cygKey.HasValue(wxT("cygdrive prefix"))) {
+		cygKey.QueryValue(wxT("cygdrive prefix"), cygdrivePrefix);
+	}
+
+	if (!cygdrivePrefix.empty())
+		return cygdrivePrefix;
+
+	// Also check "current user" (might be needed if user did not have admin rights during install)
+	wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
+
+	wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\"));
+	if( cygKey2.Exists() ) {
+		wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
+
+		if (cygKey2.HasValue(wxT("cygdrive prefix"))) {
+			wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
+			cygKey2.QueryValue(wxT("cygdrive prefix"), cygdrivePrefix);
+		}
+	}
+
+	return cygdrivePrefix;
 }
 
 wxString eDocumentPath::CygwinPathToWin(const wxString& path) { 
@@ -189,6 +218,17 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 	return true;
 }
 
+void run_cygwin_dlg(CatalystWrapper& cw, wxWindow *parentWindow, cxCygwinDlgMode mode){
+	// Notify user to install cygwin
+	CygwinDlg dlg(parentWindow, cw, mode);
+
+	const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
+
+	cxLOCK_WRITE(cw)
+		catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
+	cxENDLOCK
+}
+
 //
 // Checks to see if Cygwin is initalized, and prompts user to do it if not.
 //
@@ -200,18 +240,10 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 
 	// Check if we have a cygwin installation
 	eDocumentPath::s_cygPath = eDocumentPath::GetCygwinDir();
+	eDocumentPath::s_cygdrivePrefix = eDocumentPath::GetCygdrivePrefix();
 
 	if (eDocumentPath::s_cygPath.empty()) {
-		if (!silent) {
-			// Notify user that he should install cygwin
-			CygwinDlg dlg(parentWindow, cw, cxCYGWIN_INSTALL);
-
-			const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-			cxLOCK_WRITE(cw)
-				catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-			cxENDLOCK
-		}
+		if (!silent) run_cygwin_dlg(cw, parentWindow, cxCYGWIN_INSTALL);
 		return false;
 	}
 
@@ -240,17 +272,10 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 
 	if (eDocumentPath_shouldUpdateCygwin(stampTime, supportFile)) {
 		if (!silent) {
-			// Notify user that he should update cygwin
-			CygwinDlg dlg(parentWindow, cw, cxCYGWIN_UPDATE);
+			run_cygwin_dlg(cw, parentWindow, cxCYGWIN_INSTALL);
 
-			const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-			cxLOCK_WRITE(cw)
-				catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-			cxENDLOCK
-
-			// Cancel this command, but let the user try again without
-			// getting this dialog
+			// Cancel the command that needed cygwin support, 
+			// but let the user try again without getting this dialog
 			eDocumentPath::s_isCygwinInitialized = true;
 		}
 		return false;

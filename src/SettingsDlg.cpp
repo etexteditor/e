@@ -322,7 +322,8 @@ void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
 	cxENDLOCK
 }
 
-void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {	
+void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
+	// Check if name & profile pic changed.
 	wxString name = m_ctrlUserName->GetLabel();
 	cxLOCK_READ(m_catalyst)
 		if (name == catalyst.GetUserName(0)) name.clear(); // empty string means no change
@@ -335,6 +336,12 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 			catalyst.SetProfile(name, m_userImage);
 		cxENDLOCK
 	}
+
+	// Check if cygdrive prefix changed.
+	// ...
+
+	// Check if bash path changed.
+	// ...
 
 	EndModal(wxID_OK);
 }

@@ -19,15 +19,19 @@ public:
 #ifdef __WXMSW__
 
 	static wxString GetCygwinDir();
+	static wxString GetCygdrivePrefix();
 	static wxString CygwinPathToWin(const wxString& path);
 
 	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
 	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 
+	static void SetCygdrivePrefix(wxString &cygdrivePrefix);
+
 	// Todo: these are public so change the naming style.
 	static wxString s_cygPath;
 
 private:
+	static wxString s_cygdrivePrefix;
 	static bool s_isCygwinInitialized;
 
 #endif // __WXMSW__

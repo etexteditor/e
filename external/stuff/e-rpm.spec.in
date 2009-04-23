@@ -1,0 +1,40 @@
+%define name e
+%define version %VERSION%
+%define release %RELEASE%
+%define deploy %DEPLOY%
+
+Summary: e text editor 
+Name: e
+Version: %{version}
+Release: %{release}
+License: Commercial
+Group: Productivity/Editors/Other 
+URL: http://www.e-editor.com/
+Vendor: Alexander Stigsen
+BuildRoot: %{deploy}
+Requires: curl
+Requires: gtk2
+Requires: sqlite3
+Requires: libxml2
+Requires: libxslt
+Requires: libjpg
+Requires: icu
+Requires: cairo
+Requires: openssl
+
+%description
+e is a fast and elegant text editor with many innovative features.
+
+%prep
+
+%post
+
+%files
+%defattr(755,root,root)
+%dir /opt/e
+/opt/e/e
+%attr(644,root,root)
+/opt/e/Bundles/*
+/opt/e/Support/*
+/opt/e/Themes/*
+

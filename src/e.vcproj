@@ -1298,6 +1298,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\eDocumentPath.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\eDocumentPath.h"
+			>
+		</File>
+		<File
 			RelativePath="eIpcServer.cpp"
 			>
 			<FileConfiguration
@@ -2618,6 +2626,14 @@
 		</File>
 		<File
 			RelativePath="ShellContextMenu.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ShellRunner.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ShellRunner.h"
 			>
 		</File>
 		<File

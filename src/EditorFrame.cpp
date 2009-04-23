@@ -49,6 +49,7 @@
 #include "EditorBundlePanel.h"
 #include "BundlePane.h"
 #include "UndoHistory.h"
+#include "eDocumentPath.h"
 
 #if defined (__WXMSW__)
     #include <wx/msw/registry.h>
@@ -702,22 +703,6 @@ void EditorFrame::RestoreState() {
 #endif // __WXMSW__
 }
 
-#ifdef __WXMSW__
-void EditorFrame::InitCygwin() {
-	bool cygUpdate = true;
-	cxLOCK_READ(m_catalyst)
-		catalyst.GetSettingBool(wxT("cygupdate"), cygUpdate);
-	cxENDLOCK
-
-	// If user has previously chosen not to install/update cygwin, then
-	// we will not bother him on startup (it will still show
-	// up later if using a command that need cygwin).
-	if (!cygUpdate) return;
-
-	if (editorCtrl) editorCtrl->InitCygwin();
-}
-#endif //__WXMSW__
-
 wxMenu* EditorFrame::GetBundleMenu() {
 	wxMenu* bundleMenu = ((eApp*)wxTheApp)->GetSyntaxHandler().GetBundleMenu(); // Uses IDs in range 9000-9999
 	if (!bundleMenu) bundleMenu = new wxMenu;
@@ -815,31 +800,29 @@ void EditorFrame::UpdateEncodingMenu(wxMenu& menu) const {
 
 	// Set the current encoding
 	wxMenuItem* encodingItem = menu.FindItem(MENU_ENCODING); // "Encoding submenu item"
-	if (encodingItem) {
-		wxMenu* encodingMenu = encodingItem->GetSubMenu();
-		if (encodingMenu) {
-			wxFontEncoding enc = editorCtrl->GetEncoding();
+	if (!encodingItem) return;
 
-			// Set checkmarks
-			wxMenuItemList& items = encodingMenu->GetMenuItems();
-			for(unsigned int i = 0; i < items.GetCount(); ++i) {
-				if (wxFontMapper::GetEncoding(i) == enc) items[i]->Check(true);
-				else items[i]->Check(false);
-			}
+	wxMenu* encodingMenu = encodingItem->GetSubMenu();
+	if (!encodingMenu) return;
 
-			// Check if we can set BOM
-			wxMenuItem* bomItem = menu.FindItem(MENU_BOM); // "Byte-Order-Marker item"
-			if (bomItem) {
-				if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
-					enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE)
-					bomItem->Enable(true);
-				else bomItem->Enable(false);
+	wxFontEncoding enc = editorCtrl->GetEncoding();
 
-				bomItem->Check(editorCtrl->GetBOM());
-			}
-		}
+	// Set checkmarks
+	wxMenuItemList& items = encodingMenu->GetMenuItems();
+	for(unsigned int i = 0; i < items.GetCount(); ++i) {
+		items[i]->Check(wxFontMapper::GetEncoding(i) == enc);
 	}
 
+	// Check if we can set BOM
+	wxMenuItem* bomItem = menu.FindItem(MENU_BOM); // "Byte-Order-Marker item"
+	if (!bomItem) return;
+
+	const bool encodingAllowsBOM = (enc == wxFONTENCODING_UTF7 || 
+		enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
+		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE);
+
+	bomItem->Enable(encodingAllowsBOM);
+	bomItem->Check(editorCtrl->GetBOM());
 }
 
 /*
@@ -1389,7 +1372,7 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 
 #ifdef __WXMSW__
 		// path may be in unix format, so we have to convert it
-		if (!isBundleItem) file = EditorCtrl::CygwinPathToWin(file);
+		if (!isBundleItem) file = eDocumentPath::CygwinPathToWin(file);
 #endif // __WXMSW__
 
 		if (isBundleItem) {
@@ -1425,31 +1408,27 @@ bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 		wxRegEx domain(wxT("^.*://[^/]+$")); // domains don't need ending slash
 
 		if (path.Last() == wxT('/')) return OpenRemoteProjectFromUrl(path);
-		else if (domain.Matches(path)) return OpenRemoteProjectFromUrl(path + wxT('/'));
-		else {
-			if (!OpenRemoteFile(path)) return false;
-			Update();
-		}
+		if (domain.Matches(path)) return OpenRemoteProjectFromUrl(path + wxT('/'));
+		if (!OpenRemoteFile(path)) return false;
+
+		Update();
 		return true;
 	}
 
-	if (path.StartsWith(wxT("bundle://"))) {
-		if (!OpenRemoteFile(path)) return false;
-	}
-	else if (wxDir::Exists(path)) {
+	if (path.StartsWith(wxT("bundle://"))) return OpenRemoteFile(path);
+
+	if (wxDir::Exists(path)) {
 		wxFileName dirPath(path, wxEmptyString);
 		dirPath.MakeAbsolute(); // Handle local paths
 		return OpenDirProject(dirPath);
 	}
-	else {
-		// Handle local paths
-		wxFileName filepath = path;
-		filepath.MakeAbsolute();
 
-		if (!OpenFile(filepath, wxFONTENCODING_SYSTEM, mate)) return false;
-		Update();
-	}
+	// Handle local paths
+	wxFileName filepath = path;
+	filepath.MakeAbsolute();
 
+	if (!OpenFile(filepath, wxFONTENCODING_SYSTEM, mate)) return false;
+	Update();
 	return true;
 }
 
@@ -1458,13 +1437,11 @@ bool EditorFrame::OpenProject(const wxString& prj) {
 		ShowBundlePane();
 		return true;
 	}
-	else if (IsRemotePath(prj)) {
-		return OpenRemoteProjectFromUrl(prj);
-	}
-	else {
-		const wxFileName path = prj;
-		return OpenDirProject(path);
-	}
+	
+	if (IsRemotePath(prj)) return OpenRemoteProjectFromUrl(prj);
+
+	const wxFileName path = prj;
+	return OpenDirProject(path);
 }
 
 bool EditorFrame::OpenDirProject(const wxFileName& path) {
@@ -1481,7 +1458,7 @@ bool EditorFrame::OpenRemoteProjectFromUrl(const wxString& url) {
 	const RemoteProfile* rp = GetRemoteProfile(url, true);
 
 	if (rp && rp->IsValid()) return OpenRemoteProject(rp);
-	else return false;
+	return false;
 }
 
 bool EditorFrame::OpenRemoteProject(const RemoteProfile* rp) {
@@ -1993,32 +1970,23 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 
 	wxAuiPaneInfo& revHistoryPane = m_frameManager.GetPane(documentHistory);
 	wxMenuItem* rhItem = GetMenuBar()->FindItem(MENU_REVHIS); // "Revision History"
-	if (rhItem) {
-		if (revHistoryPane.IsShown()) rhItem->Check(true);
-		else rhItem->Check(false);
-	}
+	if (rhItem) rhItem->Check(revHistoryPane.IsShown());
 
 	wxAuiPaneInfo& undoHistoryPane = m_frameManager.GetPane(undoHistory);
 	wxMenuItem* uhItem = GetMenuBar()->FindItem(MENU_UNDOHIS); // "Undo History"
-	if (uhItem) {
-		if (undoHistoryPane.IsShown()) uhItem->Check(true);
-		else uhItem->Check(false);
-	}
+	if (uhItem) uhItem->Check(undoHistoryPane.IsShown());
 
 	// "Project Pane"
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
 	wxMenuItem* spItem = GetMenuBar()->FindItem(MENU_SHOWPROJECT);
 	if (spItem) {
-		if (projectPane.IsShown() && projectPane.window == m_projectPane) spItem->Check(true);
-		else spItem->Check(false);
+		const bool showingProjectPane = projectPane.IsShown() && projectPane.window == m_projectPane;
+		spItem->Check(showingProjectPane);
 	}
 
 	// "Show Symbol List"
 	wxMenuItem* slItem = GetMenuBar()->FindItem(MENU_SHOWSYMBOLS);
-	if (slItem) {
-		if (m_symbolList) slItem->Check(true);
-		else slItem->Check(false);
-	}
+	if (slItem) slItem->Check(m_symbolList != NULL);
 
 	// "Highlight Authors"
 	wxMenuItem* hlItem = GetMenuBar()->FindItem(MENU_HL_USERS);
@@ -2057,16 +2025,12 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	const unsigned int currentTab = m_tabBar->GetSelection();
 	for (unsigned int i = 0; i < tabItems.GetCount(); ++i) {
 		wxMenuItem* item = tabItems[i];
-
 		item->Check(item->GetId() - 40000 == (int)currentTab);
 	}
 
 	// Web preview
 	wxMenuItem* previewItem = GetMenuBar()->FindItem(MENU_PREVIEW);
-	if (previewItem) {
-		if (m_previewDlg) previewItem->Check(true);
-		else previewItem->Check(false);
-	}
+	if (previewItem) previewItem->Check(m_previewDlg != NULL);
 
 	// Save-As is not implemented for bundles items (yet)
 	wxMenuItem* saveasItem = GetMenuBar()->FindItem(wxID_SAVEAS);
@@ -2584,7 +2548,7 @@ void EditorFrame::OnMenuFilter(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuRunCurrent(wxCommandEvent& WXUNUSED(event)) {
-	editorCtrl->RunCurrent(false);
+	editorCtrl->RunCurrentSelectionAsCommand(false);
 }
 
 void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
@@ -2853,22 +2817,21 @@ void EditorFrame::OnMenuDocShare(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuCommit(wxCommandEvent& WXUNUSED(event)) {
 	// Get optional Label & Description from user
 	CommitDlg dlg(this);
-	if (dlg.ShowModal() == wxID_OK) {
+	if (dlg.ShowModal() != wxID_OK) return;
 
-		editorCtrl->Commit(dlg.GetLabel(), dlg.GetDescription());
+	editorCtrl->Commit(dlg.GetLabel(), dlg.GetDescription());
 
-		// Save the page settings
-		SaveState();
+	// Save the page settings
+	SaveState();
 
-		// By commiting a user indicates that he wants us to protect his document,
-		// so we want to commit the db before continuing.
-		cxLOCK_WRITE(m_catalyst)
-			catalyst.Commit();
-		cxENDLOCK
+	// By commiting a user indicates that he wants us to protect his document,
+	// so we want to commit the db before continuing.
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.Commit();
+	cxENDLOCK
 
-		// Notify that we are editing a new document
-		dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
-	}
+	// Notify that we are editing a new document
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
 }
 /*
 void EditorFrame::OnMenuRevTooltip(wxCommandEvent& WXUNUSED(event)) {
@@ -3278,14 +3241,13 @@ void EditorFrame::OnNotebook(wxAuiNotebookEvent& event) {
 
 void EditorFrame::UpdateNotebook() {
 	EditorCtrl* page = GetEditorCtrlFromPage(m_tabBar->GetSelection());
+	if (editorCtrl == page) return;
 
-	if (editorCtrl != page) {
-		editorCtrl = page;
-		SetPath();
+	editorCtrl = page;
+	SetPath();
 
-		// Notify that we are editing a new document
-		dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
-	}
+	// Notify that we are editing a new document
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
 }
 
 void EditorFrame::OnNotebookDragDone(wxAuiNotebookEvent& WXUNUSED(event)) {
@@ -3624,10 +3586,9 @@ bool EditorFrame::CloseTab(unsigned int tab_id, bool removetab) {
 		dlg.Centre();
 
 		int result = dlg.ShowModal();
-		if (result == wxID_CANCEL) {
-			return false; // Veto to close
-		}
-		else if (result == wxID_YES) {
+		if (result == wxID_CANCEL) return false; // Veto to close
+		
+		if (result == wxID_YES) {
 			if (!page->SaveText()) {
 				// Cancel if save failed
 				return false; // Veto to close;
@@ -3672,9 +3633,7 @@ void EditorFrame::OnCloseOtherTabs(wxCommandEvent& WXUNUSED(event)) {
 	const unsigned int keep_tab_id = m_contextTab;
 	wxASSERT(keep_tab_id >= 0 && keep_tab_id < m_tabBar->GetPageCount());
 
-	if (AskToSaveMulti(keep_tab_id) == false) {
-		return;
-	}
+	if (AskToSaveMulti(keep_tab_id) == false) return;
 
 	// Delete pages and close the tabs
 	Freeze(); // optimize redrawing
@@ -3692,9 +3651,7 @@ void EditorFrame::OnCloseAllTabs(wxCommandEvent& WXUNUSED(event)) {
 
 	if (m_tabBar->GetPageCount() == 1 && editorCtrl->IsEmpty()) return;
 
-	if (AskToSaveMulti() == false) {
-		return;
-	}
+	if (AskToSaveMulti() == false) return;
 
 	// Delete pages and close the tabs
 	Freeze(); // optimize redrawing
@@ -3713,40 +3670,38 @@ bool EditorFrame::DeletePage(unsigned int page_id, bool removetab) {
 	EditorCtrl* ec = GetEditorCtrlFromPage(page_id);
 	const doc_id di = ec->GetDocID();
 
-	if(ec->Close()) {
+	if(!ec->Close()) return false; //Vetoed close
 
-		// Notify PreviewDlg that the tab is closing (it might be pinned)
-		if (m_previewDlg) m_previewDlg->PageClosed(ec);
+	// Notify PreviewDlg that the tab is closing (it might be pinned)
+	if (m_previewDlg) m_previewDlg->PageClosed(ec);
 
-		if (ec == editorCtrl) editorCtrl = NULL; // Make sure we don't accidentally use deleted ctrl
+	if (ec == editorCtrl) editorCtrl = NULL; // Make sure we don't accidentally use deleted ctrl
 
-		//((eApp*)wxTheApp)->DeletePageSettings(page_id);
-		//pages.erase(pages.begin() + page_id);
+	//((eApp*)wxTheApp)->DeletePageSettings(page_id);
+	//pages.erase(pages.begin() + page_id);
 
-		if (di.IsDraft()) {
-			// Check if there are other pages that use the same document
-			bool document_in_use = false;
-			for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-				EditorCtrl* page = GetEditorCtrlFromPage(i);
+	if (di.IsDraft()) {
+		// Check if there are other pages that use the same document
+		bool document_in_use = false;
+		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+			EditorCtrl* page = GetEditorCtrlFromPage(i);
 
-				if (di.SameDoc(page->GetDocID())) document_in_use = true;
-			}
+			if (di.SameDoc(page->GetDocID())) document_in_use = true;
+		}
 
-			// Delete the document if this was the last ref
-			// and it is unmodified since creation/loading
-			if (!document_in_use) {
-				cxLOCK_WRITE(m_catalyst)
-					if (catalyst.IsDraftDeletableOnExit(di)) {
-						catalyst.DeleteDraft(di);
+		// Delete the document if this was the last ref
+		// and it is unmodified since creation/loading
+		if (!document_in_use) {
+			cxLOCK_WRITE(m_catalyst)
+				if (catalyst.IsDraftDeletableOnExit(di)) {
+					catalyst.DeleteDraft(di);
 
-						// Notify subscribers that the document has been deleted
-						dispatcher.Notify(wxT("DOC_DELETED"), &di, 0);
-					}
-				cxENDLOCK
-			}
+					// Notify subscribers that the document has been deleted
+					dispatcher.Notify(wxT("DOC_DELETED"), &di, 0);
+				}
+			cxENDLOCK
 		}
 	}
-	else return false; // Veto to close
 
 	if (removetab) m_tabBar->DeletePage(page_id);
 
@@ -3836,26 +3791,6 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 	self->CheckForModifiedFilesAsync();
 }
 
-void EditorFrame::ConvertPathToWin(wxString& path) { // static
-	if (!path.StartsWith(wxT("/cygdrive/"))) return;
-
-	// Get drive letter
-	const wxChar drive = wxToupper(path[10]);
-	if (drive < wxT('A') || drive > wxT('Z')) return;
-
-	// Build new path
-	wxString newpath(drive);
-	newpath += wxT(':');
-	if (path.size() > 11) newpath += path.substr(11);
-	else newpath += wxT('\\');
-	path = newpath;
-
-	// Convert path seperators
-	for (unsigned int i = 0; i < path.size(); ++i) {
-		if (path[i] == wxT('/')) path[i] = wxT('\\');
-	}
-}
-
 //! URL Decode a string.
 wxString EditorFrame::URLDecode(const wxString &value) { // static
 	wxString szDecoded;
@@ -3921,9 +3856,7 @@ enum
 };
 
 BEGIN_EVENT_TABLE(EditorFrame::HtmlOutputWin, wxPanel)
-#ifdef __WXMSW__
-	EVT_ACTIVEX(ID_MSHTML, "BeforeNavigate2", EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X)
-#endif
+	EVT_HTMLWND_BEFORE_LOAD(ID_MSHTML, EditorFrame::HtmlOutputWin::OnBeforeLoad)
 END_EVENT_TABLE()
 
 EditorFrame::HtmlOutputWin::HtmlOutputWin(EditorFrame& parent)
@@ -3969,7 +3902,7 @@ void EditorFrame::HtmlOutputWin::SetPage(const wxString& text) {
 
 		// Convert the path
 		wxString path = html.substr(startpos, endpos - startpos);
-		path = EditorCtrl::CygwinPathToWin(path);
+		path = eDocumentPath::CygwinPathToWin(path);
 		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
 		html.replace(startpos, endpos - startpos, path);
@@ -3993,10 +3926,8 @@ void EditorFrame::HtmlOutputWin::AppendText(const wxString& html) {
 #endif //FEAT_BROWSER
 }
 
-#ifdef __WXMSW__
-void EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event)
-{
-    wxString url = event[wxT("Url")];
+void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
+    const wxString url = event.GetURL();
 	if (url == wxT("about:blank"))
 		return;
 
@@ -4004,21 +3935,23 @@ void EditorFrame::HtmlOutputWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event)
 		m_parentFrame.OpenTxmtUrl(url);
 
 		// Don't try to open it in browser
-		event[wxT("Cancel")] = true;
+		event.Cancel(true);
 	}
 	else if (url.StartsWith(wxT("tm-file://"))) {
 
 		wxString path = url.substr(10);
-		path = EditorCtrl::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
+
+#ifdef __WXMSW__
+		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
+#endif
 		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
 		m_browser->LoadUrl(path);
 
 		// Don't try to open it in browser
-		event[wxT("Cancel")] = true;
+		event.Cancel(true);
 	}
 }
-#endif //__WXMSW__
 
 void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
 	// Spaces transformed to %20 in paths confuses ie
@@ -4028,3 +3961,4 @@ void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
 		}
 	}
 }
+

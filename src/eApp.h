@@ -66,6 +66,11 @@ public:
 	const wxString& RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();};
 	const wxString& RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();};
 
+#ifdef __WXMSW__
+	// Entry point to Cygwin installation on Windows
+	bool InitCygwin(bool silent=false);
+#endif
+
     // Suppress default console handling even if wxWidgets was compiled with --enable-cmdline
 #if wxUSE_CMDLINE_PARSER
     virtual bool OnCmdLineParsed(wxCmdLineParser&) {return true;}

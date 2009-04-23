@@ -14,7 +14,10 @@
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////
+DEFINE_EVENT_TYPE(wxEVT_HTMLWND_BEFORE_LOAD)
+
 BEGIN_EVENT_TABLE(wxIEHtmlWin, wxActiveX)
+	EVT_ACTIVEX(wxID_ANY, "BeforeNavigate2", wxIEHtmlWin::OnMSHTMLBeforeNavigate2X)
 END_EVENT_TABLE()
 
 
@@ -200,7 +203,7 @@ public:
 
 wxWindow* wxIEHtmlWin::GetWindow()
 {
-    return static_cast<wxWindow*>(this);
+	return static_cast<wxWindow*>(this);
 }
 
 void wxIEHtmlWin::LoadUrl(const wxString &_url, const wxString &_frame, bool keepHistory)
@@ -599,4 +602,21 @@ long hIE;
 	//if (on) ::LockWindowUpdate(NULL);
 	//else ::LockWindowUpdate(GetHwnd());
 	::SendMessage((HWND)hIE, WM_SETREDRAW, (WPARAM)on, 0);
+}
+
+void wxIEHtmlWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event) {
+	IHtmlWndBeforeLoadEvent anEvent(GetWindow());
+	anEvent.SetURL(event[wxT("Url")]);
+
+	GetWindow()->GetEventHandler()->ProcessEvent(anEvent);
+	if (anEvent.IsCancelled())
+		event[wxT("Cancel")] = true;
+}
+
+IMPLEMENT_DYNAMIC_CLASS(IHtmlWndBeforeLoadEvent, wxCommandEvent)
+IHtmlWndBeforeLoadEvent::IHtmlWndBeforeLoadEvent(wxWindow* win)
+{
+	m_cancelled = false;
+	SetEventType(wxEVT_HTMLWND_BEFORE_LOAD);
+	SetEventObject(win);
 }

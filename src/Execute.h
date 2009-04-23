@@ -40,12 +40,15 @@ public:
 	bool GetEnv(const wxString& key, wxString& value);
 	void SetEnv(const wxString& key, const wxString& value);
 	void SetEnv(const map<wxString, wxString>& env);
+	void SetIfValue(const wxString& key, const wxString& value);
 
 	void SetToCurrent();
 
 	const char* GetEnvBlock() const;
 	void GetEnvBlock(wxString& env) const;
 	void WriteEnvToFile(wxFile& file) const;
+
+	void AddSystemVars(const bool isUnix, const wxString &baseAppPath);
 
 private:
 	class LineCmp {

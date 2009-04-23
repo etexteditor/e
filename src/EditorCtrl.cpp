@@ -32,11 +32,15 @@
 #include "EditorBundlePanel.h"
 #include <wx/tokenzr.h>
 #include "jsonreader.h"
+#include "eDocumentPath.h"
+#include "ShellRunner.h"
 
 #ifdef __WXMSW__
     #include "CygwinDlg.h"
 	#include <wx/msw/registry.h>
 #endif
+
+enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
 // id's
 enum {
@@ -71,13 +75,6 @@ END_EVENT_TABLE()
 const unsigned int EditorCtrl::m_caretWidth = 2;
 unsigned long EditorCtrl::s_ctrlDownTime = 0;
 bool EditorCtrl::s_altGrDown = false;
-wxString EditorCtrl::s_bashCmd;
-wxString EditorCtrl::s_bashEnv;
-wxString EditorCtrl::s_tmBashInit;
-#ifdef __WXMSW__
-bool EditorCtrl::s_isCygwinInitialized = false;
-wxString EditorCtrl::s_cygPath;
-#endif //__WXMSW__
 
 /// Open a page saved from a previous session
 EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
@@ -352,7 +349,6 @@ unsigned int EditorCtrl::GetPos() const {
 unsigned int EditorCtrl::GetCurrentLineNumber() {
 	// Line index start from 1
 	return m_lines.GetCurrentLine() +1 ;
-
 }
 
 unsigned int EditorCtrl::GetCurrentColumnNumber() {
@@ -486,14 +482,13 @@ void EditorCtrl::EndChange() {
 	// Invalidate all stylers
 	StylersInvalidate();
 
-	if (change_doc_id.type == di.type && change_doc_id.document_id == di.document_id) {
+	if (change_doc_id.SameDoc(di)) {
 		// If we are still in the same document, we want to find
 		// matching positions and selections
 
 		if (change_doc_id.version_id == di.version_id) return;
 
 		vector<interval> oldsel = m_lines.GetSelections();
-
 		m_lines.ReLoadText();
 
 		// re-set the width
@@ -503,7 +498,6 @@ void EditorCtrl::EndChange() {
 	}
 	else {
 		scrollPos = 0;
-
 		m_lines.ReLoadText();
 
 		// re-set the width
@@ -587,6 +581,9 @@ void EditorCtrl::SetGutterRight(bool doMove) {
 	DrawLayout();
 }
 
+//
+// Returns true if a scrollbar was added or removed, else false.
+//
 bool EditorCtrl::UpdateScrollbars(unsigned int x, unsigned int y) {
 	// Check if we need a vertical scrollbar
 	const int scroll_thumb = GetScrollThumb(wxVERTICAL);
@@ -1314,7 +1311,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-			if( isUnix && !s_isCygwinInitialized && !InitCygwin()) return;
+		if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -1438,7 +1435,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 			// will be reset when leaving scope
 			wxBusyCursor wait;
 
-			pid = RawShell(cmdContent, input, &output, &errout, env, isUnix, cwd);
+			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, isUnix, cwd);
 		}
 		if (pid != 0) wxLogDebug(wxT("shell returned pid = %d"), pid);
 
@@ -2393,6 +2390,11 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	return result;
 }
 
+//
+// Returns true if the bundle item was modified, else false.
+//
+// NOTE: No callers found for this method.
+//
 bool EditorCtrl::CheckBundleItemModified() const {
 	wxASSERT(IsBundleItem());
 
@@ -2411,12 +2413,7 @@ bool EditorCtrl::CheckBundleItemModified() const {
 		if (!catalyst.GetFileMirror(m_remotePath, di, modDate)) return false;
 	cxENDLOCK
 
-	if (modDate != itemDict.GetModDate()) {
-		// Ask user if we should reload
-		return true;
-	}
-
-	return false;
+	return modDate != itemDict.GetModDate();
 }
 
 bool EditorCtrl::LoadBundleItem(const wxString& bundleUri) {
@@ -3233,11 +3230,10 @@ unsigned int EditorCtrl::GetChangePos(const doc_id& old_version_id) const {
 
 	// Return the position of the first change
 	if (matchlist.empty()) return 0; // everything changed
-	else if (matchlist[0].iv1_start_pos > 0) return 0; // insertion at top
-	else if (matchlist[0].iv2_start_pos > 0) return 0; // deletion at top
-	else {
-		return matchlist[0].iv1_end_pos;
-	}
+	if (matchlist[0].iv1_start_pos > 0) return 0; // insertion at top
+	if (matchlist[0].iv2_start_pos > 0) return 0; // deletion at top
+
+	return matchlist[0].iv1_end_pos;
 }
 
 void EditorCtrl::RemapPos(const doc_id& old_version_id, unsigned int old_pos, const vector<interval>& old_sel, unsigned int toppos) {
@@ -4713,7 +4709,8 @@ wxString EditorCtrl::GetCurrentWord() const {
 			return doc.GetTextPart(iv.start, iv.end);
 		cxENDLOCK
 	}
-	else return wxEmptyString;
+	
+	return wxEmptyString;
 }
 
 wxString EditorCtrl::GetCurrentLine() {
@@ -4947,7 +4944,7 @@ wxArrayString EditorCtrl::GetCompletionList() {
 				wxMilliSleep(50);
 			}
 
-			const long result = RawShell(completionCmd->cmd, input, &output, NULL, env);
+			const long result = ShellRunner::RawShell(completionCmd->cmd, input, &output, NULL, env);
 			if (result == -1) return wxArrayString();
 
 			// break output into lines
@@ -4999,11 +4996,10 @@ void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 		m_snippetHandler.Insert(word);
 		return;
 	}
-	else {
-		RawDelete(iv.start, iv.end);
-		unsigned int byte_len = RawInsert(iv.start, word, true);
-		SetPos(iv.start + byte_len);
-	}
+
+	RawDelete(iv.start, iv.end);
+	unsigned int byte_len = RawInsert(iv.start, word, true);
+	SetPos(iv.start + byte_len);
 
 	Freeze();
 }
@@ -5016,16 +5012,16 @@ void EditorCtrl::SetSearchRange() {
 }
 
 void EditorCtrl::ClearSearchRange(bool reset) {
-	if (!m_searchRanges.empty()) {
-		if (reset && !m_lines.IsSelected()) {
-			// Reset selection
-			for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
-				m_lines.AddSelection(p->start, p->end);
-			}
+	if (m_searchRanges.empty()) return;
+
+	if (reset && !m_lines.IsSelected()) {
+		// Reset selection
+		for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
+			m_lines.AddSelection(p->start, p->end);
 		}
-		m_searchRanges.clear();
-		DrawLayout();
 	}
+	m_searchRanges.clear();
+	DrawLayout();
 }
 
 bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int options, bool dir_forward) {
@@ -5138,12 +5134,11 @@ bool EditorCtrl::FindNextChar(wxChar c, unsigned int start_pos, unsigned int end
 		sr = doc.Find(c, start_pos, true, end_pos);
 	cxENDLOCK
 
-	if (sr.error_code >= 0) {
-		iv.start = sr.start;
-		iv.end = sr.end;
-		return true;
-	}
-	else return false;
+	if (sr.error_code < 0) return false;
+
+	iv.start = sr.start;
+	iv.end = sr.end;
+	return true;
 }
 
 cxFindResult EditorCtrl::Find(const wxString& text, int options) {
@@ -5761,45 +5756,44 @@ search_result EditorCtrl::RegExFindBackwards(const wxString& searchtext, unsigne
 }
 
 bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext, int options) {
-	if (m_lines.IsSelected()) {
-		const interval iv = m_lines.GetSelections()[0];
-		m_lines.RemoveAllSelections();
-		unsigned int byte_len = 0;
-
-		if (options & FIND_USE_REGEX) {
-			// We need to search again to get captures
-			map<unsigned int,interval> captures;
-			const search_result result = RegExFind(searchtext, iv.start, options & FIND_MATCHCASE, &captures);
-
-			if (result.error_code >= 0) {
-				const wxString new_replacetext = ParseReplaceString(replacetext, captures);
-				RawDelete(iv.start, iv.end);
-				byte_len = RawInsert(iv.start, new_replacetext, false);
-				m_lines.SetPos(iv.start + byte_len); // move to end of insertion
-			}
-			else wxASSERT(false);
-		}
-		else {
-			RawDelete(iv.start, iv.end);
-			byte_len = RawInsert(iv.start, replacetext, false);
-			m_lines.SetPos(iv.start + byte_len); // move to end of insertion
-		}
-
-		// Adjust searchranges
-		if (!m_searchRanges.empty()) {
-			const int diff = byte_len - (iv.end - iv.start);
-			for (vector<interval>::iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
-				if (p->start > iv.start) p->start += diff;
-				if (p->end > iv.start) p->end += diff;
-			}
-		}
-
-		return DoFind(searchtext, m_lines.GetPos(), options);
-	}
-	else {
+	if (!m_lines.IsSelected()) {
 		int startpos = (options & FIND_RESTART) ? 0 : m_lines.GetPos();
 		return DoFind(searchtext, startpos, options);
 	}
+
+	const interval iv = m_lines.GetSelections()[0];
+	m_lines.RemoveAllSelections();
+	unsigned int byte_len = 0;
+
+	if (options & FIND_USE_REGEX) {
+		// We need to search again to get captures
+		map<unsigned int,interval> captures;
+		const search_result result = RegExFind(searchtext, iv.start, options & FIND_MATCHCASE, &captures);
+
+		if (result.error_code >= 0) {
+			const wxString new_replacetext = ParseReplaceString(replacetext, captures);
+			RawDelete(iv.start, iv.end);
+			byte_len = RawInsert(iv.start, new_replacetext, false);
+			m_lines.SetPos(iv.start + byte_len); // move to end of insertion
+		}
+		else wxASSERT(false);
+	}
+	else {
+		RawDelete(iv.start, iv.end);
+		byte_len = RawInsert(iv.start, replacetext, false);
+		m_lines.SetPos(iv.start + byte_len); // move to end of insertion
+	}
+
+	// Adjust searchranges
+	if (!m_searchRanges.empty()) {
+		const int diff = byte_len - (iv.end - iv.start);
+		for (vector<interval>::iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
+			if (p->start > iv.start) p->start += diff;
+			if (p->end > iv.start) p->end += diff;
+		}
+	}
+
+	return DoFind(searchtext, m_lines.GetPos(), options);
 }
 
 bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options) {
@@ -6036,7 +6030,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	else 
 #endif
 	{
-
 		if (commandMode) {
 			DoCommand(key);
 			switch (key) {
@@ -6301,7 +6294,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 				lastaction = ACTION_NONE;
 				break;
-
 
 			case WXK_PAGEUP:
 			case WXK_NUMPAD_PAGEUP:
@@ -7105,338 +7097,75 @@ void EditorCtrl::MakeSelectionVisible(unsigned int sel_id) {
 
 wxString EditorCtrl::GetSelFirstLine() {
 	// returns the first line of the selection (if there is *one* selection)
+	if (!m_lines.IsSelected()) return wxT("");
 
-	if (m_lines.IsSelected()) {
-		const vector<interval>& selections = m_lines.GetSelections();
-		if (selections.size() != 1) return wxT("");
+	const vector<interval>& selections = m_lines.GetSelections();
+	if (selections.size() != 1) return wxT("");
 
-		// Get text
-		const unsigned int start_pos = selections[0].start;
-		const unsigned int line_id = m_lines.GetLineFromCharPos(start_pos);
-		const unsigned int line_end = m_lines.GetLineEndpos(line_id);
-		cxLOCKDOC_READ(m_doc)
-			return doc.GetTextPart(start_pos, wxMin(selections[0].end, line_end));
-		cxENDLOCK
-	}
-	else return wxT("");
+	// Get text
+	const unsigned int start_pos = selections[0].start;
+	const unsigned int line_id = m_lines.GetLineFromCharPos(start_pos);
+	const unsigned int line_end = m_lines.GetLineEndpos(line_id);
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(start_pos, wxMin(selections[0].end, line_end));
+	cxENDLOCK
 }
 
 wxString EditorCtrl::GetFirstSelection() const {
-	if (m_lines.IsSelected()) {
-		const interval& sel = m_lines.GetSelections()[0];
+	if (!m_lines.IsSelected()) return wxT("");
 
-		// Get text
-		cxLOCKDOC_READ(m_doc)
-			return doc.GetTextPart(sel.start, sel.end);
-		cxENDLOCK
-	}
-	else return wxT("");
+	const interval& sel = m_lines.GetSelections()[0];
+
+	// Get text
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(sel.start, sel.end);
+	cxENDLOCK
 }
 
 wxString EditorCtrl::GetSelText() const {
-	if (m_lines.IsSelected()) {
-		wxString text;
-		const vector<interval>& selections = m_lines.GetSelections();
+	if (!m_lines.IsSelected()) return wxT("");
 
-		cxLOCKDOC_READ(m_doc)
-			// Get the selected text
-			for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-				if (iv > selections.begin()) text += wxT('\n'); // Add newline between multiple selections
+	wxString text;
+	const vector<interval>& selections = m_lines.GetSelections();
 
-				text += doc.GetTextPart((*iv).start, (*iv).end);
-			}
-		cxENDLOCK
+	cxLOCKDOC_READ(m_doc)
+		// Get the selected text
+		for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
+			if (iv > selections.begin()) text += wxT('\n'); // Add newline between multiple selections
 
-		return text;
-	}
-	else return wxT("");
-}
-
-#ifdef __WXMSW__
-bool EditorCtrl::InitCygwin(bool silent) {
-	if (s_isCygwinInitialized) return true;
-
-	// Check if we have a cygwin installation
-	s_cygPath = GetCygwinDir();
-
-	if (s_cygPath.empty()) {
-		if (!silent) {
-			// Notify user that he should install cygwin
-			CygwinDlg dlg(this, m_catalyst, cxCYGWIN_INSTALL);
-
-			const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-			cxLOCK_WRITE(m_catalyst)
-				catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-			cxENDLOCK
+			text += doc.GetTextPart((*iv).start, (*iv).end);
 		}
-		return false;
-	}
-	else {
-		const wxString supportPath = ((eApp*)wxTheApp)->GetAppPath() + wxT("support\\bin\\cygwin-post-install.sh");
-		const wxFileName supportFile(supportPath);
+	cxENDLOCK
 
-		// Get last updatetime
-		wxDateTime stampTime;
-		cxLOCK_READ(m_catalyst)
-			wxLongLong dateVal;
-			if (catalyst.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
-		cxENDLOCK
-
-		// In older versions it could be saved as filestamp
-		if (!stampTime.IsValid()) {
-			const wxFileName timestamp(s_cygPath + wxT("\\etc\\setup\\last-e-update"));
-			if (timestamp.FileExists()) {
-				stampTime = timestamp.GetModificationTime();
-
-				// Save in new location
-				cxLOCK_WRITE(m_catalyst)
-					catalyst.SetSettingLong(wxT("cyg_date"), stampTime.GetValue());
-				cxENDLOCK
-			}
-		}
-
-		// Check if we should update cygwin
-		bool doUpdate = false;
-		if (stampTime.IsValid()) {
-			wxDateTime updateTime = supportFile.GetModificationTime();
-
-			// Windows does not really handle the minor parts of file dates
-			updateTime.SetMillisecond(0);
-			updateTime.SetSecond(0);
-			stampTime.SetMillisecond(0);
-			stampTime.SetSecond(0);
-
-			if (updateTime != stampTime) {
-				wxLogDebug(wxT("InitCygwin: Diff dates"));
-				wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());
-				wxLogDebug(wxT("  last-e-update: %s"), stampTime.FormatTime());
-				doUpdate = true;
-			}
-		}
-		else doUpdate = true; // first time
-
-		if (doUpdate) {
-			if (!silent) {
-				// Notify user that he should update cygwin
-				CygwinDlg dlg(this, m_catalyst, cxCYGWIN_UPDATE);
-
-				const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-				cxLOCK_WRITE(m_catalyst)
-					catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-				cxENDLOCK
-
-				// Cancel this command, but let the user try again without
-				// getting this dialog
-				s_isCygwinInitialized = true;
-			}
-			return false;
-		}
-	}
-
-	s_isCygwinInitialized = true;
-	return true;
-}
-
-wxString EditorCtrl::GetCygwinDir() { // static
-	wxString cygPath;
-
-	// Check if we have a cygwin installation
-	wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-	if( cygKey.Exists() ) {
-		if (cygKey.HasValue(wxT("native"))) {
-			cygKey.QueryValue(wxT("native"), cygPath);
-		}
-	}
-
-	// Also check "current user" (might be needed if user did not have admin rights during install)
-	if (cygPath.empty()) {
-		wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
-
-		wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-		if( cygKey2.Exists() ) {
-			wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
-
-			if (cygKey2.HasValue(wxT("native"))) {
-				wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
-				cygKey2.QueryValue(wxT("native"), cygPath);
-			}
-		}
-	}
-
-	return cygPath;
-}
-
-
-wxString EditorCtrl::CygwinPathToWin(const wxString& path) { // static
-	if (path.empty()) {
-		wxASSERT(false);
-		return wxEmptyString;
-	}
-	wxString newpath;
-
-	if (path.StartsWith(wxT("/cygdrive/"))) {
-
-		// Get drive letter
-		const wxChar drive = wxToupper(path[10]);
-		if (drive < wxT('A') || drive > wxT('Z')) {
-			wxASSERT(false);
-			return wxEmptyString;
-		}
-
-		// Build new path
-		newpath += drive;
-		newpath += wxT(':');
-		if (path.size() > 11) newpath += path.substr(11);
-		else newpath += wxT('\\');
-	}
-	else if (path.StartsWith(wxT("/usr/bin/"))) {
-		newpath = s_cygPath + wxT("\\bin\\");
-		newpath += path.substr(9);
-	}
-	else if (path.StartsWith(wxT("/usr/lib/"))) {
-		newpath = s_cygPath + wxT("\\lib\\");
-		newpath += path.substr(9);
-	}
-	else if (path.StartsWith(wxT("//"))) {
-		newpath = path; // unc path
-	}
-	else if (path.GetChar(0) == wxT('/')) {
-		newpath = s_cygPath;
-		newpath += path;
-	}
-	else return path; // no conversion
-
-	// Convert path seperators
-	for (unsigned int i = 0; i < newpath.size(); ++i) {
-		if (newpath[i] == wxT('/')) newpath[i] = wxT('\\');
-	}
-
-	return newpath;
-}
-
-#endif // __WXMSW__
-
-wxString EditorCtrl::WinPathToCygwin(const wxFileName& path) { // static
-	wxASSERT(path.IsOk() && path.IsAbsolute());
-
-#ifdef __WXMSW__
-    wxString fullpath = path.GetFullPath();
-
-	// Check if we have an unc path
-	if (fullpath.StartsWith(wxT("//"))) {
-		return fullpath; // cygwin can handle unc paths directly
-	}
-	else if (fullpath.StartsWith(wxT("\\\\"))) {
-		// Convert path seperators
-		for (unsigned int i = 0; i < fullpath.size(); ++i) {
-			if (fullpath[i] == wxT('\\')) fullpath[i] = wxT('/');
-		}
-		return fullpath; // cygwin can handle unc paths directly
-	}
-
-	// Quick conversion
-	wxString unixPath = wxT("/cygdrive/");
-	unixPath += path.GetVolume().Lower(); // Drive
-
-	// Dirs
-	const wxArrayString& dirs = path.GetDirs();
-	for (unsigned int i = 0; i < dirs.GetCount(); ++i) {
-		unixPath += wxT('/') + dirs[i];
-	}
-
-	// Filename
-	if (path.HasName()) {
-		unixPath += wxT('/') + path.GetFullName();
-	}
-
-	//unixPath += wxT('\"');
-
-	return unixPath;
-#else
-    return path.GetFullPath();
-#endif
+	return text;
 }
 
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 #ifdef __WXMSW__
-	if (isUnix && !s_isCygwinInitialized) InitCygwin(true);
+	if (isUnix) ((eApp*)wxTheApp)->InitCygwin(true);
 #endif // __WXMSW__
 
-	// Load current env (app)
+	// Load existing enviroment
 	env.SetToCurrent();
 
-	// TM_SUPPORT_PATH
-	wxFileName supportPath = ((eApp*)wxTheApp)->GetAppPath();
-	supportPath.AppendDir(wxT("Support"));
-	const bool supportPathExists = supportPath.DirExists();
-	if (supportPathExists) {
-		const wxString tmSupportPath = isUnix ? WinPathToCygwin(supportPath) : supportPath.GetPath();
-		env.SetEnv(wxT("TM_SUPPORT_PATH"), tmSupportPath);
+	// Add app keys
+	env.AddSystemVars(isUnix, ((eApp*)wxTheApp)->GetAppPath());
 
-		// TM_BASH_INIT
-		if (isUnix) {
-			wxFileName bashInit = supportPath;
-			bashInit.AppendDir(wxT("lib"));
-			bashInit.SetFullName(wxT("cygwin_bash_init.sh"));
-			if (bashInit.FileExists()) {
-				s_tmBashInit = WinPathToCygwin(bashInit);
-				env.SetEnv(wxT("TM_BASH_INIT"), s_tmBashInit);
-			}
-		}
-	}
-
-	// PATH
-	wxString envPath;
-	if (wxGetEnv(wxT("PATH"), &envPath)) {
-#ifdef __WXMSW__
-		// Check if cygwin is on the path
-		if (!s_cygPath.empty()) {
-			if (!envPath.Contains(s_cygPath)) {
-				const wxString binPath = s_cygPath + wxT("\\bin");
-				const wxString x11Path = s_cygPath + wxT("\\usr\\X11R6\\bin");
-
-				if (!envPath.empty()) {
-					envPath = binPath + wxT(";") + x11Path + wxT(";") + envPath;
-				}
-			}
-		}
-#endif // __WXMSW__
-
-		// Add TM_SUPPORT_PATH/bin to the PATH
-		if (supportPathExists) {
-			wxFileName supportBinPath = supportPath;
-			supportBinPath.AppendDir(wxT("bin"));
-			if (supportBinPath.DirExists()) {
-				envPath = supportBinPath.GetPath() + wxT(";") + envPath;
-			}
-		}
-
-		env.SetEnv(wxT("PATH"), envPath);
-	}
-
-	// TM_APPPATH
-	wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
-	if (isUnix) appPath = WinPathToCygwin(appPath);
-	env.SetEnv(wxT("TM_APPPATH"), appPath);
-
-	// TM_FULLNAME
-	env.SetEnv(wxT("TM_FULLNAME"), wxGetUserName());
+	// Add document/editor keys
 
 	// TM_FILENAME
 	// note: in case of remote files, this is of the buffer file
 	const wxString name = m_path.GetFullName();
-	if (!name.empty()) env.SetEnv(wxT("TM_FILENAME"), name);
+	env.SetIfValue(wxT("TM_FILENAME"), name);
 
 	// TM_FILEPATH & TM_DIRECTORY
 	// note: in case of remote files, this is of the buffer file
 	if (m_path.IsOk()) {
 		if (m_tmFilePath.empty()) {
 			if (isUnix) {
-				m_tmFilePath = WinPathToCygwin(m_path);
+				m_tmFilePath = eDocumentPath::WinPathToCygwin(m_path);
 				wxFileName dir(m_path.GetPath(), wxEmptyString);
-				m_tmDirectory = WinPathToCygwin(dir);
+				m_tmDirectory = eDocumentPath::WinPathToCygwin(dir);
 			}
 			else {
 				m_tmFilePath = m_path.GetFullPath();
@@ -7455,11 +7184,11 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_CURRENT_WORD
 	const wxString word = GetCurrentWord();
-	if (!word.empty()) env.SetEnv(wxT("TM_CURRENT_WORD"), word);
+	env.SetIfValue(wxT("TM_CURRENT_WORD"), word);
 
 	// TM_CURRENT_LINE
 	const wxString line = GetCurrentLine();
-	if (!line.empty()) env.SetEnv(wxT("TM_CURRENT_LINE"), line);
+	env.SetIfValue(wxT("TM_CURRENT_LINE"), line);
 
 	const unsigned int lineNum = GetCurrentLineNumber();
 	const unsigned int columnIndex = GetCurrentColumnNumber();
@@ -7481,8 +7210,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(wxT("TM_TAB_SIZE"), tabsize);
 
 	// TM_SOFT_TABS
-	if (m_parentFrame.IsSoftTabs()) env.SetEnv(wxT("TM_SOFT_TABS"), wxT("YES"));
-	else env.SetEnv(wxT("TM_SOFT_TABS"), wxT("NO"));
+	env.SetEnv(wxT("TM_SOFT_TABS"), m_parentFrame.IsSoftTabs() ? wxT("YES") : wxT("NO"));
 
 	// TM_SCOPE
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
@@ -7495,12 +7223,12 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_MODE
 	const wxString& syntaxName = m_syntaxstyler.GetName();
-	if (!syntaxName.empty()) env.SetEnv(wxT("TM_MODE"), syntaxName);
+	env.SetIfValue(wxT("TM_MODE"), syntaxName);
 
 	// TM_PROJECT_DIRECTORY
 	if (m_parentFrame.HasProject() && !m_parentFrame.IsProjectRemote()) {
 		const wxFileName& prjPath = m_parentFrame.GetProject();
-		if (isUnix) env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), WinPathToCygwin(prjPath));
+		if (isUnix) env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), eDocumentPath::WinPathToCygwin(prjPath));
 		else env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), prjPath.GetPath());
 
 		// Set project specific env vars
@@ -7510,14 +7238,14 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_SELECTED_FILE & TM_SELECTED_FILES
 	const wxArrayString selections = m_parentFrame.GetSelectionsInProject();
 	if (!selections.IsEmpty()) {
-		if (isUnix) env.SetEnv(wxT("TM_SELECTED_FILE"), WinPathToCygwin(selections[0]));
+		if (isUnix) env.SetEnv(wxT("TM_SELECTED_FILE"), eDocumentPath::WinPathToCygwin(selections[0]));
 		else env.SetEnv(wxT("TM_SELECTED_FILE"), selections[0]);
 
 		wxString sels;
 		for (unsigned int i = 0; i < selections.GetCount(); ++i) {
 			if (i) sels += wxT(" '");
 			else sels += wxT('\'');
-			if (isUnix) sels += WinPathToCygwin(selections[i]);
+			if (isUnix) sels += eDocumentPath::WinPathToCygwin(selections[i]);
 			else sels += selections[0];
 			sels += wxT('\'');
 		}
@@ -7534,130 +7262,15 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// Set bundle specific env
 	if (bundle) {
-		if (isUnix) env.SetEnv(wxT("TM_BUNDLE_PATH"), WinPathToCygwin(bundle->path));
+		if (isUnix) env.SetEnv(wxT("TM_BUNDLE_PATH"), eDocumentPath::WinPathToCygwin(bundle->path));
 		else env.SetEnv(wxT("TM_BUNDLE_PATH"), bundle->path.GetPath());
 
 		const wxFileName bsupportPath = m_syntaxHandler.GetBundleSupportPath(bundle->bundleRef);
 		if (bsupportPath.IsOk()) {
-			if (isUnix) env.SetEnv(wxT("TM_BUNDLE_SUPPORT"), WinPathToCygwin(bsupportPath));
+			if (isUnix) env.SetEnv(wxT("TM_BUNDLE_SUPPORT"), eDocumentPath::WinPathToCygwin(bsupportPath));
 			else env.SetEnv(wxT("TM_BUNDLE_SUPPORT"), bsupportPath.GetPath());
 		}
 	}
-}
-
-long EditorCtrl::RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix, const wxString& cwd) {
-	if (command.empty()) return -1;
-
-#ifdef __WXMSW__
-	if( isUnix && !s_isCygwinInitialized && !InitCygwin()) return -1;
-#endif // __WXMSW__
-
-	// Create temp file with command
-	wxFileName tmpfilePath = ((eApp*)wxTheApp)->GetAppDataPath();
-	if (isUnix)	tmpfilePath.SetFullName(wxT("tmcmd"));
-	else tmpfilePath.SetFullName(wxT("tmcmd.bat"));
-	wxFile tmpfile(tmpfilePath.GetFullPath(), wxFile::write);
-	if (tmpfile.IsOpened() && !command.empty()) {
-		tmpfile.Write(&command[0], command.size());
-		tmpfile.Close();
-	}
-	else return -1;
-
-	wxString execCmd;
-
-	// Look for shebang
-	if (command.size() > 2 && command[0] == '#' && command[1] == '!') {
-		// Ignore leading whitespace
-		unsigned int i = 2;
-		for (; i < command.size() && isspace(command[i]); ++i);
-
-		// Get the interpreter path
-		unsigned int start = i;
-		for (; i < command.size() && !isspace(command[i]); ++i);
-		wxString cmd(&command[start], wxConvUTF8, i - start);
-
-		// Rest of line is argument for interpreter
-		for (start = i; i < command.size() && command[i] != '\n'; ++i);
-		wxString args(&command[start], wxConvUTF8, i - start);
-
-#ifdef __WXMSW__
-		// Convert possible unix path to windows
-		const wxString newpath = CygwinPathToWin(cmd);
-		if (newpath.empty()) return -1;
-		execCmd = newpath + args;
-#else
-		execCmd = cmd + args;
-#endif // __WXMSW__
-		execCmd += wxT(" \"") + tmpfilePath.GetFullPath() + wxT("\"");
-	}
-	else if (isUnix) {
-		if (s_bashCmd.empty()) {
-#ifdef __WXMSW__
-			s_bashCmd = s_cygPath + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
-#else
-            s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
-#endif
-
-			wxFileName initPath = ((eApp*)wxTheApp)->GetAppPath();
-			initPath.AppendDir(wxT("Support"));
-			initPath.AppendDir(wxT("lib"));
-			initPath.SetFullName(wxT("bash_init.sh"));
-			if (initPath.FileExists()) {
-				s_bashEnv = initPath.GetFullPath();
-			}
-		}
-
-		env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
-		execCmd = s_bashCmd;
-	}
-#ifdef __WXMSW__
-	else {
-		// Windows native runs as bat files
-		// (needs double quotes for path)
-		execCmd = wxT("cmd /C \"\"") + tmpfilePath.GetFullPath() + wxT("\"\"");
-	}
-#endif // __WXMSW__
-
-	// Get ready for execution
-	cxExecute exec(env, cwd);
-	bool debugOutput = false; // default setting
-	((eApp*)wxTheApp)->GetSettingBool(wxT("bundleDebug"), debugOutput);
-	exec.SetDebugLogging(debugOutput);
-
-	// Exec the command
-	wxLogDebug(wxT("Running command: %s"), execCmd.c_str());
-	int resultCode = exec.Execute(execCmd, input);
-
-	// Get the output
-	if (resultCode != -1) {
-		if (output) output->swap(exec.GetOutput());
-		if (errorOut) errorOut->swap(exec.GetErrorOut());
-	}
-
-	return resultCode;
-}
-
-wxString EditorCtrl::GetBashCommand(const wxString& cmd, cxEnv& env) {
-#ifdef __WXMSW__
-	if( !s_isCygwinInitialized && !InitCygwin()) return wxEmptyString;
-#endif
-
-	if (s_bashEnv.empty()) {
-		wxFileName initPath = ((eApp*)wxTheApp)->GetAppPath();
-		initPath.AppendDir(wxT("Support"));
-		initPath.AppendDir(wxT("lib"));
-		initPath.SetFullName(wxT("bash_init.sh"));
-		if (initPath.FileExists()) {
-			s_bashEnv = initPath.GetFullPath();
-		}
-	}
-	env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
-
-#ifdef __WXMSW__
-	return s_cygPath + wxT("\\bin\\bash.exe -c \"") + cmd + wxT("\"");
-#else
-    return wxT("bash -c \"") + cmd + wxT("\"");
-#endif
 }
 
 wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv) {
@@ -7673,13 +7286,13 @@ wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv)
 	// Run the command
 	vector<char> input;
 	vector<char> output;
-	const int resultCode = RawShell(command, input, &output, NULL, env);
+	const int resultCode = ShellRunner::RawShell(command, input, &output, NULL, env);
     if ( resultCode == -1) return wxEmptyString; // exec failed
 
 	wxString outputStr;
 	if (!output.empty()) outputStr += wxString(&*output.begin(), wxConvUTF8, output.size());
 #ifdef __WXMSW__
-	// WINDOWS ONLY!! newline conversion
+	// Do newline conversion for Windows only.
 	outputStr.Replace(wxT("\r\n"), wxT("\n"));
 #endif // __WXMSW__
 
@@ -7687,7 +7300,7 @@ wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv)
 	return outputStr;
 }
 
-void EditorCtrl::RunCurrent(bool doReplace) {
+void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	vector<char> command;
 	unsigned int start;
 	unsigned int end;
@@ -7713,37 +7326,35 @@ void EditorCtrl::RunCurrent(bool doReplace) {
 		cxENDLOCK
 	}
 
+	if (command.empty()) return;
 
-	if (!command.empty()) {
-		RemoveAllSelections();
+	RemoveAllSelections();
 
-		Freeze();
-		if (doReplace) {
-			RawDelete(start, end);
-			end = start;
-		}
-		SetPos(end);
-
-		const wxString output = RunShellCommand(command);
-
-		if (!output.empty()) {
-			// If inserting at last (virtual) line we have to first add a newline
-			if (!doReplace && end == GetLength() && end) {
-				wxChar prevchar;
-				cxLOCKDOC_READ(m_doc)
-					const unsigned int prepos = doc.GetPrevCharPos(end);
-					prevchar = doc.GetChar(prepos);
-				cxENDLOCK
-				if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
-			}
-			const unsigned int bytelen = RawInsert(end, output);
-			SetPos(end + bytelen);
-		}
-		Freeze();
-
-		MakeCaretVisible();
-		DrawLayout();
+	Freeze();
+	if (doReplace) {
+		RawDelete(start, end);
+		end = start;
 	}
+	SetPos(end);
+
+	const wxString output = RunShellCommand(command);
+	if (!output.empty()) {
+		// If inserting at last (virtual) line we have to first add a newline
+		if (!doReplace && end == GetLength() && end) {
+			wxChar prevchar;
+			cxLOCKDOC_READ(m_doc)
+				const unsigned int prepos = doc.GetPrevCharPos(end);
+				prevchar = doc.GetChar(prepos);
+			cxENDLOCK
+			if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
+		}
+		const unsigned int bytelen = RawInsert(end, output);
+		SetPos(end + bytelen);
+	}
+	Freeze();
+
+	MakeCaretVisible();
+	DrawLayout();
 }
 
 void EditorCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
@@ -8030,39 +7641,39 @@ void EditorCtrl::OnFoldTooltipTimer(wxTimerEvent& WXUNUSED(event)) {
 	const wxPoint m = ScreenToClient(wxGetMousePosition());
 	const wxPoint mpos = ClientPosToEditor(m.x, m.y);
 
-	if (mpos.y >= 0 && mpos.y < m_lines.GetHeight()) {
-		// Find out what is under mouse
-		const unsigned int line_id = m_lines.GetLineFromYPos(mpos.y);
+	if (mpos.y < 0 || m_lines.GetHeight() <= mpos.y) return;
 
-		// Check if we are still hovering over a fold indicator
-		if (line_id == m_foldTooltipLine) {
-			wxRect bRect = m_lines.GetFoldIndicatorRect(line_id);
-			if (bRect.Contains(mpos)) {
-				const vector<cxFold*> foldStack = GetFoldStack(line_id);
-				if (!foldStack.empty()) {
-					// Find start of fold
-					const cxFold* f = foldStack.back();
-					const unsigned int fold_start = m_lines.GetLineStartpos(f->line_id);
+	// Find out what is under mouse
+	const unsigned int line_id = m_lines.GetLineFromYPos(mpos.y);
 
-					// Find the end of fold
-					const unsigned int lastline = GetLastLineInFold(foldStack);
-					unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+	// Check if we are still hovering over a fold indicator
+	if (line_id != m_foldTooltipLine) return;
 
-					wxString text = GetText(fold_start, lastposinfold);
-					text.Replace(wxT("\t"), wxT("  ")); // replace tabs with spaces
+	wxRect bRect = m_lines.GetFoldIndicatorRect(line_id);
+	if (!bRect.Contains(mpos)) return;
 
-					// Calc bounding rect
-					wxPoint point = ClientToScreen(EditorPosToClient(bRect.x, bRect.y));
-					bRect.x = point.x;
-					bRect.y = point.y;
+	const vector<cxFold*> foldStack = GetFoldStack(line_id);
+	if (foldStack.empty()) return;
 
-					// Show tooltip
-					new wxTipWindow(this, text, 400, NULL, &bRect);
-					wxLogDebug(wxT("Show fold tooltip"));
-				}
-			}
-		}
-	}
+	// Find start of fold
+	const cxFold* f = foldStack.back();
+	const unsigned int fold_start = m_lines.GetLineStartpos(f->line_id);
+
+	// Find the end of fold
+	const unsigned int lastline = GetLastLineInFold(foldStack);
+	unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+
+	wxString text = GetText(fold_start, lastposinfold);
+	text.Replace(wxT("\t"), wxT("  ")); // replace tabs with spaces
+
+	// Calc bounding rect
+	wxPoint point = ClientToScreen(EditorPosToClient(bRect.x, bRect.y));
+	bRect.x = point.x;
+	bRect.y = point.y;
+
+	// Show tooltip
+	new wxTipWindow(this, text, 400, NULL, &bRect);
+	wxLogDebug(wxT("Show fold tooltip"));
 }
 
 
@@ -8613,7 +8224,8 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 	}
 
 	if (actions.empty()) return false; // no matching shortcut
-	else if (actions.size() == 1) {
+	
+	if (actions.size() == 1) {
 		DoAction(*actions[0], NULL, false);
 	}
 	else {
@@ -8635,16 +8247,16 @@ void EditorCtrl::DoDragCommand(const tmDragCommand &cmd, const wxString& path) {
 	// Make path relative to document dir
 	const wxFileName& docPath = GetFilePath();
 	if (docPath.IsOk()) {
-		wxFileName unixDocPath(WinPathToCygwin(docPath), wxPATH_UNIX);
-		wxFileName filePath(WinPathToCygwin(path), wxPATH_UNIX);
+		wxFileName unixDocPath(eDocumentPath::WinPathToCygwin(docPath), wxPATH_UNIX);
+		wxFileName filePath(eDocumentPath::WinPathToCygwin(path), wxPATH_UNIX);
 		filePath.MakeRelativeTo(unixDocPath.GetPath(0, wxPATH_UNIX), wxPATH_UNIX);
 
 		env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath(wxPATH_UNIX);
 	}
-	else env[wxT("TM_DROPPED_FILE")] = WinPathToCygwin(path);
+	else env[wxT("TM_DROPPED_FILE")] = eDocumentPath::WinPathToCygwin(path);
 
 	// Full path
-	env[wxT("TM_DROPPED_FILEPATH")] = WinPathToCygwin(path);
+	env[wxT("TM_DROPPED_FILEPATH")] = eDocumentPath::WinPathToCygwin(path);
 
 	// Modifiers
 	wxString modifiers;
@@ -8779,48 +8391,48 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 			// No matches. Open new doc
 			m_parentFrame.Open(filenames[i]);
 			newTabs = true;
+			continue;
 		}
-		else {
-			// Create the menu
-			wxMenu listMenu;
-			int menuId = 1010; // first 10 are reserved for commands
 
-			if (filenames.GetCount() > 1) {
-				const wxFileName name(filenames[i]);
-				listMenu.Append(1000, name.GetFullName());
-				listMenu.Enable(1000, false);
-				listMenu.AppendSeparator();
-			}
+		// Create the menu
+		wxMenu listMenu;
+		int menuId = 1010; // first 10 are reserved for commands
 
-			// Add drag actions
-			wxArrayString actionList;
-			for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
-				listMenu.Append(menuId++, (*p)->name);
-			}
-
-			// Add commands
+		if (filenames.GetCount() > 1) {
+			const wxFileName name(filenames[i]);
+			listMenu.Append(1000, name.GetFullName());
+			listMenu.Enable(1000, false);
 			listMenu.AppendSeparator();
-			listMenu.Append(1001, _("Open"));
-			if (i < filenames.GetCount()-1) listMenu.Append(1002, _("Open All"));
+		}
 
-			// Show menu
-			const int result = ShowPopupList(listMenu);
-			if (result == 1001-1000) {
-				// Open
+		// Add drag actions
+		wxArrayString actionList;
+		for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
+			listMenu.Append(menuId++, (*p)->name);
+		}
+
+		// Add commands
+		listMenu.AppendSeparator();
+		listMenu.Append(1001, _("Open"));
+		if (i < filenames.GetCount()-1) listMenu.Append(1002, _("Open All"));
+
+		// Show menu
+		const int result = ShowPopupList(listMenu);
+		if (result == 1001-1000) {
+			// Open
+			m_parentFrame.Open(filenames[i]);
+			newTabs = true;
+		}
+		else if (result == 1002-1000) {
+			// Open all
+			for (; i < filenames.GetCount(); ++i) {
 				m_parentFrame.Open(filenames[i]);
-				newTabs = true;
 			}
-			else if (result == 1002-1000) {
-				// Open all
-				for (; i < filenames.GetCount(); ++i) {
-					m_parentFrame.Open(filenames[i]);
-				}
-				newTabs = true;
-				break;
-			}
-			else if (result >= 1010-1000) {
-				DoDragCommand(*actions[result-10], filenames[i]);
-			}
+			newTabs = true;
+			break;
+		}
+		else if (result >= 1010-1000) {
+			DoDragCommand(*actions[result-10], filenames[i]);
 		}
 	}
 
@@ -9077,7 +8689,7 @@ void EditorCtrl::ParseFoldMarkers() {
 			const bool matchEndMarker = (sr2.error_code > 0);
 
 			if (matchStartMarker) {
-				if (!matchEndMarker) { // starter and ender on same line cancels eachother out
+				if (!matchEndMarker) { // starter and ender on same line cancels out
 					m_folds.push_back(cxFold(i, cxFOLD_START, GetLineIndentLevel(i)));
 				}
 			}
@@ -9114,7 +8726,7 @@ vector<EditorCtrl::cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line
 		const bool matchEndMarker = (sr2.error_code > 0);
 
 		if (matchStartMarker) {
-			if (!matchEndMarker) { // starter and ender on same line cancels eachother out
+			if (!matchEndMarker) { // starter and ender on same line cancels out
 				return m_folds.insert(insertPos, cxFold(line_id, (doFold ? cxFOLD_START_FOLDED : cxFOLD_START), GetLineIndentLevel(line_id)))+1;
 			}
 		}
@@ -9127,13 +8739,13 @@ vector<EditorCtrl::cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line
 }
 
 void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
-	// Find out which lines was affected
+	// Find out which lines were affected
 	const unsigned int lineCount = m_lines.GetLineCount(false/*includeVirtual*/);
 	const unsigned int firstline = m_lines.GetLineFromCharPos(pos);
 	unsigned int lastline = m_lines.GetLineFromCharPos(pos + len);
 	if (lastline && m_lines.isLineVirtual(lastline)) --lastline; // Don't try to parse last virtual line
 
-	// How many new lines was inserted?
+	// How many new lines were inserted?
 	unsigned int newLines = lastline - firstline;
 	if (firstline == m_foldLineCount) ++newLines; // adjust for first insertion in last line (creating it)
 	wxASSERT(newLines == lineCount - m_foldLineCount);
@@ -9152,7 +8764,7 @@ void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
 		p = ParseFoldLine(i, p, doRefold);
 	}
 
-	// Adjust line id's in following
+	// Adjust line ids in following
 	if (newLines) {
 		while (p != m_folds.end()) {
 			p->line_id += newLines;
@@ -9287,26 +8899,28 @@ unsigned int EditorCtrl::GetLastLineInFold(const vector<cxFold*>& fStack) const 
 	const unsigned int foldLine = p->line_id;
 
 	for (vector<cxFold>::const_iterator f = p+1; f != m_folds.end(); ++f) {
-		if (f->type == cxFOLD_END) {
-			// Check if end marker matches any starter on the stack (ignore unmatched)
-			for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
-				if (f->indent == (*fr)->indent) {
-					if ((*fr)->line_id == foldLine) {
-						return f->line_id; // end matches current
-					}
-					else if ((*fr)->line_id < foldLine) {
-						return f->line_id-1; // end matches previous (ending fold prematurely)
-					}
-					else {
-						// skip subfolds
-						vector<const cxFold*>::iterator fb = (++fr).base();
-						foldStack.erase(fb, foldStack.end()); // pop
-						break;
-					}
+		if (f->type != cxFOLD_END){
+			foldStack.push_back(&*f);
+			continue;
+		}
+
+		// Check if end marker matches any starter on the stack (ignore unmatched)
+		for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
+			if (f->indent == (*fr)->indent) {
+				if ((*fr)->line_id == foldLine) {
+					return f->line_id; // end matches current
+				}
+				else if ((*fr)->line_id < foldLine) {
+					return f->line_id-1; // end matches previous (ending fold prematurely)
+				}
+				else {
+					// skip subfolds
+					vector<const cxFold*>::iterator fb = (++fr).base();
+					foldStack.erase(fb, foldStack.end()); // pop
+					break;
 				}
 			}
 		}
-		else foldStack.push_back(&*f);
 	}
 
 	return m_foldLineCount-1; // default is to end-of-doc
@@ -9398,9 +9012,7 @@ void EditorCtrl::ToggleFold() {
 
 	if (!foldStack.empty()) {
 		const cxFold* f = foldStack.back();
-		if (f->type == cxFOLD_START_FOLDED) {
-			UnFold(f->line_id);
-		}
+		if (f->type == cxFOLD_START_FOLDED) UnFold(f->line_id);
 		else Fold(f->line_id);
 	}
 }
@@ -9438,11 +9050,7 @@ bool EditorCtrl::IsLineFolded(unsigned int line_id) const {
 
 	const cxFold target(line_id);
 	vector<cxFold>::const_iterator p = lower_bound(m_folds.begin(), m_folds.end(), target);
-	if (p != m_folds.end() && p->line_id == line_id && p->type == cxFOLD_START_FOLDED) {
-		return true;
-	}
-
-	return false;
+	return p != m_folds.end() && p->line_id == line_id && p->type == cxFOLD_START_FOLDED;
 }
 
 bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigned int* fold_end) {
@@ -9581,7 +9189,6 @@ void EditorCtrl::BookmarksDelete(unsigned int start, unsigned int end) {
 
 		++p;
 	}
-
 }
 
 void EditorCtrl::BookmarksApplyDiff(const vector<cxChange>& changes) {

@@ -34,6 +34,7 @@
 //#include <curl/curl.h>
 #include "RemoteThread.h"
 #include "EditorFrame.h"
+#include "eDocumentPath.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -232,7 +233,7 @@ bool eApp::OnInit() {
 
 #ifdef __WXMSW__
 	wxLogDebug(wxT("Initializing cygwin"));
-	frame->InitCygwin();
+	eDocumentPath::InitCygwinOnce(*m_catalyst, this->frame);
 #endif
 
 	wxLogDebug(wxT("Checking for modified files"));
@@ -244,6 +245,13 @@ bool eApp::OnInit() {
 
     return true;
 }
+
+#ifdef __WXMSW__
+bool eApp::InitCygwin(bool silent){
+	return eDocumentPath::InitCygwin(*m_catalyst, this->frame, silent);
+}
+#endif
+
 
 void eApp::ClearState() {
 	cxLOCK_WRITE((*m_catalyst))

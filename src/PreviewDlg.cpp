@@ -15,6 +15,8 @@
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include <wx/wfstream.h>
+#include "eDocumentPath.h"
+#include "ShellRunner.h"
 
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"
@@ -200,7 +202,7 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 		m_truePath = m_editorCtrl->GetPath();
 	}
 
-	m_uncPath = ConvertPathToUNC(m_truePath);
+	m_uncPath = eDocumentPath::ConvertPathToUncFileUrl(m_truePath);
 
 	// Make sure we only update when the editor changes
 	m_editorChangeToken = m_editorCtrl->GetChangeToken();
@@ -229,13 +231,13 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 			tempFile.Write(&*text.begin(), text.size());
 		}
 
-		if (mode == cxUPDATE_RELOAD || m_isFirst) RefreshBrowser(cxUPDATE_RELOAD);
-		else RefreshBrowser(cxUPDATE_REFRESH);
+		if (m_isFirst) mode = cxUPDATE_RELOAD;
+		RefreshBrowser(mode);
 	}
 	else {
 		cxEnv env;
 		m_editorCtrl->SetEnv(env, true);
-		const wxString cmd = m_editorCtrl->GetBashCommand(m_pipeCmd, env);
+		const wxString cmd = ShellRunner::GetBashCommand(m_pipeCmd, env);
 		if (cmd.empty()) return;
 
 		// Thread will send event and delete itself when done
@@ -420,18 +422,6 @@ void PreviewDlg::InsertBase(vector<char>& html, const wxString& path) { // stati
 	}
 
 	html.insert(insertpos, base.begin(), base.end());
-}
-
-wxString PreviewDlg::ConvertPathToUNC(const wxString& path) { // static
-	if (path.empty()) return wxEmptyString;
-
-	wxString uncPath = path;
-
-	uncPath.Replace(wxT(" "), wxT("%20"));
-	uncPath.Replace(wxT("\\"), wxT("/"));
-	uncPath.Prepend(wxT("file:///"));
-
-	return uncPath;
 }
 
 void PreviewDlg::OnShowOptions(wxCommandEvent& event) {

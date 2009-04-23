@@ -278,12 +278,9 @@ public:
 	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 
 	// Shell
-	enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
-	long RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix=true, const wxString& cwd=wxEmptyString);
 	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
-	void RunCurrent(bool doReplace);
-	wxString GetBashCommand(const wxString& cmd, cxEnv& env);
+	void RunCurrentSelectionAsCommand(bool doReplace);
 
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};
@@ -352,16 +349,8 @@ public:
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
-#ifdef __WXMSW__
-	bool InitCygwin(bool silent=false);
-	static wxString GetCygwinDir();
-	static wxString CygwinPathToWin(const wxString& path);
-#endif // __WXMSW__
-
 	virtual bool OnPreKeyDown(wxKeyEvent& event);
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
-
-    static wxString WinPathToCygwin(const wxFileName& path);
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -698,13 +687,6 @@ private:
 	vector<interval> m_searchRanges;
 
 	wxString m_indent;
-	static wxString s_bashCmd;
-	static wxString s_bashEnv;
-	static wxString s_tmBashInit;
-#ifdef __WXMSW__
-	static bool s_isCygwinInitialized;
-	static wxString s_cygPath;
-#endif // __WXMSW__
 
 	// Auto-pair brackets
 	bool m_doAutoPair;

@@ -186,7 +186,7 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 			// Create the UNIX-on-Windws
 			wxPanel* unixPage = new wxPanel(notebook, wxID_ANY);
 			{
-				wxFlexGridSizer* sizer = new wxFlexGridSizer(1, 2, 0, 0);
+				wxFlexGridSizer* sizer = new wxFlexGridSizer(2, 2, 0, 0);
 				{
 					sizer->AddGrowableCol(1); // col 2 is sizable
 
@@ -195,6 +195,12 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 
 					m_ctrlCygdrivePrefix = new wxTextCtrl(unixPage, wxID_ANY, _("/cygdrive/"));
 					sizer->Add(m_ctrlCygdrivePrefix, 1, wxEXPAND|wxALL, 5);
+					
+					wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash Path:"));
+					sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+					m_ctrlBashPath = new wxTextCtrl(unixPage, wxID_ANY, _(".....\\bash.exe"));
+					sizer->Add(m_ctrlBashPath, 1, wxEXPAND|wxALL, 5);
 					
 					unixPage->SetSizerAndFit(sizer);
 				}

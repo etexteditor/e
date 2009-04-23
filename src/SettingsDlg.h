@@ -63,7 +63,8 @@ private:
 
 #ifdef __WXMSW__
 	// -- UNIX-on-Windws page
-	wxTextCtrl* m_ctrlCygdrivePrefix;
+	wxTextCtrl *m_ctrlCygdrivePrefix;
+	wxTextCtrl *m_ctrlBashPath;
 #endif
 };
 

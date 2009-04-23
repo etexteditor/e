@@ -2108,6 +2108,14 @@ int ProjectPane::AddFileIcon(const wxString& path, bool isDir) {
 }
 
 #ifdef __WXGTK__
+bool ProjectPane::GetDefaultIcon(wxIcon &icon) {
+	icon = wxArtProvider::GetIcon(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16));
+	if (!icon.IsOk()) {
+		return false;
+ 	}
+        return true;
+}
+
 bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 
 	wxFileType* FileType = NULL;
@@ -2120,7 +2128,7 @@ bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 	if (wxFileName::DirExists(path)) {
 //	if (dir.Open(path)) {
 		// get icon for directory 
-		icon = wxArtProvider::GetIcon(wxART_FOLDER);
+		icon = wxArtProvider::GetIcon(wxART_FOLDER, wxART_OTHER, wxSize(16, 16));
 		if (!icon.IsOk()) {
 			return false;
 		}
@@ -2129,32 +2137,28 @@ bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 	wxString FileExt = wxFileName(path).GetExt();
 	if (wxT("") == FileExt) {
 		// file without extension will have default icon
-		icon = wxArtProvider::GetIcon(wxART_NORMAL_FILE);
-		if (!icon.IsOk()) {
-			return false;
-		}
-		return true;
+		return GetDefaultIcon(icon);
 	}
 	if (NULL == (FileType = wxTheMimeTypesManager->GetFileTypeFromExtension(FileExt))) {
 		wxLogDebug(wxT("ProjectPane::%s() Can't get file type from ext=%s"),
 			wxString(__FUNCTION__, wxConvUTF8).c_str(), FileExt.c_str());
-		return false;
+		return GetDefaultIcon(icon);
 	}
 	if ((!FileType->GetIcon(&IconLoc)) || !IconLoc.IsOk()) {
 		wxLogDebug(wxT("ProjectPane::%s() Can't get icon location"),
 			wxString(__FUNCTION__, wxConvUTF8).c_str());
-		return false;
+		return GetDefaultIcon(icon);
 	}
 	wxLogDebug(wxT("icon location <%s>"), IconLoc.GetFileName().c_str());
 	if (!wxFile::Exists(IconLoc.GetFileName())) {
 		wxLogDebug(wxT("ProjectPane::%s() Can't find icon <%s>."),
 			wxString(__FUNCTION__, wxConvUTF8).c_str(), IconLoc.GetFileName().c_str());
-		return false;
+		return GetDefaultIcon(icon);
 	}
 	wxIcon newIcon(IconLoc);
 	if (!newIcon.IsOk()) {
 		wxLogDebug(wxT("ProjectPane::%s() Icon is not OK"), wxString(__FUNCTION__, wxConvUTF8).c_str());
-		return false;
+		return GetDefaultIcon(icon);
 	}
 	
 	icon.CopyFromBitmap(newIcon.ConvertToImage().Rescale(16, 16, wxIMAGE_QUALITY_HIGH));

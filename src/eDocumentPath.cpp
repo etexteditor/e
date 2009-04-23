@@ -209,7 +209,7 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 	return true;
 }
 
-void run_cygwin_dlg(CatalystWrapper& cw, wxWindow *parentWindow, cxCygwinDlgMode mode){
+void run_cygwin_dlg(CatalystWrapper& cw, wxWindow *parentWindow, const cxCygwinDlgMode mode){
 	// Notify user to install cygwin
 	CygwinDlg dlg(parentWindow, cw, mode);
 
@@ -251,7 +251,7 @@ wxDateTime get_last_cygwin_update(CatalystWrapper& cw) {
 // Checks to see if Cygwin is initalized, and prompts user to do it if not.
 // Returns true if Cygwin is initialized, otherwise false.
 //
-bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent) {
+bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, const bool silent) {
 	if (eDocumentPath::s_isCygwinInitialized)
 		return true;
 

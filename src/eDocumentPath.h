@@ -22,7 +22,7 @@ public:
 
 	static wxString CygwinPathToWin(const wxString& path);
 
-	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent=false);
+	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, const bool silent=false);
 	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 
 	static bool IsInitialized() { return s_isCygwinInitialized; }

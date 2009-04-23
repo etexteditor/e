@@ -154,7 +154,7 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 		return newpath;
 	}
 	
-	// Adamv: Not sure which case this handles -- forward slash paths that aren't cygdrive paths?
+	// Cygwin paths that aren't cygdrive paths get mapped to cygwin's native install folder
 	if (path.GetChar(0) == wxT('/')) {
 		newpath = s_cygPath + path;
 		newpath.Replace(wxT("/"), wxT("\\"));

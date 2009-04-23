@@ -18,7 +18,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 
 #ifdef __WXMSW__
 	if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return -1;
-#endif // __WXMSW__
+#endif
 
 	// Create temp file with command
 	wxFileName tmpfilePath = ((eApp*)wxTheApp)->GetAppDataPath();

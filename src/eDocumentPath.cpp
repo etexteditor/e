@@ -40,9 +40,7 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 	}
 
 	// Add the filename, if there is one
-	if (path.HasName()) {
-		unixPath += wxT('/') + path.GetFullName();
-	}
+	if (path.HasName()) unixPath += wxT('/') + path.GetFullName();
 
 	return unixPath;
 #endif
@@ -93,6 +91,35 @@ wxString eDocumentPath::GetCygdrivePrefix() {
 	return read_cygwin_registry_key(wxT("mounts v2"), wxT("cygdrive prefix"), wxT("/cygdrive")) + wxT("/");
 }
 
+//
+// This code assumes that we've already checked for special cases
+// involving a cygdrive prefix of '/' and a path that isn't a drive path.
+//
+// The given path is assumed to already start with cygdrive prefix
+//
+wxString eDocumentPath::convert_cygdrive_path_to_windows(const wxString& path) {
+	const size_t n = eDocumentPath::s_cygdrivePrefix.Len(); // Cygdrive prefix length
+
+	// Get drive letter
+	const wxChar drive = wxToupper(path[n] + 1);
+	if (drive < wxT('A') || wxT('Z') < drive) {
+		// Invalid drive letter; can't do anything with this.
+		wxASSERT(false);
+		return wxEmptyString;
+	}
+
+	wxString newpath;
+	newpath += drive;
+	newpath += wxT(':');
+
+	// Add stuff after the cygdrive+drive letter to the new path, else just add a slash.
+	if (path.size() > n+2) 	newpath += path.substr(n+2);
+	else newpath += wxT('\\');
+
+	newpath.Replace(wxT("/"), wxT("\\"));
+	return newpath;
+}
+
 wxString eDocumentPath::CygwinPathToWin(const wxString& path) { 
 	if (path.empty()) {
 		wxASSERT(false);
@@ -102,79 +129,29 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 	wxString newpath;
 
 	// Map cygdrive paths to standard Windows drive-letter.
-	// Don't handle mounts at root (yet)
 	if (s_cygdrivePrefix == wxT("/")) {
 		const size_t path_len = path.Len();
 
-		// path looks like: /
-		// Just a forward slash? Return the cygwin path
-		if (path_len == 1) return s_cygPath + wxT("\\");
-
-		// path looks like: /q or /q/
-		// Just a drive letter? Get a Windows drive root path
-		if (path_len == 2 || ((path_len == 3) && (path[2] == wxT('/')))) {
-			const wxChar drive = wxToupper(path[1]);
-			if (drive < wxT('A') || drive > wxT('Z')) {
-				wxASSERT(false);
-				return wxEmptyString;
-			}
-
-			// Build new path
-			newpath += drive;
-			newpath += wxT(':');
-			newpath += wxT("\\");
-			return newpath;
-		}
-
-		// path looks like /<drive>/<rest of path>
-		if ((path_len > 3) && (path[2] == wxT('/'))) {
-			const size_t n = s_cygdrivePrefix.Len() + 1; // Cygdrive prefix length
-
-			// Get drive letter
-			const wxChar drive = wxToupper(path[n]);
-			if (drive < wxT('A') || drive > wxT('Z')) {
-				wxASSERT(false);
-				return wxEmptyString;
-			}
-
-			// Build new path
-			newpath += drive;
-			newpath += wxT(':');
-
-			// Add stuff after the cygdrive+drive letter to the new path, else just add a slash.
-			if (path.size() > n+1) 	newpath += path.substr(n+1);
-			else newpath += wxT('\\');
-
-			newpath.Replace(wxT("/"), wxT("\\"));
-			return newpath;
-		}
+		// path looks like: /q or /q/ or /q/stuff
+		if (path_len == 2 || ((path_len >= 3) && (path[2] == wxT('/'))))
+			return convert_cygdrive_path_to_windows(path);
 
 		// If we got here, then don't convert the path, and let the StartsWith cases
 		// in the other top-level ifs happen.
 	}
 	else {
-		const size_t n = s_cygdrivePrefix.Len() + 1; // Cygdrive prefix length
-
-		if (path.StartsWith(s_cygdrivePrefix)) {
-			// Get drive letter
-			const wxChar drive = wxToupper(path[n]);
-			if (drive < wxT('A') || drive > wxT('Z')) {
-				wxASSERT(false);
-				return wxEmptyString;
-			}
-
-			// Build new path
-			newpath += drive;
-			newpath += wxT(':');
-
-			// Add stuff after the cygdrive+drive letter to the new path, else just add a slash.
-			if (path.size() > n+1) 	newpath += path.substr(n+1);
-			else newpath += wxT('\\');
-
-			newpath.Replace(wxT("/"), wxT("\\"));
-			return newpath;
-		}
+		if (path.StartsWith(s_cygdrivePrefix))
+			return convert_cygdrive_path_to_windows(path);
 	}
+
+	// For /usr/bin and /usr/lib, techincally we should be mapping anything that
+	// appears in the registry under cygwin mounts.
+	//
+	// Cygwin 1.7 will be changing this behavior, though, and storing mount information
+	// in fstab.
+	//
+	// For now, keep hard coding these mounts and worry about playing will with existing
+	// installations (that e didn't do) in the future.
 	
 	// Map /usr/bin/ paths to Cygwin bin folder
 	if (path.StartsWith(wxT("/usr/bin/"))) {

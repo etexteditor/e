@@ -32,7 +32,7 @@ wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) {
 	}
 
 	// Convert C:\... to /cygdrive/c/...
-	wxString unixPath = eDocumentPath::s_cygdrivePrefix + path.GetVolume().Lower();
+	wxString unixPath = eDocumentPath::s_cygdrivePrefix + wxT('/') + path.GetVolume().Lower();
 
 	// Convert slashs in path segments
 	const wxArrayString& dirs = path.GetDirs();
@@ -56,60 +56,41 @@ bool eDocumentPath::s_isCygwinInitialized = false;
 wxString eDocumentPath::s_cygPath;
 wxString eDocumentPath::s_cygdrivePrefix = wxT("/cygdrive/");
 
-wxString eDocumentPath::GetCygwinDir() { 
-	wxString cygPath;
+// Reads a value from the Cygwin registry key, trying both HKLM and HKCU.
+wxString read_cygwin_registry_key(const wxString &key_path, const wxString &key, const wxString &default_value = wxEmptyString) {
+	wxString value;
 
-	// Check if we have a cygwin installation
-	wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-	if( cygKey.Exists() && cygKey.HasValue(wxT("native"))) {
-		cygKey.QueryValue(wxT("native"), cygPath);
-	}
-
-	if (!cygPath.empty())
-		return cygPath;
-
-	// Also check "current user" (might be needed if user did not have admin rights during install)
-	wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
-
-	wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\/"));
-	if( cygKey2.Exists() ) {
-		wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
-
-		if (cygKey2.HasValue(wxT("native"))) {
-			wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
-			cygKey2.QueryValue(wxT("native"), cygPath);
+	// Check in "local machine", the "install for everyone" location.
+	{
+		wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\") + key_path);
+		if( cygKey.Exists() && cygKey.HasValue(key)) {
+			cygKey.QueryValue(key, value);
 		}
 	}
 
-	return cygPath;
+	if (!value.empty())
+		return value;
+
+	// Also check "current user" (might be needed if user did not have admin rights during install)
+	{
+		wxRegKey cygKey(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\") + key_path);
+		if( cygKey.Exists()  && cygKey.HasValue(key)) {
+			cygKey.QueryValue(key, value);
+		}
+	}
+
+	if (!value.empty())
+		return value;
+	
+	return default_value;
+}
+
+wxString eDocumentPath::GetCygwinDir() {
+	return read_cygwin_registry_key(wxT("mounts v2\\/"), wxT("native"));
 }
 
 wxString eDocumentPath::GetCygdrivePrefix() { 
-	wxString cygdrivePrefix;
-
-	// Check if we have a cygwin installation
-	wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\"));
-	if( cygKey.Exists() && cygKey.HasValue(wxT("cygdrive prefix"))) {
-		cygKey.QueryValue(wxT("cygdrive prefix"), cygdrivePrefix);
-	}
-
-	if (!cygdrivePrefix.empty())
-		return cygdrivePrefix;
-
-	// Also check "current user" (might be needed if user did not have admin rights during install)
-	wxLogDebug(wxT("CygPath: No key in HKEY_LOCAL_MACHINE"));
-
-	wxRegKey cygKey2(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\"));
-	if( cygKey2.Exists() ) {
-		wxLogDebug(wxT("CygPath: key exits in HKEY_CURRENT_USER"));
-
-		if (cygKey2.HasValue(wxT("cygdrive prefix"))) {
-			wxLogDebug(wxT("CygPath: native exits in HKEY_CURRENT_USER"));
-			cygKey2.QueryValue(wxT("cygdrive prefix"), cygdrivePrefix);
-		}
-	}
-
-	return cygdrivePrefix;
+	return read_cygwin_registry_key(wxT("mounts v2"), wxT("cygdrive prefix"), wxT("/cygdrive"));
 }
 
 wxString eDocumentPath::CygwinPathToWin(const wxString& path) { 

@@ -179,31 +179,30 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 
 					profilePage->SetSizerAndFit(profileSizer);
 				}
-
 				notebook->AddPage(profilePage, _("Profile"), true);
 			}
 
-			// Create the advanced page
-			wxPanel* advancedPage = new wxPanel(notebook, wxID_ANY);
+#ifdef __WXMSW__
+			// Create the UNIX-on-Windws
+			wxPanel* unixPage = new wxPanel(notebook, wxID_ANY);
 			{
 				wxFlexGridSizer* sizer = new wxFlexGridSizer(1, 2, 0, 0);
 				{
 					sizer->AddGrowableCol(1); // col 2 is sizable
 
-					wxStaticText* labelCygdrive = new wxStaticText(advancedPage, wxID_ANY, _("Cygdrive Prefix:"));
+					wxStaticText* labelCygdrive = new wxStaticText(unixPage, wxID_ANY, _("Cygdrive Prefix:"));
 					sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-					m_ctrlCygdrivePrefix = new wxTextCtrl(advancedPage, wxID_ANY, _("/cygdrive/"));
+					m_ctrlCygdrivePrefix = new wxTextCtrl(unixPage, wxID_ANY, _("/cygdrive/"));
 					sizer->Add(m_ctrlCygdrivePrefix, 1, wxEXPAND|wxALL, 5);
 					
-					advancedPage->SetSizerAndFit(sizer);
+					unixPage->SetSizerAndFit(sizer);
 				}
-
-				notebook->AddPage(advancedPage, _("Advanced"), true);
+				notebook->AddPage(unixPage, _("UNIX"), true);
 			}
+#endif
 
 			notebook->SetSelection(0);
-
 			mainSizer->Add(notebook, 0, wxEXPAND|wxALL, 5);
 		}
 

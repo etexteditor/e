@@ -61,8 +61,10 @@ private:
 	wxSpinCtrl* m_marginSpin;
 	wxCheckBox* m_wrapMargin;
 
-	// -- Advanced page
+#ifdef __WXMSW__
+	// -- UNIX-on-Windws page
 	wxTextCtrl* m_ctrlCygdrivePrefix;
+#endif
 };
 
 #endif // __SETTINGSDLG_H__

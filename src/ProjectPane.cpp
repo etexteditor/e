@@ -2120,7 +2120,7 @@ bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 	if (wxFileName::DirExists(path)) {
 //	if (dir.Open(path)) {
 		// get icon for directory 
-		icon = wxArtProvider::GetIcon(wxART_FOLDER);
+		icon = wxArtProvider::GetIcon(wxART_FOLDER, wxART_OTHER, wxSize(16, 16));
 		if (!icon.IsOk()) {
 			return false;
 		}
@@ -2129,7 +2129,7 @@ bool ProjectPane::GetIconFromFilePath(const wxString& path, wxIcon &icon) {
 	wxString FileExt = wxFileName(path).GetExt();
 	if (wxT("") == FileExt) {
 		// file without extension will have default icon
-		icon = wxArtProvider::GetIcon(wxART_NORMAL_FILE);
+		icon = wxArtProvider::GetIcon(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16));
 		if (!icon.IsOk()) {
 			return false;
 		}

@@ -62,6 +62,7 @@ private:
 	wxCheckBox* m_wrapMargin;
 
 	// -- Advanced page
+	wxTextCtrl* m_ctrlCygdrivePrefix;
 };
 
 #endif // __SETTINGSDLG_H__

@@ -150,7 +150,7 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 			// Create the profile page
 			wxPanel* profilePage = new wxPanel(notebook, wxID_ANY);
 			{
-				wxFlexGridSizer* profileSizer = new wxFlexGridSizer(2,2, 0, 0);
+				wxFlexGridSizer* profileSizer = new wxFlexGridSizer(2, 2, 0, 0);
 				{
 					profileSizer->AddGrowableCol(1); // col 2 is sizable
 
@@ -181,13 +181,27 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 				}
 
 				notebook->AddPage(profilePage, _("Profile"), true);
+			}
 
-				// Create the advanced page
-				wxPanel* advancedPage = new wxPanel(notebook, wxID_ANY);
+			// Create the advanced page
+			wxPanel* advancedPage = new wxPanel(notebook, wxID_ANY);
+			{
+				wxFlexGridSizer* sizer = new wxFlexGridSizer(1, 2, 0, 0);
 				{
+					sizer->AddGrowableCol(1); // col 2 is sizable
+
+					wxStaticText* labelCygdrive = new wxStaticText(advancedPage, wxID_ANY, _("Cygdrive Prefix:"));
+					sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+					m_ctrlCygdrivePrefix = new wxTextCtrl(advancedPage, wxID_ANY, _("/cygdrive/"));
+					sizer->Add(m_ctrlCygdrivePrefix, 1, wxEXPAND|wxALL, 5);
+					
+					advancedPage->SetSizerAndFit(sizer);
 				}
+
 				notebook->AddPage(advancedPage, _("Advanced"), true);
 			}
+
 			notebook->SetSelection(0);
 
 			mainSizer->Add(notebook, 0, wxEXPAND|wxALL, 5);

@@ -104,10 +104,53 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 	// Map cygdrive paths to standard Windows drive-letter.
 	// Don't handle mounts at root (yet)
 	if (s_cygdrivePrefix == wxT("/")) {
-		// If we got here, then don't convert the path.
-		return path;
+		const size_t path_len = path.Len();
 
-		// TODO: Convert the path
+		// path looks like: /
+		// Just a forward slash? Return the cygwin path
+		if (path_len == 1) return s_cygPath + wxT("\\");
+
+		// path looks like: /q or /q/
+		// Just a drive letter? Get a Windows drive root path
+		if (path_len == 2 || ((path_len == 3) && (path[2] == wxT('/')))) {
+			const wxChar drive = wxToupper(path[1]);
+			if (drive < wxT('A') || drive > wxT('Z')) {
+				wxASSERT(false);
+				return wxEmptyString;
+			}
+
+			// Build new path
+			newpath += drive;
+			newpath += wxT(':');
+			newpath += wxT("\\");
+			return newpath;
+		}
+
+		// path looks like /<drive>/<rest of path>
+		if ((path_len > 3) && (path[2] == wxT('/'))) {
+			const size_t n = s_cygdrivePrefix.Len() + 1; // Cygdrive prefix length
+
+			// Get drive letter
+			const wxChar drive = wxToupper(path[n]);
+			if (drive < wxT('A') || drive > wxT('Z')) {
+				wxASSERT(false);
+				return wxEmptyString;
+			}
+
+			// Build new path
+			newpath += drive;
+			newpath += wxT(':');
+
+			// Add stuff after the cygdrive+drive letter to the new path, else just add a slash.
+			if (path.size() > n+1) 	newpath += path.substr(n+1);
+			else newpath += wxT('\\');
+
+			newpath.Replace(wxT("/"), wxT("\\"));
+			return newpath;
+		}
+
+		// If we got here, then don't convert the path, and let the StartsWith cases
+		// in the other top-level ifs happen.
 	}
 	else {
 		const size_t n = s_cygdrivePrefix.Len() + 1; // Cygdrive prefix length
@@ -124,7 +167,7 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 			newpath += drive;
 			newpath += wxT(':');
 
-			// Add stuff after the cygdrive to the new path, else just add a slash.
+			// Add stuff after the cygdrive+drive letter to the new path, else just add a slash.
 			if (path.size() > n+1) 	newpath += path.substr(n+1);
 			else newpath += wxT('\\');
 

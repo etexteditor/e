@@ -161,28 +161,6 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 	return path;
 }
 
-// This function was taken from EditorFrame, but is not called from anywhere.
-void eDocumentPath::ConvertPathToWin(wxString& path) {
-	// If Cygdrive is mounted at root, then don't try to convert paths (yet.)
-	if (s_cygdrivePrefix == wxT("/")) return;
-
-	if (!path.StartsWith(s_cygdrivePrefix)) return;
-
-	// Get drive letter
-	const wxChar drive = wxToupper(path[10]);
-	if (drive < wxT('A') || drive > wxT('Z')) return;
-
-	// Build new path
-	wxString newpath(drive);
-	newpath += wxT(':');
-	const size_t n = s_cygdrivePrefix.Len() + 1; // Cygdrive prefix plus drive letter
-	if (path.size() > n) newpath += path.substr(n);
-	else newpath += wxT('\\');
-
-	newpath.Replace(wxT("/"), wxT("\\"));
-	path = newpath;
-}
-
 void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow) {
 	bool shouldPromptUserForCygUpdate = true;
 	cxLOCK_READ(cw)

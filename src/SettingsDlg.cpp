@@ -188,8 +188,10 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 			}
 
 #ifdef __WXMSW__
-			// Create the UNIX-on-Windws
+			// Create the UNIX-on-Windws page
 			{
+				const bool cygwin_initialized = eDocumentPath::IsInitialized();
+
 				wxPanel* unixPage = new wxPanel(notebook, wxID_ANY);
 				wxFlexGridSizer* sizer = new wxFlexGridSizer(2, 2, 0, 0);
 				sizer->AddGrowableCol(1); // col 2 is sizable
@@ -198,32 +200,20 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 				wxStaticText* labelCygInit = new wxStaticText(unixPage, wxID_ANY, _("Cygwin initialized?"));
 				sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				wxStaticText* labelCygInitValue = new wxStaticText(unixPage, wxID_ANY, eDocumentPath::IsInitialized() ? _("Yes") : _("No"));
+				wxStaticText* labelCygInitValue = new wxStaticText(unixPage, wxID_ANY, cygwin_initialized ? _("Yes") : _("No"));
 				sizer->Add(labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 				// Bash path
 				wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash Path:"));
 				sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				//m_ctrlBashPath = new wxTextCtrl(unixPage, wxID_ANY, _(".....\\bash.exe"));
-				//sizer->Add(m_ctrlBashPath, 1, wxEXPAND|wxALL, 5);
-				
+				wxStaticText* labelBashPathValue = new wxStaticText(unixPage, wxID_ANY, 
+					cygwin_initialized ? eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe") : _("(Cygwin not initialized.)"));
+
+				sizer->Add(labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
 				// Size and fit
 				unixPage->SetSizerAndFit(sizer);
-
-				//// Read cygdrive-prefix setting and fill control.
-				//wxString cygdrivePrefix;
-				//cxLOCK_READ(m_catalyst)
-				//	catalyst.GetSettingString(wxT("cygdrive-prefix"), cygdrivePrefix);
-				//cxENDLOCK
-
-				//if (cygdrivePrefix.IsEmpty())
-				//	cygdrivePrefix = wxT("/cygdrive/");
-				//	
-				//m_ctrlCygdrivePrefix->SetValue(cygdrivePrefix);
-
-				// Read bash path setting and fill control.
-				// ....
 
 				notebook->AddPage(unixPage, _("UNIX"), true);
 			}

@@ -189,10 +189,10 @@ void cxEnv::AddSystemVars(const bool isUnix, const wxString &baseAppPath) {
 	if (wxGetEnv(wxT("PATH"), &envPath)) {
 #ifdef __WXMSW__
 		// Check if cygwin is on the path
-		if (!eDocumentPath::s_cygPath.empty()) {
-			if (!envPath.Contains(eDocumentPath::s_cygPath)) {
-				const wxString binPath = eDocumentPath::s_cygPath + wxT("\\bin");
-				const wxString x11Path = eDocumentPath::s_cygPath + wxT("\\usr\\X11R6\\bin");
+		if (!eDocumentPath::CygwinPath().empty()) {
+			if (!envPath.Contains(eDocumentPath::CygwinPath())) {
+				const wxString binPath = eDocumentPath::CygwinPath() + wxT("\\bin");
+				const wxString x11Path = eDocumentPath::CygwinPath() + wxT("\\usr\\X11R6\\bin");
 
 				if (!envPath.empty()) {
 					envPath = binPath + wxT(";") + x11Path + wxT(";") + envPath;

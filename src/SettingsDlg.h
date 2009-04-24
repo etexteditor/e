@@ -25,9 +25,14 @@ public:
 private:
 	void UpdateEncoding();
 
+#ifdef __WXMSW__
+	void UpdateUnixPage();
+#endif
+
 	// Event handlers
 	void OnButtonOk(wxCommandEvent& event);
 	void OnButtonLoadPic(wxCommandEvent& event);
+	void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& event);
 	void OnCheckAutoPair(wxCommandEvent& event);
 	void OnCheckAutoWrap(wxCommandEvent& event);
 	void OnCheckKeepState(wxCommandEvent& event);
@@ -63,6 +68,12 @@ private:
 
 #ifdef __WXMSW__
 	// -- UNIX-on-Windws page
+	wxPanel* m_unixPage;
+
+	wxStaticText* m_labelCygInitValue;
+	wxStaticText* m_labelBashPathValue;
+	wxStaticText* m_labelCygdriveValue;
+	wxButton* m_cygwinButton;
 #endif
 };
 

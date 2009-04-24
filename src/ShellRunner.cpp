@@ -59,7 +59,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 	else if (isUnix) {
 		if (s_bashCmd.empty()) {
 #ifdef __WXMSW__
-			s_bashCmd = eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
+			s_bashCmd = eDocumentPath::CygwinPath() + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #else
             s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #endif
@@ -122,7 +122,7 @@ wxString ShellRunner::GetBashCommand(const wxString& cmd, cxEnv& env) {
 	env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
 
 #ifdef __WXMSW__
-	return eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe -c \"") + cmd + wxT("\"");
+	return eDocumentPath::CygwinPath() + wxT("\\bin\\bash.exe -c \"") + cmd + wxT("\"");
 #else
     return wxT("bash -c \"") + cmd + wxT("\"");
 #endif

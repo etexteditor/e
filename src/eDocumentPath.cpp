@@ -257,7 +257,7 @@ wxDateTime get_last_cygwin_update(CatalystWrapper& cw) {
 
 	// In older versions it could be saved as filestamp
 	if (!stampTime.IsValid()) {
-		const wxFileName timestamp(eDocumentPath::s_cygPath + wxT("\\etc\\setup\\last-e-update"));
+		const wxFileName timestamp(eDocumentPath::CygwinPath() + wxT("\\etc\\setup\\last-e-update"));
 		if (timestamp.FileExists()) {
 			stampTime = timestamp.GetModificationTime();
 

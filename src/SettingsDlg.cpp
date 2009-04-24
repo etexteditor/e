@@ -38,12 +38,14 @@ enum {
 	CTRL_MARGINSPIN,
 	CTRL_LINEENDING,
 	CTRL_ENCODING,
-	CTRL_BOM
+	CTRL_BOM,
+	CTRL_CYGWIN_ACTION // Only added on Windows
 };
 
 BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, SettingsDlg::OnButtonOk)
 	EVT_BUTTON(CTRL_LOADPIC, SettingsDlg::OnButtonLoadPic)
+	EVT_BUTTON(CTRL_CYGWIN_ACTION, SettingsDlg::OnButtonCygwinAction)
 	EVT_CHECKBOX(CTRL_AUTOPAIR, SettingsDlg::OnCheckAutoPair)
 	EVT_CHECKBOX(CTRL_AUTOWRAP, SettingsDlg::OnCheckAutoWrap)
 	EVT_CHECKBOX(CTRL_KEEPSTATE, SettingsDlg::OnCheckKeepState)
@@ -190,32 +192,44 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 #ifdef __WXMSW__
 			// Create the UNIX-on-Windws page
 			{
-				const bool cygwin_initialized = eDocumentPath::IsInitialized();
+				m_unixPage = new wxPanel(notebook, wxID_ANY);
+				wxFlexGridSizer* sizer = new wxFlexGridSizer(4, 2, 0, 0);
+				{
+					sizer->AddGrowableCol(1); // 2nd column is sizable
 
-				wxPanel* unixPage = new wxPanel(notebook, wxID_ANY);
-				wxFlexGridSizer* sizer = new wxFlexGridSizer(2, 2, 0, 0);
-				sizer->AddGrowableCol(1); // col 2 is sizable
+					// Is Cygwin intialized?
+					wxStaticText* labelCygInit = new wxStaticText(m_unixPage, wxID_ANY, _("Cygwin initialized?"));
+					sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				// Is Cygwin intialized?
-				wxStaticText* labelCygInit = new wxStaticText(unixPage, wxID_ANY, _("Cygwin initialized?"));
-				sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+					m_labelCygInitValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
+					sizer->Add(m_labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				wxStaticText* labelCygInitValue = new wxStaticText(unixPage, wxID_ANY, cygwin_initialized ? _("Yes") : _("No"));
-				sizer->Add(labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+					// Bash path
+					wxStaticText* labelBashPath = new wxStaticText(m_unixPage, wxID_ANY, _("Bash Path:"));
+					sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				// Bash path
-				wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash Path:"));
-				sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+					m_labelBashPathValue = new wxStaticText(m_unixPage, wxID_ANY, 	_(""));
+					sizer->Add(m_labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				wxStaticText* labelBashPathValue = new wxStaticText(unixPage, wxID_ANY, 
-					cygwin_initialized ? eDocumentPath::s_cygPath + wxT("\\bin\\bash.exe") : _("(Cygwin not initialized.)"));
+					// Cygdrive path
+					wxStaticText* labelCygdrive = new wxStaticText(m_unixPage, wxID_ANY, _("Cygdrive Prefix:"));
+					sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-				sizer->Add(labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+					m_labelCygdriveValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
+					sizer->Add(m_labelCygdriveValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+					// Button
+					sizer->AddStretchSpacer();
+
+					m_cygwinButton = new wxButton(m_unixPage, CTRL_CYGWIN_ACTION, _(""));
+					sizer->Add(m_cygwinButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+				}
 
 				// Size and fit
-				unixPage->SetSizerAndFit(sizer);
+				m_unixPage->SetSizerAndFit(sizer);
+				UpdateUnixPage();
 
-				notebook->AddPage(unixPage, _("UNIX"), true);
+				notebook->AddPage(m_unixPage, _("UNIX"), true);
 			}
 #endif
 
@@ -235,6 +249,27 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 	SetSizeHints(size.x, size.y, -1, size.y);
 
 	Centre();
+}
+
+void SettingsDlg::UpdateUnixPage() {
+	const bool cygwin_initialized = eDocumentPath::IsInitialized();
+
+	m_labelCygInitValue->SetLabel(cygwin_initialized 
+		? _("Yes") : _("No"));
+
+	m_labelBashPathValue->SetLabel(cygwin_initialized 
+		? eDocumentPath::CygwinPath() + wxT("\\bin\\bash.exe") 
+		: _("(Cygwin not initialized)"));
+
+	m_labelCygdriveValue->SetLabel(cygwin_initialized 
+		? eDocumentPath::CygdrivePrefix() 
+		: _("(Cygwin not initialized)"));
+
+	m_cygwinButton->SetLabel(cygwin_initialized 
+		? _("Show version information") 
+		: _("Initialize now"));
+
+	m_unixPage->Fit();
 }
 
 void SettingsDlg::UpdateEncoding() {
@@ -335,13 +370,19 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 		cxENDLOCK
 	}
 
-	// Check if cygdrive prefix changed.
-	// ...
-
-	// Check if bash path changed.
-	// ...
-
 	EndModal(wxID_OK);
+}
+
+void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {
+#ifdef __WXMSW__
+	if (eDocumentPath::IsInitialized()){
+		::wxMessageBox(wxT("Hello!"), wxT("Pushed"));
+	}
+	else {
+		eDocumentPath::InitCygwin(m_catalyst, this);
+		UpdateUnixPage();
+	}
+#endif
 }
 
 void SettingsDlg::OnButtonLoadPic(wxCommandEvent& WXUNUSED(event)) {

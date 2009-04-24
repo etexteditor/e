@@ -26,15 +26,15 @@ public:
 	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
 
 	static bool IsInitialized() { return s_isCygwinInitialized; }
-
-	// Todo: these are public so change the naming style.
-	static wxString s_cygPath;
+	static wxString CygdrivePrefix() { return s_cygdrivePrefix; }
+	static wxString CygwinPath() { return s_cygPath; }
 
 private:
 	static wxString eDocumentPath::convert_cygdrive_path_to_windows(const wxString& path);
 
-	static wxString s_cygdrivePrefix;
 	static bool s_isCygwinInitialized;
+	static wxString s_cygdrivePrefix;
+	static wxString s_cygPath;
 
 #endif // __WXMSW__
 };

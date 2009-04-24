@@ -469,9 +469,9 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 			editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
 		editMenu->AppendSeparator();
 		editMenu->Append(MENU_SYNTAX, _("S&yntax"), m_syntaxMenu, _("Syntax"));
-		editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme.."), _("Edit Theme"));
+		editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 		editMenu->AppendSeparator();
-		editMenu->Append(MENU_SETTINGS, _("S&ettings.."), _("Edit Settings"));
+		editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
 		menuBar->Append(editMenu, _("&Edit"));
 
 		// View menu
@@ -3961,4 +3961,3 @@ void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
 		}
 	}
 }
-

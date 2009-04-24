@@ -165,7 +165,7 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 							m_ctrlUserPic->SetBackgroundColour(*wxWHITE);
 							picSizer->Add(m_ctrlUserPic, 0);
 
-							wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load.."));
+							wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load..."));
 							picSizer->Add(loadButton, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
 
 							profileSizer->Add(picSizer, 0, wxALL, 5);

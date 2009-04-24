@@ -1663,7 +1663,6 @@ bool EditorFrame::IsBundlePath(const wxString& path) { // static
 bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
 	wxBusyCursor busy;
 
-	// Setup variables
 	bool doReload = true;
 	bool isCurrent = false;
 	const bool isBundleItem = IsBundlePath(filepath);
@@ -1703,9 +1702,9 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 			}
 		}
 
-		// Check if the file on disk have been changed since last save
+		// Check if the file on disk has been changed since last save
 		if (modifiedDate.IsValid()) {
-			if (isBundleItem) {} // EditorCtrl does it's own check for changes
+			if (isBundleItem) {} // EditorCtrl does its own check for changes
 			else if (IsRemotePath(filepath)) {
 				if (!rp) rp = GetRemoteProfile(filepath, false);
 				const wxDateTime fileDate = GetRemoteThread().GetModDate(filepath, *rp);

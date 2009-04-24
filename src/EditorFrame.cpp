@@ -469,9 +469,9 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 			editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
 		editMenu->AppendSeparator();
 		editMenu->Append(MENU_SYNTAX, _("S&yntax"), m_syntaxMenu, _("Syntax"));
-		editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme.."), _("Edit Theme"));
+		editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 		editMenu->AppendSeparator();
-		editMenu->Append(MENU_SETTINGS, _("S&ettings.."), _("Edit Settings"));
+		editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
 		menuBar->Append(editMenu, _("&Edit"));
 
 		// View menu
@@ -3936,20 +3936,22 @@ void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 
 		// Don't try to open it in browser
 		event.Cancel(true);
+		return;
 	}
-	else if (url.StartsWith(wxT("tm-file://"))) {
-
+	
+	if (url.StartsWith(wxT("tm-file://"))) {
 		wxString path = url.substr(10);
 
 #ifdef __WXMSW__
 		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
 #endif
-		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
+		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 		m_browser->LoadUrl(path);
 
 		// Don't try to open it in browser
 		event.Cancel(true);
+		return;
 	}
 }
 
@@ -3961,4 +3963,3 @@ void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
 		}
 	}
 }
-

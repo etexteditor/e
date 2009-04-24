@@ -29,7 +29,7 @@ dialog and then re-save the file.
 
 Always `git diff` before committing; if every line in a file is marked as
 changed then you probably converted CRLF to LF accidentally. Resave the file
-and re-diff before comitting.
+and re-diff before committing.
 
 
 = Building e =

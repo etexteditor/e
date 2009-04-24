@@ -206,14 +206,14 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 					sizer->Add(m_labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 					// Bash path
-					wxStaticText* labelBashPath = new wxStaticText(m_unixPage, wxID_ANY, _("Bash Path:"));
+					wxStaticText* labelBashPath = new wxStaticText(m_unixPage, wxID_ANY, _("Bash path:"));
 					sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 					m_labelBashPathValue = new wxStaticText(m_unixPage, wxID_ANY, 	_(""));
 					sizer->Add(m_labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 					// Cygdrive path
-					wxStaticText* labelCygdrive = new wxStaticText(m_unixPage, wxID_ANY, _("Cygdrive Prefix:"));
+					wxStaticText* labelCygdrive = new wxStaticText(m_unixPage, wxID_ANY, _("Cygdrive prefix:"));
 					sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 					m_labelCygdriveValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));

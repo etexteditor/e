@@ -3936,20 +3936,22 @@ void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 
 		// Don't try to open it in browser
 		event.Cancel(true);
+		return;
 	}
-	else if (url.StartsWith(wxT("tm-file://"))) {
-
+	
+	if (url.StartsWith(wxT("tm-file://"))) {
 		wxString path = url.substr(10);
 
 #ifdef __WXMSW__
 		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
 #endif
-		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 
+		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
 		m_browser->LoadUrl(path);
 
 		// Don't try to open it in browser
 		event.Cancel(true);
+		return;
 	}
 }
 

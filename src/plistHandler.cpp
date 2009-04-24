@@ -232,7 +232,7 @@ wxString PListHandler::GetSyntaxAssoc(const wxString& ext) const {
 	const int index = m_vSyntaxAssocs.Find(pExt[ext.mb_str(wxConvUTF8)]);
 
 	if (index != -1) return wxString(pSynId(m_vSyntaxAssocs[index]), wxConvUTF8);
-	else return wxEmptyString;
+	return wxEmptyString;
 }
 
 void PListHandler::SetSyntaxAssoc(const wxString& ext, const wxString& syntaxId) {
@@ -775,11 +775,11 @@ BundleItemType PListHandler::GetBundleTypeFromUri(const wxString& uri) const {
 	const wxString itemtype = uri_part.BeforeFirst(wxT('/'));
 
 	if (itemtype == wxT("Snippets")) return BUNDLE_SNIPPET;
-	else if (itemtype == wxT("Commands")) return BUNDLE_COMMAND;
-	else if (itemtype == wxT("DragCommands")) return BUNDLE_DRAGCMD;
-	else if (itemtype == wxT("Preferences")) return BUNDLE_PREF;
-	else if (itemtype == wxT("Syntaxes")) return BUNDLE_LANGUAGE;
-	else return BUNDLE_NONE;
+	if (itemtype == wxT("Commands")) return BUNDLE_COMMAND;
+	if (itemtype == wxT("DragCommands")) return BUNDLE_DRAGCMD;
+	if (itemtype == wxT("Preferences")) return BUNDLE_PREF;
+	if (itemtype == wxT("Syntaxes")) return BUNDLE_LANGUAGE;
+	return BUNDLE_NONE;
 }
 
 bool PListHandler::GetBundleItemFromUri(const wxString& uri, BundleItemType& type, unsigned int& bundleId, unsigned int& itemId) const {
@@ -1335,11 +1335,10 @@ bool PListHandler::DeletePlistItem(unsigned int ndx, int loc, c4_View vList) {
 		vList.RemoveAt(ndx);
 		return true;
 	}
-	else {
-		// Just update locality
-		pLocality(rPlistItem) = locality;
-		return false;
-	}
+
+	// Just update locality
+	pLocality(rPlistItem) = locality;
+	return false;
 }
 
 void PListHandler::DeleteBundleSubItems(unsigned int bundleId, int loc) {
@@ -1821,14 +1820,14 @@ PListDict PListHandler::GetPlistItem(unsigned int ndx, c4_View vList) const {
 		const unsigned int ref = pLocalRef(rItem);
 		return GetPlist(ref);
 	}
-	else if (locality & PLIST_PRISTINE || locality & PLIST_INSTALLED) {
+	
+	if (locality & PLIST_PRISTINE || locality & PLIST_INSTALLED) {
 		const unsigned int ref = pPristineRef(rItem);
 		return GetPlist(ref);
 	}
-	else {
-		wxASSERT(false);
-		return PListDict();
-	}
+
+	wxASSERT(false);
+	return PListDict();
 }
 
 PListDict PListHandler::GetEditablePlistItem(unsigned int ndx, c4_View vList) {
@@ -1838,19 +1837,18 @@ PListDict PListHandler::GetEditablePlistItem(unsigned int ndx, c4_View vList) {
 	const int locality = pLocality(rItem);
 
 	if (locality & PLIST_LOCAL) return GetPlist(pLocalRef(rItem));
-	else {
-		wxASSERT(locality & PLIST_PRISTINE || locality & PLIST_INSTALLED);
 
-		// We have to make an editable copy
-		const unsigned int prisRef = pPristineRef(rItem);
-		const unsigned int locRef = CopyPlist(prisRef);
+	wxASSERT(locality & PLIST_PRISTINE || locality & PLIST_INSTALLED);
 
-		// Update theme entry
-		pLocalRef(rItem) = locRef;
-		pLocality(rItem) = locality | PLIST_LOCAL;
+	// We have to make an editable copy
+	const unsigned int prisRef = pPristineRef(rItem);
+	const unsigned int locRef = CopyPlist(prisRef);
 
-		return GetPlist(locRef);
-	}
+	// Update theme entry
+	pLocalRef(rItem) = locRef;
+	pLocality(rItem) = locality | PLIST_LOCAL;
+
+	return GetPlist(locRef);
 }
 
 bool PListHandler::GetTheme(unsigned int ndx, PListDict& theme) const {
@@ -2110,10 +2108,9 @@ int PListHandler::LoadPList(const wxString& path) {
 
 		return ref;
 	}
-	else {
-		wxASSERT(false); // we only support toplevel dicts
-		return -1;
-	}
+
+	wxASSERT(false); // we only support toplevel dicts
+	return -1;
 
 error:
 	DeletePList(ref);

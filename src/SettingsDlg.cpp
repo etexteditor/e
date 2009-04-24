@@ -17,7 +17,8 @@
 #include <wx/fontmap.h>
 
 #ifdef __WXMSW__
-	#include "eDocumentPath.h"
+#include "eDocumentPath.h"
+#include "ShellRunner.h"
 #endif
 
 
@@ -376,7 +377,18 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {
 #ifdef __WXMSW__
 	if (eDocumentPath::IsInitialized()){
-		::wxMessageBox(wxT("Hello!"), wxT("Pushed"));
+		const wxString command(wxT("uname -a"));
+
+		cxEnv env;
+		const vector<char> cmd(command.begin(), command.end());
+		const vector<char> input;
+		vector<char> output;
+		{
+			wxBusyCursor wait;
+			ShellRunner::RawShell(cmd, input, &output, NULL, env, true);
+		}
+		const wxString cmd_out = wxString(&*output.begin(), wxConvUTF8, output.size());
+		::wxMessageBox(cmd_out, wxT("Cygwin Version"));
 	}
 	else {
 		eDocumentPath::InitCygwin(m_catalyst, this);

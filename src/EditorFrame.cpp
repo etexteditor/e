@@ -662,7 +662,7 @@ void EditorFrame::RestoreState() {
 				mirrorPath = catalyst.GetPagePath(i);
 			cxENDLOCK
 			if (dlg) dlg->Update(i, msg + wxT("\n") + mirrorPath);
-			const bool isBundleItem = IsBundlePath(mirrorPath);
+			const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
 
 			wxWindow* page = NULL;
 			EditorCtrl* ec = NULL;
@@ -1404,7 +1404,7 @@ bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 	}
 
 	// Handle remote paths
-	if (IsRemotePath(path)) {
+	if (eDocumentPath::IsRemotePath(path)) {
 		wxRegEx domain(wxT("^.*://[^/]+$")); // domains don't need ending slash
 
 		if (path.Last() == wxT('/')) return OpenRemoteProjectFromUrl(path);
@@ -1415,7 +1415,7 @@ bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 		return true;
 	}
 
-	if (path.StartsWith(wxT("bundle://"))) return OpenRemoteFile(path);
+	if (eDocumentPath::IsBundlePath(path)) return OpenRemoteFile(path);
 
 	if (wxDir::Exists(path)) {
 		wxFileName dirPath(path, wxEmptyString);
@@ -1438,7 +1438,7 @@ bool EditorFrame::OpenProject(const wxString& prj) {
 		return true;
 	}
 	
-	if (IsRemotePath(prj)) return OpenRemoteProjectFromUrl(prj);
+	if (eDocumentPath::IsRemotePath(prj)) return OpenRemoteProjectFromUrl(prj);
 
 	const wxFileName path = prj;
 	return OpenDirProject(path);
@@ -1631,7 +1631,7 @@ wxString EditorFrame::GetTempPath() const {
 }
 
 const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool withDir) {
-	wxASSERT(IsRemotePath(url));
+	wxASSERT(eDocumentPath::IsRemotePath(url));
 
 	// Get (or create) matching profile
 	cxLOCK_WRITE(m_catalyst)
@@ -1652,20 +1652,12 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	return true;
 }
 
-bool EditorFrame::IsRemotePath(const wxString& path) { // static
-	return path.StartsWith(wxT("ftp://")) || path.StartsWith(wxT("http://"));
-}
-
-bool EditorFrame::IsBundlePath(const wxString& path) { // static
-	return (path.StartsWith(wxT("bundle://")));
-}
-
 bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
 	wxBusyCursor busy;
 
 	bool doReload = true;
 	bool isCurrent = false;
-	const bool isBundleItem = IsBundlePath(filepath);
+	const bool isBundleItem = eDocumentPath::IsBundlePath(filepath);
 
 	if (!editorCtrl) {
 		// This should never happen, but there have been
@@ -1705,7 +1697,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 		// Check if the file on disk has been changed since last save
 		if (modifiedDate.IsValid()) {
 			if (isBundleItem) {} // EditorCtrl does its own check for changes
-			else if (IsRemotePath(filepath)) {
+			else if (eDocumentPath::IsRemotePath(filepath)) {
 				if (!rp) rp = GetRemoteProfile(filepath, false);
 				const wxDateTime fileDate = GetRemoteThread().GetModDate(filepath, *rp);
 				if (modifiedDate == fileDate) doReload = false; // No need to reload unchanged file

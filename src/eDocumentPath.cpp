@@ -328,3 +328,11 @@ wxString eDocumentPath::ConvertPathToUncFileUrl(const wxString& path) {
 
 	return uncPath;
 }
+
+bool eDocumentPath::IsRemotePath(const wxString& path) {
+	return path.StartsWith(wxT("ftp://")) || path.StartsWith(wxT("http://"));
+}
+
+bool eDocumentPath::IsBundlePath(const wxString& path) {
+	return (path.StartsWith(wxT("bundle://")));
+}

@@ -15,6 +15,9 @@ public:
 
 	static wxString ConvertPathToUncFileUrl(const wxString& path);
 
+	static bool IsBundlePath(const wxString& path);
+	static bool IsRemotePath(const wxString& path);
+
 #ifdef __WXMSW__
 
 	static wxString GetCygwinDir();

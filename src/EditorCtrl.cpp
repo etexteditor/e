@@ -100,9 +100,9 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 		wxASSERT(page_id >= 0 && page_id < catalyst.GetPageCount());
 		catalyst.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
 	cxENDLOCK
-	const bool isBundleItem = m_parentFrame.IsBundlePath(mirrorPath);
+	const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
 
-	if (m_parentFrame.IsRemotePath(mirrorPath)) {
+	if (eDocumentPath::IsRemotePath(mirrorPath)) {
 		// If the mirror points to a remote file, we have to download it first.
 		SetDocument(di, mirrorPath);
 	}
@@ -2347,7 +2347,7 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	cxFileResult result = cxFILE_OK;
 	wxFileName filepath;
 
-	if (newpath.StartsWith(wxT("bundle://"))) {
+	if (eDocumentPath::IsBundlePath(newpath)) {
 		if (!LoadBundleItem(newpath)) return cxFILE_OPEN_ERROR;
 	}
 	else {
@@ -2355,7 +2355,7 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 		ClearRemoteInfo();
 
 		// If the path points to a remote file, we have to download it first.
-		if (m_parentFrame.IsRemotePath(newpath)) {
+		if (eDocumentPath::IsRemotePath(newpath)) {
 			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(newpath, false);
 			const wxString buffPath = m_parentFrame.DownloadFile(newpath, m_remoteProfile);
 			if (buffPath.empty()) return cxFILE_DOWNLOAD_ERROR; // download failed
@@ -2955,7 +2955,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 }
 
 void EditorCtrl::SetPath(const wxString& newpath) {
-	wxASSERT(!m_parentFrame.IsRemotePath(newpath)); // just to catch a bug
+	wxASSERT(!eDocumentPath::IsRemotePath(newpath)); // just to catch a bug
 	
 	if (IsBundleItem()) return; // bundleItem only has remotePath
 
@@ -3054,7 +3054,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 		cxENDLOCK
 
 		// If the path points to a remote file, we have to save it to a temp bufferfile first.
-		if (m_parentFrame.IsRemotePath(path)) {
+		if (eDocumentPath::IsRemotePath(path)) {
 			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(path, false);
 			m_path = m_parentFrame.GetTempPath();
 			m_remotePath = path;

@@ -183,7 +183,6 @@ public:
 	wxString GetSaveDir() const;
 
 	// RemoteFile support functions
-	static bool IsRemotePath(const wxString& path);
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);
 	wxString DownloadFile(const wxString& url, const RemoteProfile* rp);
 	wxDateTime GetRemoteDate(const wxString& url, const RemoteProfile* rp);
@@ -191,7 +190,6 @@ public:
 	wxString GetTempPath() const;
 
 	// Bundle Editor support functions
-	static bool IsBundlePath(const wxString& path);
 	void ShowBundleManager();
 
 	// Search Bar

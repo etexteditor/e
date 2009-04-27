@@ -461,7 +461,8 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		frame->AddTab();
 		return true;
 	}
-	else if (command.StartsWith(wxT("OPEN_FILE"))) {
+	
+	if (command.StartsWith(wxT("OPEN_FILE"))) {
 		wxString path = args;
 		wxString mate;
 
@@ -481,13 +482,15 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		if (res && (lineNum || columnNum)) frame->GotoPos(lineNum, columnNum);
 		return res;
 	}
-	else if (command == wxT("view_insert")) {
+	
+	if (command == wxT("view_insert")) {
 		if (args.empty()) return false;
 		if (args.size() == 1) eCtrl->InsertChar((wxChar)args[0]);
 		else eCtrl->Insert(args);
 		return true;
 	}
-	else if (command == wxT("view_delete")) {
+	
+	if (command == wxT("view_delete")) {
 		wxString str_start = args.BeforeFirst(wxT(' '));
 		wxString str_end = args.AfterFirst(wxT(' '));
 		long start, end;
@@ -499,17 +502,20 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		eCtrl->Delete(start, end);
 		return true;
 	}
-	else if (command == wxT("view_freeze")) {
+	
+	if (command == wxT("view_freeze")) {
 		eCtrl->Freeze();
 		return true;
 	}
-	else if (command == wxT("view_getlength")) {
+	
+	if (command == wxT("view_getlength")) {
 		int length = eCtrl->GetLength();
 		result.Printf(wxT("%d"), length);
 		wxLogDebug(wxT("  returning length: %d %s"), length, result.c_str());
 		return true;
 	}
-	else if (command == wxT("view_setpos")) {
+	
+	if (command == wxT("view_setpos")) {
 		long pos;
 		if (!args.ToLong(&pos)) return false;
 		if (pos < 0 || pos > (long)eCtrl->GetLength()) return false;
@@ -517,13 +523,15 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		eCtrl->SetPos(pos);
 		return true;
 	}
-	else if (command == wxT("view_getpos")) {
+	
+	if (command == wxT("view_getpos")) {
 		int pos = eCtrl->GetPos();
 		result.Printf(wxT("%d"), pos);
 		wxLogDebug(wxT("  returning pos: %d %s"), pos, result.c_str());
 		return true;
 	}
-	else if (command == wxT("view_getversioncount")) {
+	
+	if (command == wxT("view_getversioncount")) {
 		const DocumentWrapper& dw = eCtrl->GetDocument();
 		cxLOCKDOC_READ(dw)
 			int count = doc.GetVersionCount();
@@ -532,7 +540,8 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		cxENDLOCK
 		return true;
 	}
-	else if (command == wxT("view_setversion")) {
+	
+	if (command == wxT("view_setversion")) {
 		long version_id;
 		if (!args.ToLong(&version_id)) return false;
 		const DocumentWrapper& dw = eCtrl->GetDocument();
@@ -545,10 +554,9 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		eCtrl->SetDocument(di);
 		return true;
 	}
-	else {
-		wxLogDebug(wxT("Execute command: %s "), command.c_str());
-		return false;
-	}
+
+	wxLogDebug(wxT("Execute command: %s "), command.c_str());
+	return false;
 }
 
 wxString eApp::ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) const {

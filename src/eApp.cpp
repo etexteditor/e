@@ -115,6 +115,7 @@ bool eApp::OnInit() {
 	bool clearLayout = false;
 	bool clearUndo = false;
 	bool clearBundleCache = false;
+	bool checkForUpdate = true;
 
 	// Parse options
 	for (int i = 1; i < argc; ++i) {
@@ -123,6 +124,7 @@ bool eApp::OnInit() {
 		else if (arg == wxT("--clearlayout")) clearLayout = true;
 		else if (arg == wxT("--clearundo")) clearUndo = true;
 		else if (arg == wxT("--clearcache")) clearBundleCache = true;
+		else if (arg == wxT("--noupdate")) checkForUpdate = false;
 		else if (arg == wxT("--mate")) {
 			++i;
 			mate = argv[i];
@@ -243,8 +245,10 @@ bool eApp::OnInit() {
 	frame->CheckForModifiedFilesAsync();
 	wxLogDebug(wxT("Done Checking for modified files"));
 
-	// Check website to se if there are updates
-	CheckForUpdates();
+	if (checkForUpdate) {
+		// Check website to se if there are updates
+		CheckForUpdates();
+	}
 
     return true;
 }

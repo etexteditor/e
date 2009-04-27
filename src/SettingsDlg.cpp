@@ -385,7 +385,7 @@ void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {
 		::wxMessageBox(cmd_out, wxT("Cygwin Version"));
 	}
 	else {
-		eDocumentPath::InitCygwin(m_catalyst, this);
+		eDocumentPath::InitCygwin(this);
 		UpdateUnixPage();
 	}
 #endif

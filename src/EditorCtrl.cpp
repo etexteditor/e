@@ -101,7 +101,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	wxASSERT(page_id >= 0 && page_id < (int)settings.GetPageCount());
 	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
 
-	const bool isBundleItem = eDocumentPath.IsBundlePath(mirrorPath);
+	const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
 
 	if (eDocumentPath::IsRemotePath(mirrorPath)) {
 		// If the mirror points to a remote file, we have to download it first.

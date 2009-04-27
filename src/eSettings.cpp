@@ -80,8 +80,10 @@ bool eSettings::IsEmpty() const {
 
 bool eSettings::GetSettingBool(const wxString& name, bool& value) const {
 	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
 	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
 	if (!settings.HasMember(name)) return false;
+
 	const wxJSONValue val = settings.ItemAt(name);
 	if (!val.IsBool() || !val.IsInt()) return false;
 
@@ -96,8 +98,10 @@ void eSettings::SetSettingBool(const wxString& name, bool value) {
 
 bool eSettings::GetSettingInt(const wxString& name, int& value) const {
 	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
 	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
 	if (!settings.HasMember(name)) return false;
+
 	const wxJSONValue val = settings.ItemAt(name);
 	if (!val.IsInt()) return false;
 
@@ -112,8 +116,10 @@ void eSettings::SetSettingInt(const wxString& name, int value) {
 
 bool eSettings::GetSettingLong(const wxString& name, wxLongLong& value) const {
 	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
 	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
 	if (!settings.HasMember(name)) return false;
+
 	const wxJSONValue val = settings.ItemAt(name);
 	if (!val.IsInt64()) return false;
 
@@ -128,8 +134,10 @@ void eSettings::SetSettingLong(const wxString& name, const wxLongLong& value) {
 
 bool eSettings::GetSettingString(const wxString& name, wxString& value) const {
 	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
 	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
 	if (!settings.HasMember(name)) return false;
+
 	const wxJSONValue val = settings.ItemAt(name);
 	if (!val.IsString()) return false;
 
@@ -180,7 +188,8 @@ void eSettings::AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t 
 	}
 
 	if (ndx == 0) return; // No need to do anything if path is already top
-	else if (ndx > 0) jsonArray.Remove(ndx); // remove duplicate entry
+	
+	if (ndx > 0) jsonArray.Remove(ndx); // remove duplicate entry
 
 	// Insert value at top
 	jsonArray.Insert(0, value);
@@ -404,25 +413,25 @@ const RemoteProfile* eSettings::GetRemoteProfileFromUrl(const wxString& url, boo
 	const int profile_count = remotes.Size();
 	for (int i = 0; i < profile_count; ++i) {
 		const wxJSONValue profile = remotes.ItemAt(i);
+		if (profile.ItemAt(wxT("address")).AsString() != address) continue;
 
-		if (profile.ItemAt(wxT("address")).AsString() == address) {
-			// Ftp is default protocol
-			wxString prot = profile.ItemAt(wxT("protocol")).AsString();
-			if (prot.empty()) prot = wxT("ftp");
+		// Ftp is default protocol
+		wxString prot = profile.ItemAt(wxT("protocol")).AsString();
+		if (prot.empty()) prot = wxT("ftp");
 
-			if (prot != protocol) continue; // ftp is default
-			if (!username.empty() && profile.ItemAt(wxT("username")).AsString() != username) continue;
+		if (prot != protocol) continue; // ftp is default
+		if (!username.empty() && profile.ItemAt(wxT("username")).AsString() != username) continue;
 
-			RemoteProfile* rp = DoGetRemoteProfile(i);
-			if (withDir && StripSlashes(rp->m_dir) != sDir) continue;
+		RemoteProfile* rp = DoGetRemoteProfile(i);
+		if (withDir && StripSlashes(rp->m_dir) != sDir) continue;
 
-			// Password may have changed
-			if (!pwd.empty() && rp->m_pwd != pwd) {
-				rp->m_pwd = pwd;
-				SaveRemoteProfile(rp);
-			}
-			return rp;
+		// Password may have changed
+		if (!pwd.empty() && rp->m_pwd != pwd) {
+			rp->m_pwd = pwd;
+			SaveRemoteProfile(rp);
 		}
+
+		return rp;
 	}
 
 	// Add new temp profile

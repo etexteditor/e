@@ -18,6 +18,7 @@
 #include "doc_byte_iter.h"
 #include "cx_pcre.h"
 #include "Utf.h"
+#include "eApp.h"
 
 // Constructor
 Document::Document(const doc_id& di, CatalystWrapper cw)
@@ -60,7 +61,8 @@ void Document::CreateNew() {
 void Document::SetDefaultEncoding() {
 	// Check if we need to set eol property
 	wxString eolStr;
-	if (m_catalyst.GetSettingString(wxT("formatEol"), eolStr)) {
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	if (settings.GetSettingString(wxT("formatEol"), eolStr)) {
 		wxTextFileType eol = wxTextBuffer::typeDefault;
 		if (eolStr == wxT("crlf")) eol = wxTextFileType_Dos;
 		else if (eolStr == wxT("lf")) eol = wxTextFileType_Unix;
@@ -70,14 +72,14 @@ void Document::SetDefaultEncoding() {
 
 	// Check if we need to set encoding property
 	wxString encStr;
-	if (m_catalyst.GetSettingString(wxT("formatEncoding"), encStr)) {
+	if (settings.GetSettingString(wxT("formatEncoding"), encStr)) {
 		const wxFontEncoding enc = wxFontMapper::GetEncodingFromName(encStr);
 		SetPropertyEncoding(enc);
 	}
 
 	// Check if we need to set bom property
 	bool bom;
-	if (m_catalyst.GetSettingBool(wxT("formatBom"), bom)) {
+	if (settings.GetSettingBool(wxT("formatBom"), bom)) {
 		SetPropertyBOM(bom);
 	}
 }

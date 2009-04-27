@@ -64,6 +64,7 @@ class Document;
 class SyncEvent;
 class RemoteProfile;
 class cxInternal;
+class eSettings;
 
 // Type definitions
 typedef int REVISION_ID; // DOCUMENT_ID
@@ -323,6 +324,7 @@ public:
 	bool IsMirroredSpecific(const doc_id& di) const;
 	bool GetMirrorPaths(const doc_id& di, wxArrayString& paths) const;
 	bool GetMirrorPathsForDraft(const doc_id& di, wxArrayString& paths) const;
+	bool VerifyMirror(const wxString& path, const doc_id& di) const;
 
 	Dispatcher& GetDispatcher();
 
@@ -339,39 +341,7 @@ public:
 
 	// Settings functions
 	const wxLongLong& GetId() const;
-	int GetPageCount() const;
-	void SetPageSettings(int page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks);
-	void GetPageSettings(int page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks) const;
-	wxString GetPagePath(unsigned int page_id) const;
-	void DeletePageSettings(int page_id);
-	void DeleteAllPageSettings();
-	void ValidatePagesSettings();
-	void SetSettingBool(const wxString& name, bool value);
-	void SetSettingInt(const wxString& name, int value);
-	void SetSettingLong(const wxString& name, wxLongLong value);
-	void SetSettingString(const wxString& name, const wxString& value);
-	bool GetSettingBool(const wxString& name, bool& value) const;
-	bool GetSettingInt(const wxString& name, int& value) const;
-	bool GetSettingLong(const wxString& name, wxLongLong& value) const;
-	bool GetSettingString(const wxString& name, wxString& value) const;
-	void RemoveSettingString(const wxString& name);
-	void RemoveSettingInt(const wxString& name);
-	void RemoveSettingBool(const wxString& name);
-	void AddRecentFile(const wxString& path);
-	void AddRecentProject(const wxString& path);
-	void GetRecentFiles(wxArrayString& recentfiles) const;
-	void GetRecentProjects(wxArrayString& recentprojects) const;
-
-	// Remote profiles
-	unsigned int GetRemoteProfileCount() const;
-	wxString GetRemoteProfileName(unsigned int profile_id) const;
-	unsigned int AddRemoteProfile(const RemoteProfile& profile);
-	void SetRemoteProfile(unsigned int profile_id, const RemoteProfile& profile);
-	const RemoteProfile* GetRemoteProfile(unsigned int profile_id);
-	const RemoteProfile* GetRemoteProfileFromUrl(const wxString& url, bool withDir);
-	void SetRemoteProfileLogin(const RemoteProfile* rp, const wxString& username, const wxString& pwd, bool toDb);
-	//bool GetRemoteProfile(const wxString& url, RemoteProfile& profile) const;
-	void DeleteRemoteProfile(unsigned int profile_id);
+	void MoveOldSettings(eSettings& settings);
 
 	// List of documents
 	void GetDocList(vector<doc_id>& doclist) const;
@@ -432,25 +402,12 @@ private:
 	// Utility functions
 	wxLongLong GetRand64() const;
 
-	// Remote profiles
-	RemoteProfile* DoGetRemoteProfile(unsigned int profile_id);
-	void SaveRemoteProfile(RemoteProfile* rp);
-
 	// Member variables
 	mutable RecursiveCriticalSection m_critSec;
 	cxInternal* m_i;
 
 	// Settings
 	wxLongLong m_id;
-	c4_View m_vPages;
-	c4_View m_v64hash;
-	c4_View m_vInthash;
-	c4_View m_vStringhash;
-	c4_View m_vRecentFiles;
-	c4_View m_vRecentPrj;
-
-	c4_View m_vRemotes;
-	auto_vector<RemoteProfile> m_tempRemotes;
 
 	friend class Document;
 	friend class cxInternal;

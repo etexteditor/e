@@ -883,6 +883,29 @@ wxJSONValue::GetMemberNames() const
 // NOTE: these functions are not 'const' so we have to call
 // the COW() function before accessing data
 
+//! Insert the item at the specified index.
+/*!
+ The function inserts the item at index \c index in the array.
+ If this object does not contain an array type, the actual content is
+ deleted and a new array is created.
+ Returns a reference to the appended object.
+*/
+wxJSONValue&
+wxJSONValue::Insert( unsigned index, const wxJSONValue& value )
+{
+  wxJSONRefData* data = COW();
+  wxASSERT( data );
+  if ( data->m_type != wxJSONTYPE_ARRAY )  {
+    // we have to change the type of the actual object to the array type
+    SetType( wxJSONTYPE_ARRAY );
+  }
+
+  // Insert the wxJSONValue object to the array
+  data->m_value.m_valArray.Insert( value, index );
+  wxJSONValue& v = data->m_value.m_valArray.Item(index);
+  return v;
+}
+
 //! Append the specified value in the array.
 /*!
  The function appends the value specified in the parameter to the array
@@ -1046,6 +1069,20 @@ wxJSONValue::Remove( const wxString& key )
   return r;
 }
 
+//! Remove all members in Array or Object
+void
+wxJSONValue::RemoveAll()
+{
+  wxJSONRefData* data = COW();
+  wxASSERT( data );
+
+  if ( data->m_type == wxJSONTYPE_OBJECT )  {
+    data->m_value.m_valMap.clear();
+  }
+  else if ( data->m_type == wxJSONTYPE_ARRAY )  {
+    data->m_value.m_valArray.Empty();
+  }
+}
 
 //! Clear the object value.
 /*!

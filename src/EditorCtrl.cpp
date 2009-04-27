@@ -95,11 +95,12 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	wxString syntax;
 	vector<unsigned int> folds;
 	vector<unsigned int> bookmarks;
-	cxLOCK_READ(m_catalyst)
-		// Retrieve the page info
-		wxASSERT(page_id >= 0 && page_id < catalyst.GetPageCount());
-		catalyst.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
-	cxENDLOCK
+	
+	// Retrieve the page info
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	wxASSERT(page_id >= 0 && page_id < (int)settings.GetPageCount());
+	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
+
 	const bool isBundleItem = m_parentFrame.IsBundlePath(mirrorPath);
 
 	if (m_parentFrame.IsRemotePath(mirrorPath)) {
@@ -227,13 +228,12 @@ void EditorCtrl::Init() {
 	m_wrapAtMargin = false;
 	bool doShowMargin = false;
 	int marginChars = 80;
-	cxLOCK_READ(m_catalyst)
-		catalyst.GetSettingBool(wxT("autoPair"), m_doAutoPair);
-		catalyst.GetSettingBool(wxT("autoWrap"), m_doAutoWrap);
-		catalyst.GetSettingBool(wxT("showMargin"), doShowMargin);
-		catalyst.GetSettingBool(wxT("wrapMargin"), m_wrapAtMargin);
-		catalyst.GetSettingInt(wxT("marginChars"), marginChars);
-	cxENDLOCK
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	settings.GetSettingBool(wxT("autoPair"), m_doAutoPair);
+	settings.GetSettingBool(wxT("autoWrap"), m_doAutoWrap);
+	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
+	settings.GetSettingBool(wxT("wrapMargin"), m_wrapAtMargin);
+	settings.GetSettingInt(wxT("marginChars"), marginChars);
 	m_lastScopePos = -1; // scope selection
 	if (!doShowMargin) m_wrapAtMargin = false;
 
@@ -2887,7 +2887,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	// Check if we need to force the native end-of-line
 	bool forceNativeEOL = false; // default value
-	((eApp*)wxTheApp)->GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
+	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
 
 	// Save the text
 	cxFileResult savedResult;
@@ -8154,13 +8154,12 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 	int marginChars = 80;
 
 	// Update settings
-	cxLOCK_READ(self->m_catalyst)
-		catalyst.GetSettingBool(wxT("autoPair"), self->m_doAutoPair);
-		catalyst.GetSettingBool(wxT("autoWrap"), self->m_doAutoWrap);
-		catalyst.GetSettingBool(wxT("showMargin"), doShowMargin);
-		catalyst.GetSettingBool(wxT("wrapMargin"), self->m_wrapAtMargin);
-		catalyst.GetSettingInt(wxT("marginChars"), marginChars);
-	cxENDLOCK
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	settings.GetSettingBool(wxT("autoPair"), self->m_doAutoPair);
+	settings.GetSettingBool(wxT("autoWrap"), self->m_doAutoWrap);
+	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
+	settings.GetSettingBool(wxT("wrapMargin"), self->m_wrapAtMargin);
+	settings.GetSettingInt(wxT("marginChars"), marginChars);
 
 	if (!doShowMargin) {
 		marginChars = 0;

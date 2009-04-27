@@ -151,18 +151,16 @@ void eDocumentPath::ConvertPathToWin(wxString& path) {
 	}
 }
 
-void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow) {
+void eDocumentPath::InitCygwinOnce(wxWindow *parentWindow) {
 	bool shouldPromptUserForCygUpdate = true;
-	cxLOCK_READ(cw)
-		catalyst.GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
-	cxENDLOCK
+	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
 
 	// If user has previously chosen not to install/update cygwin, then
 	// we will not bother him on startup (it will still show
 	// up later if using a command that need cygwin).
 
 	if (shouldPromptUserForCygUpdate && parentWindow)
-		eDocumentPath::InitCygwin(cw, parentWindow);
+		eDocumentPath::InitCygwin(parentWindow);
 }
 
 
@@ -194,23 +192,22 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 //
 // Returns true if Cygwin is initialized, otherwise false.
 //
-bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool silent) {
+bool eDocumentPath::InitCygwin(wxWindow *parentWindow, bool silent) {
 	if (eDocumentPath::s_isCygwinInitialized)
 		return true;
 
 	// Check if we have a cygwin installation
 	eDocumentPath::s_cygPath = eDocumentPath::GetCygwinDir();
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
 
 	if (eDocumentPath::s_cygPath.empty()) {
 		if (!silent) {
 			// Notify user that he should install cygwin
-			CygwinDlg dlg(parentWindow, cw, cxCYGWIN_INSTALL);
+			CygwinDlg dlg(parentWindow, cxCYGWIN_INSTALL);
 
 			const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
 
-			cxLOCK_WRITE(cw)
-				catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-			cxENDLOCK
+			settings.SetSettingBool(wxT("cygupdate"), cygUpdate);
 		}
 		return false;
 	}
@@ -220,10 +217,8 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 
 	// Get last updatetime
 	wxDateTime stampTime;
-	cxLOCK_READ(cw)
-		wxLongLong dateVal;
-		if (catalyst.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
-	cxENDLOCK
+	wxLongLong dateVal;
+	if (settings.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
 
 	// In older versions it could be saved as filestamp
 	if (!stampTime.IsValid()) {
@@ -232,22 +227,18 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, bool
 			stampTime = timestamp.GetModificationTime();
 
 			// Save in new location
-			cxLOCK_WRITE(cw)
-				catalyst.SetSettingLong(wxT("cyg_date"), stampTime.GetValue());
-			cxENDLOCK
+			settings.SetSettingLong(wxT("cyg_date"), stampTime.GetValue());
 		}
 	}
 
 	if (eDocumentPath_shouldUpdateCygwin(stampTime, supportFile)) {
 		if (!silent) {
 			// Notify user that he should update cygwin
-			CygwinDlg dlg(parentWindow, cw, cxCYGWIN_UPDATE);
+			CygwinDlg dlg(parentWindow, cxCYGWIN_UPDATE);
 
 			const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
 
-			cxLOCK_WRITE(cw)
-				catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-			cxENDLOCK
+			settings.SetSettingBool(wxT("cygupdate"), cygUpdate);
 
 			// Cancel this command, but let the user try again without
 			// getting this dialog

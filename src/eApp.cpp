@@ -80,7 +80,6 @@ END_EVENT_TABLE()
 bool eApp::OnInit() {
 	// Initialize variables
 	frame = NULL;
-	m_settings = NULL;
 	m_pCatalyst = NULL;
 	m_catalyst = NULL;
 	m_pSyntaxHandler = NULL;
@@ -183,6 +182,10 @@ bool eApp::OnInit() {
 	// Quit if trial has expired
 	if (m_pCatalyst->IsExpired()) return false;
 
+	// Load Settings
+	m_settings.Load(m_appDataPath);
+	if (m_settings.IsEmpty()) m_pCatalyst->MoveOldSettings(m_settings);
+
 	// Apply options
 	if (clearState) ClearState();
 	if (clearLayout) ClearLayout();
@@ -233,7 +236,7 @@ bool eApp::OnInit() {
 
 #ifdef __WXMSW__
 	wxLogDebug(wxT("Initializing cygwin"));
-	eDocumentPath::InitCygwinOnce(*m_catalyst, this->frame);
+	eDocumentPath::InitCygwinOnce(this->frame);
 #endif
 
 	wxLogDebug(wxT("Checking for modified files"));
@@ -248,45 +251,41 @@ bool eApp::OnInit() {
 
 #ifdef __WXMSW__
 bool eApp::InitCygwin(bool silent){
-	return eDocumentPath::InitCygwin(*m_catalyst, this->frame, silent);
+	return eDocumentPath::InitCygwin(this->frame, silent);
 }
 #endif
 
 
 void eApp::ClearState() {
-	cxLOCK_WRITE((*m_catalyst))
-		// Pages
-		catalyst.DeleteAllPageSettings();
+	// Pages
+	m_settings.DeleteAllPageSettings();
 
-		// Tab layout
-		catalyst.RemoveSettingString(wxT("topwin/tablayout"));
-		catalyst.RemoveSettingBool(wxT("topwin/page_id"));
+	// Tab layout
+	m_settings.RemoveSetting(wxT("topwin/tablayout"));
+	m_settings.RemoveSetting(wxT("topwin/page_id"));
 
-		catalyst.Commit();
-	cxENDLOCK
+	m_settings.Save();
 }
 
 void eApp::ClearLayout() {
-	cxLOCK_WRITE((*m_catalyst))
-		// Window size and position
-		catalyst.RemoveSettingInt(wxT("topwin/x"));
-		catalyst.RemoveSettingInt(wxT("topwin/y"));
-		catalyst.RemoveSettingInt(wxT("topwin/width"));
-		catalyst.RemoveSettingInt(wxT("topwin/height"));
-		catalyst.RemoveSettingBool(wxT("topwin/ismax"));
+	// Window size and position
+	m_settings.RemoveSetting(wxT("topwin/x"));
+	m_settings.RemoveSetting(wxT("topwin/y"));
+	m_settings.RemoveSetting(wxT("topwin/width"));
+	m_settings.RemoveSetting(wxT("topwin/height"));
+	m_settings.RemoveSetting(wxT("topwin/ismax"));
 
-		// wxAUI perspective
-		catalyst.RemoveSettingString(wxT("topwin/panes"));
+	// wxAUI perspective
+	m_settings.RemoveSetting(wxT("topwin/panes"));
 
-		// pane settings
-		catalyst.RemoveSettingString(wxT("symbol_pane"));
-		catalyst.RemoveSettingBool(wxT("showsymbols"));
-		catalyst.RemoveSettingString(wxT("prvw_pane"));
-		catalyst.RemoveSettingBool(wxT("showpreview"));
-		catalyst.RemoveSettingBool(wxT("showproject"));
+	// pane settings
+	m_settings.RemoveSetting(wxT("symbol_pane"));
+	m_settings.RemoveSetting(wxT("showsymbols"));
+	m_settings.RemoveSetting(wxT("prvw_pane"));
+	m_settings.RemoveSetting(wxT("showpreview"));
+	m_settings.RemoveSetting(wxT("showproject"));
 
-		catalyst.Commit();
-	cxENDLOCK
+	m_settings.Save();
 }
 
 bool eApp::SendArgsToInstance() {
@@ -607,7 +606,6 @@ int eApp::OnExit() {
 	if (m_pCatalyst) delete m_pCatalyst;
 	if (m_checker) delete m_checker;
 	if (m_pSyntaxHandler) delete m_pSyntaxHandler;
-	if (m_settings) delete m_settings;
 
 #ifdef __WXDEBUG__
 	if (blackboxLib.IsLoaded()) blackboxLib.Unload();
@@ -622,7 +620,7 @@ int eApp::OnExit() {
 void eApp::CheckForUpdates() {
 	// Check if it more than 7 days have gone since last update check
 	wxLongLong lastup;
-	if (GetSettingLong(wxT("lastupdatecheck"), lastup)) {
+	if (m_settings.GetSettingLong(wxT("lastupdatecheck"), lastup)) {
 		wxDateTime sevendaysago = wxDateTime::Now() - wxDateSpan(0, 0, 1, 0);
 		wxDateTime lastupdated(lastup);
 
@@ -731,7 +729,7 @@ void* UpdaterThread::Entry() {
 
 			// Remember this time as last update checked
 			wxLongLong now = wxDateTime::Now().GetValue();
-			((eApp*)wxTheApp)->SetSettingLong(wxT("lastupdatecheck"), now);
+			((eApp*)wxTheApp)->GetSettings().SetSettingLong(wxT("lastupdatecheck"), now);
 		}
 	}
 

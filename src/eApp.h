@@ -21,6 +21,7 @@
 #include "mk4.h"
 #include "eIpcServer.h"
 #include <wx/ffile.h>
+#include "eSettings.h"
 
 // pre-declearations
 class eApp;
@@ -48,16 +49,7 @@ public:
 
 	// Settings functions
 	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};
-	int GetPageCount() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetPageCount(); cxENDLOCK};
-	void DeletePageSettings(int page_id) {cxLOCK_WRITE((*m_catalyst)) catalyst.DeletePageSettings(page_id); cxENDLOCK};
-	void SetSettingBool(const wxString& name, bool value) {cxLOCK_WRITE((*m_catalyst)) catalyst.SetSettingBool(name, value); cxENDLOCK};
-	void SetSettingInt(const wxString& name, int value) {cxLOCK_WRITE((*m_catalyst)) catalyst.SetSettingInt(name, value); cxENDLOCK};
-	void SetSettingLong(const wxString& name, wxLongLong value) {cxLOCK_WRITE((*m_catalyst)) catalyst.SetSettingLong(name, value); cxENDLOCK};
-	void SetSettingString(const wxString& name, const wxString& value) {cxLOCK_WRITE((*m_catalyst)) catalyst.SetSettingString(name, value); cxENDLOCK};
-	bool GetSettingBool(const wxString& name, bool& value) const {cxLOCK_READ((*m_catalyst)) return catalyst.GetSettingBool(name, value); cxENDLOCK};
-	bool GetSettingInt(const wxString& name, int& value) const {cxLOCK_READ((*m_catalyst)) return catalyst.GetSettingInt(name, value); cxENDLOCK};
-	bool GetSettingLong(const wxString& name, wxLongLong& value) const {cxLOCK_READ((*m_catalyst)) return catalyst.GetSettingLong(name, value); cxENDLOCK};
-	bool GetSettingString(const wxString& name, wxString& value) const {cxLOCK_READ((*m_catalyst)) return catalyst.GetSettingString(name, value); cxENDLOCK};
+	eSettings& GetSettings(){return m_settings;};
 
 	// Registration functions
 	bool IsRegistered() const {return m_pCatalyst->IsRegistered();};
@@ -127,11 +119,7 @@ private:
 	unsigned long m_columnNum;
 
 	// Settings
-	c4_Storage* m_settings;
-	c4_View m_vPages;
-	c4_View m_v64hash;
-	c4_View m_vInthash;
-	c4_View m_vStringhash;
+	eSettings m_settings;
 
 #ifdef __WXDEBUG__
 	wxFFile m_logFile;

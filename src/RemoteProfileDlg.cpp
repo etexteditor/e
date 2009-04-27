@@ -14,6 +14,8 @@
 #include "RemoteProfileDlg.h"
 #include <wx/notebook.h>
 #include "RemoteThread.h"
+#include "eSettings.h"
+#include "eApp.h"
 
 // Ctrl id's
 enum {
@@ -34,9 +36,9 @@ BEGIN_EVENT_TABLE(RemoteProfileDlg, wxDialog)
 	EVT_CLOSE(RemoteProfileDlg::OnClose)
 END_EVENT_TABLE()
 
-RemoteProfileDlg::RemoteProfileDlg(wxWindow *parent, CatalystWrapper cw)
+RemoteProfileDlg::RemoteProfileDlg(wxWindow *parent)
 : wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_catalyst(cw), m_currentProfile(-1) {
+  m_settings(((eApp*)wxTheApp)->GetSettings()), m_currentProfile(-1) {
 	SetTitle (_("Remote Profiles"));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -157,17 +159,10 @@ void RemoteProfileDlg::EnableSettings(bool enable) {
 }
 
 void RemoteProfileDlg::Init() {
-	unsigned int profile_count = 0;
-	cxLOCK_READ(m_catalyst)
-		profile_count = catalyst.GetRemoteProfileCount();
-	cxENDLOCK
+	const unsigned int profile_count = m_settings.GetRemoteProfileCount();
 
 	for (unsigned int i = 0; i < profile_count; ++i) {
-		wxString profileName;
-		cxLOCK_READ(m_catalyst)
-			profileName = catalyst.GetRemoteProfileName(i);
-		cxENDLOCK
-
+		const wxString profileName = m_settings.GetRemoteProfileName(i);
 		m_profileList->Append(profileName, (void*)i);
 	}
 
@@ -182,10 +177,7 @@ void RemoteProfileDlg::SetProfile(unsigned int profile_id) {
 	else if (m_currentProfile != -1) SaveProfile();
 
 	// Get the profile from db
-	const RemoteProfile* rp = NULL;
-	cxLOCK_WRITE(m_catalyst)
-		rp = catalyst.GetRemoteProfile(profile_id);
-	cxENDLOCK
+	const RemoteProfile* rp = m_settings.GetRemoteProfile(profile_id);
 
 	m_currentProfile = (intptr_t)profile_id;
 	m_profileName->SetValue(rp->m_name);
@@ -219,9 +211,7 @@ void RemoteProfileDlg::SaveProfile() {
 	rp.m_pwd = m_profilePassword->GetValue();
 
 	// Save to db
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetRemoteProfile(m_currentProfile, rp);
-	cxENDLOCK
+	m_settings.SetRemoteProfile(m_currentProfile, rp);
 }
 
 void RemoteProfileDlg::OnButtonNew(wxCommandEvent& WXUNUSED(event)) {
@@ -230,10 +220,7 @@ void RemoteProfileDlg::OnButtonNew(wxCommandEvent& WXUNUSED(event)) {
 	rp.m_name = wxT("New Profile");
 
 	// Add to db
-	unsigned int profile_id;
-	cxLOCK_WRITE(m_catalyst)
-		profile_id = catalyst.AddRemoteProfile(rp);
-	cxENDLOCK
+	const unsigned int profile_id = m_settings.AddRemoteProfile(rp);
 
 	// Add to list
 	const unsigned int item_id = m_profileList->Append(rp.m_name, (void*)profile_id);
@@ -253,9 +240,7 @@ void RemoteProfileDlg::OnButtonDelete(wxCommandEvent& WXUNUSED(event)) {
 
 	// Delete profile
 	const uintptr_t profile_id = (uintptr_t)m_profileList->GetClientData(item);
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.DeleteRemoteProfile(profile_id);
-	cxENDLOCK
+	m_settings.DeleteRemoteProfile(profile_id);
 	m_profileList->Delete(item);
 
 	// Adjust subsequent profile id's

@@ -15,6 +15,8 @@
 #include "wx/image.h"
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
+#include "eSettings.h"
+#include "eApp.h"
 
 // Ctrl id's
 enum {
@@ -48,7 +50,7 @@ END_EVENT_TABLE()
 
 SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 : wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_catalyst(cw), m_ctUserPic(false)
+  m_settings(((eApp*)wxTheApp)->GetSettings()), m_catalyst(cw), m_ctUserPic(false)
 {
 	SetTitle (_("Settings"));
 
@@ -89,15 +91,13 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 				bool doWrapMargin = false;
 				int marginChars = 80;  
 
-				cxLOCK_READ(m_catalyst)
-					catalyst.GetSettingBool(wxT("autoPair"), doAutoPair);
-					catalyst.GetSettingBool(wxT("autoWrap"), doAutoWrap);
-					catalyst.GetSettingBool(wxT("keepState"), doKeepState);
-					catalyst.GetSettingBool(wxT("checkChange"), doCheckChange);
-					catalyst.GetSettingBool(wxT("showMargin"), doShowMargin);
-					catalyst.GetSettingBool(wxT("wrapMargin"), doWrapMargin);
-					catalyst.GetSettingInt(wxT("marginChars"), marginChars);
-				cxENDLOCK
+				m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
+				m_settings.GetSettingBool(wxT("autoWrap"), doAutoWrap);
+				m_settings.GetSettingBool(wxT("keepState"), doKeepState);
+				m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+				m_settings.GetSettingBool(wxT("showMargin"), doShowMargin);
+				m_settings.GetSettingBool(wxT("wrapMargin"), doWrapMargin);
+				m_settings.GetSettingInt(wxT("marginChars"), marginChars);
 
 				// Update ctrls
 				autoPair->SetValue(doAutoPair);
@@ -221,11 +221,9 @@ void SettingsDlg::UpdateEncoding() {
 	// Get saved settings
 	wxString eolStr;
 	wxString encStr;
-	cxLOCK_READ(m_catalyst)
-		catalyst.GetSettingString(wxT("formatEol"), eolStr);
-		catalyst.GetSettingString(wxT("formatEncoding"), encStr);
-		catalyst.GetSettingBool(wxT("formatBom"), bom);
-	cxENDLOCK
+	m_settings.GetSettingString(wxT("formatEol"), eolStr);
+	m_settings.GetSettingString(wxT("formatEncoding"), encStr);
+	m_settings.GetSettingBool(wxT("formatBom"), bom);
 	if (eolStr == wxT("crlf")) eol = wxTextFileType_Dos;
 	else if (eolStr == wxT("lf")) eol = wxTextFileType_Unix;
 	else if (eolStr == wxT("cr")) eol = wxTextFileType_Mac;
@@ -258,18 +256,16 @@ void SettingsDlg::OnComboEol(wxCommandEvent& event) {
 	else if (event.GetSelection() == 1) eolStr = wxT("lf");
 	else if (event.GetSelection() == 0) eolStr = wxT("cr");
 
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingString(wxT("formatEol"), eolStr);
-	cxENDLOCK
+	m_settings.SetSettingString(wxT("formatEol"), eolStr);
 }
 
 void SettingsDlg::OnComboEncoding(wxCommandEvent& event) {
 	const wxFontEncoding enc = wxFontMapper::GetEncoding(event.GetSelection());
 	const wxString encStr = wxFontMapper::GetEncodingName(enc);
-	cxLOCK_WRITE(m_catalyst)
-		if (enc == wxFONTENCODING_DEFAULT) catalyst.RemoveSettingString(wxT("formatEncoding"));
-		else catalyst.SetSettingString(wxT("formatEncoding"), encStr);
-	cxENDLOCK
+
+	if (enc == wxFONTENCODING_DEFAULT) m_settings.RemoveSetting(wxT("formatEncoding"));
+	else m_settings.SetSettingString(wxT("formatEncoding"), encStr);
+
 
 	// Check if bom ctrl should be enabled
 	if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
@@ -279,9 +275,7 @@ void SettingsDlg::OnComboEncoding(wxCommandEvent& event) {
 }
 
 void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("formatBom"), event.IsChecked());
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("formatBom"), event.IsChecked());
 }
 
 void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {	
@@ -324,9 +318,7 @@ void SettingsDlg::OnButtonLoadPic(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void SettingsDlg::OnCheckAutoPair(wxCommandEvent& event) {
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("autoPair"), event.IsChecked());
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("autoPair"), event.IsChecked());
 
 	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
@@ -334,9 +326,7 @@ void SettingsDlg::OnCheckAutoPair(wxCommandEvent& event) {
 }
 
 void SettingsDlg::OnCheckAutoWrap(wxCommandEvent& event) {
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("autoWrap"), event.IsChecked());
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("autoWrap"), event.IsChecked());
 
 	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
@@ -345,9 +335,7 @@ void SettingsDlg::OnCheckAutoWrap(wxCommandEvent& event) {
 
 void SettingsDlg::OnCheckShowMargin(wxCommandEvent& event) {
 	const bool doShowMargin = event.IsChecked();
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("showMargin"), doShowMargin);
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("showMargin"), doShowMargin);
 
 	m_marginSpin->Enable(doShowMargin);
 	m_wrapMargin->Enable(doShowMargin);
@@ -359,9 +347,7 @@ void SettingsDlg::OnCheckShowMargin(wxCommandEvent& event) {
 
 void SettingsDlg::OnCheckWrapMargin(wxCommandEvent& event) {
 	const bool doWrapMargin = event.IsChecked();
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("wrapMargin"), doWrapMargin);
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("wrapMargin"), doWrapMargin);
 
 	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
@@ -371,9 +357,7 @@ void SettingsDlg::OnCheckWrapMargin(wxCommandEvent& event) {
 void SettingsDlg::OnMarginSpin(wxSpinEvent& event) {
 	const int marginChars = event.GetPosition();
 
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingInt(wxT("marginChars"), marginChars);
-	cxENDLOCK
+	m_settings.SetSettingInt(wxT("marginChars"), marginChars);
 
 	// Notify that the settings have changed
 	Dispatcher& dispatcher = m_catalyst.GetDispatcher();
@@ -381,13 +365,9 @@ void SettingsDlg::OnMarginSpin(wxSpinEvent& event) {
 }
 
 void SettingsDlg::OnCheckKeepState(wxCommandEvent& event) {
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("keepState"), event.IsChecked());
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("keepState"), event.IsChecked());
 }
 
 void SettingsDlg::OnCheckCheckChange(wxCommandEvent& event) {
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingBool(wxT("checkChange"), event.IsChecked());
-	cxENDLOCK
+	m_settings.SetSettingBool(wxT("checkChange"), event.IsChecked());
 }

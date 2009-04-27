@@ -299,7 +299,7 @@ bool eApp::SendArgsToInstance() {
 	for (unsigned int i = 0; i < 10; ++i) {
 		hWndRecv = ::FindWindow(wxT("wxWindowClassNR"), wxT("eIpcWin"));
 		if (hWndRecv) break;
-		else if (!m_checker->IsAnotherRunning()) {
+		if (!m_checker->IsAnotherRunning()) {
 			// Instance has closed. Just open our selves
 			return false;
 		}

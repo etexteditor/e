@@ -2,7 +2,6 @@
 #define __EDOCUMENTPATH_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
 #include <wx/filename.h>
 
 class eDocumentPath
@@ -25,8 +24,8 @@ public:
 
 	static wxString CygwinPathToWin(const wxString& path);
 
-	static bool InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, const bool silent=false);
-	static void InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow);
+	static bool InitCygwin(wxWindow *parentWindow, bool silent=false);
+	static void InitCygwinOnce(wxWindow *parentWindow);
 
 	static bool IsInitialized() { return s_isCygwinInitialized; }
 	static wxString CygdrivePrefix() { return s_cygdrivePrefix; }

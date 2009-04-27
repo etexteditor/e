@@ -185,18 +185,16 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 	return path;
 }
 
-void eDocumentPath::InitCygwinOnce(CatalystWrapper& cw, wxWindow *parentWindow) {
+void eDocumentPath::InitCygwinOnce(wxWindow *parentWindow) {
 	bool shouldPromptUserForCygUpdate = true;
-	cxLOCK_READ(cw)
-		catalyst.GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
-	cxENDLOCK
+	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
 
 	// If user has previously chosen not to install/update cygwin, then
 	// we will not bother him on startup (it will still show
 	// up later if using a command that need cygwin).
 
 	if (shouldPromptUserForCygUpdate && parentWindow)
-		eDocumentPath::InitCygwin(cw, parentWindow);
+		eDocumentPath::InitCygwin(parentWindow);
 }
 
 //
@@ -233,27 +231,22 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 	return true;
 }
 
-void run_cygwin_dlg(CatalystWrapper& cw, wxWindow *parentWindow, const cxCygwinDlgMode mode){
+void run_cygwin_dlg(wxWindow *parentWindow, const cxCygwinDlgMode mode){
 	// Notify user to install cygwin
-	CygwinDlg dlg(parentWindow, cw, mode);
+	CygwinDlg dlg(parentWindow, mode);
 
 	const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-
-	cxLOCK_WRITE(cw)
-		catalyst.SetSettingBool(wxT("cygupdate"), cygUpdate);
-	cxENDLOCK
+	((eApp*)wxTheApp)->GetSettings().SetSettingBool(wxT("cygupdate"), cygUpdate);
 }
-
 
 // 
 // Gets the cygwin last update time, migrating state form previous e versions if needed.
 //
-wxDateTime get_last_cygwin_update(CatalystWrapper& cw) {
+wxDateTime get_last_cygwin_update() {
 	wxDateTime stampTime;
-	cxLOCK_READ(cw)
-		wxLongLong dateVal;
-		if (catalyst.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
-	cxENDLOCK
+	wxLongLong dateVal;
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	if (settings.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
 
 	// In older versions it could be saved as filestamp
 	if (!stampTime.IsValid()) {
@@ -262,9 +255,7 @@ wxDateTime get_last_cygwin_update(CatalystWrapper& cw) {
 			stampTime = timestamp.GetModificationTime();
 
 			// Save in new location
-			cxLOCK_WRITE(cw)
-				catalyst.SetSettingLong(wxT("cyg_date"), stampTime.GetValue());
-			cxENDLOCK
+			settings.SetSettingLong(wxT("cyg_date"), stampTime.GetValue());
 		}
 	}
 
@@ -275,7 +266,7 @@ wxDateTime get_last_cygwin_update(CatalystWrapper& cw) {
 // Checks to see if Cygwin is initalized, and prompts user to do it if not.
 // Returns true if Cygwin is initialized, otherwise false.
 //
-bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, const bool silent) {
+bool eDocumentPath::InitCygwin(wxWindow *parentWindow, const bool silent) {
 	if (eDocumentPath::s_isCygwinInitialized)
 		return true;
 
@@ -286,7 +277,7 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, cons
 	const bool cygwin_is_installed = !s_cygPath.empty();
 
 	if (!cygwin_is_installed) {
-		if (!silent) run_cygwin_dlg(cw, parentWindow, cxCYGWIN_INSTALL);
+		if (!silent) run_cygwin_dlg(parentWindow, cxCYGWIN_INSTALL);
 		return false;
 	}
 
@@ -294,11 +285,11 @@ bool eDocumentPath::InitCygwin(CatalystWrapper& cw, wxWindow *parentWindow, cons
 	const wxString supportPath = ((eApp*)wxTheApp)->GetAppPath() + wxT("support\\bin\\cygwin-post-install.sh");
 	const wxFileName supportFile(supportPath);
 
-	wxDateTime stampTime = get_last_cygwin_update(cw);
+	wxDateTime stampTime = get_last_cygwin_update();
 
 	if (eDocumentPath_shouldUpdateCygwin(stampTime, supportFile)) {
 		if (!silent) {
-			run_cygwin_dlg(cw, parentWindow, cxCYGWIN_UPDATE);
+			run_cygwin_dlg(parentWindow, cxCYGWIN_UPDATE);
 
 			// Cancel the command that needed cygwin support (return false below.)
 			// But, since we have an older version of Cygwin installed,

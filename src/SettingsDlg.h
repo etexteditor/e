@@ -18,6 +18,9 @@
 #include "Catalyst.h"
 #include <wx/spinctrl.h>
 
+// Pre-declarations
+class eSettings;
+
 class SettingsDlg : public wxDialog {
 public:
 	SettingsDlg(wxWindow *parent, CatalystWrapper cw);
@@ -46,6 +49,7 @@ private:
 	DECLARE_EVENT_TABLE();
 
 	// Member variables
+	eSettings& m_settings;
 	CatalystWrapper m_catalyst;
 	wxImage m_userImage;
 

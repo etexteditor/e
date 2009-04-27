@@ -49,6 +49,7 @@ class ChangeCheckerThread;
 class BundleEditor;
 class BundlePane;
 class UndoHistory;
+class eSettings;
 
 // Menu id's
 enum {
@@ -454,6 +455,7 @@ private:
 
 	// Member variables
 	CatalystWrapper m_catalyst;
+	eSettings& m_settings;
 	Dispatcher& dispatcher;
 	wxImageList imageList;
 	RemoteThread *m_remoteThread;

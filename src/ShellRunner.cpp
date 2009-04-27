@@ -87,7 +87,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 	// Get ready for execution
 	cxExecute exec(env, cwd);
 	bool debugOutput = false; // default setting
-	((eApp*)wxTheApp)->GetSettingBool(wxT("bundleDebug"), debugOutput);
+	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("bundleDebug"), debugOutput);
 	exec.SetDebugLogging(debugOutput);
 
 	// Exec the command

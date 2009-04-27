@@ -21,8 +21,8 @@ BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CygwinDlg::OnButtonOk)
 END_EVENT_TABLE()
 
-CygwinDlg::CygwinDlg(wxWindow *parent, CatalystWrapper& cw, cxCygwinDlgMode mode)
-: wxDialog (parent, wxID_ANY, wxEmptyString, wxDefaultPosition), m_catalyst(cw), m_mode(mode) {
+CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode)
+: wxDialog (parent, wxID_ANY, wxEmptyString, wxDefaultPosition), m_mode(mode) {
 	if (m_mode == cxCYGWIN_INSTALL) SetTitle(_("Cygwin not installed!"));
 	else SetTitle(_("Update Cygwin"));
 
@@ -54,15 +54,15 @@ CygwinDlg::CygwinDlg(wxWindow *parent, CatalystWrapper& cw, cxCygwinDlgMode mode
 void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	const wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
 	const cxCygwinInstallMode install_mode = m_autoRadio->GetValue() ? cxCYGWIN_AUTO : cxCYGWIN_MANUAL;
-	new CygwinInstallThread(m_catalyst, install_mode, appPath);
+	new CygwinInstallThread(install_mode, appPath);
 
 	EndModal(wxID_OK);
 }
 
 // ---- CygwinInstallThread ------------------------------------------------------------
 
-CygwinDlg::CygwinInstallThread::CygwinInstallThread(CatalystWrapper& cw, cxCygwinInstallMode mode, const wxString& appPath)
-: m_catalyst(cw), m_mode(mode), m_appPath(appPath) {
+CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath)
+: m_mode(mode), m_appPath(appPath) {
 	Create();
     Run();
 }
@@ -128,9 +128,7 @@ void* CygwinDlg::CygwinInstallThread::Entry() {
 	// Mark this update as done
 	const wxFileName supportFile(supportScript);
 	const wxDateTime updateTime = supportFile.GetModificationTime();
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingLong(wxT("cyg_date"), updateTime.GetValue());
-	cxENDLOCK
+	((eApp*)wxTheApp)->GetSettings().SetSettingLong(wxT("cyg_date"), updateTime.GetValue());
 
 	return NULL;
 }

@@ -30,15 +30,15 @@
 // pre-declarations
 class EditorFrame;
 class EditorCtrl;
-class CatalystWrapper;
+class eSettings;
 
 class PreviewDlg : public wxPanel {
 public:
 	PreviewDlg(EditorFrame& parent);
 	~PreviewDlg();
 
-	void LoadSettings(const CatalystWrapper& cw);
-	void SaveSettings(CatalystWrapper& cw) const;
+	void LoadSettings(const eSettings& settings);
+	void SaveSettings(eSettings& settings) const;
 	void PageClosed(const EditorCtrl* ec);
 
 	// Utility functions

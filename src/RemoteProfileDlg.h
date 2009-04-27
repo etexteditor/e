@@ -15,14 +15,13 @@
 #define __REMOTEPROFILEDLG_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
 
 // pre-definitions
-class CatalystWrapper;
+class eSettings;
 
 class RemoteProfileDlg : public wxDialog {
 public:
-	RemoteProfileDlg(wxWindow *parent, CatalystWrapper cw);
+	RemoteProfileDlg(wxWindow *parent);
 
 	intptr_t GetCurrentProfile() const {return m_currentProfile;};
 
@@ -53,7 +52,7 @@ private:
 	wxButton* m_openButton;
 
 	// Member variables
-	CatalystWrapper m_catalyst;
+	eSettings& m_settings;
 	intptr_t m_currentProfile;
 };
 

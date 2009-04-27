@@ -53,7 +53,8 @@ TmSyntaxHandler::TmSyntaxHandler(Dispatcher& disp, bool clearCache)
 
 	// Get font
 	wxString fontDesc;
-	if (((eApp*)wxTheApp)->GetSettingString(wxT("font"), fontDesc)) {
+	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	if (settings.GetSettingString(wxT("font"), fontDesc)) {
 		m_defaultTheme.font.SetNativeFontInfo(fontDesc);
 	}
 	if (!m_defaultTheme.font.Ok()) {
@@ -64,7 +65,7 @@ TmSyntaxHandler::TmSyntaxHandler(Dispatcher& disp, bool clearCache)
 
 	// Load Theme
 	wxString themeUuid;
-	if (((eApp*)wxTheApp)->GetSettingString(wxT("theme_id"), themeUuid)) {
+	if (settings.GetSettingString(wxT("theme_id"), themeUuid)) {
 		SetTheme(themeUuid.mb_str(wxConvUTF8));
 	}
 	else SetTheme("71D40D9D-AE48-11D9-920A-000D93589AF6"); // Default Theme ("Mac Classic")
@@ -451,7 +452,7 @@ bool TmSyntaxHandler::SetTheme(const char* uuid) {
 	wxASSERT(uuid);
 
 	if(LoadTheme(uuid)) {
-		((eApp*)wxTheApp)->SetSettingString(wxT("theme_id"), wxString(uuid, wxConvUTF8));
+		((eApp*)wxTheApp)->GetSettings().SetSettingString(wxT("theme_id"), wxString(uuid, wxConvUTF8));
 
 		m_dispatcher.Notify(wxT("THEME_CHANGED"), NULL, 0);
 		return true;
@@ -469,7 +470,7 @@ void TmSyntaxHandler::SetFont(const wxFont& font) {
 	//wxASSERT(font.IsFixedWidth());
 
 	if (font != m_currentTheme.font) {
-		((eApp*)wxTheApp)->SetSettingString(wxT("font"), font.GetNativeFontInfoDesc());
+		((eApp*)wxTheApp)->GetSettings().SetSettingString(wxT("font"), font.GetNativeFontInfoDesc());
 
 		m_defaultTheme.font = font;
 		m_currentTheme.font = font;

@@ -29,6 +29,9 @@ public:
 	virtual bool IsPosInFold(unsigned int pos, unsigned int* fold_start=NULL, unsigned int* fold_end=NULL) = 0;
 	virtual void UnFoldParents(unsigned int line_id) = 0;
 	virtual const vector<cxFold>& GetFolds() const = 0;
+
+	// This isn't used by Lines directly, but is passed to internal data member Line.
+	virtual const interval& GetHlBracket() const = 0;
 };
 
 #endif // __IFOLDINGEDITOR_H__

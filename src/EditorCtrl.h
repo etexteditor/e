@@ -305,7 +305,7 @@ public:
 	wxString GetSymbolString(const Styler_Syntax::SymbolRef& sr) const;
 
 	// Bracket Highlighting
-	const interval& GetHlBracket() const {return m_hlBracket;};
+	virtual const interval& GetHlBracket() const {return m_hlBracket;};
 
 	vector<unsigned int> GetFoldedLines() const;
 	virtual const vector<cxFold>& GetFolds() const {return m_folds;};

@@ -7,7 +7,7 @@
 #endif
 
 #include "Document.h"
-//
+
 class IPrintableDocument {
 public:
 	virtual wxString GetName() const = 0;

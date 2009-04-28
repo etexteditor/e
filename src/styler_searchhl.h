@@ -18,7 +18,6 @@
 #include "Catalyst.h"
 #include "StyleRun.h"
 #include "styler.h"
-//#include "Lines.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__

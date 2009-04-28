@@ -1126,7 +1126,7 @@ unsigned int Styler_Syntax::AdjustForDeletion(unsigned int start, unsigned int e
 		stxmatch& m = *(*p);
 		if (m.start >= end) break;
 
-		const bool isContained = (m.start >= start && m.end <= end);
+		const bool isContained = (start <= m.start && m.end <= end);
 
 		// If match not fully contained and is a span we can move inside
 		// But we will only go in if the first part of the span still exists

@@ -132,8 +132,7 @@ void Lines::UpdateParsedLine(unsigned int line_id) {
 }
 
 int Lines::GetWidth() {
-	if (m_wrapMode != cxWRAP_NONE) return line.GetDisplayWidth();
-	else return ll->width();
+	return m_wrapMode == cxWRAP_NONE ? ll->width() : line.GetDisplayWidth();
 }
 
 void Lines::UpdateFont() {
@@ -318,15 +317,15 @@ unsigned int Lines::GetLineStartpos(unsigned int lineid) {
 		wxASSERT(lineid == ll->size() && NewlineTerminated);
 		return ll->length();
 	}
-	else return ll->offset(lineid);
+	
+	return ll->offset(lineid);
 }
 
 bool Lines::isLineVirtual(unsigned int lineid) {
 	wxASSERT(lineid >= 0 && lineid <= ll->size());
 	wxASSERT(NewlineTerminated || lineid != ll->size());
 
-	if (lineid == ll->size() && NewlineTerminated) return true;
-	else return false;
+	return lineid == ll->size() && NewlineTerminated;
 }
 
 unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
@@ -337,24 +336,24 @@ unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
 	if (stripnewline) {
 		// We want the pos right before the newline
 		if (lineid == ll->last() && !NewlineTerminated) return ll->length();
-		else if (lineid > ll->last()) return ll->length();
-		else return ll->end(lineid)-1;
+		if (lineid > ll->last()) return ll->length();
+		return ll->end(lineid)-1;
 	}
-	else {
-		if (lineid > ll->last()) {
-			wxASSERT(lineid == ll->size() && NewlineTerminated);
-			return ll->length();
-		}
-		else return ll->end(lineid);
+
+	if (lineid > ll->last()) {
+		wxASSERT(lineid == ll->size() && NewlineTerminated);
+		return ll->length();
 	}
+
+	return ll->end(lineid);
 }
 
 bool Lines::IsLineEmpty(unsigned int lineid) {
 	wxASSERT(lineid <= ll->size());
 
 	if (ll->size() == 0) return true;
-	else if (lineid > ll->last()) return true; // last virtual line
-	else return (ll->offset(lineid)+1 >= ll->end(lineid));
+	if (lineid > ll->last()) return true; // last virtual line
+	return (ll->offset(lineid)+1 >= ll->end(lineid));
 }
 
 bool Lines::IsLineEnd(unsigned int pos) {
@@ -428,36 +427,34 @@ int Lines::GetLineFromYPos(int folded_ypos) {
 	const unsigned int ypos = UnFoldedYPos(folded_ypos+1); // + one pixel to make sure we enter line
 
 	if (folded_ypos == 0) return 0;
-	else if (ypos > ll->height()) {
+	if (ypos > ll->height()) {
 		wxASSERT(NewlineTerminated);
 		return ll->size();
 	}
-	else return ll->find_ypos(ypos);
 
+	return ll->find_ypos(ypos);
 }
 
 int Lines::GetYPosFromLine(unsigned int lineid) {
 	if (lineid == 0) return 0;
-	else if (lineid < ll->size()) return FoldedYPos(ll->top(lineid));
-	else {
-		if (!(NewlineTerminated && lineid == ll->size())) {
-			const doc_id di = m_doc.GetDoc().GetDocument();
-			wxString msg = wxString::Format(wxT("Out-of-bounds %d, %d, %d (%d,%d,%d)"), NewlineTerminated, lineid, ll->size(), di.type, di.document_id, di.version_id);
-			wxFAIL_MSG(msg);
-		}
-		//wxASSERT(NewlineTerminated && lineid == ll->size());
-		return FoldedYPos(ll->bottom(lineid-1));
+	if (lineid < ll->size()) return FoldedYPos(ll->top(lineid));
+
+	if (!(NewlineTerminated && lineid == ll->size())) {
+		const doc_id di = m_doc.GetDoc().GetDocument();
+		wxString msg = wxString::Format(wxT("Out-of-bounds %d, %d, %d (%d,%d,%d)"), NewlineTerminated, lineid, ll->size(), di.type, di.document_id, di.version_id);
+		wxFAIL_MSG(msg);
 	}
+	//wxASSERT(NewlineTerminated && lineid == ll->size());
+	return FoldedYPos(ll->bottom(lineid-1));
 }
 
 int Lines::GetBottomYPosFromLine(unsigned int lineid) {
 	wxASSERT(lineid > 0 || ll->size() > 0); // empty line has no bottom
 
 	if (lineid < ll->size()) return FoldedYPos(ll->bottom(lineid));
-	else {
-		wxASSERT(NewlineTerminated && lineid == ll->size());
-		return FoldedYPos(ll->height() + line.GetCharHeight());
-	}
+
+	wxASSERT(NewlineTerminated && lineid == ll->size());
+	return FoldedYPos(ll->height() + line.GetCharHeight());
 }
 
 int Lines::PrepareYPos(int folded_ypos) {
@@ -470,7 +467,8 @@ int Lines::PrepareYPos(int folded_ypos) {
 		const unsigned int adj_ypos = FoldedYPos(new_ypos); 
 		return adj_ypos - folded_ypos; // diff adjusted for folding
 	}
-	else return 0;
+
+	return 0;
 }
 
 void Lines::AddStyler(Styler& styler) {
@@ -686,7 +684,8 @@ void Lines::InsertChar(unsigned int pos, const wxChar& newtext, unsigned int byt
 		ll->verify(true);
 		return;
 	}
-	else if (pos == ll->length()) {
+
+	if (pos == ll->length()) {
 		// Extending end. Check if we need a new line
 		if (NewlineTerminated) ll->insert(ll->size(), ll->length()+byte_len);
 		else ll->update(ll->size()-1, ll->length()+byte_len);
@@ -1049,11 +1048,11 @@ int Lines::GetPosFromXY(int xpos, int folded_ypos, bool allowOutbound) {
 	// Positions might move outside textarea
 	if (xpos < 0) xpos = 0;
 	else if (xpos > GetWidth()) xpos = GetWidth();
+
 	if (ypos < 0) ypos = 0;
 	else if ((unsigned int)ypos > ll->height()) {
 		// Clicked below lines
-		if (allowOutbound) return ll->length();
-		else return -1;
+		return allowOutbound ? ll->length() : -1;
 	}
 
 	// Find the line clicked on
@@ -1129,10 +1128,9 @@ full_pos Lines::MovePosUp(int xpos) {
 	if (up_pos >= 0) {
 		return ClickOnLine(xpos, up_pos);
 	}
-	else {
-		const full_pos fp = {pos, caretpos.x, FoldedYPos(caretpos.y)};
-		return fp;
-	}
+
+	const full_pos fp = {pos, caretpos.x, FoldedYPos(caretpos.y)};
+	return fp;
 }
 
 full_pos Lines::MovePosDown(int xpos) {

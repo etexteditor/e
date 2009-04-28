@@ -520,10 +520,6 @@ private:
 	wxArrayString m_recentFiles;
 	wxArrayString m_recentProjects;
 
-	// BundleEditor
-	BundleEditor* m_bundleEditor;
-	bool m_bundleEditorModified;
-
 	// Printing
 	wxPageSetupDialogData m_printData;
 

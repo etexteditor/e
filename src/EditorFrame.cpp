@@ -209,7 +209,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	 m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL),
 	 m_symbolList(NULL), m_pStatBar(NULL),
 	   m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
-	   m_bundleEditor(NULL), m_bundleEditorModified(false), bitmap(1,1)
+	   bitmap(1,1)
 	   //,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm), m_pToolBar(NULL)
 {
 	Create(NULL, id, title, rect.GetPosition(), rect.GetSize(), wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS, wxT("eMainFrame"));
@@ -613,7 +613,6 @@ EditorFrame::~EditorFrame() {
 	if (undoHistory) undoHistory->Destroy();
 	if (m_changeCheckerThread) m_changeCheckerThread->Kill(); // may be locked on network drive
 	//if (m_dirWatcher) m_dirWatcher->Delete(); // may take forever
-	delete m_bundleEditor;
 }
 
 void EditorFrame::RestoreState() {
@@ -913,10 +912,9 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 			
 			// Only added if modified
 			if (mDate == bundleModDate || (skipDate.IsValid() && bundleModDate == skipDate)) continue;
-			else {
-				skipDate = bundleModDate;
-				isModified = true;
-			}
+
+			skipDate = bundleModDate;
+			isModified = true;
 		}
 
 		// Add to change list
@@ -2012,8 +2010,6 @@ void EditorFrame::OnMenuFindCommand(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuReloadBundles(wxCommandEvent& WXUNUSED(event)) {
-
-	// Show user that we are reloading
 	wxBusyCursor wait;
 
 	// Reload bundles (will send it's own event to reset bundle menu if needed)
@@ -2021,17 +2017,10 @@ void EditorFrame::OnMenuReloadBundles(wxCommandEvent& WXUNUSED(event)) {
 	
 	// If we have an active BundleEditor, it has to reload the new bundles
 	if (m_bundlePane) m_bundlePane->LoadBundles();
-	if (m_bundleEditor) m_bundleEditor->LoadBundles(); // old style is still accesible
 }
 
 void EditorFrame::OnMenuEditBundles(wxCommandEvent& WXUNUSED(event)) {
 	ShowBundlePane();
-
-	/*if (wxIsShiftDown()) {
-		// Old style editor
-		if (!m_bundleEditor) m_bundleEditor = new BundleEditor(this);
-		m_bundleEditor->Show();
-	}*/
 }
 
 void EditorFrame::OnMenuManageBundles(wxCommandEvent& WXUNUSED(event)) {
@@ -2044,7 +2033,6 @@ void EditorFrame::ShowBundleManager() {
 
 	// If we have an active BundleEditor, it has to reload the new bundles
 	if (dlg.NeedBundleReload()) {
-		if (m_bundleEditor) m_bundleEditor->LoadBundles(); // old style still available
 		if (m_bundlePane) m_bundlePane->LoadBundles();
 	}
 }
@@ -3272,12 +3260,6 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 	event.Skip();
 	if (!event.GetActive()) return;
 
-	// Check if we need to save changes in BundleEditor
-	if (m_bundleEditor && m_bundleEditor->IsShown() && m_bundleEditor->IsModified()) {
-		m_bundleEditorModified = true; // handle in idle time to avoid messing up events
-		return;
-	}
-	
 	if (editorCtrl) {
 		if (IsShown()) {
 			// If the frame get focus we want to pass it to the currently active editorCtrl
@@ -3466,12 +3448,6 @@ void EditorFrame::OnIdle(wxIdleEvent& event) {
 	wxASSERT(m_tabBar->GetPageCount() != 0);
 
 	//wxLogDebug(wxT("EditorFrame::OnIdle"));
-
-	if (m_bundleEditor && m_bundleEditorModified) {
-		wxBusyCursor wait;
-		m_bundleEditor->SaveChanges();
-		m_bundleEditorModified = false;
-	}
 
 	SaveState();
 

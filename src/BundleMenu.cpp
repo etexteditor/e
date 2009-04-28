@@ -145,11 +145,7 @@ bool BundleMenuItem::OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxOD
 		DWORD colText;
 		if ( stat & wxODSelected )
 		{
-			if (!(stat & wxODDisabled))
-			{
-				colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
-			}
-			else colText = GetSysColor(COLOR_GRAYTEXT);
+			colText = GetSysColor((stat & wxODDisabled) ? COLOR_GRAYTEXT : COLOR_HIGHLIGHTTEXT);
 		}
 		else
 		{

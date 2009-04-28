@@ -912,10 +912,9 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 			
 			// Only added if modified
 			if (mDate == bundleModDate || (skipDate.IsValid() && bundleModDate == skipDate)) continue;
-			else {
-				skipDate = bundleModDate;
-				isModified = true;
-			}
+
+			skipDate = bundleModDate;
+			isModified = true;
 		}
 
 		// Add to change list

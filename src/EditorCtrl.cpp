@@ -35,7 +35,6 @@
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
 #include "FindFlags.h"
-#include "styler_syntax.h"
 
 #ifdef __WXMSW__
     #include "CygwinDlg.h"

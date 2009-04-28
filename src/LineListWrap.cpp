@@ -13,6 +13,7 @@
 
 #include "LineListWrap.h"
 #include <algorithm>
+#include "Document.h"
 
 // Initializing static constants
 const unsigned int LineListWrap::WINSIZE = 200;

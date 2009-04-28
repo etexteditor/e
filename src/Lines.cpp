@@ -14,6 +14,7 @@
 #include "Lines.h"
 #include "eApp.h"
 #include "doc_byte_iter.h"
+#include "Document.h"
 
 Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl)
 : dc(dc), m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),

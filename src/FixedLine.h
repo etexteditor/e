@@ -18,8 +18,6 @@
 #include "Catalyst.h"
 #include "StyleRun.h"
 #include "styler.h"
-#include "styler_searchhl.h"
-#include "styler_syntax.h"
 #include "tm_syntaxhandler.h"
 #include "FastDC.h"
 

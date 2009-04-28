@@ -18,7 +18,6 @@
 #include "Document.h"
 #include "StyleRun.h"
 #include "styler.h"
-//#include "Lines.h"
 #include "pcre.h"
 #include "matchers.h"
 #include "tm_syntaxhandler.h"

@@ -38,7 +38,6 @@ void Styler_Syntax::Clear() {
 void Styler_Syntax::Invalidate() {
 	m_topMatches.flags = 0;
 	m_topMatches.matches.clear();
-
 	m_syntax_end = 0;
 }
 
@@ -71,39 +70,38 @@ void Styler_Syntax::ReStyleSub(const submatch& sm) {
 
 bool Styler_Syntax::UpdateSyntax() {
 	const cxSyntaxInfo* si = m_syntaxHandler.GetSyntax(m_doc);
-	if (si) {
-		if (si->topmatcher != m_topMatches.subMatcher) {
-			Clear(); // Prepare for new syntax
-			m_syntaxName = si->name;
-			m_topMatches.subMatcher = si->topmatcher;
-		}
-		return true;
+	if (!si) return false; // No new syntax found
+
+	if (si->topmatcher != m_topMatches.subMatcher) {
+		Clear(); // Prepare for new syntax
+		m_syntaxName = si->name;
+		m_topMatches.subMatcher = si->topmatcher;
 	}
 
-	return false; // No new syntax found
+	return true;
 }
 
 void Styler_Syntax::SetSyntax(const wxString& syntaxName, const wxString& ext) {
 	const cxSyntaxInfo* si = m_syntaxHandler.GetSyntax(syntaxName, ext);
-	if (si) {
-		if (si->topmatcher != m_topMatches.subMatcher) {
-			Clear(); // Prepare for new syntax
-			m_syntaxName = si->name;
-			m_topMatches.subMatcher = si->topmatcher;
-
-			// Check if base syntax has a style
-			// (disabled until styles get more dynamic handling of transparency)
-			/*const wxString& topScope = m_topMatches.subMatcher->GetName();
-			if (!topScope.empty()) {
-				deque<const wxString*> scopes;
-				scopes.push_front(&topScope);
-				m_topStyle = m_syntaxHandler.GetStyle(scopes);
-			}*/
-		}
-	}
-	else {
+	if (!si) {
 		wxASSERT(false);
 		Clear(); // No syntax found
+		return;
+	}
+
+	if (si->topmatcher != m_topMatches.subMatcher) {
+		Clear(); // Prepare for new syntax
+		m_syntaxName = si->name;
+		m_topMatches.subMatcher = si->topmatcher;
+
+		// Check if base syntax has a style
+		// (disabled until styles get more dynamic handling of transparency)
+		/*const wxString& topScope = m_topMatches.subMatcher->GetName();
+		if (!topScope.empty()) {
+			deque<const wxString*> scopes;
+			scopes.push_front(&topScope);
+			m_topStyle = m_syntaxHandler.GetStyle(scopes);
+		}*/
 	}
 }
 
@@ -154,7 +152,6 @@ const deque<interval> Styler_Syntax::GetScopeIntervals(unsigned int pos) const {
 	}
 
 	GetSubScopeIntervals(pos, 0, m_topMatches, scopes);
-
 	return scopes;
 }
 

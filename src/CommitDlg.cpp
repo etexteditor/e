@@ -38,4 +38,3 @@ CommitDlg::CommitDlg(wxWindow *parent)
 	SetSizerAndFit(sizer);
 	SetSize(350, 200);
 }
-

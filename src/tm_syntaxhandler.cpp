@@ -21,7 +21,6 @@
 #include "BundleMenu.h"
 #include "pcre.h"
 
-//#include "EditorCtrl.h"
 #include "Document.h"
 #include "IEditorDoAction.h"
 

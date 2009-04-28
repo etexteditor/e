@@ -34,6 +34,7 @@
 #include "jsonreader.h"
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
+#include "FindFlags.h"
 
 #ifdef __WXMSW__
     #include "CygwinDlg.h"

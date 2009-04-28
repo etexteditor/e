@@ -52,11 +52,6 @@ class EditorBundlePanel;
 									  Document& doc = m_doc.GetDoc(); \
 									  Lines& lines = m_lines;
 */
-// Define option bits for Find
-static const unsigned int FIND_MATCHCASE = 1;
-static const unsigned int FIND_USE_REGEX = 2;
-static const unsigned int FIND_RESTART   = 4;
-static const unsigned int FIND_HIGHLIGHT = 8;
 
 enum cxFindResult {
 	cxFOUND,

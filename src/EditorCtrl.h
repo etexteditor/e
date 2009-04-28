@@ -22,7 +22,6 @@
 #include <wx/ffile.h>
 //#include "styler_users.h"
 #include "styler_searchhl.h"
-#include "styler_syntax.h"
 #include "RevTooltip.h"
 #include "tm_syntaxhandler.h"
 #include "SnippetHandler.h"
@@ -43,6 +42,7 @@ class PreviewDlg;
 class cxRemoteAction;
 class MultilineDataObject;
 class EditorBundlePanel;
+class Styler_Syntax;
 
 // Defines (for synchronizations during multi-threading)
 /*#define cxLOCKEDIT_READ {wxCriticalSectionLocker cx_lock(m_catalyst.GetReadLock()); \

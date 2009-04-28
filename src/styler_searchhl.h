@@ -34,8 +34,6 @@ public:
 	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges);
 	virtual ~Styler_SearchHL() {};
 
-	void Init();
-
 	void Clear();
 	void Invalidate();
 	void SetSearch(const wxString& text, int options);

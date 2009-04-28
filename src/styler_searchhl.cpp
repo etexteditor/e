@@ -27,10 +27,6 @@ Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines,
 	Clear(); // Make sure all variables are empty
 }
 
-void Styler_SearchHL::Init() {
-	// We need a pointer to the editor for Regex seaching
-}
-
 void Styler_SearchHL::Clear() {
 	m_text.Clear();
 	m_options = 0;

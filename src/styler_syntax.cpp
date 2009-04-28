@@ -1124,52 +1124,50 @@ unsigned int Styler_Syntax::AdjustForDeletion(unsigned int start, unsigned int e
 	unsigned int change_end = start;
 	do {
 		stxmatch& m = *(*p);
+		if (m.start >= end) break;
 
-		if (m.start < end) {
-			const bool isContained = (m.start >= start && m.end <= end);
+		const bool isContained = (m.start >= start && m.end <= end);
 
-			// If match not fully contained and is a span we can move inside
-			// But we will only go in if the first part of the span still exists
-			if (!isContained && m.subMatch.get() && m.subMatch->subMatcher && m.start <= start) {
-				submatch& sm = *m.subMatch;
-				const unsigned int offset = m.start;
+		// If match not fully contained and is a span we can move inside
+		// But we will only go in if the first part of the span still exists
+		if (!isContained && m.subMatch.get() && m.subMatch->subMatcher && m.start <= start) {
+			submatch& sm = *m.subMatch;
+			const unsigned int offset = m.start;
 
-				// Check if we are in first match (start delimiter).
-				// If first match extends from before lineStart then we know
-				// that it is not the start delimiter (match must have zero
-				// length start delimiter)
-				if (sm.flags & cxSPAN_HAS_STARTER && start <= (offset + sm.matches[0]->end)) {
-					// If so we have to remove the span
-					if (m.end > end) change_end = m.end - (end - start);
-					p = matches.erase(p);
-				}
-				else {
-					// We have to enter the span and continue search inside
-					const unsigned int seg_start = offset > start ? 0 : start - offset;
-					const unsigned int seg_end = m.end < end ? m.end - offset : end - offset;
-					change_end = offset + AdjustForDeletion(seg_start, seg_end, *m.subMatch, o + offset, lineStart);
-
-					// Adjust match to new position and size
-					// This is the only case where the match is not deleted and thus need adjusting
-					if (m.start > start) {
-						m.end -= m.start - start;
-						m.start = start;
-					}
-					m.end -= seg_end - seg_start;
-
-					++p; // Go to next match
-				}
-			}
-			else {
-				// Else Delete and continue
+			// Check if we are in first match (start delimiter).
+			// If first match extends from before lineStart then we know
+			// that it is not the start delimiter (match must have zero
+			// length start delimiter)
+			if (sm.flags & cxSPAN_HAS_STARTER && start <= (offset + sm.matches[0]->end)) {
+				// If so we have to remove the span
 				if (m.end > end) change_end = m.end - (end - start);
 				p = matches.erase(p);
+			}
+			else {
+				// We have to enter the span and continue search inside
+				const unsigned int seg_start = offset > start ? 0 : start - offset;
+				const unsigned int seg_end = m.end < end ? m.end - offset : end - offset;
+				change_end = offset + AdjustForDeletion(seg_start, seg_end, *m.subMatch, o + offset, lineStart);
 
-				// If we have deleted the last match in a span we have to re-open it
-				if (p == matches.end()) submatches.flags &= ~cxSPAN_IS_CLOSED;
+				// Adjust match to new position and size
+				// This is the only case where the match is not deleted and thus need adjusting
+				if (m.start > start) {
+					m.end -= m.start - start;
+					m.start = start;
+				}
+				m.end -= seg_end - seg_start;
+
+				++p; // Go to next match
 			}
 		}
-		else break;
+		else {
+			// Else Delete and continue
+			if (m.end > end) change_end = m.end - (end - start);
+			p = matches.erase(p);
+
+			// If we have deleted the last match in a span we have to re-open it
+			if (p == matches.end()) submatches.flags &= ~cxSPAN_IS_CLOSED;
+		}
 	} while (p != matches.end());
 
 	// Move all following matches to correct position

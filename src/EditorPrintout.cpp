@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 #include "EditorPrintout.h"
-#include "INamedDocument.h"
+#include "IPrintableDocument.h"
 #include "eApp.h"
 #include "GutterCtrl.h"
 
@@ -22,7 +22,7 @@ const interval EditorPrintout::s_hlBracket(0,0);
 const unsigned int EditorPrintout::s_lastpos = 0;
 const bool EditorPrintout::s_isShadow = false;
 
-EditorPrintout::EditorPrintout(const INamedDocument& editorCtrl)
+EditorPrintout::EditorPrintout(const IPrintableDocument& editorCtrl)
 : wxPrintout(editorCtrl.GetName()), m_editorCtrl(editorCtrl), m_line(NULL), m_lineList(NULL)
 {
 }

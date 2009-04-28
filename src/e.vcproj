@@ -1707,7 +1707,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\INamedDocument.h"
+			RelativePath=".\IPrintableDocument.h"
 			>
 		</File>
 		<File

@@ -34,7 +34,7 @@
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
-#include "INamedDocument.h"
+#include "IPrintableDocument.h"
 
 // Pre-definitions
 class GutterCtrl;
@@ -74,7 +74,7 @@ enum cxCase {
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
 	public IEditorDoAction,
-	public INamedDocument {
+	public IPrintableDocument {
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);

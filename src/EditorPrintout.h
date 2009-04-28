@@ -29,13 +29,13 @@
 using namespace std;
 
 // Pre-definitions
-class INamedDocument;
+class IPrintableDocument;
 class FixedLine;
 class LineListWrap;
 
 class EditorPrintout: public wxPrintout {
 public:
-	EditorPrintout(const INamedDocument& editorCtrl);
+	EditorPrintout(const IPrintableDocument& editorCtrl);
 	~EditorPrintout();
 
 	void OnPreparePrinting();
@@ -46,7 +46,7 @@ public:
 
 private:
 	// Member variables
-	const INamedDocument& m_editorCtrl;
+	const IPrintableDocument& m_editorCtrl;
 	FixedLine* m_line;
 	LineListWrap* m_lineList;
 	vector<unsigned int> m_pages;

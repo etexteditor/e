@@ -29,6 +29,7 @@
 #include "Execute.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
+#include "IFoldingEditor.h"
 
 #include <wx/dnd.h>
 
@@ -67,7 +68,7 @@ enum cxCase {
 	cxREVERSECASE
 };
 
-class EditorCtrl : public KeyHookable<wxControl> {
+class EditorCtrl : public KeyHookable<wxControl>, public IFoldingEditor {
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -306,37 +307,20 @@ public:
 	// Bracket Highlighting
 	const interval& GetHlBracket() const {return m_hlBracket;};
 
-	// Folding
-	enum cxFoldType {
-		cxFOLD_START,
-		cxFOLD_START_FOLDED,
-		cxFOLD_END
-	};
-	struct cxFold {
-	public:
-		cxFold(unsigned int line, cxFoldType type, unsigned int indent);
-		cxFold(unsigned int line) : line_id(line) {};
-		bool operator<(const cxFold& f) const {return line_id < f.line_id;};
-		bool operator<(unsigned int line) const {return line_id < line;};
-		unsigned int line_id;
-		cxFoldType type;
-		unsigned int count;
-		unsigned int indent;
-	};
 	vector<unsigned int> GetFoldedLines() const;
-	const vector<cxFold>& GetFolds() const {return m_folds;};
+	virtual const vector<cxFold>& GetFolds() const {return m_folds;};
 	void UpdateFolds() {ParseFoldMarkers();};
 	void Fold(unsigned int line_id);
 	void FoldAll();
 	void FoldOthers();
 	void UnFold(unsigned int line_id);
-	void UnFoldParents(unsigned int line_id);
+	virtual void UnFoldParents(unsigned int line_id);
 	void UnFoldAll();
 	void ToggleFold();
 	void SelectFold();
 	void SelectFold(unsigned int line_id);
 	bool IsLineFolded(unsigned int line_id) const;
-	bool IsPosInFold(unsigned int pos, unsigned int* fold_start=NULL, unsigned int* fold_end=NULL);
+	virtual bool IsPosInFold(unsigned int pos, unsigned int* fold_start=NULL, unsigned int* fold_end=NULL);
 	bool HasFoldedFolds() const;
 	vector<cxFold*> GetFoldStack(unsigned int line_id);
 

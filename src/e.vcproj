@@ -1699,6 +1699,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IFoldingEditor.h"
+			>
+		</File>
+		<File
 			RelativePath="json_defs.h"
 			>
 		</File>

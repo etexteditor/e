@@ -1489,6 +1489,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\FindFlags.h"
+			>
+		</File>
+		<File
 			RelativePath="FixedLine.cpp"
 			>
 			<FileConfiguration

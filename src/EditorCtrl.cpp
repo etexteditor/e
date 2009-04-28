@@ -216,7 +216,7 @@ void EditorCtrl::Init() {
 	// is shared with the other EditCtrl's. We call it in Show() & OnSize().
 
 	m_remoteProfile = NULL;
-	m_search_hl_styler.Init(*this);
+	m_search_hl_styler.Init();
 
 	// Column selection state
 	m_blockKeyState = BLOCKKEY_NONE;

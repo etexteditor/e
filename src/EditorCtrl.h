@@ -30,10 +30,11 @@
 #include "RemoteThread.h"
 #include "key_hook.h"
 
+#include <wx/dnd.h>
+
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
-
-#include <wx/dnd.h>
+#include "INamedDocument.h"
 
 // Pre-definitions
 class GutterCtrl;
@@ -72,7 +73,8 @@ enum cxCase {
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
-	public IEditorDoAction{
+	public IEditorDoAction,
+	public INamedDocument {
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -154,11 +156,11 @@ public:
 	bool SaveText(bool askforpath=false);
 	bool IsModified() const;
 	DocumentWrapper& GetDocument() {return m_doc;};
-	const DocumentWrapper& GetDocument() const {return m_doc;};
+	virtual const DocumentWrapper& GetDocument() const {return m_doc;};
 	bool SetDocument(const doc_id& di, const wxString& path=wxEmptyString, const RemoteProfile* rp=NULL);
 	doc_id GetDocID() const;
-	wxString GetName() const;
-	const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
+	virtual wxString GetName() const;
+	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};

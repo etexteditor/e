@@ -1707,6 +1707,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\INamedDocument.h"
+			>
+		</File>
+		<File
 			RelativePath="json_defs.h"
 			>
 		</File>

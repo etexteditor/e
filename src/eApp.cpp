@@ -403,7 +403,7 @@ bool eApp::SendArgsToInstance() {
 
 				if (arg.StartsWith(wxT("txmt:"))) cmd += arg;
 				else {
-					if (EditorFrame::IsRemotePath(arg)) cmd += arg;
+					if (eDocumentPath::IsRemotePath(arg)) cmd += arg;
 					else {
 						wxFileName path(arg);
 						path.MakeAbsolute();

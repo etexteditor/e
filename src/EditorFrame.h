@@ -46,7 +46,6 @@ class PreviewDlg;
 class SymbolList;
 class wxFilesChangedEvent;
 class ChangeCheckerThread;
-class BundleEditor;
 class BundlePane;
 class UndoHistory;
 class eSettings;

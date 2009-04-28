@@ -15,6 +15,9 @@
 #define __REMOTEPROFILEDLG_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#ifdef __WXGTK__
+  #include <wx/wx.h>
+#endif
 
 // pre-definitions
 class eSettings;

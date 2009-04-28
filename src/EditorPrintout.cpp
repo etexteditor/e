@@ -14,7 +14,9 @@
 #include "EditorPrintout.h"
 #include "IPrintableDocument.h"
 #include "eApp.h"
-#include "GutterCtrl.h"
+#include "tm_syntaxhandler.h"
+#include "FixedLine.h"
+#include "LineListWrap.h"
 
 // Dummy vars for line
 const vector<interval> EditorPrintout::s_sel;
@@ -30,6 +32,12 @@ EditorPrintout::EditorPrintout(const IPrintableDocument& editorCtrl)
 EditorPrintout::~EditorPrintout() {
 	delete m_lineList;
 	delete m_line;
+}
+
+unsigned int digits_in_number(unsigned int number) {
+	unsigned int count = 1; // minimum is one
+	while ((number /= 10) != 0) ++count;
+	return count;
 }
 
 void EditorPrintout::OnPreparePrinting() {
@@ -52,7 +60,7 @@ void EditorPrintout::OnPreparePrinting() {
 
 	// Calc gutter width
 	const wxSize digit_ext = dc.GetTextExtent(wxT("0"));
-	const unsigned int max_num_width = GutterCtrl::DigitsInNumber(m_lineList->size());
+	const unsigned int max_num_width = digits_in_number(m_lineList->size());
 	m_gutter_width = (max_num_width * digit_ext.x) + 8;
 
 	m_line->SetWidth(size.width - m_gutter_width);

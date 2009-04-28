@@ -31,6 +31,8 @@ public:
 	virtual const vector<cxFold>& GetFolds() const = 0;
 
 	// This isn't used by Lines directly, but is passed to internal data member Line.
+	// The only use of this member is in Lines (though of course the underlying EditorCtrl member
+	// is used internally in the editor control.
 	virtual const interval& GetHlBracket() const = 0;
 };
 

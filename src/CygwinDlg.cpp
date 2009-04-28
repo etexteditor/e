@@ -12,7 +12,6 @@
  ******************************************************************************/
 
 #include "CygwinDlg.h"
-#include "EditorCtrl.h"
 #include "eApp.h"
 #include "Execute.h"
 #include "eDocumentPath.h"

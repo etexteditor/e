@@ -13,13 +13,12 @@
 
 #include "styler_syntax.h"
 #include "Lines.h"
-#include "eApp.h"
 #include <algorithm>
 
 const unsigned int Styler_Syntax::EXTSIZE = 1000;
 
-Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines)
-: m_doc(dw), m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_lines(lines), m_syntax_end(0), m_updateLineHeight(false) {
+Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler& syntaxHandler)
+: m_doc(dw), m_syntaxHandler(syntaxHandler), m_lines(lines), m_syntax_end(0), m_updateLineHeight(false) {
 	m_topMatches.subMatcher = NULL;
 	m_topStyle = NULL;
 

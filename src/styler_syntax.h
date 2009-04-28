@@ -34,7 +34,7 @@ using namespace std;
 
 class Styler_Syntax : public Styler {
 public:
-	Styler_Syntax(const DocumentWrapper& dw, Lines& lines);
+	Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler& syntaxHandler);
 	virtual ~Styler_Syntax() {Clear();};
 
 	const wxString& GetName() const {return m_syntaxName;};

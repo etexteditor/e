@@ -1664,6 +1664,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IEditorDoAction.h"
+			>
+		</File>
+		<File
 			RelativePath="IEHtmlWin.cpp"
 			>
 			<FileConfiguration

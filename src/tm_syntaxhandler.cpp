@@ -20,7 +20,10 @@
 #include <wx/ffile.h>
 #include "BundleMenu.h"
 #include "pcre.h"
-#include "EditorCtrl.h"
+
+//#include "EditorCtrl.h"
+#include "Document.h"
+#include "IEditorDoAction.h"
 
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
@@ -427,7 +430,7 @@ wxString TmSyntaxHandler::GetBundleItemUriFromMenu(unsigned int id) const {
 	return m_plistHandler.GetBundleItemUri(type, bundleId, itemId);
 }
 
-void TmSyntaxHandler::DoBundleAction(unsigned int id, EditorCtrl& editor) {
+void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 	// Get uuid
 	map<unsigned int, wxString>::const_iterator p = m_menuActions.find(id);
 	if (p == m_menuActions.end()) {

@@ -29,7 +29,9 @@
 #include "Execute.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
+
 #include "IFoldingEditor.h"
+#include "IEditorDoAction.h"
 
 #include <wx/dnd.h>
 
@@ -68,7 +70,9 @@ enum cxCase {
 	cxREVERSECASE
 };
 
-class EditorCtrl : public KeyHookable<wxControl>, public IFoldingEditor {
+class EditorCtrl : public KeyHookable<wxControl>, 
+	public IFoldingEditor,
+	public IEditorDoAction{
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -268,7 +272,7 @@ public:
 	// Commands & Shell
 	void DoActionFromDlg();
 	void ShowScopeTip();
-	void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
+	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
 	void FilterThroughCommand();
 
 	// DragCommands

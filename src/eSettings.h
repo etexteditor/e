@@ -66,6 +66,14 @@ public:
 	void SetRemoteProfileLogin(const RemoteProfile* rp, const wxString& username, const wxString& pwd, bool toDb);
 	void DeleteRemoteProfile(size_t profile_id);
 
+	// Search History
+	size_t GetSearchCount() const;
+	void GetSearch(size_t item, wxString& pattern, bool& isRegex, bool& matchCase) const;
+	bool AddSearch(const wxString& pattern, bool isRegex, bool matchCase);
+	size_t GetReplaceCount() const;
+	wxString GetReplace(size_t item) const;
+	bool AddReplace(const wxString& pattern);
+
 private:
 	// Recent files (support functions)
 	void AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max);

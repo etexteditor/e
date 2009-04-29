@@ -13,6 +13,7 @@
 
 #include "FindCmdDlg.h"
 #include <algorithm>
+#include "eApp.h"
 
 // Ctrl id's
 enum {

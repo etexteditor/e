@@ -15,7 +15,6 @@
 #define __FINDCMDDLG_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "eApp.h"
 #include "SearchListBox.h"
 #include "tm_syntaxhandler.h"
 

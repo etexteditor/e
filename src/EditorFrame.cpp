@@ -2433,7 +2433,7 @@ void EditorFrame::OnMenuSelectFold(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuEditTheme(wxCommandEvent& WXUNUSED(event)) {
-	ThemeEditor dlg(this);
+	ThemeEditor dlg(this, ((eApp*)wxTheApp)->GetSyntaxHandler());
 	dlg.ShowModal();
 }
 

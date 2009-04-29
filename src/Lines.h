@@ -21,9 +21,6 @@
 #endif
 using namespace std;
 
-// pre-definitions
-//class EditorCtrl;
-
 class Lines {
 public:
 	Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl);

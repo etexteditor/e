@@ -330,6 +330,8 @@ RemoteProfile* eSettings::DoGetRemoteProfile(size_t profile_id)  {
 }
 
 size_t eSettings::GetRemoteProfileCount() const {
+	if (!m_jsonRoot.HasMember(wxT("remoteProfiles"))) return 0;
+
 	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
 	return remotes.Size();
 }
@@ -505,4 +507,96 @@ wxString eSettings::StripSlashes(const wxString& path) { // static
 	const size_t start = (path[0] == wxT('/')) ? 1 : 0;
 	const size_t end = (path.Last() ==  wxT('/')) ? path.size()-1 : path.size();
 	return path.substr(start, end-start);
+}
+
+size_t eSettings::GetSearchCount() const {
+	if (!m_jsonRoot.HasMember(wxT("searchHistory"))) return 0;
+
+	const wxJSONValue searches = m_jsonRoot.ItemAt(wxT("searchHistory"));
+	return searches.Size();
+}
+
+void eSettings::GetSearch(size_t ndx, wxString& pattern, bool& isRegex, bool& matchCase) const {
+	const wxJSONValue searches = m_jsonRoot.ItemAt(wxT("searchHistory"));
+	wxASSERT((int)ndx < searches.Size());
+
+	const wxJSONValue item = searches.ItemAt(ndx);
+	pattern = item.ItemAt(wxT("pattern")).AsString();
+	isRegex = item.ItemAt(wxT("isRegex")).AsBool();
+	matchCase = item.ItemAt(wxT("matchCase")).AsBool();
+}
+
+bool eSettings::AddSearch(const wxString& pattern, bool isRegex, bool matchCase) {
+	wxJSONValue& searches = m_jsonRoot[wxT("searchHistory")];
+
+	// Don't add duplicates
+	if (searches.Size() > 0) {
+		wxJSONValue& last = searches[0];
+		if (last.ItemAt(wxT("pattern")).AsString() == pattern) {
+			// We can ignore repeated top insertions, but options may have changed
+			if (last[wxT("isRegex")].AsBool() != isRegex) last[wxT("isRegex")] = isRegex;
+			if (last[wxT("matchCase")].AsBool() != matchCase) last[wxT("matchCase")] = matchCase;			
+			return false;
+		}
+
+		// Check if there should be a duplicate lower down
+		for (size_t i = 0; i < searches.Size(); ++i) {
+			if (searches[i][wxT("pattern")].AsString() == pattern) {
+				searches.Remove(i);
+				break;
+			}
+		}
+	}
+	
+	// Add the new item
+	wxJSONValue item;
+	item[wxT("pattern")] = pattern;
+	item[wxT("isRegex")] = isRegex;
+	item[wxT("matchCase")] = matchCase;
+	searches.Insert(0, item);
+
+	// Limit number of items to save
+	if (searches.Size() > 20) searches.Remove(searches.Size()-1);
+
+	return true;
+}
+
+size_t eSettings::GetReplaceCount() const {
+	if (!m_jsonRoot.HasMember(wxT("replaceHistory"))) return 0;
+
+	const wxJSONValue replacements = m_jsonRoot.ItemAt(wxT("replaceHistory"));
+	return replacements.Size();
+}
+
+wxString eSettings::GetReplace(size_t ndx) const {
+	const wxJSONValue replacements = m_jsonRoot.ItemAt(wxT("replaceHistory"));
+	wxASSERT((int)ndx < replacements.Size());
+
+	return replacements.ItemAt(ndx).AsString();
+}
+
+bool eSettings::AddReplace(const wxString& pattern) {
+	wxJSONValue& replacements = m_jsonRoot[wxT("replaceHistory")];
+
+	// Don't add duplicates
+	if (replacements.Size() > 0) {
+		const wxJSONValue last = replacements.ItemAt(0);
+		if (last.AsString() == pattern) return false;
+		
+		// Check if there should be a duplicate lower down
+		for (size_t i = 0; i < replacements.Size(); ++i) {
+			if (replacements[i].AsString() == pattern) {
+				replacements.Remove(i);
+				break;
+			}
+		}
+	}
+	
+	// Add the new item
+	replacements.Insert(0, pattern);
+
+	// Limit number of items to save
+	if (replacements.Size() > 20) replacements.Remove(replacements.Size()-1);
+
+	return true;
 }

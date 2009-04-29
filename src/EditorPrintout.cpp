@@ -51,7 +51,9 @@ void EditorPrintout::OnPreparePrinting() {
 	dc.SetFont(font);
 
 	// Initialize line info
-	m_line = new FixedLine(dc, m_editorCtrl.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow);
+	const tmTheme& theme = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme();
+
+	m_line = new FixedLine(dc, m_editorCtrl.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
 	m_line->SetPrintMode();
 	m_line->Init();
 	m_line->SetWordWrap(cxWRAP_SMART);
@@ -111,7 +113,10 @@ bool EditorPrintout::OnPrintPage(int pageNum) {
 	wxDC& dc = *GetDC();
 	const wxFont& font = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme().font;
 	dc.SetFont(font);
-	FixedLine line(dc, m_editorCtrl.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow);
+
+	const tmTheme& theme = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme();
+
+	FixedLine line(dc, m_editorCtrl.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
 	line.SetPrintMode();
 	line.Init();
 	line.SetWordWrap(cxWRAP_SMART);

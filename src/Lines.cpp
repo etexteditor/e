@@ -17,7 +17,7 @@
 
 Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme)
 : dc(dc), m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),
-  line(dc, dw, selections, editorCtrl.GetHlBracket(), lastpos, m_isSelShadow),
+  line(dc, dw, selections, editorCtrl.GetHlBracket(), lastpos, m_isSelShadow, theme),
   m_theme(theme), m_lastSel(-1), m_marginChars(0), m_marginPos(0),
   selections(), m_isSelShadow(false),
   m_wrapMode(cxWRAP_NONE), ll(NULL), llWrap(line, dw), llNoWrap(line, dw)

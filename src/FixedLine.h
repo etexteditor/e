@@ -37,7 +37,7 @@ enum cxWrapMode {
 
 class FixedLine {
 public:
-	FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow);
+	FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme);
 	void Init();
 
 	bool IsValid() const {return width != 0;};

@@ -19,9 +19,9 @@
 // Initialize static variables
 wxString FixedLine::s_text;
 
-FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow)
+FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme)
 : dc((FastDC&)dc), m_doc(dw), textstart(0), textend(0), m_lineLen(0), m_lineBufferLen(0), width(0), old_width(0), m_tabChars(4), lastpos(lastpos), m_isSelShadow(isShadow), selections(sel), m_hlBracket(hlBracket),
-  m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_sr(m_theme, (FastDC&)dc),
+  m_theme(theme), m_sr(m_theme, (FastDC&)dc),
   m_wrapMode(cxWRAP_NONE), m_showIndent(false), m_indentWidth(0),
   bmFold(1, 1), bmNewline(1, 1), bmSpace(1, 1), bmTab(1, 1)
 {

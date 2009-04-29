@@ -49,6 +49,7 @@
 #include "BundlePane.h"
 #include "UndoHistory.h"
 #include "eDocumentPath.h"
+#include "SearchPanel.h"
 
 #if defined (__WXMSW__)
     #include <wx/msw/registry.h>

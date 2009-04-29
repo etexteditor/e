@@ -16,14 +16,10 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "CloseButton.h"
-#include "EditorCtrl.h"
-
-// pre-definitions
-//enum cxFindResult;
+#include "FindFlags.h"
 
 class SearchPanel : public wxPanel {
 public:
-	// Constructors
 	SearchPanel(wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~SearchPanel();
 

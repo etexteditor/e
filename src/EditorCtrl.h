@@ -29,6 +29,7 @@
 #include "Execute.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
+#include "FindFlags.h"
 
 #include <wx/dnd.h>
 
@@ -52,19 +53,6 @@ class EditorBundlePanel;
 									  Document& doc = m_doc.GetDoc(); \
 									  Lines& lines = m_lines;
 */
-
-enum cxFindResult {
-	cxFOUND,
-	cxFOUND_AFTER_RESTART,
-	cxNOT_FOUND
-};
-
-enum cxCase {
-	cxUPPERCASE,
-	cxLOWERCASE,
-	cxTITLECASE,
-	cxREVERSECASE
-};
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,

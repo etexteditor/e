@@ -22,7 +22,6 @@
 #include "Catalyst.h"
 #include "DocHistory.h"
 #include "EditorCtrl.h"
-#include "SearchPanel.h"
 #include <wx/dnd.h>
 #include "GutterCtrl.h"
 #include <wx/regex.h>
@@ -49,6 +48,7 @@ class ChangeCheckerThread;
 class BundlePane;
 class UndoHistory;
 class eSettings;
+class SearchPanel;
 
 // Menu id's
 enum {

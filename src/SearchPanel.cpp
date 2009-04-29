@@ -16,7 +16,6 @@
 #include "images/search_png.h"
 #include "images/search_re_png.h"
 #include <wx/mstream.h>
-#include "FindFlags.h"
 
 // control ids
 enum

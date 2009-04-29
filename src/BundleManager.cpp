@@ -191,8 +191,7 @@ void BundleManager::AddItems(const wxString& repoName, const vector<cxFileInfo>&
 					remoteDate.SetSecond(0);
 					remoteDate.SetMillisecond(0);
 
-					if (installedDate == remoteDate) m_bundleList->SetItemImage(itemId, 1);
-					else m_bundleList->SetItemImage(itemId, 2);
+					m_bundleList->SetItemImage(itemId, (installedDate == remoteDate) ? 1 : 2);
 				}
 				break;
 			}
@@ -367,12 +366,11 @@ void BundleManager::OnRemoteAction(cxRemoteAction& event) {
 void BundleManager::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
     const wxString url = event.GetURL();
 	if (url == wxT("about:blank")) return;
-	else {
-		wxLaunchDefaultBrowser(url);
 
-		// Don't try to open it in inline browser
-		event.Cancel(true);
-	}
+	wxLaunchDefaultBrowser(url);
+
+	// Don't try to open it in inline browser
+	event.Cancel(true);
 }
 
 void BundleManager::OnInstallButton(wxCommandEvent& WXUNUSED(event)) {
@@ -380,10 +378,10 @@ void BundleManager::OnInstallButton(wxCommandEvent& WXUNUSED(event)) {
 	case BDL_NOT_INSTALLED:
 	case BDL_INSTALLED_OLDER:
 	case BDL_INSTALLED_NEWER:
-		InstallBundle(); // Download bundle
+		InstallBundle();
 		break;
 	case BDL_DISABLED:
-		RestoreBundle(); // Restore bundle
+		RestoreBundle();
 		break;
 	case BDL_INSTALLED_UPTODATE:
 		wxASSERT(false); // should never happen
@@ -639,5 +637,4 @@ void BundleManager::DelTree(const wxString& path) {
 #else
 	wxASSERT(false); // not implemented
 #endif
-
 }

@@ -13,7 +13,6 @@
 
 #include "BundlePane.h"
 #include "EditorFrame.h"
-#include "eApp.h"
 
 #include "images/tmBundle.xpm"
 #include "images/tmCommand.xpm"
@@ -91,9 +90,9 @@ const char* BundlePane::s_commandsyntax = "# just to remind you of some useful e
 "echo Word: \"$TM_CURRENT_WORD\"\n"
 "echo Selection: \"$TM_SELECTED_TEXT\"";
 
-BundlePane::BundlePane(EditorFrame& parent)
+BundlePane::BundlePane(EditorFrame& parent, TmSyntaxHandler& syntaxHandler)
 : wxPanel(&parent, wxID_ANY, wxPoint(-100,-100)), m_parentFrame(parent), m_imageList(16,16),
-  m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_plistHandler(m_syntaxHandler.GetPListHandler()) {
+  m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()) {
 	// Build Imagelist
 	m_imageList.Add(wxIcon(tmbundle_xpm));
 	m_imageList.Add(wxIcon(tmcommand_xpm));

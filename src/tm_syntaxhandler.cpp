@@ -55,7 +55,7 @@ TmSyntaxHandler::TmSyntaxHandler(Dispatcher& disp, bool clearCache)
 
 	// Get font
 	wxString fontDesc;
-	eSettings& settings = ((IGetSettings*)wxTheApp)->GetSettings();
+	eSettings& settings = eGetSettings();
 	if (settings.GetSettingString(wxT("font"), fontDesc)) {
 		m_defaultTheme.font.SetNativeFontInfo(fontDesc);
 	}
@@ -454,7 +454,7 @@ bool TmSyntaxHandler::SetTheme(const char* uuid) {
 	wxASSERT(uuid);
 
 	if(LoadTheme(uuid)) {
-		((IGetSettings*)wxTheApp)->GetSettings().SetSettingString(wxT("theme_id"), wxString(uuid, wxConvUTF8));
+		eGetSettings().SetSettingString(wxT("theme_id"), wxString(uuid, wxConvUTF8));
 
 		m_dispatcher.Notify(wxT("THEME_CHANGED"), NULL, 0);
 		return true;
@@ -472,7 +472,7 @@ void TmSyntaxHandler::SetFont(const wxFont& font) {
 	//wxASSERT(font.IsFixedWidth());
 
 	if (font != m_currentTheme.font) {
-		((IGetSettings*)wxTheApp)->GetSettings().SetSettingString(wxT("font"), font.GetNativeFontInfoDesc());
+		eGetSettings().SetSettingString(wxT("font"), font.GetNativeFontInfoDesc());
 
 		m_defaultTheme.font = font;
 		m_currentTheme.font = font;

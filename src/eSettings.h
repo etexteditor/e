@@ -86,4 +86,6 @@ public:
 	virtual eSettings& GetSettings() = 0;
 };
 
+eSettings& eGetSettings(void);
+
 #endif //__ESETTINGS_H__

@@ -12,14 +12,13 @@
  ******************************************************************************/
 
 #include "Lines.h"
-#include "eApp.h"
 #include "doc_byte_iter.h"
 #include "Document.h"
 
-Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl)
+Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme)
 : dc(dc), m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),
   line(dc, dw, selections, editorCtrl.GetHlBracket(), lastpos, m_isSelShadow),
-  m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_lastSel(-1), m_marginChars(0), m_marginPos(0),
+  m_theme(theme), m_lastSel(-1), m_marginChars(0), m_marginPos(0),
   selections(), m_isSelShadow(false),
   m_wrapMode(cxWRAP_NONE), ll(NULL), llWrap(line, dw), llNoWrap(line, dw)
 {

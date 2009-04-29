@@ -23,7 +23,7 @@ using namespace std;
 
 class Lines {
 public:
-	Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl);
+	Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme);
 	void Init();
 
 	int GetHeight() const;

@@ -30,7 +30,7 @@ class wxIEHtmlWin;
 
 class BundleManager : public wxDialog {
 public:
-	BundleManager(EditorFrame& parent);
+	BundleManager(EditorFrame& parent, TmSyntaxHandler& syntaxHandler);
 	~BundleManager();
 
 	bool NeedBundleReload() const {return m_needBundleReload;};

@@ -14,7 +14,6 @@
 #include "ThemeEditor.h"
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
-#include "eApp.h"
 
 enum {
 	CTRL_FONTSELECT,

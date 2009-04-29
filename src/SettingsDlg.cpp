@@ -16,7 +16,6 @@
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 #include "eSettings.h"
-#include "eApp.h"
 
 #ifdef __WXMSW__
 #include "eDocumentPath.h"
@@ -63,7 +62,7 @@ END_EVENT_TABLE()
 
 SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 : wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_settings(((eApp*)wxTheApp)->GetSettings()), m_catalyst(cw), m_ctUserPic(false)
+  m_settings(((IGetSettings*)wxTheApp)->GetSettings()), m_catalyst(cw), m_ctUserPic(false)
 {
 	SetTitle (_("Settings"));
 

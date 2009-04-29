@@ -252,6 +252,7 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
 	Centre();
 }
 
+#ifdef __WXMSW__
 void SettingsDlg::UpdateUnixPage() {
 	const bool cygwin_initialized = eDocumentPath::IsInitialized();
 
@@ -272,6 +273,7 @@ void SettingsDlg::UpdateUnixPage() {
 
 	m_unixPage->Fit();
 }
+#endif
 
 void SettingsDlg::UpdateEncoding() {
 	// Build list of line endings

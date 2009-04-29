@@ -35,7 +35,7 @@ private:
 	// Event handlers
 	void OnButtonOk(wxCommandEvent& event);
 	void OnButtonLoadPic(wxCommandEvent& event);
-	void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& event);
+	void OnButtonCygwinAction(wxCommandEvent& event);
 	void OnCheckAutoPair(wxCommandEvent& event);
 	void OnCheckAutoWrap(wxCommandEvent& event);
 	void OnCheckKeepState(wxCommandEvent& event);

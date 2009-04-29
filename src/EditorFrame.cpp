@@ -32,7 +32,6 @@
 #include "ProjectPane.h"
 #include "ThemeEditor.h"
 #include <wx/mstream.h>
-#include "BundleEditor.h"
 #include "BundleManager.h"
 #include "PreviewDlg.h"
 #include "BundleMenu.h"

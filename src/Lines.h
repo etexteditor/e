@@ -22,7 +22,7 @@
 using namespace std;
 
 // pre-definitions
-class EditorCtrl;
+//class EditorCtrl;
 
 class Lines {
 public:

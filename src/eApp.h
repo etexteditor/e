@@ -33,7 +33,7 @@ class EditorFrame;
 #define ID_UPDATES_AVAILABLE 100
 
 
-class eApp : public wxApp
+class eApp : public wxApp, public IGetSettings
 {
 public:
 	virtual bool OnInit();
@@ -49,7 +49,7 @@ public:
 
 	// Settings functions
 	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};
-	eSettings& GetSettings(){return m_settings;};
+	virtual eSettings& GetSettings(){return m_settings;};
 
 	// Registration functions
 	bool IsRegistered() const {return m_pCatalyst->IsRegistered();};

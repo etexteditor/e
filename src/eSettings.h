@@ -81,4 +81,9 @@ private:
 	auto_vector<RemoteProfile> m_tempRemotes; // cache for remote profiles
 };
 
+class IGetSettings {
+public:
+	virtual eSettings& GetSettings() = 0;
+};
+
 #endif //__ESETTINGS_H__

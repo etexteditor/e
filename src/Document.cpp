@@ -61,7 +61,7 @@ void Document::CreateNew() {
 void Document::SetDefaultEncoding() {
 	// Check if we need to set eol property
 	wxString eolStr;
-	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	eSettings& settings = ((IGetSettings*)wxTheApp)->GetSettings();
 	if (settings.GetSettingString(wxT("formatEol"), eolStr)) {
 		wxTextFileType eol = wxTextBuffer::typeDefault;
 		if (eolStr == wxT("crlf")) eol = wxTextFileType_Dos;

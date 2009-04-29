@@ -1880,9 +1880,9 @@ bool EditorFrame::IsSearching() const {
 
 bool EditorFrame::GetSetting(const wxString& name) const {
 	if (name == wxT("search/highlight")) return m_searchHighlight;
-	else if (name == wxT("editor/linenumbers")) return m_showGutter;
-	else wxASSERT(false);
+	if (name == wxT("editor/linenumbers")) return m_showGutter;
 
+	wxASSERT(false);
 	return false; // We should never reach here
 }
 

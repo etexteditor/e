@@ -78,7 +78,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	  m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), bitmap(bitmap), scrollPos(0), m_scrollPosX(0), topline(-1), commandMode(false), m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
       m_parentFrame(parentFrame), m_changeToken(0), m_savedForPreview(false), m_bundlePanel(NULL),
       m_modCallback(NULL), m_scrollCallback(NULL), m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), m_activeTooltip(NULL),
-	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
  	  do_freeze(true), m_options_cache(0), m_re(NULL), m_symbolCacheToken(0)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -159,7 +159,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	  m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), bitmap(bitmap), scrollPos(0), m_scrollPosX(0), topline(-1), commandMode(false), m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
       m_parentFrame(parentFrame), m_changeToken(0), m_savedForPreview(false), m_bundlePanel(NULL),
       m_modCallback(NULL), m_scrollCallback(NULL), m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), m_activeTooltip(NULL),
-	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
  	  do_freeze(true), m_options_cache(0), m_re(NULL), m_symbolCacheToken(0)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -188,7 +188,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	  m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), bitmap(bitmap), scrollPos(0), m_scrollPosX(0), topline(-1), commandMode(false), m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
       m_parentFrame(parentFrame), m_changeToken(0), m_savedForPreview(false), m_bundlePanel(NULL),
       m_modCallback(NULL), m_scrollCallback(NULL), m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), m_activeTooltip(NULL),
-	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
  	  do_freeze(true), m_options_cache(0), m_re(NULL), m_symbolCacheToken(0)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);

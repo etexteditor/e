@@ -31,7 +31,7 @@ using namespace std;
 
 class Styler_SearchHL : public Styler {
 public:
-	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges);
+	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme);
 	virtual ~Styler_SearchHL() {};
 
 	void Clear();

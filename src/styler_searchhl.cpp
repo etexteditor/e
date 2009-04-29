@@ -12,16 +12,15 @@
  ******************************************************************************/
 
 #include "styler_searchhl.h"
-#include "eApp.h"
 #include "Lines.h"
 #include "Document.h"
 #include "FindFlags.h"
 
 const unsigned int Styler_SearchHL::EXTSIZE = 1000;
 
-Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges)
+Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
 : m_doc(rev), m_lines(lines), m_searchRanges(ranges),
-  m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_hlcolor(m_theme.searchHighlightColor),
+  m_theme(theme), m_hlcolor(m_theme.searchHighlightColor),
   m_rangeColor(m_theme.shadowColor) {
 
 	Clear(); // Make sure all variables are empty

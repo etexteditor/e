@@ -18,7 +18,7 @@
 #include "doc_byte_iter.h"
 #include "cx_pcre.h"
 #include "Utf.h"
-#include "eApp.h"
+#include "eSettings.h"
 
 // Constructor
 Document::Document(const doc_id& di, CatalystWrapper cw)

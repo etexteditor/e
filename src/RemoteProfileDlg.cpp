@@ -15,7 +15,6 @@
 #include <wx/notebook.h>
 #include "RemoteThread.h"
 #include "eSettings.h"
-#include "eApp.h"
 
 // Ctrl id's
 enum {
@@ -38,7 +37,7 @@ END_EVENT_TABLE()
 
 RemoteProfileDlg::RemoteProfileDlg(wxWindow *parent)
 : wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_settings(((eApp*)wxTheApp)->GetSettings()), m_currentProfile(-1) {
+  m_settings(((IGetSettings*)wxTheApp)->GetSettings()), m_currentProfile(-1) {
 	SetTitle (_("Remote Profiles"));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);

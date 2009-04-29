@@ -13,7 +13,6 @@
 
 #include "FixedLine.h"
 #include <algorithm>
-#include "eApp.h"
 #include "Document.h"
 
 // Initialize static variables

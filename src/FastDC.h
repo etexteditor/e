@@ -11,8 +11,8 @@
  *
  ******************************************************************************/
 
-#ifndef FASTDC_H
-#define FASTDC_H
+#ifndef __FASTDC_H__
+#define __FASTDC_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #ifdef __WXGTK__
@@ -53,4 +53,4 @@ public:
 	// Cannot have any member variables, as it is cast from wxDC
 };
 
-#endif // FIXEDLINE_H
+#endif // Include guard

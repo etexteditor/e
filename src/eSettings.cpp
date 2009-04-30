@@ -84,8 +84,11 @@ bool eSettings::GetSettingBool(const wxString& name, bool& value) const {
 	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
 	if (!settings.HasMember(name)) return false;
 
+	// old bool values may have been stored as ints
 	const wxJSONValue val = settings.ItemAt(name);
-	if (!val.IsBool() || !val.IsInt()) return false;
+	if (val.IsInt()) return (val.AsInt() > 0);
+
+	if (!val.IsBool()) return false;
 
 	value = val.AsBool();
 	return true;
@@ -540,7 +543,7 @@ bool eSettings::AddSearch(const wxString& pattern, bool isRegex, bool matchCase)
 		}
 
 		// Check if there should be a duplicate lower down
-		for (size_t i = 0; i < searches.Size(); ++i) {
+		for (int i = 0; i < searches.Size(); ++i) {
 			if (searches[i][wxT("pattern")].AsString() == pattern) {
 				searches.Remove(i);
 				break;
@@ -584,7 +587,7 @@ bool eSettings::AddReplace(const wxString& pattern) {
 		if (last.AsString() == pattern) return false;
 		
 		// Check if there should be a duplicate lower down
-		for (size_t i = 0; i < replacements.Size(); ++i) {
+		for (int i = 0; i < replacements.Size(); ++i) {
 			if (replacements[i].AsString() == pattern) {
 				replacements.Remove(i);
 				break;

@@ -14,6 +14,7 @@
 #include "UndoHistory.h"
 #include <algorithm>
 #include "EditorFrame.h"
+#include "EditorCtrl.h"
 
 // ctrl & menu id's
 enum {

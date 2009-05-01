@@ -16,6 +16,7 @@
 #include <wx/mimetype.h>
 #include <wx/progdlg.h>
 #include <wx/ffile.h>
+#include <wx/file.h>
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
 

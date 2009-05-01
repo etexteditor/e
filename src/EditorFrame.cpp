@@ -1254,7 +1254,7 @@ EditorCtrl* EditorFrame::GetEditorCtrl() {
 
 // This method returns true if the active editor is different from the one
 // passed in, or if the active editor is the same but there has been an edit.
-EditorCtrl* EditorFrame::GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) {
+wxControl* EditorFrame::GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) {
 	if (editorCtrl == NULL) {
 		newStatus = ECT_NO_EDITOR;
 		return NULL;

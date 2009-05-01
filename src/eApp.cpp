@@ -31,9 +31,9 @@
 #include <wx/image.h>
 #include "tm_syntaxhandler.h"
 #include <wx/stdpaths.h>
-//#include <curl/curl.h>
 #include "RemoteThread.h"
 #include "EditorFrame.h"
+#include "EditorCtrl.h"
 #include "eDocumentPath.h"
 
 #ifdef __WXMSW__

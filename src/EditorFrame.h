@@ -22,7 +22,6 @@
 #include "Catalyst.h"
 #include "DocHistory.h"
 #include <wx/dnd.h>
-#include "GutterCtrl.h"
 #include <wx/regex.h>
 #include "StatusBar.h"
 #include <wx/aui/aui.h>
@@ -30,6 +29,9 @@
 #include "RemoteThread.h"
 #include "DirWatcher.h"
 #include "key_hook.h"
+
+// For cxWrapMode; was previously indirectly included through GutterCtrl
+#include "FixedLine.h"
 
 #include "IFrameEditorService.h"
 #include "IFrameSymbolService.h"
@@ -192,7 +194,7 @@ public:
 	EditorCtrl* GetEditorCtrl();
 
 	// Editor Service methods.
-	virtual EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
+	virtual wxControl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
 	virtual void FocusEditor();
 
 	// Files

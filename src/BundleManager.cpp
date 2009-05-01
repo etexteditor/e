@@ -12,13 +12,19 @@
  ******************************************************************************/
 
 #include "BundleManager.h"
-#include "EditorFrame.h"
+#include "IFrameRemoteThread.h"
+#include "tm_syntaxhandler.h"
 #include <wx/filename.h>
 #include "eApp.h"
 #include <wx/progdlg.h>
 #include <wx/stdpaths.h>
 #include <wx/ffile.h>
 #include "urlencode.h"
+
+#ifdef __WXMSW__
+    #include "IEHtmlWin.h"
+#endif
+#include "IHtmlWnd.h"
 
 #include "images/accept.xpm"
 #include "images/exclamation.xpm"

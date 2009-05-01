@@ -68,68 +68,69 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	const unsigned int currentChangeToken = editorCtrl->GetChangeToken();
 
 	// Only update if the editorCtrl has changed
-	if (newEditorCtrl || m_changeToken != currentChangeToken) { // || m_pos != editorCtrl->GetPos()) {
-		m_editorCtrl = editorCtrl;
-		m_editorCtrlId = id;
+	const bool shouldProcess = newEditorCtrl || (m_changeToken != currentChangeToken);
+	if (!shouldProcess) return;
 
-		// Reload symbols
-		m_symbols.clear();
-		m_symbolStrings.Empty();
-		const int res = editorCtrl->GetSymbols(m_symbols);
-		if (res == 1) {
-			// reload symbol strings
-			for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-				const SymbolRef& sr = *p;
-				m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
-			}
-			m_listBox->SetAllItems();
+	m_editorCtrl = editorCtrl;
+	m_editorCtrlId = id;
+
+	// Reload symbols
+	m_symbols.clear();
+	m_symbolStrings.Empty();
+	const int res = editorCtrl->GetSymbols(m_symbols);
+	if (res == 1) {
+		// reload symbol strings
+		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+			const SymbolRef& sr = *p;
+			m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
 		}
-		else if (res == 2) { // DEBUG: double implementation to view path in crash dump (remove when bug is solved)
-			// reload symbol strings
-			for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-				const SymbolRef& sr = *p;
-				m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
-			}
-			m_listBox->SetAllItems();
+		m_listBox->SetAllItems();
+	}
+	else if (res == 2) { // DEBUG: double implementation to view path in crash dump (remove when bug is solved)
+		// reload symbol strings
+		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+			const SymbolRef& sr = *p;
+			m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
 		}
-		else {
-			m_listBox->SetAllItems(); // clear list
-			return;
-		}
+		m_listBox->SetAllItems();
+	}
+	else {
+		m_listBox->SetAllItems(); // clear list
+		return;
+	}
 
-		// Get editor state
-		m_pos = editorCtrl->GetPos();
-		m_changeToken = currentChangeToken;
+	// Get editor state
+	m_pos = editorCtrl->GetPos();
+	m_changeToken = currentChangeToken;
 
-		// Keep scrollpos so we can stay at the same pos
-		const unsigned int scrollPos = m_listBox->GetScrollPos(wxVERTICAL);
+	// Keep scrollpos so we can stay at the same pos
+	const unsigned int scrollPos = m_listBox->GetScrollPos(wxVERTICAL);
 
-		// Set current symbol
-		if (!m_symbols.empty()) {
-			/*// Set new symbols
-			bool currentSet = false;
-			unsigned int id = 0;
-			for (vector<Styler_Syntax::SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-				// Select current
-				if (!currentSet && m_pos < p->start) {
-					if (p != m_symbols.begin()) {
-						SetSelection(id-1, true);
-					}
-					currentSet = true;
+	// Set current symbol
+	if (!m_symbols.empty()) {
+		/*// Set new symbols
+		bool currentSet = false;
+		unsigned int id = 0;
+		for (vector<Styler_Syntax::SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+			// Select current
+			if (!currentSet && m_pos < p->start) {
+				if (p != m_symbols.begin()) {
+					SetSelection(id-1, true);
 				}
-
-				++id;
+				currentSet = true;
 			}
 
-			// Current symbol may be the last and therefore not checked above
-			if (!currentSet && m_pos >= m_symbols.back().start) {
-				SetSelection(id-1, true);
-			}*/
+			++id;
+		}
 
-			// Keep same position
-			if (!newEditorCtrl) {
-				m_listBox->SetScrollPos(wxVERTICAL, scrollPos);
-			}
+		// Current symbol may be the last and therefore not checked above
+		if (!currentSet && m_pos >= m_symbols.back().start) {
+			SetSelection(id-1, true);
+		}*/
+
+		// Keep same position
+		if (!newEditorCtrl) {
+			m_listBox->SetScrollPos(wxVERTICAL, scrollPos);
 		}
 	}
 }

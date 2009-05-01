@@ -22,7 +22,7 @@
 
 // pre-definitions
 class TmSyntaxHandler;
-class EditorFrame;
+class IFrameRemoteThread;
 class wxProgressDialog;
 #ifdef __WXMSW__
 class wxIEHtmlWin;
@@ -30,7 +30,7 @@ class wxIEHtmlWin;
 
 class BundleManager : public wxDialog {
 public:
-	BundleManager(EditorFrame& parent, TmSyntaxHandler& syntaxHandler);
+	BundleManager(IFrameRemoteThread& parent, TmSyntaxHandler& syntaxHandler);
 	~BundleManager();
 
 	bool NeedBundleReload() const {return m_needBundleReload;};
@@ -86,7 +86,7 @@ private:
 	};
 
 	// Member variables
-	EditorFrame& m_parentFrame;
+	IFrameRemoteThread& m_parentFrame;
 	RemoteThread& m_remoteThread;
 	TmSyntaxHandler& m_syntaxHandler;
 	PListHandler& m_plistHandler;

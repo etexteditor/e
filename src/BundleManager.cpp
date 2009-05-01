@@ -55,8 +55,8 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
 
-BundleManager::BundleManager(EditorFrame& parent, TmSyntaxHandler& syntaxHandler)
-: wxDialog (&parent, -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+BundleManager::BundleManager(IFrameRemoteThread& parent, TmSyntaxHandler& syntaxHandler)
+: wxDialog (dynamic_cast<wxWindow*>(&parent), -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
   m_parentFrame(parent), m_remoteThread(parent.GetRemoteThread()), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
   m_allBundlesReceived(false), m_needBundleReload(false)
 {

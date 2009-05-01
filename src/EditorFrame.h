@@ -155,8 +155,14 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
+class IFrameRemoteThread {
+public:
+	// For remote file access.
+	virtual RemoteThread& GetRemoteThread() = 0;
+};
+
 // EditorFrame services as used by the ProjectPane
-class IFrameProjectService {
+class IFrameProjectService : public IFrameRemoteThread {
 public:
 	// Opening local and remote files.
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString) = 0;
@@ -167,9 +173,6 @@ public:
 
 	// Directory monitoring.
 	virtual DirWatcher& GetDirWatcher() = 0;
-
-	// For remote file access.
-	virtual RemoteThread& GetRemoteThread() = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,

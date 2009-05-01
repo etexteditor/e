@@ -16,8 +16,7 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "SearchListBox.h"
-#include "SymbolRef.h"
-#include "EditorChangeState.h"
+#include "IEditorSymbols.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -29,8 +28,6 @@
 #endif
 using namespace std;
 
-class EditorCtrl;
-class IEditorSymbols;
 class EditorFrame;
 
 class SymbolList : public wxPanel {

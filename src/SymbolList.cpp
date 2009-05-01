@@ -12,7 +12,6 @@
  ******************************************************************************/
 
 #include "SymbolList.h"
-#include "EditorCtrl.h"
 #include "EditorFrame.h"
 
 // Ctrl id's
@@ -63,26 +62,7 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	if(!editorSymbols || (newStatus == ECT_NO_CHANGE)) return;
 
 	bool newEditor = (newStatus == ECT_NEW_EDITOR);
-
 	this->m_editorSymbols = editorSymbols;
-
-	//EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
-	//if (!editorCtrl) return;
-	//const int id = editorCtrl->GetId();
-
-	//// In rare cases a new editorCtrl may get same address as
-	//// a previous one, so we also track the window id.
-	//const bool newEditorCtrl = (editorCtrl != m_editorCtrl || id != m_editorCtrlId);
-
-	//if (newEditorCtrl) m_changeToken = 0; // reset token
-	//const unsigned int currentChangeToken = editorCtrl->GetChangeToken();
-
-	//// Only update if the editorCtrl has changed
-	//const bool shouldProcess = newEditorCtrl || (m_changeToken != currentChangeToken);
-	//if (!shouldProcess) return;
-
-	//m_editorCtrl = editorCtrl;
-	//m_editorCtrlId = id;
 
 	// Reload symbols
 	m_symbols.clear();

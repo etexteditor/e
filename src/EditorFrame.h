@@ -173,8 +173,9 @@ public:
 	void UpdateTabs();
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
+	EditorCtrl* GetEditorCtrl();
 
-	virtual EditorCtrl* GetEditorCtrl();
+	// Editor Service methods.
 	virtual EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
 	virtual void FocusEditor();
 

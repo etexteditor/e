@@ -1256,19 +1256,19 @@ EditorCtrl* EditorFrame::GetEditorCtrl() {
 // passed in, or if the active editor is the same but there has been an edit.
 EditorCtrl* EditorFrame::GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) {
 	if (editorCtrl == NULL) {
-		newStatus = EditorChangeType::ECT_NO_EDITOR;
+		newStatus = ECT_NO_EDITOR;
 		return NULL;
 	}
 
-	EditorChangeState& currentState = editorCtrl->GetChangeState();
+	EditorChangeState currentState = editorCtrl->GetChangeState();
 	if (currentState.id != lastChangeState.id) {
-		newStatus = EditorChangeType::ECT_NEW_EDITOR;
+		newStatus = ECT_NEW_EDITOR;
 	}
 	else if (currentState.changeToken != lastChangeState.changeToken) {
-		newStatus = EditorChangeType::ECT_EDITOR_CHANGED;
+		newStatus = ECT_EDITOR_CHANGED;
 	}
 	else {
-		newStatus = EditorChangeType::ECT_NO_CHANGE;
+		newStatus = ECT_NO_CHANGE;
 	}
 
 	return editorCtrl;

@@ -456,10 +456,12 @@ private:
 	unsigned int UpdateEditorWidth();
 
 	void ShowTipAtCaret(const wxString& text);
+	bool DoShortcut(int keyCode, int modifiers);
+
+	// Show lists as a popup menu
 	int ShowPopupList(const vector<const tmAction*>& actionList);
 	int ShowPopupList(const wxArrayString& list);
 	int ShowPopupList(wxMenu& menu);
-	bool DoShortcut(int keyCode, int modifiers);
 
 	void Tab();
 	bool DoTabTrigger(unsigned int wordstart, unsigned int wordend);

@@ -17,6 +17,7 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "SearchListBox.h"
 #include "SymbolRef.h"
+#include "EditorChangeState.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -29,6 +30,7 @@
 using namespace std;
 
 class EditorCtrl;
+class IEditorSymbols;
 class EditorFrame;
 
 class SymbolList : public wxPanel {
@@ -86,10 +88,8 @@ private:
 	ActionList* m_listBox;
 
 	// Editor state
-	EditorCtrl* m_editorCtrl;
-	int m_editorCtrlId;
-	unsigned int m_changeToken;
-	unsigned int m_pos;
+	IEditorSymbols* m_editorSymbols;
+	EditorChangeState m_editorChangeState;
 
 	vector<SymbolRef> m_symbols;
 	wxArrayString m_symbolStrings;

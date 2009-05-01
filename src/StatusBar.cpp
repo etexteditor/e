@@ -47,6 +47,17 @@ StatusBar::StatusBar(EditorFrame& parent, wxWindowID id)
 }
 
 void StatusBar::UpdateBarFromActiveEditor() {
+/*
+
+	Ask the parent frame, if the editor change state is not different, then leave.
+	Get the active editor (a narrower interface to it, actually.)
+	If NULL, then leave.
+	
+	Get the new change state.
+	Proceed with work (updating the status bar panels.)
+
+*/
+
 	EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
 	if (!editorCtrl) return;
 

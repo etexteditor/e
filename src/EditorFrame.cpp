@@ -1254,8 +1254,28 @@ EditorCtrl* EditorFrame::GetEditorCtrl() {
 
 // This method returns true if the active editor is different from the one
 // passed in, or if the active editor is the same but there has been an edit.
-bool EditorFrame::IsEditorDifferent(const EditorChangeState& ecs) const {
-	return (editorCtrl == NULL) || (editorCtrl->GetChangeState() != ecs);
+EditorCtrl* EditorFrame::GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) {
+	if (editorCtrl == NULL) {
+		newStatus = EditorChangeType::ECT_NO_EDITOR;
+		return NULL;
+	}
+
+	EditorChangeState& currentState = editorCtrl->GetChangeState();
+	if (currentState.id != lastChangeState.id) {
+		newStatus = EditorChangeType::ECT_NEW_EDITOR;
+	}
+	else if (currentState.changeToken != lastChangeState.changeToken) {
+		newStatus = EditorChangeType::ECT_EDITOR_CHANGED;
+	}
+	else {
+		newStatus = EditorChangeType::ECT_NO_CHANGE;
+	}
+
+	return editorCtrl;
+}
+
+void EditorFrame::FocusEditor() {
+	if (editorCtrl != NULL) editorCtrl->SetFocus();
 }
 
 EditorCtrl* EditorFrame::GetEditorCtrlFromPage(size_t page_idx) {

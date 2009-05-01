@@ -39,6 +39,7 @@
 // pre-declearations
 class eApp;
 class EditorCtrl;
+struct EditorChangeState;
 //class Incomming;
 class ProjectPane;
 class PreviewDlg;
@@ -151,18 +152,8 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
-struct EditorChangeState {
-	EditorChangeState(const unsigned int _id, const unsigned int _changeToken):id(_id), changeToken(_changeToken){}
-	const unsigned int id;
-	const unsigned int changeToken;
-
-	bool operator==(const EditorChangeState& ecs) const throw() {return id == ecs.id && changeToken == ecs.changeToken;};
-	bool operator!=(const EditorChangeState& ecs) const throw() {return id != ecs.id || changeToken != ecs.changeToken;};
-};
-
 class EditorFrame : public KeyHookable<wxFrame> {
 public:
-	// ctor(s)
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect);
 	~EditorFrame();
 
@@ -179,8 +170,9 @@ public:
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
 	EditorCtrl* GetEditorCtrl();
+	void FocusEditor();
 
-	bool IsEditorDifferent(const EditorChangeState& ecs) const;
+	EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
 
 	// Files
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project

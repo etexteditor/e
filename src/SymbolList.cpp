@@ -30,7 +30,7 @@ END_EVENT_TABLE()
 
 SymbolList::SymbolList(EditorFrame& parent)
 : wxPanel((wxWindow*)&parent, wxID_ANY),
-  m_parentFrame(parent), m_editorCtrl(NULL) {
+  m_parentFrame(parent), m_editorSymbols(NULL) {
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_symbolStrings);
@@ -56,33 +56,43 @@ bool SymbolList::Destroy() {
 }
 
 void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
-	EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
-	if (!editorCtrl) return;
-	const int id = editorCtrl->GetId();
+	EditorChangeType newStatus;
+	IEditorSymbols* editorSymbols = dynamic_cast<IEditorSymbols*>(m_parentFrame.GetEditorAndChangeType(this->m_editorChangeState, newStatus));
 
-	// In rare cases a new editorCtrl may get same address as
-	// a previous one, so we also track the window id.
-	const bool newEditorCtrl = (editorCtrl != m_editorCtrl || id != m_editorCtrlId);
+	// If we lost the editor, or there was no change, then do nothing.
+	if(!editorSymbols || (newStatus == ECT_NO_CHANGE)) return;
 
-	if (newEditorCtrl) m_changeToken = 0; // reset token
-	const unsigned int currentChangeToken = editorCtrl->GetChangeToken();
+	bool newEditor = (newStatus == ECT_NEW_EDITOR);
 
-	// Only update if the editorCtrl has changed
-	const bool shouldProcess = newEditorCtrl || (m_changeToken != currentChangeToken);
-	if (!shouldProcess) return;
+	this->m_editorSymbols = editorSymbols;
 
-	m_editorCtrl = editorCtrl;
-	m_editorCtrlId = id;
+	//EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
+	//if (!editorCtrl) return;
+	//const int id = editorCtrl->GetId();
+
+	//// In rare cases a new editorCtrl may get same address as
+	//// a previous one, so we also track the window id.
+	//const bool newEditorCtrl = (editorCtrl != m_editorCtrl || id != m_editorCtrlId);
+
+	//if (newEditorCtrl) m_changeToken = 0; // reset token
+	//const unsigned int currentChangeToken = editorCtrl->GetChangeToken();
+
+	//// Only update if the editorCtrl has changed
+	//const bool shouldProcess = newEditorCtrl || (m_changeToken != currentChangeToken);
+	//if (!shouldProcess) return;
+
+	//m_editorCtrl = editorCtrl;
+	//m_editorCtrlId = id;
 
 	// Reload symbols
 	m_symbols.clear();
 	m_symbolStrings.Empty();
-	const int res = editorCtrl->GetSymbols(m_symbols);
+	const int res = m_editorSymbols->GetSymbols(m_symbols);
 	if (res == 1) {
 		// reload symbol strings
 		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
 			const SymbolRef& sr = *p;
-			m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
+			m_symbolStrings.Add(m_editorSymbols->GetSymbolString(sr));
 		}
 		m_listBox->SetAllItems();
 	}
@@ -90,7 +100,7 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 		// reload symbol strings
 		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
 			const SymbolRef& sr = *p;
-			m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
+			m_symbolStrings.Add(m_editorSymbols->GetSymbolString(sr));
 		}
 		m_listBox->SetAllItems();
 	}
@@ -99,39 +109,16 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	// Get editor state
-	m_pos = editorCtrl->GetPos();
-	m_changeToken = currentChangeToken;
+	// Save the change state for next time around, reseting the change token if we have a new editor.
+	this->m_editorChangeState = editorSymbols->GetChangeState();
+	if (newEditor) this->m_editorChangeState.changeToken = 0;
 
 	// Keep scrollpos so we can stay at the same pos
 	const unsigned int scrollPos = m_listBox->GetScrollPos(wxVERTICAL);
 
 	// Set current symbol
 	if (!m_symbols.empty()) {
-		/*// Set new symbols
-		bool currentSet = false;
-		unsigned int id = 0;
-		for (vector<Styler_Syntax::SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-			// Select current
-			if (!currentSet && m_pos < p->start) {
-				if (p != m_symbols.begin()) {
-					SetSelection(id-1, true);
-				}
-				currentSet = true;
-			}
-
-			++id;
-		}
-
-		// Current symbol may be the last and therefore not checked above
-		if (!currentSet && m_pos >= m_symbols.back().start) {
-			SetSelection(id-1, true);
-		}*/
-
-		// Keep same position
-		if (!newEditorCtrl) {
-			m_listBox->SetScrollPos(wxVERTICAL, scrollPos);
-		}
+		if (!newEditor) 	m_listBox->SetScrollPos(wxVERTICAL, scrollPos);
 	}
 }
 
@@ -150,7 +137,7 @@ void SymbolList::OnSearchChar(wxKeyEvent& event) {
 		return;
 	case WXK_ESCAPE:
 		if (event.ShiftDown()) m_parentFrame.CloseSymbolList();
-		if (m_editorCtrl) m_editorCtrl->SetFocus();
+		if (m_editorSymbols) m_parentFrame.FocusEditor(); //m_editorCtrl->SetFocus();
 		return;
 	}
 
@@ -159,14 +146,14 @@ void SymbolList::OnSearchChar(wxKeyEvent& event) {
 }
 
 void SymbolList::OnAction(wxCommandEvent& WXUNUSED(event)) {
-	if (!m_editorCtrl) return;
+	if (!m_editorSymbols) return;
 
 	if(m_listBox->GetSelectedCount() == 1) {
 		const int hit = m_listBox->GetSelectedAction();
 
 		if (hit != wxNOT_FOUND && hit < (int)m_symbols.size()) {
 			// Go to symbol
-			m_editorCtrl->GotoSymbolPos(m_symbols[hit].start);
+			m_editorSymbols->GotoSymbolPos(m_symbols[hit].start);
 
 			// Close symbollist if user holds down shift
 			if (wxGetKeyState(WXK_SHIFT)) {

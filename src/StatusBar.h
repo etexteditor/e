@@ -14,6 +14,8 @@
 #ifndef __STATUSBAR_H__
 #define __STATUSBAR_H__
 
+#include "EditorChangeState.h"
+
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "SymbolRef.h"
 // STL can't compile with Level 4
@@ -68,6 +70,7 @@ private:
 
 	// Editor state
 	EditorCtrl* m_editorCtrl;
+	EditorChangeState m_editorChangeState;
 	int m_editorCtrlId;
 	unsigned int m_changeToken;
 	unsigned int m_pos;

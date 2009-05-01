@@ -36,10 +36,12 @@
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
 #include "IPrintableDocument.h"
+#include "EditorChangeState.h"
 
 // Pre-definitions
 class GutterCtrl;
 class EditorFrame;
+struct EditorChangeState;
 class PreviewDlg;
 class cxRemoteAction;
 class MultilineDataObject;
@@ -54,13 +56,18 @@ class EditorBundlePanel;
 									  Lines& lines = m_lines;
 */
 
-class IEditorSymbols {
+class IEditorSymbols : public IGetChangeState {
+public:
+	virtual int GetSymbols(vector<SymbolRef>& symbols) const = 0;
+	virtual wxString GetSymbolString(const SymbolRef& sr) const = 0;
+	virtual void GotoSymbolPos(unsigned int pos) = 0;
 };
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
 	public IEditorDoAction,
-	public IPrintableDocument {
+	public IPrintableDocument,
+	public IEditorSymbols {
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -277,6 +284,7 @@ public:
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};
 	unsigned int GetChangeToken() const {return m_changeToken;};
+	virtual EditorChangeState GetChangeState() const;
 
 	// Callbacks
 	void SetModifiedCallback(void(*callback)(void*), void* data) {m_modCallback = callback; m_modCallbackData = data;};
@@ -292,9 +300,9 @@ public:
 	wxArrayString GetCompletionList();
 
 	// Symbols
-	int GetSymbols(vector<SymbolRef>& symbols) const;
-	wxString GetSymbolString(const SymbolRef& sr) const;
-	void GotoSymbolPos(unsigned int pos);
+	virtual int GetSymbols(vector<SymbolRef>& symbols) const;
+	virtual wxString GetSymbolString(const SymbolRef& sr) const;
+	virtual void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
 	virtual const interval& GetHlBracket() const {return m_hlBracket;};

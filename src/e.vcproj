@@ -1096,6 +1096,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\EditorChangeState.h"
+			>
+		</File>
+		<File
 			RelativePath="EditorCtrl.cpp"
 			>
 			<FileConfiguration

@@ -154,15 +154,20 @@ enum {
 
 // EditorFrame implements this interface, which gathers functions
 // used to query & modify the state of, and retreive pointers to, the active editor.
-class IEditorServices {
+class IFrameEditorServices {
 public:
 	virtual EditorCtrl* GetEditorCtrl() = 0;
 	virtual EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) = 0;
 	virtual void FocusEditor() = 0;
 };
 
+class IFrameSymbolService : public IFrameEditorServices {
+public:
+	virtual void CloseSymbolList() = 0;
+};
+
 class EditorFrame : public KeyHookable<wxFrame>,
-	public IEditorServices {
+	public IFrameSymbolService {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect);
 	~EditorFrame();
@@ -242,7 +247,8 @@ public:
 
 	// Symbol List (pane)
 	void ShowSymbolList();
-	void CloseSymbolList();
+	virtual void CloseSymbolList();
+
 	// DirWatcher & RemoteThread
 	DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
 

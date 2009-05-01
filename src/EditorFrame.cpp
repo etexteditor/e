@@ -1252,6 +1252,12 @@ EditorCtrl* EditorFrame::GetEditorCtrl() {
 	return editorCtrl;
 }
 
+// This method returns true if the active editor is different from the one
+// passed in, or if the active editor is the same but there has been an edit.
+bool EditorFrame::IsEditorDifferent(const EditorChangeState& ecs) const {
+	return (editorCtrl == NULL) || (editorCtrl->GetChangeState() != ecs);
+}
+
 EditorCtrl* EditorFrame::GetEditorCtrlFromPage(size_t page_idx) {
 	wxWindow* page = m_tabBar->GetPage(page_idx);
 	if (!page) return NULL;

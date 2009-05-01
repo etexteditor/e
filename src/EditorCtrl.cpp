@@ -9223,6 +9223,10 @@ void EditorCtrl::GotoPrevBookmark() {
 	DrawLayout();
 }
 
+EditorChangeState EditorCtrl::GetChangeState() const {
+	return EditorChangeState(this->GetId(), this->GetChangeToken());
+}
+
 // ------ TextTip -----------------------------------------
 
 BEGIN_EVENT_TABLE(EditorCtrl::TextTip, wxPopupTransientWindow)

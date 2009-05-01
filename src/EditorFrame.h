@@ -180,6 +180,8 @@ public:
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
 	EditorCtrl* GetEditorCtrl();
 
+	bool IsEditorDifferent(const EditorChangeState& ecs) const;
+
 	// Files
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
 	bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);

@@ -151,6 +151,15 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
+struct EditorChangeState {
+	EditorChangeState(const unsigned int _id, const unsigned int _changeToken):id(_id), changeToken(_changeToken){}
+	const unsigned int id;
+	const unsigned int changeToken;
+
+	bool operator==(const EditorChangeState& ecs) const throw() {return id == ecs.id && changeToken == ecs.changeToken;};
+	bool operator!=(const EditorChangeState& ecs) const throw() {return id != ecs.id || changeToken != ecs.changeToken;};
+};
+
 class EditorFrame : public KeyHookable<wxFrame> {
 public:
 	// ctor(s)

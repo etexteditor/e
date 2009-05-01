@@ -152,7 +152,17 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
-class EditorFrame : public KeyHookable<wxFrame> {
+// EditorFrame implements this interface, which gathers functions
+// used to query & modify the state of, and retreive pointers to, the active editor.
+class IEditorServices {
+public:
+	virtual EditorCtrl* GetEditorCtrl() = 0;
+	virtual EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) = 0;
+	virtual void FocusEditor() = 0;
+};
+
+class EditorFrame : public KeyHookable<wxFrame>,
+	public IEditorServices {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect);
 	~EditorFrame();
@@ -169,10 +179,10 @@ public:
 	void UpdateTabs();
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
-	EditorCtrl* GetEditorCtrl();
-	void FocusEditor();
 
-	EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
+	virtual EditorCtrl* GetEditorCtrl();
+	virtual EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
+	virtual void FocusEditor();
 
 	// Files
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project

@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "EditorFrame.h"
+#include "EditorCtrl.h"
 #include <wx/icon.h>
 #include <wx/filename.h>
 #include <wx/artprov.h>

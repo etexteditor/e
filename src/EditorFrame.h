@@ -21,7 +21,6 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "DocHistory.h"
-#include "EditorCtrl.h"
 #include <wx/dnd.h>
 #include "GutterCtrl.h"
 #include <wx/regex.h>
@@ -39,6 +38,7 @@
 
 // pre-declearations
 class eApp;
+class EditorCtrl;
 //class Incomming;
 class ProjectPane;
 class PreviewDlg;

@@ -27,9 +27,9 @@ BEGIN_EVENT_TABLE(SymbolList, wxPanel)
 	EVT_LISTBOX_DCLICK(CTRL_ALIST, SymbolList::OnAction)
 END_EVENT_TABLE()
 
-SymbolList::SymbolList(EditorFrame& parent)
+SymbolList::SymbolList(wxWindow& parent, IFrameSymbolService& services)
 : wxPanel((wxWindow*)&parent, wxID_ANY),
-  m_parentFrame(parent), m_editorSymbols(NULL) {
+  m_parentFrame(services), m_editorSymbols(NULL) {
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_symbolStrings);

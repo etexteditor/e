@@ -28,11 +28,11 @@
 #endif
 using namespace std;
 
-class EditorFrame;
+class IFrameSymbolService;
 
 class SymbolList : public wxPanel {
 public:
-	SymbolList(EditorFrame& parent);
+	SymbolList(wxWindow& parent, IFrameSymbolService& services);
 
 	bool Destroy();
 
@@ -80,7 +80,7 @@ private:
 	};
 
 	// Member variables
-	EditorFrame& m_parentFrame;
+	IFrameSymbolService& m_parentFrame;
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_listBox;
 

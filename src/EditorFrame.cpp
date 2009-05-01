@@ -2992,7 +2992,7 @@ void EditorFrame::ShowSymbolList() {
 	if (m_symbolList) return; // already shown
 
 	// Create the pane
-	m_symbolList = new SymbolList(*this);
+	m_symbolList = new SymbolList(*this, *this);
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxT("Symbols")).Right().Caption(_("Symbols")).BestSize(wxSize(150,50)); // defaults
 

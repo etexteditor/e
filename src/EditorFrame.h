@@ -155,8 +155,26 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
+// EditorFrame services as used by the ProjectPane
+class IFrameProjectService {
+public:
+	// Opening local and remote files.
+	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString) = 0;
+	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL) = 0;
+
+	// Prompting for remote credentials.
+	virtual bool AskRemoteLogin(const RemoteProfile* rp) = 0;
+
+	// Directory monitoring.
+	virtual DirWatcher& GetDirWatcher() = 0;
+
+	// For remote file access.
+	virtual RemoteThread& GetRemoteThread() = 0;
+};
+
 class EditorFrame : public KeyHookable<wxFrame>,
-	public IFrameSymbolService {
+	public IFrameSymbolService,
+	public IFrameProjectService {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect);
 	~EditorFrame();
@@ -181,8 +199,8 @@ public:
 
 	// Files
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
-	bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);
-	bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
+	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);
+	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
 	bool OpenTxmtUrl(const wxString& url);
 	bool AskToSaveMulti(int keep_tab=-1);
 	void SaveAllFilesInProject();
@@ -194,7 +212,7 @@ public:
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);
 	wxString DownloadFile(const wxString& url, const RemoteProfile* rp);
 	wxDateTime GetRemoteDate(const wxString& url, const RemoteProfile* rp);
-	bool AskRemoteLogin(const RemoteProfile* rp);
+	virtual bool AskRemoteLogin(const RemoteProfile* rp);
 	wxString GetTempPath() const;
 
 	// Bundle Editor support functions
@@ -240,11 +258,11 @@ public:
 	virtual void CloseSymbolList();
 
 	// DirWatcher & RemoteThread
-	DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
+	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
 
 	void SetUndoPaneCaption(const wxString& caption);
 
-	RemoteThread& GetRemoteThread() {return *m_remoteThread;};
+	virtual RemoteThread& GetRemoteThread() {return *m_remoteThread;};
 
 	// Preview
 	void SetWebPreviewTitle(const wxString& title);

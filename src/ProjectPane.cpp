@@ -68,8 +68,8 @@ int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
     return s1->CmpNoCase(*s2);
 }
 
-ProjectPane::ProjectPane(EditorFrame& parent, wxWindowID id)
-: wxPanel(&parent, id), m_parentFrame(parent), m_imageList(16,16), m_dirWatchHandle(NULL),
+ProjectPane::ProjectPane(IFrameProjectService& parent, wxWindowID id)
+: wxPanel(dynamic_cast<wxWindow*>(&parent), id), m_parentFrame(parent), m_imageList(16,16), m_dirWatchHandle(NULL),
   m_isRemote(false), m_isDestroying(false),  m_remoteThread(parent.GetRemoteThread()),
   m_remoteProfile(NULL), m_busyCount(0), m_newIconsCond(m_iconMutex)
 {

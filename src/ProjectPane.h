@@ -38,12 +38,12 @@
 using namespace std;
 
 // pre-definitions
-class EditorFrame;
+class IFrameProjectService;
 class wxDirWatcherEvent;
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
-	ProjectPane(EditorFrame& parent, wxWindowID id = wxID_ANY);
+	ProjectPane(IFrameProjectService& parent, wxWindowID id = wxID_ANY);
 	~ProjectPane();
 
 	bool IsFocused() const;
@@ -189,7 +189,7 @@ private:
 	wxButton* m_settingsButton;
 
 	// Member variables
-	EditorFrame& m_parentFrame;
+	IFrameProjectService& m_parentFrame;
 	wxImageList m_imageList;
 	void* m_dirWatchHandle;
 	bool m_isRemote;
@@ -238,4 +238,3 @@ private:
 };
 
 #endif // __PROJECTPANE_H__
-

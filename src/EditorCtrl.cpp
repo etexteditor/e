@@ -7267,11 +7267,11 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	}
 }
 
-wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv) {
+wxString EditorCtrl::RunShellCommand(const vector<char>& command) {
 	if (command.empty()) return wxEmptyString;
 
 	cxEnv env;
-	if (doSetEnv) SetEnv(env);
+	SetEnv(env);
 
 	// Set a busy cursor
 	// will be reset when leaving scope

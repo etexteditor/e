@@ -8387,6 +8387,13 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 	if (!newTabs) SetFocus();
 }
 
+void EditorCtrl::GotoSymbolPos(unsigned int pos) {
+	SetPos(pos);
+	MakeCaretVisibleCenter();
+	ReDraw();
+	SetFocus();
+}
+
 int EditorCtrl::GetSymbols(vector<SymbolRef>& symbols) const {
 	// Only return symbols if the entire syntax is parsed
 	if (!m_syntaxstyler.IsParsed() || !m_syntaxHandler.AllBundlesLoaded()) return 0;

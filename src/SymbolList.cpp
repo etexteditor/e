@@ -165,10 +165,7 @@ void SymbolList::OnAction(wxCommandEvent& WXUNUSED(event)) {
 
 		if (hit != wxNOT_FOUND && hit < (int)m_symbols.size()) {
 			// Go to symbol
-			m_editorCtrl->SetPos(m_symbols[hit].start);
-			m_editorCtrl->MakeCaretVisibleCenter();
-			m_editorCtrl->ReDraw();
-			m_editorCtrl->SetFocus();
+			m_editorCtrl->GotoSymbolPos(m_symbols[hit].start);
 
 			// Close symbollist if user holds down shift
 			if (wxGetKeyState(WXK_SHIFT)) {

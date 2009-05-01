@@ -54,6 +54,9 @@ class EditorBundlePanel;
 									  Lines& lines = m_lines;
 */
 
+class IEditorSymbols {
+};
+
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
 	public IEditorDoAction,
@@ -291,6 +294,7 @@ public:
 	// Symbols
 	int GetSymbols(vector<SymbolRef>& symbols) const;
 	wxString GetSymbolString(const SymbolRef& sr) const;
+	void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
 	virtual const interval& GetHlBracket() const {return m_hlBracket;};

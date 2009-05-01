@@ -324,6 +324,34 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="Interfaces"
+			>
+			<File
+				RelativePath=".\IEditorDoAction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IEditorSymbols.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IFoldingEditor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IFrameEditorService.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IFrameSymbolService.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IPrintableDocument.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\application.ico"
 			>
@@ -1653,14 +1681,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\IEditorDoAction.h"
-			>
-		</File>
-		<File
-			RelativePath=".\IEditorSymbols.h"
-			>
-		</File>
-		<File
 			RelativePath="IEHtmlWin.cpp"
 			>
 			<FileConfiguration
@@ -1693,22 +1713,6 @@
 		</File>
 		<File
 			RelativePath="IEHtmlWin.h"
-			>
-		</File>
-		<File
-			RelativePath=".\IFoldingEditor.h"
-			>
-		</File>
-		<File
-			RelativePath=".\IFrameEditorService.h"
-			>
-		</File>
-		<File
-			RelativePath=".\IFrameSymbolService.h"
-			>
-		</File>
-		<File
-			RelativePath=".\IPrintableDocument.h"
 			>
 		</File>
 		<File

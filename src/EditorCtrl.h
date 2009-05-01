@@ -36,7 +36,7 @@
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
 #include "IPrintableDocument.h"
-#include "EditorChangeState.h"
+#include "IEditorSymbols.h"
 
 // Pre-definitions
 class GutterCtrl;
@@ -55,13 +55,6 @@ class EditorBundlePanel;
 									  Document& doc = m_doc.GetDoc(); \
 									  Lines& lines = m_lines;
 */
-
-class IEditorSymbols : public IGetChangeState {
-public:
-	virtual int GetSymbols(vector<SymbolRef>& symbols) const = 0;
-	virtual wxString GetSymbolString(const SymbolRef& sr) const = 0;
-	virtual void GotoSymbolPos(unsigned int pos) = 0;
-};
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,

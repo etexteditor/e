@@ -1680,6 +1680,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IEditorSymbols.h"
+			>
+		</File>
+		<File
 			RelativePath="IEHtmlWin.cpp"
 			>
 			<FileConfiguration

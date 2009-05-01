@@ -12,9 +12,7 @@
  ******************************************************************************/
 
 #include "CompletionPopup.h"
-#ifdef __WXGTK__
-   #include <wx/wx.h>
-#endif
+#include "EditorCtrl.h"
 
 CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions)
 : wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER) {

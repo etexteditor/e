@@ -16,6 +16,7 @@
 #include "eApp.h"
 #include "BundleMenu.h"
 #include <wx/fontmap.h>
+#include "EditorCtrl.h"
 
 // Menu id's
 enum {
@@ -95,9 +96,9 @@ void StatusBar::UpdateEditorCtrl() {
 			// Symbols
 			if (newEditorCtrl || symbolsChanged || m_pos != pos) {
 				SetStatusText(wxEmptyString, 3);
-				for (vector<Styler_Syntax::SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
+				for (vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
 					if (m_pos >= p->start) {
-						const Styler_Syntax::SymbolRef& sr = *p;
+						const SymbolRef& sr = *p;
 						SetStatusText(editorCtrl->GetSymbolString(sr), 3);
 						break;
 					}
@@ -210,8 +211,8 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 			// Create the symbols menu
 			unsigned int id = 5000; // menu range 5000-6000
 			bool currentSet = false;
-			for (vector<Styler_Syntax::SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-				const Styler_Syntax::SymbolRef& sr = *p;
+			for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+				const SymbolRef& sr = *p;
 				wxString symbolString = m_editorCtrl->GetSymbolString(sr);
 				if (symbolString.empty()) symbolString = wxT(" "); // menu name cannot be empty
 

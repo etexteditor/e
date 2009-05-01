@@ -289,8 +289,8 @@ public:
 	wxArrayString GetCompletionList();
 
 	// Symbols
-	int GetSymbols(vector<Styler_Syntax::SymbolRef>& symbols) const;
-	wxString GetSymbolString(const Styler_Syntax::SymbolRef& sr) const;
+	int GetSymbols(vector<SymbolRef>& symbols) const;
+	wxString GetSymbolString(const SymbolRef& sr) const;
 
 	// Bracket Highlighting
 	virtual const interval& GetHlBracket() const {return m_hlBracket;};
@@ -685,7 +685,7 @@ private:
 
 	// Symbol cache
 	mutable unsigned int m_symbolCacheToken;
-	mutable vector<Styler_Syntax::SymbolRef> m_symbolCache;
+	mutable vector<SymbolRef> m_symbolCache;
 
 	// Key state
 	static unsigned long s_ctrlDownTime;

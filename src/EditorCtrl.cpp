@@ -6219,9 +6219,9 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 			case WXK_F10:
 				{
-					vector<Styler_Syntax::SymbolRef> symbols;
+					vector<SymbolRef> symbols;
 					m_syntaxstyler.GetSymbols(symbols);
-					for (vector<Styler_Syntax::SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
+					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
 						wxLogDebug(wxT("%d-%d -> \"%s\" -> \"%s\""), p->start, p->end, GetText(p->start, p->end).c_str(), p->transform->c_str());
 					}
 				}
@@ -8387,7 +8387,7 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 	if (!newTabs) SetFocus();
 }
 
-int EditorCtrl::GetSymbols(vector<Styler_Syntax::SymbolRef>& symbols) const {
+int EditorCtrl::GetSymbols(vector<SymbolRef>& symbols) const {
 	// Only return symbols if the entire syntax is parsed
 	if (!m_syntaxstyler.IsParsed() || !m_syntaxHandler.AllBundlesLoaded()) return 0;
 
@@ -8407,8 +8407,8 @@ int EditorCtrl::GetSymbols(vector<Styler_Syntax::SymbolRef>& symbols) const {
 	return res;
 }
 
-wxString EditorCtrl::GetSymbolString(const Styler_Syntax::SymbolRef& sr) const {
-	const Styler_Syntax::SymbolRef sr_debug = sr; // copy so we can see contents in call stack
+wxString EditorCtrl::GetSymbolString(const SymbolRef& sr) const {
+	const SymbolRef sr_debug = sr; // copy so we can see contents in call stack
 
 	const wxString& transform = *(sr_debug.transform);
 

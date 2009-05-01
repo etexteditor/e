@@ -21,6 +21,7 @@
 #include "pcre.h"
 #include "matchers.h"
 #include "tm_syntaxhandler.h"
+#include "SymbolRef.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -62,12 +63,6 @@ public:
 	void ApplyDiff(const vector<cxLineChange>& linechanges);
 
 	bool OnIdle();
-
-	struct SymbolRef {
-		unsigned int start;
-		unsigned int end;
-		const wxString* transform;
-	};
 
 	void GetSymbols(vector<SymbolRef>& symbols) const;
 

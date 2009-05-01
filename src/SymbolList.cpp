@@ -78,16 +78,16 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 		const int res = editorCtrl->GetSymbols(m_symbols);
 		if (res == 1) {
 			// reload symbol strings
-			for (vector<Styler_Syntax::SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-				const Styler_Syntax::SymbolRef& sr = *p;
+			for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+				const SymbolRef& sr = *p;
 				m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
 			}
 			m_listBox->SetAllItems();
 		}
 		else if (res == 2) { // DEBUG: double implementation to view path in crash dump (remove when bug is solved)
 			// reload symbol strings
-			for (vector<Styler_Syntax::SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-				const Styler_Syntax::SymbolRef& sr = *p;
+			for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+				const SymbolRef& sr = *p;
 				m_symbolStrings.Add(editorCtrl->GetSymbolString(sr));
 			}
 			m_listBox->SetAllItems();

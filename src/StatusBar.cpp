@@ -59,87 +59,88 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	const bool newEditorCtrl = (editorCtrl != m_editorCtrl || id != m_editorCtrlId);
 
 	// Only update if the editorCtrl has changed
-	if (newEditorCtrl || m_changeToken != changeToken || m_pos != pos) {
-		if (newEditorCtrl) m_changeToken = 0; // reset
-		m_editorCtrl = editorCtrl;
-		m_editorCtrlId = id;
+	const bool updatePanels = newEditorCtrl || (m_changeToken != changeToken) || (m_pos != pos);
+	if (!updatePanels) return;
 
-		Freeze();
-		if (editorCtrl) {
-			// Get position info
-			const unsigned int line = editorCtrl->GetCurrentLineNumber();
-			const unsigned int column = editorCtrl->GetCurrentColumnNumber();
+	if (newEditorCtrl) m_changeToken = 0; // reset
+	m_editorCtrl = editorCtrl;
+	m_editorCtrlId = id;
 
-			// Caret position
-			if (line != m_line || column != m_column) {
-				SetStatusText(wxString::Format(wxT("Line: %u  Column: %u"), line, column), 0);
+	Freeze();
+	if (editorCtrl) {
+		// Get position info
+		const unsigned int line = editorCtrl->GetCurrentLineNumber();
+		const unsigned int column = editorCtrl->GetCurrentColumnNumber();
 
-				m_line = line;
-				m_column = column;
-			}
+		// Caret position
+		if (line != m_line || column != m_column) {
+			SetStatusText(wxString::Format(wxT("Line: %u  Column: %u"), line, column), 0);
 
-			// Syntax
-			if (GetStatusText(1) != editorCtrl->GetSyntaxName()) {
-				SetStatusText(editorCtrl->GetSyntaxName(), 1);
-			}
-
-			// Only reload symbol list if doc has changed
-			bool symbolsChanged = false;
-			if (newEditorCtrl || m_changeToken != changeToken) {
-				m_symbols.clear();
-				if (editorCtrl->GetSymbols(m_symbols)) {
-					m_changeToken = editorCtrl->GetChangeToken(); // Track change state (so we only update on change)
-					symbolsChanged = true;
-				}
-			}
-
-			// Symbols
-			if (newEditorCtrl || symbolsChanged || m_pos != pos) {
-				SetStatusText(wxEmptyString, 3);
-				for (vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
-					if (m_pos >= p->start) {
-						const SymbolRef& sr = *p;
-						SetStatusText(editorCtrl->GetSymbolString(sr), 3);
-						break;
-					}
-				}
-			}
-
-			// Encoding
-			wxFontEncoding enc = editorCtrl->GetEncoding();
-			if (enc == wxFONTENCODING_DEFAULT) enc = wxLocale::GetSystemEncoding();
-			wxString encoding = wxFontMapper::GetEncodingName(enc).Lower();
-			if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
-				enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE) {
-				if (editorCtrl->GetBOM()) encoding += wxT("+bom");
-			}
-			wxTextFileType eol = editorCtrl->GetEOL();
-			if (eol == wxTextFileType_None) eol = wxTextBuffer::typeDefault;
-			if (eol == wxTextFileType_Dos) encoding += wxT(" crlf");
-			else if (eol == wxTextFileType_Unix) encoding += wxT(" lf");
-			else if (eol == wxTextFileType_Mac) encoding += wxT(" cr");
-
-			SetStatusText(encoding, 4);
-
-			m_pos = pos;
+			m_line = line;
+			m_column = column;
 		}
 
-		// Tabs
-		const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-		const bool isSoftTabs = m_parentFrame.IsSoftTabs();
-		if (tabWidth != m_tabWidth || isSoftTabs != m_isSoftTabs) {
-			if (m_parentFrame.IsSoftTabs()) {
-				SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
-			}
-			else {
-				SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
-			}
-
-			m_tabWidth = tabWidth;
-			m_isSoftTabs = isSoftTabs;
+		// Syntax
+		if (GetStatusText(1) != editorCtrl->GetSyntaxName()) {
+			SetStatusText(editorCtrl->GetSyntaxName(), 1);
 		}
-		Thaw();
+
+		// Only reload symbol list if doc has changed
+		bool symbolsChanged = false;
+		if (newEditorCtrl || m_changeToken != changeToken) {
+			m_symbols.clear();
+			if (editorCtrl->GetSymbols(m_symbols)) {
+				m_changeToken = editorCtrl->GetChangeToken(); // Track change state (so we only update on change)
+				symbolsChanged = true;
+			}
+		}
+
+		// Symbols
+		if (newEditorCtrl || symbolsChanged || m_pos != pos) {
+			SetStatusText(wxEmptyString, 3);
+			for (vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
+				if (m_pos >= p->start) {
+					const SymbolRef& sr = *p;
+					SetStatusText(editorCtrl->GetSymbolString(sr), 3);
+					break;
+				}
+			}
+		}
+
+		// Encoding
+		wxFontEncoding enc = editorCtrl->GetEncoding();
+		if (enc == wxFONTENCODING_DEFAULT) enc = wxLocale::GetSystemEncoding();
+		wxString encoding = wxFontMapper::GetEncodingName(enc).Lower();
+		if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
+			enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE) {
+			if (editorCtrl->GetBOM()) encoding += wxT("+bom");
+		}
+		wxTextFileType eol = editorCtrl->GetEOL();
+		if (eol == wxTextFileType_None) eol = wxTextBuffer::typeDefault;
+		if (eol == wxTextFileType_Dos) encoding += wxT(" crlf");
+		else if (eol == wxTextFileType_Unix) encoding += wxT(" lf");
+		else if (eol == wxTextFileType_Mac) encoding += wxT(" cr");
+
+		SetStatusText(encoding, 4);
+
+		m_pos = pos;
 	}
+
+	// Tabs
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const bool isSoftTabs = m_parentFrame.IsSoftTabs();
+	if (tabWidth != m_tabWidth || isSoftTabs != m_isSoftTabs) {
+		if (m_parentFrame.IsSoftTabs()) {
+			SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
+		}
+		else {
+			SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
+		}
+
+		m_tabWidth = tabWidth;
+		m_isSoftTabs = isSoftTabs;
+	}
+	Thaw();
 }
 
 void StatusBar::OnIdle(wxIdleEvent& WXUNUSED(event)) {

@@ -46,7 +46,7 @@ StatusBar::StatusBar(EditorFrame& parent, wxWindowID id)
 	SetFieldsCount(WXSIZEOF(widths), widths);
 }
 
-void StatusBar::UpdateEditorCtrl() {
+void StatusBar::UpdateBarFromActiveEditor() {
 	EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
 	if (!editorCtrl) return;
 
@@ -143,11 +143,11 @@ void StatusBar::UpdateEditorCtrl() {
 }
 
 void StatusBar::OnIdle(wxIdleEvent& WXUNUSED(event)) {
-	UpdateEditorCtrl();
+	UpdateBarFromActiveEditor();
 }
 
 void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
-	UpdateEditorCtrl();
+	UpdateBarFromActiveEditor();
 	wxASSERT(m_editorCtrl);
 
 	const int x = event.GetX();

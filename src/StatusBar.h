@@ -36,7 +36,7 @@ public:
 	StatusBar(EditorFrame& parent, wxWindowID id);
 
 private:
-	void UpdateEditorCtrl();
+	void UpdateBarFromActiveEditor();
 
 	void OnIdle(wxIdleEvent& event);
 	void OnMouseLeftDown(wxMouseEvent& event);

@@ -24,8 +24,6 @@
 #include "eSettings.h"
 
 // pre-declearations
-class eApp;
-//#include "tm_syntaxhandler.h"
 class TmSyntaxHandler;
 class EditorFrame;
 

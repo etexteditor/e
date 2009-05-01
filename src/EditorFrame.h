@@ -33,6 +33,7 @@
 
 #include "IFrameEditorService.h"
 #include "IFrameSymbolService.h"
+#include "IFrameRemoteThread.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
@@ -153,12 +154,6 @@ enum {
 	MENU_BOOKMARK_PREVIOUS,
 	MENU_BOOKMARK_TOGGLE,
 	MENU_BOOKMARK_CLEAR
-};
-
-class IFrameRemoteThread {
-public:
-	// For remote file access.
-	virtual RemoteThread& GetRemoteThread() = 0;
 };
 
 // EditorFrame services as used by the ProjectPane

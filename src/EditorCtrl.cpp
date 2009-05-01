@@ -7304,32 +7304,29 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	}
 	SetPos(end);
 
-	if (!command.empty()) {
+	{
+		// Set a busy cursor
+		// will be reset when leaving scope
+		wxBusyCursor wait;
+
 		cxEnv env;
 		SetEnv(env);
-
-		{
-			// Set a busy cursor
-			// will be reset when leaving scope
-			wxBusyCursor wait;
-
-			const wxString output = ShellRunner::RunShellCommand(command, env);
-			if (!output.empty()) {
-				// If inserting at last (virtual) line we have to first add a newline
-				if (!doReplace && end == GetLength() && end) {
-					wxChar prevchar;
-					cxLOCKDOC_READ(m_doc)
-						const unsigned int prepos = doc.GetPrevCharPos(end);
-						prevchar = doc.GetChar(prepos);
-					cxENDLOCK
-					if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
-				}
-				const unsigned int bytelen = RawInsert(end, output);
-				SetPos(end + bytelen);
+		const wxString output = ShellRunner::RunShellCommand(command, env);
+		if (!output.empty()) {
+			// If inserting at last (virtual) line we have to first add a newline
+			if (!doReplace && end == GetLength() && end) {
+				wxChar prevchar;
+				cxLOCKDOC_READ(m_doc)
+					const unsigned int prepos = doc.GetPrevCharPos(end);
+					prevchar = doc.GetChar(prepos);
+				cxENDLOCK
+				if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
 			}
+			const unsigned int bytelen = RawInsert(end, output);
+			SetPos(end + bytelen);
+		}
 
-		} // internal scope for busy cursor
-	}
+	} // internal scope for busy cursor
 
 	Freeze();
 

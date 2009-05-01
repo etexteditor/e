@@ -7267,33 +7267,6 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	}
 }
 
-wxString EditorCtrl::RunShellCommand(const vector<char>& command) {
-	if (command.empty()) return wxEmptyString;
-
-	cxEnv env;
-	SetEnv(env);
-
-	// Set a busy cursor
-	// will be reset when leaving scope
-	wxBusyCursor wait;
-
-	// Run the command
-	vector<char> input;
-	vector<char> output;
-	const int resultCode = ShellRunner::RawShell(command, input, &output, NULL, env);
-    if ( resultCode == -1) return wxEmptyString; // exec failed
-
-	wxString outputStr;
-	if (!output.empty()) outputStr += wxString(&*output.begin(), wxConvUTF8, output.size());
-#ifdef __WXMSW__
-	// Do newline conversion for Windows only.
-	outputStr.Replace(wxT("\r\n"), wxT("\n"));
-#endif // __WXMSW__
-
-	// Insert output into text
-	return outputStr;
-}
-
 void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	vector<char> command;
 	unsigned int start;
@@ -7331,20 +7304,33 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	}
 	SetPos(end);
 
-	const wxString output = RunShellCommand(command);
-	if (!output.empty()) {
-		// If inserting at last (virtual) line we have to first add a newline
-		if (!doReplace && end == GetLength() && end) {
-			wxChar prevchar;
-			cxLOCKDOC_READ(m_doc)
-				const unsigned int prepos = doc.GetPrevCharPos(end);
-				prevchar = doc.GetChar(prepos);
-			cxENDLOCK
-			if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
-		}
-		const unsigned int bytelen = RawInsert(end, output);
-		SetPos(end + bytelen);
+	if (!command.empty()) {
+		cxEnv env;
+		SetEnv(env);
+
+		{
+			// Set a busy cursor
+			// will be reset when leaving scope
+			wxBusyCursor wait;
+
+			const wxString output = ShellRunner::RunShellCommand(command, env);
+			if (!output.empty()) {
+				// If inserting at last (virtual) line we have to first add a newline
+				if (!doReplace && end == GetLength() && end) {
+					wxChar prevchar;
+					cxLOCKDOC_READ(m_doc)
+						const unsigned int prepos = doc.GetPrevCharPos(end);
+						prevchar = doc.GetChar(prepos);
+					cxENDLOCK
+					if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
+				}
+				const unsigned int bytelen = RawInsert(end, output);
+				SetPos(end + bytelen);
+			}
+
+		} // internal scope for busy cursor
 	}
+
 	Freeze();
 
 	MakeCaretVisible();

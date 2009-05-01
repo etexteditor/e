@@ -269,7 +269,6 @@ public:
 
 	// Shell
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
-	wxString RunShellCommand(const vector<char>& command);
 	void RunCurrentSelectionAsCommand(bool doReplace);
 
 	// Track if doc has been modified

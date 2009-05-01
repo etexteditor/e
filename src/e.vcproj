@@ -1700,6 +1700,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IFrameEditorService.h"
+			>
+		</File>
+		<File
 			RelativePath=".\IPrintableDocument.h"
 			>
 		</File>

@@ -15,9 +15,11 @@
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include <wx/wfstream.h>
+#include <wx/process.h>
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
 #include "eSettings.h"
+#include "Execute.h"
 
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"

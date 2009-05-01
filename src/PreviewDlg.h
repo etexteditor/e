@@ -18,7 +18,7 @@
 #ifdef __WXGTK__
    #include <wx/wx.h>
 #endif
-#include "Execute.h"
+#include "Env.h"
 #include "pcre.h"
 
 #ifdef __WXMSW__
@@ -31,6 +31,7 @@
 class EditorFrame;
 class EditorCtrl;
 class eSettings;
+class wxProcessEvent;
 
 class PreviewDlg : public wxPanel {
 public:

@@ -34,6 +34,7 @@
 #include "jsonreader.h"
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
+#include "Env.h"
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 

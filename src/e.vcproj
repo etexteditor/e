@@ -1283,6 +1283,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Env.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Env.h"
+			>
+		</File>
+		<File
 			RelativePath=".\eSettings.cpp"
 			>
 		</File>

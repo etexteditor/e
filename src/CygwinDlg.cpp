@@ -14,6 +14,7 @@
 #include "CygwinDlg.h"
 #include "eApp.h"
 #include "Execute.h"
+#include "Env.h"
 #include "eDocumentPath.h"
 
 BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)

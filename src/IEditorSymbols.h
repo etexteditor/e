@@ -11,6 +11,4 @@ public:
 	virtual void GotoSymbolPos(unsigned int pos) = 0;
 };
 
-
-
 #endif // __IEDITORSYMBOLS_H__

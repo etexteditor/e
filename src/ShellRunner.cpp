@@ -1,6 +1,8 @@
 #include "ShellRunner.h"
 #include "eApp.h"
 #include "eDocumentPath.h"
+#include "Env.h"
+#include "Execute.h"
 
 // Initialize statics
 wxString ShellRunner::s_bashCmd;

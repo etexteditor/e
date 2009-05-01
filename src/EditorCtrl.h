@@ -26,7 +26,6 @@
 #include "RevTooltip.h"
 #include "tm_syntaxhandler.h"
 #include "SnippetHandler.h"
-#include "Execute.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
 #include "FindFlags.h"
@@ -39,9 +38,9 @@
 #include "IEditorSymbols.h"
 
 // Pre-definitions
+class cxEnv;
 class GutterCtrl;
 class EditorFrame;
-struct EditorChangeState;
 class PreviewDlg;
 class cxRemoteAction;
 class MultilineDataObject;

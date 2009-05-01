@@ -21,6 +21,8 @@
 #include <errno.h>
 #endif
 
+#include "Env.h"
+
 BEGIN_EVENT_TABLE(cxExecute, wxEvtHandler)
 	EVT_END_PROCESS(99, cxExecute::OnEndProcess)
 END_EVENT_TABLE()

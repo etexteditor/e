@@ -1280,9 +1280,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	if (cmdContent.empty()) return; // nothing to do
 
 	// Set up the process environment
-	const bool isUnix = action.isUnix;
 	cxEnv env;
-	SetEnv(env, isUnix, action.bundle);
+	SetEnv(env, action.isUnix, action.bundle);
 
 	if (envVars) {
 		env.SetEnv(*envVars);
@@ -1305,7 +1304,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-		if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return;
+		if (action.isUnix && !((eApp*)wxTheApp)->InitCygwin()) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -1429,7 +1428,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 			// will be reset when leaving scope
 			wxBusyCursor wait;
 
-			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, isUnix, cwd);
+			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, action.isUnix, cwd);
 		}
 		if (pid != 0) wxLogDebug(wxT("shell returned pid = %d"), pid);
 

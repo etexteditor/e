@@ -7698,33 +7698,6 @@ int EditorCtrl::ShowPopupList(const vector<const tmAction*>& actionList) {
 	return ShowPopupList(listMenu);
 }
 
-int EditorCtrl::ShowPopupList(const wxArrayString& list) {
-	// Create the menu
-	wxMenu listMenu;
-	int menuId = 1000;
-	bool shortcuts = true;
-	for (size_t i = 0; i < list.Count(); ++i) {
-		if (list[i].empty()) {
-			listMenu.AppendSeparator();
-			shortcuts = false; // no shortcuts after separator
-		}
-		else {
-			wxString itemText = list[i];
-
-			// Add shortcuts
-			if (shortcuts) {
-				if (i < 9) itemText += wxString::Format(wxT("\t&%u"), i+1);
-				else if (i == 9) itemText += wxT("\t&0");
-			}
-
-			listMenu.Append(new PopupMenuItem(&listMenu, menuId, itemText));
-		}
-		++menuId;
-	}
-
-	return ShowPopupList(listMenu);
-}
-
 int EditorCtrl::ShowPopupList(wxMenu& menu) {
 	MakeCaretVisible();
 	DrawLayout();

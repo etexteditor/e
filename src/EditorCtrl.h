@@ -460,7 +460,6 @@ private:
 
 	// Show lists as a popup menu
 	int ShowPopupList(const vector<const tmAction*>& actionList);
-	int ShowPopupList(const wxArrayString& list);
 	int ShowPopupList(wxMenu& menu);
 
 	void Tab();

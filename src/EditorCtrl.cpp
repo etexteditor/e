@@ -34,6 +34,7 @@
 #include "jsonreader.h"
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
+#include "Env.h"
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
@@ -1280,9 +1281,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	if (cmdContent.empty()) return; // nothing to do
 
 	// Set up the process environment
-	const bool isUnix = action.isUnix;
 	cxEnv env;
-	SetEnv(env, isUnix, action.bundle);
+	SetEnv(env, action.isUnix, action.bundle);
 
 	if (envVars) {
 		env.SetEnv(*envVars);
@@ -1305,7 +1305,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-		if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return;
+		if (action.isUnix && !((eApp*)wxTheApp)->InitCygwin()) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -1429,7 +1429,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 			// will be reset when leaving scope
 			wxBusyCursor wait;
 
-			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, isUnix, cwd);
+			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, action.isUnix, cwd);
 		}
 		if (pid != 0) wxLogDebug(wxT("shell returned pid = %d"), pid);
 
@@ -6220,9 +6220,9 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 			case WXK_F10:
 				{
-					vector<Styler_Syntax::SymbolRef> symbols;
+					vector<SymbolRef> symbols;
 					m_syntaxstyler.GetSymbols(symbols);
-					for (vector<Styler_Syntax::SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
+					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
 						wxLogDebug(wxT("%d-%d -> \"%s\" -> \"%s\""), p->start, p->end, GetText(p->start, p->end).c_str(), p->transform->c_str());
 					}
 				}
@@ -7267,33 +7267,6 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	}
 }
 
-wxString EditorCtrl::RunShellCommand(const vector<char>& command, bool doSetEnv) {
-	if (command.empty()) return wxEmptyString;
-
-	cxEnv env;
-	if (doSetEnv) SetEnv(env);
-
-	// Set a busy cursor
-	// will be reset when leaving scope
-	wxBusyCursor wait;
-
-	// Run the command
-	vector<char> input;
-	vector<char> output;
-	const int resultCode = ShellRunner::RawShell(command, input, &output, NULL, env);
-    if ( resultCode == -1) return wxEmptyString; // exec failed
-
-	wxString outputStr;
-	if (!output.empty()) outputStr += wxString(&*output.begin(), wxConvUTF8, output.size());
-#ifdef __WXMSW__
-	// Do newline conversion for Windows only.
-	outputStr.Replace(wxT("\r\n"), wxT("\n"));
-#endif // __WXMSW__
-
-	// Insert output into text
-	return outputStr;
-}
-
 void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	vector<char> command;
 	unsigned int start;
@@ -7331,20 +7304,30 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	}
 	SetPos(end);
 
-	const wxString output = RunShellCommand(command);
-	if (!output.empty()) {
-		// If inserting at last (virtual) line we have to first add a newline
-		if (!doReplace && end == GetLength() && end) {
-			wxChar prevchar;
-			cxLOCKDOC_READ(m_doc)
-				const unsigned int prepos = doc.GetPrevCharPos(end);
-				prevchar = doc.GetChar(prepos);
-			cxENDLOCK
-			if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
+	{
+		// Set a busy cursor
+		// will be reset when leaving scope
+		wxBusyCursor wait;
+
+		cxEnv env;
+		SetEnv(env);
+		const wxString output = ShellRunner::RunShellCommand(command, env);
+		if (!output.empty()) {
+			// If inserting at last (virtual) line we have to first add a newline
+			if (!doReplace && end == GetLength() && end) {
+				wxChar prevchar;
+				cxLOCKDOC_READ(m_doc)
+					const unsigned int prepos = doc.GetPrevCharPos(end);
+					prevchar = doc.GetChar(prepos);
+				cxENDLOCK
+				if (prevchar != wxT('\n')) end += RawInsert(end, wxT("\n"));
+			}
+			const unsigned int bytelen = RawInsert(end, output);
+			SetPos(end + bytelen);
 		}
-		const unsigned int bytelen = RawInsert(end, output);
-		SetPos(end + bytelen);
-	}
+
+	} // internal scope for busy cursor
+
 	Freeze();
 
 	MakeCaretVisible();
@@ -7711,33 +7694,6 @@ int EditorCtrl::ShowPopupList(const vector<const tmAction*>& actionList) {
 
 		// Add item 
 		listMenu.Append(new PopupMenuItem(&listMenu, 1000+(*p), itemText));
-	}
-
-	return ShowPopupList(listMenu);
-}
-
-int EditorCtrl::ShowPopupList(const wxArrayString& list) {
-	// Create the menu
-	wxMenu listMenu;
-	int menuId = 1000;
-	bool shortcuts = true;
-	for (size_t i = 0; i < list.Count(); ++i) {
-		if (list[i].empty()) {
-			listMenu.AppendSeparator();
-			shortcuts = false; // no shortcuts after separator
-		}
-		else {
-			wxString itemText = list[i];
-
-			// Add shortcuts
-			if (shortcuts) {
-				if (i < 9) itemText += wxString::Format(wxT("\t&%u"), i+1);
-				else if (i == 9) itemText += wxT("\t&0");
-			}
-
-			listMenu.Append(new PopupMenuItem(&listMenu, menuId, itemText));
-		}
-		++menuId;
 	}
 
 	return ShowPopupList(listMenu);
@@ -8432,7 +8388,14 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 	if (!newTabs) SetFocus();
 }
 
-int EditorCtrl::GetSymbols(vector<Styler_Syntax::SymbolRef>& symbols) const {
+void EditorCtrl::GotoSymbolPos(unsigned int pos) {
+	SetPos(pos);
+	MakeCaretVisibleCenter();
+	ReDraw();
+	SetFocus();
+}
+
+int EditorCtrl::GetSymbols(vector<SymbolRef>& symbols) const {
 	// Only return symbols if the entire syntax is parsed
 	if (!m_syntaxstyler.IsParsed() || !m_syntaxHandler.AllBundlesLoaded()) return 0;
 
@@ -8452,8 +8415,8 @@ int EditorCtrl::GetSymbols(vector<Styler_Syntax::SymbolRef>& symbols) const {
 	return res;
 }
 
-wxString EditorCtrl::GetSymbolString(const Styler_Syntax::SymbolRef& sr) const {
-	const Styler_Syntax::SymbolRef sr_debug = sr; // copy so we can see contents in call stack
+wxString EditorCtrl::GetSymbolString(const SymbolRef& sr) const {
+	const SymbolRef sr_debug = sr; // copy so we can see contents in call stack
 
 	const wxString& transform = *(sr_debug.transform);
 
@@ -9259,6 +9222,10 @@ void EditorCtrl::GotoPrevBookmark() {
 	m_lines.SetPos(m_lines.GetLineStartpos(p->line_id));
 	MakeCaretVisible();
 	DrawLayout();
+}
+
+EditorChangeState EditorCtrl::GetChangeState() const {
+	return EditorChangeState(this->GetId(), this->GetChangeToken());
 }
 
 // ------ TextTip -----------------------------------------

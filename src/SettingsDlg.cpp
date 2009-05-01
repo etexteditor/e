@@ -20,6 +20,7 @@
 #ifdef __WXMSW__
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
+#include "Env.h"
 #endif
 
 

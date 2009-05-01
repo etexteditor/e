@@ -1096,6 +1096,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\EditorChangeState.h"
+			>
+		</File>
+		<File
 			RelativePath="EditorCtrl.cpp"
 			>
 			<FileConfiguration
@@ -1279,6 +1283,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Env.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Env.h"
+			>
+		</File>
+		<File
 			RelativePath=".\eSettings.cpp"
 			>
 		</File>
@@ -1320,37 +1332,6 @@
 		<File
 			RelativePath="ExceptionHandler.h"
 			>
-		</File>
-		<File
-			RelativePath="Execute.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="Execute.h"
@@ -1676,6 +1657,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IEditorSymbols.h"
+			>
+		</File>
+		<File
 			RelativePath="IEHtmlWin.cpp"
 			>
 			<FileConfiguration
@@ -1712,6 +1697,14 @@
 		</File>
 		<File
 			RelativePath=".\IFoldingEditor.h"
+			>
+		</File>
+		<File
+			RelativePath=".\IFrameEditorService.h"
+			>
+		</File>
+		<File
+			RelativePath=".\IFrameSymbolService.h"
 			>
 		</File>
 		<File
@@ -2810,6 +2803,10 @@
 		</File>
 		<File
 			RelativePath="SymbolList.h"
+			>
+		</File>
+		<File
+			RelativePath=".\SymbolRef.h"
 			>
 		</File>
 		<File

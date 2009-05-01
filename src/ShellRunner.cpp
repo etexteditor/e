@@ -1,6 +1,8 @@
 #include "ShellRunner.h"
 #include "eApp.h"
 #include "eDocumentPath.h"
+#include "Env.h"
+#include "Execute.h"
 
 // Initialize statics
 wxString ShellRunner::s_bashCmd;
@@ -59,7 +61,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 	else if (isUnix) {
 		if (s_bashCmd.empty()) {
 #ifdef __WXMSW__
-			s_bashCmd = eDocumentPath::CygwinPath() + wxT("\\bin\\bash.exe \"") + tmpfilePath.GetFullPath() + wxT("\"");
+			s_bashCmd = eDocumentPath::CygwinPath() + wxT("\\bin\\bash.exe \"") + eDocumentPath::WinPathToCygwin(tmpfilePath.GetFullPath()) + wxT("\"");
 #else
             s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #endif
@@ -127,3 +129,26 @@ wxString ShellRunner::GetBashCommand(const wxString& cmd, cxEnv& env) {
     return wxT("bash -c \"") + cmd + wxT("\"");
 #endif
 }
+
+// Runs the given command in the given environment.
+// Returns the output as a string, or the empty string if there was an error.
+wxString ShellRunner::RunShellCommand(const vector<char>& command, cxEnv& env) {
+	if (command.empty()) return wxEmptyString;
+
+	// Run the command
+	vector<char> input;
+	vector<char> output;
+	const int resultCode = ShellRunner::RawShell(command, input, &output, NULL, env);
+    if ( resultCode == -1) return wxEmptyString; // exec failed
+
+	wxString outputStr;
+	if (!output.empty()) outputStr += wxString(&*output.begin(), wxConvUTF8, output.size());
+#ifdef __WXMSW__
+	// Do newline conversion for Windows only.
+	outputStr.Replace(wxT("\r\n"), wxT("\n"));
+#endif // __WXMSW__
+
+	// Insert output into text
+	return outputStr;
+}
+

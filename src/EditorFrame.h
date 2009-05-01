@@ -21,7 +21,6 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "DocHistory.h"
-#include "EditorCtrl.h"
 #include <wx/dnd.h>
 #include "GutterCtrl.h"
 #include <wx/regex.h>
@@ -32,6 +31,9 @@
 #include "DirWatcher.h"
 #include "key_hook.h"
 
+#include "IFrameEditorService.h"
+#include "IFrameSymbolService.h"
+
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
 #endif
@@ -39,6 +41,8 @@
 
 // pre-declearations
 class eApp;
+class EditorCtrl;
+struct EditorChangeState;
 //class Incomming;
 class ProjectPane;
 class PreviewDlg;
@@ -151,9 +155,9 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
-class EditorFrame : public KeyHookable<wxFrame> {
+class EditorFrame : public KeyHookable<wxFrame>,
+	public IFrameSymbolService {
 public:
-	// ctor(s)
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect);
 	~EditorFrame();
 
@@ -169,7 +173,10 @@ public:
 	void UpdateTabs();
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
-	EditorCtrl* GetEditorCtrl();
+
+	virtual EditorCtrl* GetEditorCtrl();
+	virtual EditorCtrl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
+	virtual void FocusEditor();
 
 	// Files
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
@@ -229,7 +236,8 @@ public:
 
 	// Symbol List (pane)
 	void ShowSymbolList();
-	void CloseSymbolList();
+	virtual void CloseSymbolList();
+
 	// DirWatcher & RemoteThread
 	DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
 

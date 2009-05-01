@@ -15,13 +15,24 @@
 #define __SYMBOLLIST_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "EditorCtrl.h"
-#include "EditorFrame.h"
 #include "SearchListBox.h"
+#include "IEditorSymbols.h"
+
+// STL can't compile with Level 4
+#ifdef __WXMSW__
+    #pragma warning(push, 1)
+#endif
+#include <vector>
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
+using namespace std;
+
+class IFrameSymbolService;
 
 class SymbolList : public wxPanel {
 public:
-	SymbolList(EditorFrame& parent);
+	SymbolList(IFrameSymbolService& services);
 
 	bool Destroy();
 
@@ -69,17 +80,15 @@ private:
 	};
 
 	// Member variables
-	EditorFrame& m_parentFrame;
+	IFrameSymbolService& m_parentFrame;
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_listBox;
 
 	// Editor state
-	EditorCtrl* m_editorCtrl;
-	int m_editorCtrlId;
-	unsigned int m_changeToken;
-	unsigned int m_pos;
+	IEditorSymbols* m_editorSymbols;
+	EditorChangeState m_editorChangeState;
 
-	vector<Styler_Syntax::SymbolRef> m_symbols;
+	vector<SymbolRef> m_symbols;
 	wxArrayString m_symbolStrings;
 };
 

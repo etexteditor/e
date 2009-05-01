@@ -26,7 +26,6 @@
 #include "RevTooltip.h"
 #include "tm_syntaxhandler.h"
 #include "SnippetHandler.h"
-#include "Execute.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
 #include "FindFlags.h"
@@ -36,8 +35,10 @@
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
 #include "IPrintableDocument.h"
+#include "IEditorSymbols.h"
 
 // Pre-definitions
+class cxEnv;
 class GutterCtrl;
 class EditorFrame;
 class PreviewDlg;
@@ -57,7 +58,8 @@ class EditorBundlePanel;
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
 	public IEditorDoAction,
-	public IPrintableDocument {
+	public IPrintableDocument,
+	public IEditorSymbols {
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -269,12 +271,12 @@ public:
 
 	// Shell
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
-	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
 	void RunCurrentSelectionAsCommand(bool doReplace);
 
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};
 	unsigned int GetChangeToken() const {return m_changeToken;};
+	virtual EditorChangeState GetChangeState() const;
 
 	// Callbacks
 	void SetModifiedCallback(void(*callback)(void*), void* data) {m_modCallback = callback; m_modCallbackData = data;};
@@ -290,8 +292,9 @@ public:
 	wxArrayString GetCompletionList();
 
 	// Symbols
-	int GetSymbols(vector<Styler_Syntax::SymbolRef>& symbols) const;
-	wxString GetSymbolString(const Styler_Syntax::SymbolRef& sr) const;
+	virtual int GetSymbols(vector<SymbolRef>& symbols) const;
+	virtual wxString GetSymbolString(const SymbolRef& sr) const;
+	virtual void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
 	virtual const interval& GetHlBracket() const {return m_hlBracket;};
@@ -457,10 +460,11 @@ private:
 	unsigned int UpdateEditorWidth();
 
 	void ShowTipAtCaret(const wxString& text);
-	int ShowPopupList(const vector<const tmAction*>& actionList);
-	int ShowPopupList(const wxArrayString& list);
-	int ShowPopupList(wxMenu& menu);
 	bool DoShortcut(int keyCode, int modifiers);
+
+	// Show lists as a popup menu
+	int ShowPopupList(const vector<const tmAction*>& actionList);
+	int ShowPopupList(wxMenu& menu);
 
 	void Tab();
 	bool DoTabTrigger(unsigned int wordstart, unsigned int wordend);
@@ -685,7 +689,7 @@ private:
 
 	// Symbol cache
 	mutable unsigned int m_symbolCacheToken;
-	mutable vector<Styler_Syntax::SymbolRef> m_symbolCache;
+	mutable vector<SymbolRef> m_symbolCache;
 
 	// Key state
 	static unsigned long s_ctrlDownTime;

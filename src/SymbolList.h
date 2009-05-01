@@ -15,9 +15,11 @@
 #define __SYMBOLLIST_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "EditorCtrl.h"
-#include "EditorFrame.h"
 #include "SearchListBox.h"
+#include "styler_syntax.h"
+
+class EditorCtrl;
+class EditorFrame;
 
 class SymbolList : public wxPanel {
 public:

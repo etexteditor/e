@@ -12,6 +12,8 @@
  ******************************************************************************/
 
 #include "SymbolList.h"
+#include "EditorCtrl.h"
+#include "EditorFrame.h"
 
 // Ctrl id's
 enum {

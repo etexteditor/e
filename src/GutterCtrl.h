@@ -16,7 +16,8 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "EditorCtrl.h"
-#include "tm_syntaxhandler.h"
+
+struct tmTheme;
 
 class GutterCtrl : public wxControl {
 public:
@@ -75,7 +76,6 @@ private:
 	bool m_sel_startoutside;
 	unsigned int m_sel_startline;
 	unsigned int m_sel_endline;
-
 };
 
 #endif // __GUTTERCTRL_H__

@@ -13,6 +13,7 @@
 
 #include "GutterCtrl.h"
 #include "eApp.h"
+#include "tm_syntaxhandler.h"
 
 BEGIN_EVENT_TABLE(GutterCtrl, wxControl)
 	EVT_PAINT(GutterCtrl::OnPaint)

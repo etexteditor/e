@@ -32,6 +32,7 @@
 #include "key_hook.h"
 
 #include "IFrameEditorService.h"
+#include "IFrameSymbolService.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
@@ -152,11 +153,6 @@ enum {
 	MENU_BOOKMARK_PREVIOUS,
 	MENU_BOOKMARK_TOGGLE,
 	MENU_BOOKMARK_CLEAR
-};
-
-class IFrameSymbolService : public IFrameEditorService {
-public:
-	virtual void CloseSymbolList() = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,

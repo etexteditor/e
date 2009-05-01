@@ -12,7 +12,16 @@
  ******************************************************************************/
 
 #include "SymbolList.h"
-#include "EditorFrame.h"
+#include "IFrameSymbolService.h"
+
+// STL can't compile with Level 4
+#ifdef __WXMSW__
+    #pragma warning(push, 1)
+#endif
+#include <algorithm>
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
 
 // Ctrl id's
 enum {
@@ -27,8 +36,8 @@ BEGIN_EVENT_TABLE(SymbolList, wxPanel)
 	EVT_LISTBOX_DCLICK(CTRL_ALIST, SymbolList::OnAction)
 END_EVENT_TABLE()
 
-SymbolList::SymbolList(wxWindow& parent, IFrameSymbolService& services)
-: wxPanel((wxWindow*)&parent, wxID_ANY),
+SymbolList::SymbolList(IFrameSymbolService& services)
+: wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
   m_parentFrame(services), m_editorSymbols(NULL) {
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);

@@ -32,7 +32,7 @@ class IFrameSymbolService;
 
 class SymbolList : public wxPanel {
 public:
-	SymbolList(wxWindow& parent, IFrameSymbolService& services);
+	SymbolList(IFrameSymbolService& services);
 
 	bool Destroy();
 

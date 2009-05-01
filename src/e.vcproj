@@ -1704,6 +1704,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IFrameSymbolService.h"
+			>
+		</File>
+		<File
 			RelativePath=".\IPrintableDocument.h"
 			>
 		</File>

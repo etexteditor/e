@@ -224,7 +224,7 @@ void EditorCtrl::Init() {
 	m_wrapAtMargin = false;
 	bool doShowMargin = false;
 	int marginChars = 80;
-	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	eSettings& settings = eGetSettings();
 	settings.GetSettingBool(wxT("autoPair"), m_doAutoPair);
 	settings.GetSettingBool(wxT("autoWrap"), m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
@@ -2882,7 +2882,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	// Check if we need to force the native end-of-line
 	bool forceNativeEOL = false; // default value
-	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
+	eGetSettings().GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
 
 	// Save the text
 	cxFileResult savedResult;
@@ -8105,7 +8105,7 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 	int marginChars = 80;
 
 	// Update settings
-	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	eSettings& settings = eGetSettings();
 	settings.GetSettingBool(wxT("autoPair"), self->m_doAutoPair);
 	settings.GetSettingBool(wxT("autoWrap"), self->m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);

@@ -16,6 +16,13 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
+#ifndef WX_PRECOMP
+        #include <wx/control.h>
+        #include <wx/dc.h>
+        #include <wx/dcclient.h>
+        #include <wx/dcmemory.h>
+#endif
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)

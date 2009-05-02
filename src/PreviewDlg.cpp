@@ -578,7 +578,7 @@ void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
 
 // ------ CommandThread -----------------------------------------------------
 
-PreviewDlg::CommandThread::CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, PreviewDlg& parent, const cxEnv& env)
+PreviewDlg::CommandThread::CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env)
 : m_isTerminated(false), m_command(command), m_parent(parent), m_outputPath(outputPath),
   m_truePath(truePath), m_env(env) {
 	m_input.swap(input); // copy as calling function can go out of scope

@@ -49,13 +49,13 @@ public:
 private:
 	class CommandThread : public wxThread {
 	public:
-		CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, PreviewDlg& parent, const cxEnv& env);
+		CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env);
 		void Terminate() {m_isTerminated = true;};
 		virtual void *Entry();
 	private:
 		bool m_isTerminated;
 		const wxString m_command;
-		PreviewDlg& m_parent;
+		wxEvtHandler& m_parent;
 		vector<char> m_input;
 		const wxString& m_outputPath;
 		const wxString& m_truePath;

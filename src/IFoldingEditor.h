@@ -1,8 +1,7 @@
 #ifndef __IFOLDINGEDITOR_H__
 #define __IFOLDINGEDITOR_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include <wx/platform.h>
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)

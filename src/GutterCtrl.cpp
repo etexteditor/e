@@ -12,8 +12,11 @@
  ******************************************************************************/
 
 #include "GutterCtrl.h"
+#include "Catalyst.h" // for interval, for IFoldingEditor
+#include "Fold.h"
 #include "eApp.h"
 #include "tm_syntaxhandler.h"
+#include "EditorCtrl.h"
 
 BEGIN_EVENT_TABLE(GutterCtrl, wxControl)
 	EVT_PAINT(GutterCtrl::OnPaint)
@@ -181,17 +184,17 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 	const unsigned int linecount = lines.GetLineCount();
 
 	// Prepare for foldings
-	const vector<EditorCtrl::cxFold>& folds = m_editorCtrl.GetFolds();
-	vector<EditorCtrl::cxFold>::const_iterator nextFold = folds.begin();
+	const vector<cxFold>& folds = m_editorCtrl.GetFolds();
+	vector<cxFold>::const_iterator nextFold = folds.begin();
 	const unsigned int line_middle = lines.GetLineHeight() / 2;
-	vector<const EditorCtrl::cxFold*> foldStack;
+	vector<const cxFold*> foldStack;
 	if (m_showFolds) {
 		m_editorCtrl.UpdateFolds();
 
 #ifdef __WXDEBUG__
 		bool debug = false;
 		if (debug) {
-			for (vector<EditorCtrl::cxFold>::const_iterator f = folds.begin(); f != folds.end(); ++f) {
+			for (vector<cxFold>::const_iterator f = folds.begin(); f != folds.end(); ++f) {
 				const wxString indent(wxT('.'), f->indent);
 				wxLogDebug(wxT("%d: %s%d"), f->line_id, indent.c_str(), f->type);
 			}
@@ -199,9 +202,9 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 #endif
 
 		for (nextFold = folds.begin(); nextFold != folds.end() && nextFold->line_id < firstline; ++nextFold) {
-			if (nextFold->type == EditorCtrl::cxFOLD_END) {
+			if (nextFold->type == cxFOLD_END) {
 				// check if end marker matches any starter on the stack
-				for (vector<const EditorCtrl::cxFold*>::reverse_iterator p = foldStack.rbegin(); p != foldStack.rend(); ++p) {
+				for (vector<const cxFold*>::reverse_iterator p = foldStack.rbegin(); p != foldStack.rend(); ++p) {
 					if ((*p)->indent == nextFold->indent) {
 						foldStack.erase(p.base()-1, foldStack.end()); // pop
 						break;
@@ -251,7 +254,7 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 			bool drawFoldLine = (!foldStack.empty());
 
 			if (nextFold != folds.end() && nextFold->line_id == i) {
-				if (nextFold->type == EditorCtrl::cxFOLD_START) {
+				if (nextFold->type == cxFOLD_START) {
 					const int ypos2 = lines.GetBottomYPosFromLine(i) - scrollPos;
 					const unsigned int box_y = ypos + line_middle - 5;
 					m_mdc.DrawBitmap(m_bmFoldOpen, m_foldStartX, box_y);
@@ -264,7 +267,7 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 					drawFoldLine = false;
 					++nextFold;
 				}
-				else if (nextFold->type == EditorCtrl::cxFOLD_START_FOLDED) {
+				else if (nextFold->type == cxFOLD_START_FOLDED) {
 					const unsigned int box_y = ypos + line_middle - 5;
 					m_mdc.DrawBitmap(m_bmFoldClosed, m_foldStartX, box_y);
 					drawFoldLine = false;
@@ -273,12 +276,12 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 					i += nextFold->count;
 					while (nextFold != folds.end() && nextFold->line_id <= i) ++nextFold;
 				}
-				else if (nextFold->type == EditorCtrl::cxFOLD_END) {
+				else if (nextFold->type == cxFOLD_END) {
 					if (!foldStack.empty()) {
 						// check if end marker matches any starter on the stack (ignore unmatched)
-						for (vector<const EditorCtrl::cxFold*>::reverse_iterator f = foldStack.rbegin(); f != foldStack.rend(); ++f) {
+						for (vector<const cxFold*>::reverse_iterator f = foldStack.rbegin(); f != foldStack.rend(); ++f) {
 							if (nextFold->indent == (*f)->indent) {
-								vector<const EditorCtrl::cxFold*>::iterator fb = (++f).base();
+								vector<const cxFold*>::iterator fb = (++f).base();
 
 								// Check if we should highlight fold line
 								if (*fb == m_currentFold) m_mdc.SetPen(wxPen(m_edgecolor, 2));
@@ -451,8 +454,8 @@ void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
 		if (y >= 0 && y < lines.GetHeight()) {
 			const unsigned int line_id = lines.GetLineFromYPos(y);
 
-			vector<EditorCtrl::cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
-			if (!foldStack.empty() && foldStack.back()->type == EditorCtrl::cxFOLD_START) {
+			vector<cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
+			if (!foldStack.empty() && foldStack.back()->type == cxFOLD_START) {
 				lines.RemoveAllSelections(); // first click will have selected fold
 				if (m_posBeforeFoldClick != -1) lines.SetPos(m_posBeforeFoldClick); // and moved pos
 
@@ -473,17 +476,17 @@ void GutterCtrl::ClickOnFold(unsigned int y) {
 		const unsigned int line_id = lines.GetLineFromYPos(y);
 
 		// Check if it is a fold marker
-		const vector<EditorCtrl::cxFold>& folds = m_editorCtrl.GetFolds();
-		const EditorCtrl::cxFold target(line_id);
-		vector<EditorCtrl::cxFold>::const_iterator p = lower_bound(folds.begin(), folds.end(), target);
+		const vector<cxFold>& folds = m_editorCtrl.GetFolds();
+		const cxFold target(line_id);
+		vector<cxFold>::const_iterator p = lower_bound(folds.begin(), folds.end(), target);
 
 		if (p != folds.end() && p->line_id == line_id) {
-			if (p->type == EditorCtrl::cxFOLD_START) {
+			if (p->type == cxFOLD_START) {
 				m_editorCtrl.Fold(line_id);
 				m_editorCtrl.DrawLayout();
 				return;
 			}
-			else if (p->type == EditorCtrl::cxFOLD_START_FOLDED) {
+			else if (p->type == cxFOLD_START_FOLDED) {
 				m_editorCtrl.UnFold(line_id);
 				m_editorCtrl.DrawLayout();
 				return;
@@ -552,7 +555,7 @@ void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
 	else if (event.GetX() > (int)m_foldStartX && y >= 0 && y < lines.GetHeight()) {
 		const unsigned int line_id = lines.GetLineFromYPos(y);
 
-		vector<EditorCtrl::cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
+		vector<cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
 		if (!foldStack.empty()) {
 			m_currentFold = foldStack.back();
 			DrawGutter(); // Redraw gutter to show highlights

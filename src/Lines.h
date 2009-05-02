@@ -9,7 +9,6 @@
 #include "tm_syntaxhandler.h"
 #include "LineListWrap.h"
 #include "LineListNoWrap.h"
-#include "IFoldingEditor.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -20,6 +19,8 @@
     #pragma warning(pop)
 #endif
 using namespace std;
+
+class IFoldingEditor;
 
 class Lines {
 public:

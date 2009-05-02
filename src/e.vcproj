@@ -1545,6 +1545,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Fold.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Fold.h"
+			>
+		</File>
+		<File
 			RelativePath="ftpparse.cpp"
 			>
 			<FileConfiguration

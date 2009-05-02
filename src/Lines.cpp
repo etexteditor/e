@@ -14,6 +14,8 @@
 #include "Lines.h"
 #include "doc_byte_iter.h"
 #include "Document.h"
+#include "IFoldingEditor.h"
+#include "Fold.h"
 
 Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme)
 : dc(dc), m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),
@@ -952,9 +954,9 @@ void Lines::Draw(int xoffset, int yoffset, wxRect& rect) {
 		unsigned int firstline = ll->find_ypos(top_ypos);
 
 		// Prepare for foldings
-		const vector<IFoldingEditor::cxFold>& folds = m_editorCtrl.GetFolds();
-		const IFoldingEditor::cxFold target(firstline);
-		vector<IFoldingEditor::cxFold>::const_iterator nextFold = lower_bound(folds.begin(), folds.end(), target);
+		const vector<cxFold>& folds = m_editorCtrl.GetFolds();
+		const cxFold target(firstline);
+		vector<cxFold>::const_iterator nextFold = lower_bound(folds.begin(), folds.end(), target);
 
 		// Draw one line at a time
 		const unsigned int linecount = ll->size();
@@ -974,7 +976,7 @@ void Lines::Draw(int xoffset, int yoffset, wxRect& rect) {
 			// Check if line is folded
 			bool isFolded = false;
 			if (nextFold != folds.end() && nextFold->line_id == firstline) {
-				if (nextFold->type == IFoldingEditor::cxFOLD_START_FOLDED) isFolded = true;
+				if (nextFold->type == cxFOLD_START_FOLDED) isFolded = true;
 				else ++nextFold;
 			}
 
@@ -1147,12 +1149,12 @@ unsigned int Lines::FoldedYPos(unsigned int ypos) const {
 	const unsigned int height = GetUnFoldedHeight();
 	wxASSERT(ypos <= height);
 
-	const vector<IFoldingEditor::cxFold>& m_folds = m_editorCtrl.GetFolds();
+	const vector<cxFold>& m_folds = m_editorCtrl.GetFolds();
 	unsigned int folded_ypos = ypos;
 
-	vector<IFoldingEditor::cxFold>::const_iterator p = m_folds.begin();
+	vector<cxFold>::const_iterator p = m_folds.begin();
 	while (p != m_folds.end()) {
-		if (p->type == IFoldingEditor::cxFOLD_START_FOLDED) {
+		if (p->type == cxFOLD_START_FOLDED) {
 			// Check if we have passed ypos
 			const unsigned int line_bottom = ll->bottom(p->line_id);
 			if (line_bottom >= ypos) break;
@@ -1179,12 +1181,12 @@ unsigned int Lines::UnFoldedYPos(unsigned int ypos) const {
 	// you can click outside text - wxASSERT((int)ypos <= height);
 	wxASSERT((int)ypos >= 0);
 
-	const vector<IFoldingEditor::cxFold>& m_folds = m_editorCtrl.GetFolds();
+	const vector<cxFold>& m_folds = m_editorCtrl.GetFolds();
 	unsigned int unfolded_ypos = ypos;
 
-	vector<IFoldingEditor::cxFold>::const_iterator p = m_folds.begin();
+	vector<cxFold>::const_iterator p = m_folds.begin();
 	while (p != m_folds.end()) {
-		if (p->type == IFoldingEditor::cxFOLD_START_FOLDED) {
+		if (p->type == cxFOLD_START_FOLDED) {
 			// Check if we have passed ypos
 			const unsigned int line_bottom = ll->bottom(p->line_id);
 			if (line_bottom >= unfolded_ypos) break;

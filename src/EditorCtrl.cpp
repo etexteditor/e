@@ -35,6 +35,7 @@
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
 #include "Env.h"
+#include "Fold.h"
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
@@ -8587,10 +8588,6 @@ void EditorCtrl::Print() {
 
 #endif  //__WXDEBUG__
 
-EditorCtrl::cxFold::cxFold(unsigned int line, cxFoldType type, unsigned int indent)
-: line_id(line), type(type), count(0), indent(indent) {
-}
-
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {
 	vector<unsigned int> folds;
 	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
@@ -8661,7 +8658,7 @@ void EditorCtrl::ParseFoldMarkers() {
 	m_foldedLines = i;
 }
 
-vector<EditorCtrl::cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line_id, vector<cxFold>::iterator insertPos, bool doFold) {
+vector<cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line_id, vector<cxFold>::iterator insertPos, bool doFold) {
 	wxASSERT(line_id < m_lines.GetLineCount());
 
 	const unsigned int lineStart = m_lines.GetLineStartpos(line_id);
@@ -9013,9 +9010,9 @@ bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigne
 	wxASSERT(pos <= GetLength());
 	const unsigned int line_id = m_lines.GetLineFromCharPos(pos);
 
-	vector<EditorCtrl::cxFold>::const_iterator p = m_folds.begin();
+	vector<cxFold>::const_iterator p = m_folds.begin();
 	while (p != m_folds.end()) {
-		if (p->type == EditorCtrl::cxFOLD_START_FOLDED) {
+		if (p->type == cxFOLD_START_FOLDED) {
 			// Check if we have passed pos
 			const unsigned int line_end = m_lines.GetLineEndpos(p->line_id, true);
 			if (line_end >= pos) return false;
@@ -9037,15 +9034,15 @@ bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigne
 	return false;
 }
 
-vector<EditorCtrl::cxFold*> EditorCtrl::GetFoldStack(unsigned int line_id) {
+vector<cxFold*> EditorCtrl::GetFoldStack(unsigned int line_id) {
 	vector<cxFold*> foldStack;
 	if (m_lines.isLineVirtual(line_id)) return foldStack;
 
 	wxASSERT(line_id < m_foldLineCount);
 
-	for (vector<EditorCtrl::cxFold>::iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
+	for (vector<cxFold>::iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
 
-		if (p->type == EditorCtrl::cxFOLD_END) {
+		if (p->type == cxFOLD_END) {
 			// Check if end marker matches any starter on the stack (ignore unmatched)
 			for (vector<cxFold*>::reverse_iterator f = foldStack.rbegin(); f != foldStack.rend(); ++f) {
 				if (p->indent == (*f)->indent) {

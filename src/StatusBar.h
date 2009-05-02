@@ -17,6 +17,12 @@
 #include "EditorChangeState.h"
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+
+#ifndef WX_PRECOMP
+        #include <wx/statusbr.h>
+        #include <wx/dialog.h>
+#endif
+
 #include "SymbolRef.h"
 // STL can't compile with Level 4
 #ifdef __WXMSW__

@@ -3,6 +3,10 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
+#ifndef WX_PRECOMP
+        #include <wx/string.h>
+#endif
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(disable:4786)

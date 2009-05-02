@@ -30,8 +30,12 @@ class EditorFrame;
 // Constants
 #define ID_UPDATES_AVAILABLE 100
 
+class IGetSyntaxHandler {
+public:
+	virtual TmSyntaxHandler& GetSyntaxHandler() const = 0;
+};
 
-class eApp : public wxApp, public IGetSettings
+class eApp : public wxApp, public IGetSettings, public IGetSyntaxHandler
 {
 public:
 	virtual bool OnInit();
@@ -40,7 +44,7 @@ public:
 	// Member functions
 	bool ExecuteCmd(const wxString& cmd);
 	bool ExecuteCmd(const wxString& cmd, wxString& result);
-	TmSyntaxHandler& GetSyntaxHandler() {return *m_pSyntaxHandler;};
+	virtual TmSyntaxHandler& GetSyntaxHandler() const {return *m_pSyntaxHandler;};
 
 	const wxString& GetAppPath() const {return m_appPath;};
 	const wxString& GetAppDataPath() const {return m_appDataPath;};

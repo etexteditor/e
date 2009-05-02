@@ -1,6 +1,7 @@
 #include "Env.h"
 #include "eDocumentPath.h"
 #include <wx/filename.h>
+#include <wx/utils.h>
 
 void cxEnv::SetEnv(const wxString& key, const wxString& value) {
 	wxASSERT(!key.empty());

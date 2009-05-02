@@ -21,6 +21,10 @@
 #include "BundleMenu.h"
 #include "pcre.h"
 
+#ifdef __WXGTK__
+  #include <gdk/gdk.h>
+#endif
+
 #include "Document.h"
 #include "IEditorDoAction.h"
 

@@ -15,6 +15,11 @@
 #define __SYMBOLLIST_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+
+#ifndef WX_PRECOMP
+        #include <wx/textctrl.h>
+#endif
+
 #include "SearchListBox.h"
 #include "IEditorSymbols.h"
 

@@ -3,6 +3,10 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
+#ifndef WX_PRECOMP
+        #include <wx/string.h>
+#endif
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(disable:4786)
@@ -23,7 +27,7 @@ public:
 	~ShellRunner(void);
 
 	static long RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix=true, const wxString& cwd=wxEmptyString);
-	static wxString ShellRunner::RunShellCommand(const vector<char>& command, cxEnv& env);
+	static wxString RunShellCommand(const vector<char>& command, cxEnv& env);
 
 	static wxString GetBashCommand(const wxString& cmd, cxEnv& env);
 

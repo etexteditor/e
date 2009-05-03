@@ -31,7 +31,7 @@ using namespace std;
 
 class FindCmdDlg : public wxDialog {
 public:
-	FindCmdDlg(wxWindow *parent, const deque<const wxString*>& scope);
+	FindCmdDlg(wxWindow *parent, const vector<const tmAction*>& actions);
 	~FindCmdDlg();
 	const tmAction* GetSelection() {return m_cmdList->GetSelectedAction();};
 
@@ -84,8 +84,7 @@ private:
 	};
 
 	// Member variables
-	const deque<const wxString*>& m_scope;
-	vector<const tmAction*> m_actions;
+	const vector<const tmAction*>& m_actions;
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_cmdList;
 };

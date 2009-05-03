@@ -1355,8 +1355,10 @@ void EditorCtrl::FilterThroughCommand() {
 
 void EditorCtrl::DoActionFromDlg() {
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
+	vector<const tmAction*> actions;
+	m_syntaxHandler.GetAllActions(scope, actions);
 
-	FindCmdDlg dlg(this, scope);
+	FindCmdDlg dlg(this, actions);
 	if (dlg.ShowModal() == wxID_OK) {
 		const tmAction* action = dlg.GetSelection();
 		if (action) DoAction(*action, NULL, false);

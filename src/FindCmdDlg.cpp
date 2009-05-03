@@ -13,7 +13,6 @@
 
 #include "FindCmdDlg.h"
 #include <algorithm>
-#include "IGetSyntaxHandler.h"
 
 // Ctrl id's
 enum {
@@ -27,13 +26,10 @@ BEGIN_EVENT_TABLE(FindCmdDlg, wxDialog)
 	EVT_LISTBOX_DCLICK(CTRL_ALIST, FindCmdDlg::OnAction)
 END_EVENT_TABLE()
 
-FindCmdDlg::FindCmdDlg(wxWindow *parent, const deque<const wxString*>& scope)
-:  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER), m_scope(scope) {
-
+FindCmdDlg::FindCmdDlg(wxWindow *parent,  const vector<const tmAction*>& actions):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER), m_actions(actions) 
+{
 	SetTitle (_("Select Bundle Item"));
-
-	// Get list of all commands available from current scope
-	dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetAllActions(m_scope, m_actions);
 
 	// Create Layout
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);

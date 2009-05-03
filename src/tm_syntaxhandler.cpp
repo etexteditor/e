@@ -13,7 +13,8 @@
 
 #include "tm_syntaxhandler.h"
 #include <wx/dir.h>
-#include "eApp.h"
+#include "IAppPaths.h"
+#include "eSettings.h"
 #include "matchers.h"
 #include "Dispatcher.h"
 #include <wx/tokenzr.h>
@@ -41,7 +42,7 @@
 const wxString TmSyntaxHandler::s_emptyString;
 
 TmSyntaxHandler::TmSyntaxHandler(Dispatcher& disp, bool clearCache)
-: m_plistHandler(((eApp*)wxTheApp)->GetAppPath(), ((eApp*)wxTheApp)->GetAppDataPath(), clearCache),
+: m_plistHandler(dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath(), dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath(), clearCache),
   m_dispatcher(disp), m_styleNode(NULL), m_bundleMenu(NULL), m_nextMenuID(9000), m_nextFoldID(0), m_doUpdateBundles(true),
   m_nextBundle(0), m_currentSyntax(NULL), m_currentMatchers(NULL), m_currentParsedReps(NULL), m_repsInParsing(NULL) {
 	// Initialize TinyXml

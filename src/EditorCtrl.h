@@ -46,14 +46,6 @@ class cxRemoteAction;
 class MultilineDataObject;
 class EditorBundlePanel;
 
-// Defines (for synchronizations during multi-threading)
-/*#define cxLOCKEDIT_READ {wxCriticalSectionLocker cx_lock(m_catalyst.GetReadLock()); \
-									  const Document& doc = m_doc.GetDoc(); \
-									  const Lines& lines = m_lines;
-#define cxLOCKEDIT_WRITE {wxCriticalSectionLocker cx_lock(m_catalyst.GetWriteLock()); \
-									  Document& doc = m_doc.GetDoc(); \
-									  Lines& lines = m_lines;
-*/
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,

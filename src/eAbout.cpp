@@ -22,9 +22,11 @@ BEGIN_EVENT_TABLE(eAbout, wxDialog)
 	EVT_BUTTON(2, eAbout::OnRegister)
 END_EVENT_TABLE()
 
+
 eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
 	const bool isregistered = cat.IsRegistered();
+	const wxString& versionName = ((eApp*)wxTheApp)->VersionName();
 
 	SetTitle (_("About e"));
 
@@ -40,7 +42,7 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 	appname->SetFont(wxFont(20, wxDEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
 
 	infopane->Add(appname);
-	infopane->Add(new wxStaticText(this, -1, _("Version: " + ((eApp*)wxTheApp)->m_version_name)));
+	infopane->Add(new wxStaticText(this, -1, _("Version: " + versionName)));
 
 	infopane->Add(0,10,1);
 
@@ -138,6 +140,5 @@ eAbout::LogoPanel::LogoPanel(wxWindow *parent)
 
 void eAbout::LogoPanel::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxPaintDC dc(this);
-
 	dc.DrawBitmap(bitmap, 0, 0, true);
 }

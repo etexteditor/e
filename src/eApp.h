@@ -44,6 +44,8 @@ public:
 	virtual bool OnInit();
 	int OnExit();
 
+	const wxString& VersionName() const { return m_version_name; }
+
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);
 	virtual bool ExecuteCmd(const wxString& cmd, wxString& result);
@@ -76,9 +78,12 @@ public:
     virtual bool OnCmdLineError(wxCmdLineParser&) {return true;}
 #endif // wxUSE_CMDLINE_PARSER
         
+private:
 	// Member variables
 	EditorFrame* frame;
 	wxString m_version_name;
+
+public:
 	unsigned int m_version_id;
 
 #ifdef __WXDEBUG__

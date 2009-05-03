@@ -13,10 +13,10 @@
 
 #include "StatusBar.h"
 #include "EditorFrame.h"
-#include "eApp.h"
 #include "BundleMenu.h"
 #include <wx/fontmap.h>
 #include "EditorCtrl.h"
+#include "IGetSyntaxHandler.h"
 
 // Menu id's
 enum {
@@ -177,7 +177,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 		const wxString& current = m_editorCtrl->GetSyntaxName();
 
 		// Get syntaxes and sort
-		vector<cxSyntaxInfo*> syntaxes = ((eApp*)wxTheApp)->GetSyntaxHandler().GetSyntaxes();
+		vector<cxSyntaxInfo*> syntaxes = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetSyntaxes();
 		sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
 
 		// Syntax submenu

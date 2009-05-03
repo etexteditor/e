@@ -352,6 +352,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IGetSyntaxHandler.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IPrintableDocument.h"
 				>
 			</File>

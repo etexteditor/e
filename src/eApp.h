@@ -22,6 +22,7 @@
 #include "eIpcServer.h"
 #include <wx/ffile.h>
 #include "eSettings.h"
+#include "IGetSyntaxHandler.h"
 
 // pre-declearations
 class TmSyntaxHandler;
@@ -29,11 +30,6 @@ class EditorFrame;
 
 // Constants
 #define ID_UPDATES_AVAILABLE 100
-
-class IGetSyntaxHandler {
-public:
-	virtual TmSyntaxHandler& GetSyntaxHandler() const = 0;
-};
 
 class eApp : public wxApp, public IGetSettings, public IGetSyntaxHandler
 {

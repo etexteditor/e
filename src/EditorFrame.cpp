@@ -206,7 +206,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, const wxRect& rect)
-	: m_catalyst(cat), m_settings(((eApp*)wxTheApp)->GetSettings()), dispatcher(cat.GetDispatcher()), m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
+	: m_catalyst(cat), m_settings(eGetSettings()), dispatcher(cat.GetDispatcher()), m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
 	 m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL),
 	 m_symbolList(NULL), m_pStatBar(NULL),
 	   m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
@@ -1497,7 +1497,7 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 	m_frameManager.Update();
 
 	if (!project.empty()) {
-		eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+		eSettings& settings = eGetSettings();
 		settings.SetSettingBool(wxT("showproject"), true);
 		settings.SetSettingString(wxT("project"), project);
 		settings.AddRecentProject(project);

@@ -104,9 +104,8 @@ FindCmdDlg::ActionList::ActionList(wxWindow* parent, wxWindowID id, const vector
 
 void FindCmdDlg::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
 	const bool isCurrent = IsCurrent(n);
+	dc.SetTextForeground(isCurrent ? m_hlTextColor : m_textColor);
 
-	if (isCurrent) dc.SetTextForeground(m_hlTextColor);
-	else dc.SetTextForeground(m_textColor);
 	const unsigned int ypos = rect.y + m_topMargen;
 	unsigned int rightBorder = rect.GetRight();
 
@@ -236,8 +235,7 @@ void FindCmdDlg::ActionList::Find(const wxString& searchtext) {
 
 const tmAction* FindCmdDlg::ActionList::GetSelectedAction() {
 	const int sel = GetSelection();
-	if (sel == -1) return NULL;
-	else return m_items[sel].action;
+	return sel == -1 ? NULL : m_items[sel].action;
 }
 
 

@@ -699,7 +699,8 @@ void* UpdaterThread::Entry() {
 	wxASSERT(m_http);
 
 	const eApp& app = *((eApp*)wxTheApp);
-	const unsigned int thisVersion = app.m_version_id;
+	const unsigned int thisVersion = app.VersionId();
+
 	// Set a cookie so the server can count unique requests
 	wxString cookie;
 	if (app.IsRegistered()) cookie = wxString::Format(wxT("%s.%u.*"), app.GetId().ToString().c_str(), thisVersion);

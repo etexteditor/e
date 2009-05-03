@@ -45,6 +45,7 @@ public:
 	int OnExit();
 
 	const wxString& VersionName() const { return m_version_name; }
+	const unsigned int VersionId() const { return m_version_id; }
 
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);
@@ -82,9 +83,9 @@ private:
 	// Member variables
 	EditorFrame* frame;
 	wxString m_version_name;
+	unsigned int m_version_id;
 
 public:
-	unsigned int m_version_id;
 
 #ifdef __WXDEBUG__
 	void OnAssertFailure(const wxChar *file, int line, const wxChar *cond, const wxChar *msg);

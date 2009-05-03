@@ -328,3 +328,10 @@ bool eDocumentPath::IsRemotePath(const wxString& path) {
 bool eDocumentPath::IsBundlePath(const wxString& path) {
 	return (path.StartsWith(wxT("bundle://")));
 }
+
+wxString eDocumentPath::GetAppDataTempPath() {
+	// Create temp buffer file
+	const wxString tempPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath() + wxT("temp") + wxFILE_SEP_PATH;
+	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
+	return wxFileName::CreateTempFileName(tempPath);
+}

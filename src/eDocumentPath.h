@@ -17,6 +17,8 @@ public:
 	static bool IsBundlePath(const wxString& path);
 	static bool IsRemotePath(const wxString& path);
 
+	static wxString GetAppDataTempPath();
+
 #ifdef __WXMSW__
 
 	static wxString GetCygwinDir();

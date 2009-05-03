@@ -3149,7 +3149,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 		// If the path points to a remote file, we have to save it to a temp bufferfile first.
 		if (eDocumentPath::IsRemotePath(path)) {
 			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(path, false);
-			m_path = EditorFrame::GetTempPath();
+			m_path = eDocumentPath::GetAppDataTempPath();
 			m_remotePath = path;
 
 			cxLOCKDOC_WRITE(m_doc)

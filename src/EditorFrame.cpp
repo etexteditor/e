@@ -1610,7 +1610,7 @@ wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp)
 	wxASSERT(rp && rp->IsValid());
 
 	// Create temp buffer file
-	const wxString buffPath = GetTempPath();
+	const wxString buffPath = eDocumentPath::GetAppDataTempPath();
 
 	// Download file
 	while(1) {
@@ -1636,13 +1636,6 @@ wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp)
 wxDateTime EditorFrame::GetRemoteDate(const wxString& url, const RemoteProfile* rp) {
 	wxASSERT(rp && rp->IsValid());
 	return GetRemoteThread().GetModDate(url, *rp);
-}
-
-wxString EditorFrame::GetTempPath() {
-	// Create temp buffer file
-	const wxString tempPath = ((eApp*)wxTheApp)->GetAppDataPath() + wxT("temp") + wxFILE_SEP_PATH;
-	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
-	return wxFileName::CreateTempFileName(tempPath);
 }
 
 const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool withDir) {

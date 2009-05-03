@@ -214,7 +214,6 @@ public:
 	wxString DownloadFile(const wxString& url, const RemoteProfile* rp);
 	wxDateTime GetRemoteDate(const wxString& url, const RemoteProfile* rp);
 	virtual bool AskRemoteLogin(const RemoteProfile* rp);
-	static wxString GetTempPath();
 
 	// Bundle Editor support functions
 	void ShowBundleManager();

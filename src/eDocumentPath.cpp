@@ -6,7 +6,8 @@
 #endif
 
 // Needed to get app path, to find the post-cygwin install script
-#include "eApp.h"
+#include "IAppPaths.h"
+#include "eSettings.h"
 
 eDocumentPath::eDocumentPath(void){}
 eDocumentPath::~eDocumentPath(void){}
@@ -187,7 +188,7 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 
 void eDocumentPath::InitCygwinOnce(wxWindow *parentWindow) {
 	bool shouldPromptUserForCygUpdate = true;
-	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
+	eGetSettings().GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
 
 	// If user has previously chosen not to install/update cygwin, then
 	// we will not bother him on startup (it will still show
@@ -236,7 +237,7 @@ void run_cygwin_dlg(wxWindow *parentWindow, const cxCygwinDlgMode mode){
 	CygwinDlg dlg(parentWindow, mode);
 
 	const bool cygUpdate = (dlg.ShowModal() == wxID_OK);
-	((eApp*)wxTheApp)->GetSettings().SetSettingBool(wxT("cygupdate"), cygUpdate);
+	eGetSettings().SetSettingBool(wxT("cygupdate"), cygUpdate);
 }
 
 // 
@@ -245,7 +246,7 @@ void run_cygwin_dlg(wxWindow *parentWindow, const cxCygwinDlgMode mode){
 wxDateTime get_last_cygwin_update() {
 	wxDateTime stampTime;
 	wxLongLong dateVal;
-	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
+	eSettings& settings = eGetSettings();
 	if (settings.GetSettingLong(wxT("cyg_date"), dateVal)) stampTime = wxDateTime(dateVal);
 
 	// In older versions it could be saved as filestamp
@@ -282,7 +283,7 @@ bool eDocumentPath::InitCygwin(wxWindow *parentWindow, const bool silent) {
 	}
 
 	// Get last cygwin update, and see if we need to reinstall
-	const wxString supportPath = ((eApp*)wxTheApp)->GetAppPath() + wxT("support\\bin\\cygwin-post-install.sh");
+	const wxString supportPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath() + wxT("support\\bin\\cygwin-post-install.sh");
 	const wxFileName supportFile(supportPath);
 
 	wxDateTime stampTime = get_last_cygwin_update();

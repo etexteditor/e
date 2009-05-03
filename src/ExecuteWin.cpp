@@ -13,7 +13,7 @@
 
 #include "Execute.h"
 #include <wx/filename.h>
-#include "eApp.h"
+#include "IAppPaths.h"
 
 #ifndef __WXMSW__
 #include <sys/types.h>

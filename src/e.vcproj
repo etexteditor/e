@@ -328,6 +328,10 @@
 			Name="Interfaces"
 			>
 			<File
+				RelativePath=".\IAppPaths.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IEditorDoAction.h"
 				>
 			</File>

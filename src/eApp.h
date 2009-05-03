@@ -23,6 +23,7 @@
 #include <wx/ffile.h>
 #include "eSettings.h"
 #include "IGetSyntaxHandler.h"
+#include "IAppPaths.h"
 
 // pre-declearations
 class TmSyntaxHandler;
@@ -30,12 +31,6 @@ class EditorFrame;
 
 // Constants
 #define ID_UPDATES_AVAILABLE 100
-
-class IAppPaths {
-public:
-	virtual const wxString& GetAppPath() const = 0;
-	virtual const wxString& GetAppDataPath() const = 0;
-};
 
 class eApp : public wxApp, public IGetSettings, public IGetSyntaxHandler, public IAppPaths
 {

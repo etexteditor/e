@@ -18,6 +18,12 @@
 #include "EditorCtrl.h"
 #include "IGetSyntaxHandler.h"
 
+unsigned int _gutter_digits_in_number(unsigned int number) {
+	unsigned int count = 1; // minimum is one
+	while ((number /= 10) != 0) ++count;
+	return count;
+}
+
 BEGIN_EVENT_TABLE(GutterCtrl, wxControl)
 	EVT_PAINT(GutterCtrl::OnPaint)
 	EVT_SIZE(GutterCtrl::OnSize)
@@ -122,16 +128,13 @@ void GutterCtrl::UpdateTheme() {
 	mdc.Clear();
 	mdc.SetBrush(m_edgecolor);
 	mdc.DrawCircle(5,5,5);
-
 }
 
 unsigned GutterCtrl::CalcLayout(unsigned int height) {
-	//if (!m_editorCtrl) return; // We can be called before editorCtrl is valid
 	const Lines& lines = m_editorCtrl.m_lines;
 
-	// Calculate the number of digits in max linenumber
-	const unsigned int linecount = lines.GetLineCount();
-	const int digits = wxMax(DigitsInNumber(linecount), 2); // 2 is min
+	// Calculate the number of digits in max linenumber; reserve space for at least 2
+	const int digits = wxMax(_gutter_digits_in_number(lines.GetLineCount()), 2);
 
 	// Resize control
 	m_max_digits = digits;
@@ -160,7 +163,6 @@ void GutterCtrl::SetGutterRight(bool doMove) {
 }
 
 void GutterCtrl::DrawGutter(wxDC& dc) {
-	//if (!m_editorCtrl) return; // We can be called before editorCtrl is valid
 	Lines& lines = m_editorCtrl.m_lines;
 
 	const wxSize size = GetClientSize();
@@ -202,17 +204,17 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 #endif
 
 		for (nextFold = folds.begin(); nextFold != folds.end() && nextFold->line_id < firstline; ++nextFold) {
-			if (nextFold->type == cxFOLD_END) {
-				// check if end marker matches any starter on the stack
-				for (vector<const cxFold*>::reverse_iterator p = foldStack.rbegin(); p != foldStack.rend(); ++p) {
-					if ((*p)->indent == nextFold->indent) {
-						foldStack.erase(p.base()-1, foldStack.end()); // pop
-						break;
-					}
-				}
-			}
-			else {
+			if (nextFold->type != cxFOLD_END) {
 				foldStack.push_back(&*nextFold);
+				continue;
+			}
+
+			// check if end marker matches any starter on the stack
+			for (vector<const cxFold*>::reverse_iterator p = foldStack.rbegin(); p != foldStack.rend(); ++p) {
+				if ((*p)->indent != nextFold->indent) continue;
+
+				foldStack.erase(p.base()-1, foldStack.end()); // pop
+				break;
 			}
 		}
 	}
@@ -303,7 +305,6 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 					}
 					++nextFold;
 				}
-
 			}
 
 			if (drawFoldLine) {
@@ -328,15 +329,6 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 #endif
 }
 
-
-unsigned int GutterCtrl::DigitsInNumber(unsigned int number) { // static
-	unsigned int count = 1; // minimum is one
-	while ((number /= 10) != 0) {
-		++count;
-	}
-
-	return count;
-}
 
 void GutterCtrl::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxPaintDC dc(this);

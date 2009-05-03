@@ -48,8 +48,6 @@ public:
 	void DrawGutter() {wxClientDC dc(this);DrawGutter(dc);};
 	void DrawGutter(wxDC& dc);
 
-	static unsigned int DigitsInNumber(unsigned int number);
-
 private:
 	void ClickOnFold(unsigned int y);
 

@@ -31,7 +31,13 @@ class EditorFrame;
 // Constants
 #define ID_UPDATES_AVAILABLE 100
 
-class eApp : public wxApp, public IGetSettings, public IGetSyntaxHandler
+class IAppPaths {
+public:
+	virtual const wxString& GetAppPath() const = 0;
+	virtual const wxString& GetAppDataPath() const = 0;
+};
+
+class eApp : public wxApp, public IGetSettings, public IGetSyntaxHandler, public IAppPaths
 {
 public:
 	virtual bool OnInit();
@@ -42,8 +48,8 @@ public:
 	bool ExecuteCmd(const wxString& cmd, wxString& result);
 	virtual TmSyntaxHandler& GetSyntaxHandler() const {return *m_pSyntaxHandler;};
 
-	const wxString& GetAppPath() const {return m_appPath;};
-	const wxString& GetAppDataPath() const {return m_appDataPath;};
+	virtual const wxString& GetAppPath() const {return m_appPath;};
+	virtual const wxString& GetAppDataPath() const {return m_appDataPath;};
 
 	// Settings functions
 	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};

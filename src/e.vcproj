@@ -340,6 +340,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IExecuteAppCommand.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IFoldingEditor.h"
 				>
 			</File>

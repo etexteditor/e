@@ -24,6 +24,7 @@
 #include "eSettings.h"
 #include "IGetSyntaxHandler.h"
 #include "IAppPaths.h"
+#include "IExecuteAppCommand.h"
 
 // pre-declearations
 class TmSyntaxHandler;
@@ -32,11 +33,6 @@ class EditorFrame;
 // Constants
 #define ID_UPDATES_AVAILABLE 100
 
-class IExecuteAppCommand {
-public:
-	virtual bool ExecuteCmd(const wxString& cmd) = 0;
-	virtual bool ExecuteCmd(const wxString& cmd, wxString& result) = 0;
-};
 
 class eApp : public wxApp, 
 	public IGetSettings, 

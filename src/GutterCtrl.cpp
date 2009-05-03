@@ -14,9 +14,9 @@
 #include "GutterCtrl.h"
 #include "Catalyst.h" // for interval, for IFoldingEditor
 #include "Fold.h"
-#include "eApp.h"
 #include "tm_syntaxhandler.h"
 #include "EditorCtrl.h"
+#include "IGetSyntaxHandler.h"
 
 BEGIN_EVENT_TABLE(GutterCtrl, wxControl)
 	EVT_PAINT(GutterCtrl::OnPaint)
@@ -33,7 +33,7 @@ END_EVENT_TABLE()
 GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id)
 	: wxControl(&parent, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
 	  m_editorCtrl(parent), m_mdc(), m_bitmap(1,1), m_width(0), m_gutterLeft(true), m_showBookmarks(true), m_showFolds(true), m_currentFold(NULL), m_posBeforeFoldClick(-1),
-  m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_bgcolor(m_theme.gutterColor),
+  m_theme(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetTheme()), m_bgcolor(m_theme.gutterColor),
   m_currentSel(-1)
 {
 	m_mdc.SelectObject(m_bitmap);

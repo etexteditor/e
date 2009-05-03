@@ -1128,10 +1128,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\eAppSettings.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\EditorBundlePanel.cpp"
 			>
 		</File>

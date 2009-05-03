@@ -759,3 +759,8 @@ void* UpdaterThread::Entry() {
 
 	return NULL;
 }
+
+// Gloal method for getting eApp's settings object, without needing to include all of eApp.h
+eSettings& eGetSettings(void) {
+	return (dynamic_cast<IGetSettings*>(wxTheApp))->GetSettings();
+}

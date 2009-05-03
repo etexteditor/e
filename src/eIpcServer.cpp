@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 #include "eIpcServer.h"
-#include "eApp.h"
+#include "IExecuteAppCommand.h"
 
 #ifdef __WXMSW__
 

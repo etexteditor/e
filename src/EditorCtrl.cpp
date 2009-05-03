@@ -125,8 +125,8 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	vector<unsigned int> bookmarks;
 
 	// Retrieve the page info
-	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
-	wxASSERT(page_id >= 0 && page_id < (int)settings.GetPageCount());
+	eSettings& settings = eGetSettings();
+	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
 	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
 
 	const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);

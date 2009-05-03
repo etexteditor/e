@@ -436,7 +436,7 @@ void eApp::OnIdle(wxIdleEvent& event) {
 		if (m_pSyntaxHandler->DoIdle()) event.RequestMore();
 	}
 
-	// Importent: wxApp need to do it's own idle processing
+	// Important: wxApp needs to do its idle processing as well
 	event.Skip();
 }
 

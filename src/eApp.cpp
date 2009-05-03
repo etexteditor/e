@@ -238,7 +238,7 @@ bool eApp::OnInit() {
 
 #ifdef __WXMSW__
 	wxLogDebug(wxT("Initializing cygwin"));
-	eDocumentPath::InitCygwinOnce(this->frame);
+	eDocumentPath::InitCygwinOnce();
 #endif
 
 	wxLogDebug(wxT("Checking for modified files"));
@@ -252,13 +252,6 @@ bool eApp::OnInit() {
 
     return true;
 }
-
-#ifdef __WXMSW__
-bool eApp::InitCygwin(bool silent){
-	return eDocumentPath::InitCygwin(this->frame, silent);
-}
-#endif
-
 
 void eApp::ClearState() {
 	// Pages

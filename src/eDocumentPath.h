@@ -26,8 +26,8 @@ public:
 
 	static wxString CygwinPathToWin(const wxString& path);
 
-	static bool InitCygwin(wxWindow *parentWindow, bool silent=false);
-	static void InitCygwinOnce(wxWindow *parentWindow);
+	static bool InitCygwin(bool silent=false);
+	static void InitCygwinOnce();
 
 	static bool IsInitialized() { return s_isCygwinInitialized; }
 	static wxString CygdrivePrefix() { return s_cygdrivePrefix; }

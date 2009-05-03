@@ -1406,7 +1406,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
-		if (action.isUnix && !eDocumentPath::InitCygwin(&m_parentFrame)) return;
+		if (action.isUnix && !eDocumentPath::InitCygwin()) return;
 		#endif // __WXMSW__
 
 		const tmCommand* cmd = (tmCommand*)&action;
@@ -7237,7 +7237,7 @@ wxString EditorCtrl::GetSelText() const {
 
 void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 #ifdef __WXMSW__
-	if (isUnix) eDocumentPath::InitCygwin(&m_parentFrame, true);
+	if (isUnix) eDocumentPath::InitCygwin(true);
 #endif // __WXMSW__
 
 	// Load existing enviroment

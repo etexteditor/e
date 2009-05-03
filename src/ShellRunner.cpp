@@ -20,7 +20,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 	if (command.empty()) return -1;
 
 #ifdef __WXMSW__
-	if (isUnix && !((eApp*)wxTheApp)->InitCygwin()) return -1;
+	if (isUnix && !eDocumentPath::InitCygwin()) return -1;
 #endif
 
 	// Create temp file with command
@@ -108,7 +108,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 
 wxString ShellRunner::GetBashCommand(const wxString& cmd, cxEnv& env) {
 #ifdef __WXMSW__
-	if (!((eApp*)wxTheApp)->InitCygwin()) return wxEmptyString;
+	if (!eDocumentPath::InitCygwin()) return wxEmptyString;
 #endif
 
 	if (s_bashEnv.empty()) {

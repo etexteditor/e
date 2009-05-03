@@ -186,7 +186,7 @@ wxString eDocumentPath::CygwinPathToWin(const wxString& path) {
 	return path;
 }
 
-void eDocumentPath::InitCygwinOnce(wxWindow *parentWindow) {
+void eDocumentPath::InitCygwinOnce() {
 	bool shouldPromptUserForCygUpdate = true;
 	eGetSettings().GetSettingBool(wxT("cygupdate"), shouldPromptUserForCygUpdate);
 
@@ -194,8 +194,8 @@ void eDocumentPath::InitCygwinOnce(wxWindow *parentWindow) {
 	// we will not bother him on startup (it will still show
 	// up later if using a command that need cygwin).
 
-	if (shouldPromptUserForCygUpdate && parentWindow)
-		eDocumentPath::InitCygwin(parentWindow);
+	if (shouldPromptUserForCygUpdate && wxTheApp->GetTopWindow())
+		eDocumentPath::InitCygwin();
 }
 
 //
@@ -267,7 +267,7 @@ wxDateTime get_last_cygwin_update() {
 // Checks to see if Cygwin is initalized, and prompts user to do it if not.
 // Returns true if Cygwin is initialized, otherwise false.
 //
-bool eDocumentPath::InitCygwin(wxWindow *parentWindow, const bool silent) {
+bool eDocumentPath::InitCygwin(const bool silent) {
 	if (eDocumentPath::s_isCygwinInitialized)
 		return true;
 
@@ -278,7 +278,7 @@ bool eDocumentPath::InitCygwin(wxWindow *parentWindow, const bool silent) {
 	const bool cygwin_is_installed = !s_cygPath.empty();
 
 	if (!cygwin_is_installed) {
-		if (!silent) run_cygwin_dlg(parentWindow, cxCYGWIN_INSTALL);
+		if (!silent) run_cygwin_dlg(wxTheApp->GetTopWindow(), cxCYGWIN_INSTALL);
 		return false;
 	}
 
@@ -290,7 +290,7 @@ bool eDocumentPath::InitCygwin(wxWindow *parentWindow, const bool silent) {
 
 	if (eDocumentPath_shouldUpdateCygwin(stampTime, supportFile)) {
 		if (!silent) {
-			run_cygwin_dlg(parentWindow, cxCYGWIN_UPDATE);
+			run_cygwin_dlg(wxTheApp->GetTopWindow(), cxCYGWIN_UPDATE);
 
 			// Cancel the command that needed cygwin support (return false below.)
 			// But, since we have an older version of Cygwin installed,

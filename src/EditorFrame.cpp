@@ -227,7 +227,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 
 	// Create toolbar (has to be done after framemanager)
 	/*bool showToolbar = false; // default setting
-	((eApp*)wxTheApp)->GetSettingBool(wxT("toolbar"), showToolbar);
+	m_settings.GetSettingBool(wxT("toolbar"), showToolbar);
 	if (showToolbar) CreateAndSetToolbar(); */
 
 	// Create statusbar

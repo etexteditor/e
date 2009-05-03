@@ -74,13 +74,43 @@ unsigned long EditorCtrl::s_ctrlDownTime = 0;
 bool EditorCtrl::s_altGrDown = false;
 
 /// Open a page saved from a previous session
-EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
-	: m_catalyst(cw), m_doc(cw), dispatcher(cw.GetDispatcher()), m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_enableDrawing(false), m_isResizing(true),
-	  m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), bitmap(bitmap), scrollPos(0), m_scrollPosX(0), topline(-1), commandMode(false), m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-      m_parentFrame(parentFrame), m_changeToken(0), m_savedForPreview(false), m_bundlePanel(NULL),
-      m_modCallback(NULL), m_scrollCallback(NULL), m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), m_activeTooltip(NULL),
-	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
- 	  do_freeze(true), m_options_cache(0), m_re(NULL), m_symbolCacheToken(0)
+EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)	: 
+	m_catalyst(cw),
+	m_doc(cw),
+	dispatcher(cw.GetDispatcher()),
+
+	bitmap(bitmap), 
+	m_parentFrame(parentFrame), 
+
+	m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
+	m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+
+	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
+	m_activeTooltip(NULL),
+
+	m_modCallback(NULL), 
+	m_scrollCallback(NULL), 
+
+	m_enableDrawing(false), 
+	m_isResizing(true),
+	scrollPos(0), 
+	m_scrollPosX(0), 
+	topline(-1), 
+	commandMode(false),
+	m_changeToken(0), 
+	m_savedForPreview(false), 
+	m_bundlePanel(NULL),
+	lastpos(0), 
+	m_doubleClickedLine(-1), 
+	m_currentSel(-1), 
+	do_freeze(true), 
+	m_options_cache(0), 
+	m_re(NULL), 
+	m_symbolCacheToken(0)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -154,14 +184,45 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	}
 }
 
+
 /// Open a document
-EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
-	: m_catalyst(cw), m_doc(cw), dispatcher(cw.GetDispatcher()), m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_enableDrawing(false), m_isResizing(true),
-	  m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), bitmap(bitmap), scrollPos(0), m_scrollPosX(0), topline(-1), commandMode(false), m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-      m_parentFrame(parentFrame), m_changeToken(0), m_savedForPreview(false), m_bundlePanel(NULL),
-      m_modCallback(NULL), m_scrollCallback(NULL), m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), m_activeTooltip(NULL),
-	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
- 	  do_freeze(true), m_options_cache(0), m_re(NULL), m_symbolCacheToken(0)
+EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
+	m_catalyst(cw),
+	m_doc(cw),
+	dispatcher(cw.GetDispatcher()),
+
+	bitmap(bitmap), 
+	m_parentFrame(parentFrame),
+
+	m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+
+	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
+	m_activeTooltip(NULL),
+
+	m_modCallback(NULL),
+	m_scrollCallback(NULL),
+
+	m_enableDrawing(false), 
+	m_isResizing(true),
+	scrollPos(0),
+	m_scrollPosX(0),
+	topline(-1),
+	commandMode(false), 
+	m_changeToken(0),
+	m_savedForPreview(false),
+	m_bundlePanel(NULL),
+	lastpos(0),
+	m_doubleClickedLine(-1),
+	m_currentSel(-1), 
+	do_freeze(true),
+	m_options_cache(0),
+	m_re(NULL),
+	m_symbolCacheToken(0)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Init();
@@ -183,14 +244,45 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	FoldingInvalidate();
 }
 
+
 /// Create a new empty document
-EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)
-	: m_catalyst(cw), m_doc(cw, true), dispatcher(cw.GetDispatcher()), m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_enableDrawing(false), m_isResizing(true),
-	  m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), bitmap(bitmap), scrollPos(0), m_scrollPosX(0), topline(-1), commandMode(false), m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-      m_parentFrame(parentFrame), m_changeToken(0), m_savedForPreview(false), m_bundlePanel(NULL),
-      m_modCallback(NULL), m_scrollCallback(NULL), m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), m_activeTooltip(NULL),
-	  lastpos(0), m_doubleClickedLine(-1), m_currentSel(-1), m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
- 	  do_freeze(true), m_options_cache(0), m_re(NULL), m_symbolCacheToken(0)
+	EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
+	m_catalyst(cw),
+	m_doc(cw, true), 
+	dispatcher(cw.GetDispatcher()), 
+
+	bitmap(bitmap), 
+	m_parentFrame(parentFrame), 
+
+	m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), 
+	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
+
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
+	m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+
+	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
+	m_activeTooltip(NULL),
+
+	m_modCallback(NULL), 
+	m_scrollCallback(NULL), 
+
+	m_enableDrawing(false), 
+	m_isResizing(true),
+	scrollPos(0), 
+	m_scrollPosX(0), 
+	topline(-1), 
+	commandMode(false), 
+	m_changeToken(0), 
+	m_savedForPreview(false), 
+	m_bundlePanel(NULL),
+	lastpos(0), 
+	m_doubleClickedLine(-1), 
+	m_currentSel(-1), 
+	do_freeze(true), 
+	m_options_cache(0), 
+	m_re(NULL), 
+	m_symbolCacheToken(0)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -205,6 +297,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	// Init Folding
 	FoldingInvalidate();
 }
+
 
 void EditorCtrl::Init() {
 	// Initialize the memoryDC for dubblebuffering
@@ -224,12 +317,14 @@ void EditorCtrl::Init() {
 	m_wrapAtMargin = false;
 	bool doShowMargin = false;
 	int marginChars = 80;
+
 	eSettings& settings = eGetSettings();
 	settings.GetSettingBool(wxT("autoPair"), m_doAutoPair);
 	settings.GetSettingBool(wxT("autoWrap"), m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	settings.GetSettingBool(wxT("wrapMargin"), m_wrapAtMargin);
 	settings.GetSettingInt(wxT("marginChars"), marginChars);
+
 	m_lastScopePos = -1; // scope selection
 	if (!doShowMargin) m_wrapAtMargin = false;
 

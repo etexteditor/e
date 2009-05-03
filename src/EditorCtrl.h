@@ -563,43 +563,67 @@ private:
 	CatalystWrapper& m_catalyst;
 	DocumentWrapper m_doc;
 	Dispatcher& dispatcher;
+
+	wxBitmap& bitmap;
+	EditorFrame& m_parentFrame;
+
 	TmSyntaxHandler& m_syntaxHandler;
+	const tmTheme& m_theme;
+	Lines m_lines;
+
+	Styler_SearchHL m_search_hl_styler;
+	Styler_Syntax m_syntaxstyler;
+
+	wxTimer m_foldTooltipTimer;
+	TextTip* m_activeTooltip;
+
+	void (*m_modCallback)(void*);
+	void (*m_scrollCallback)(void*);
+
+	bool m_enableDrawing;
+	bool m_isResizing;
+	int scrollPos;
+	int m_scrollPosX;
+	int topline;
+	bool commandMode;
+	unsigned int m_changeToken;
+	bool m_savedForPreview;
+	EditorBundlePanel* m_bundlePanel;
+	unsigned int lastpos;
+	int m_doubleClickedLine; // Used for triple-click detection
+	int m_currentSel;
+	bool do_freeze;
+	mutable int m_options_cache; // for compiled regex
+	mutable pcre *m_re; // for last compiled regex
+	mutable unsigned int m_symbolCacheToken;
+
+	// Above: set in constructors' intializer list
+	// ----
+	// Below: not set in initializer list
+
+	int lastxpos; // Used to keep Up/Down in line
+
 	GutterCtrl* m_gutterCtrl;
 	bool m_showGutter;
 	bool m_gutterLeft;
 	unsigned int m_gutterWidth;
-	bool m_enableDrawing;
-	bool m_isResizing;
-	Lines m_lines;
 	LiveCaret* caret;
 	wxMemoryDC mdc;
-	wxBitmap& bitmap;
-	int scrollPos;
-	int m_scrollPosX;
 	int old_scrollPos; // set by OnScroll when scrolling
-	int topline;
 	wxFileName m_path;
 	wxString m_remotePath;
 	const RemoteProfile* m_remoteProfile;
-	bool commandMode;
 	vector<int> commandStack;
-	const tmTheme& m_theme;
-	EditorFrame& m_parentFrame;
 	static const unsigned int m_caretWidth;
 	unsigned int m_caretHeight;
 	wxDateTime m_modSkipDate;
-	unsigned int m_changeToken;
-	bool m_savedForPreview;
 	wxString m_mate;
 
 	// Bundle item info
 	BundleItemType m_bundleType;
-	EditorBundlePanel* m_bundlePanel;
 
-	// Callbacks
-	void (*m_modCallback)(void*);
+	// Callback data
 	void* m_modCallbackData;
-	void (*m_scrollCallback)(void*);
 	void* m_scrollCallbackData;
 
 	// Folding vars
@@ -607,18 +631,10 @@ private:
 	unsigned int m_foldedLines;
 	unsigned int m_foldLineCount;
 	unsigned int m_foldTooltipLine;
-	wxTimer m_foldTooltipTimer;
 
 	// Bookmarks
 	vector<cxBookmark> m_bookmarks;
 
-	// Tooltip
-	//RevTooltip m_revTooltip;
-	//wxPoint m_revTooltipMousePos;
-	TextTip* m_activeTooltip;
-
-	unsigned int lastpos;
-	int lastxpos; // Used to keep Up/Down in line
 	action lastaction;
 	wxPoint lastMousePos; // Used to check if mouse have really moved
 
@@ -626,7 +642,6 @@ private:
 	wxPoint m_dragStartPos;
 
 	// Triple-click detection
-	int m_doubleClickedLine;
 	wxStopWatch m_doubleClickTimer;
 
 	enum SelMode {
@@ -636,7 +651,6 @@ private:
 	};
 
 	SelMode m_selMode;
-	int m_currentSel;
 	int m_sel_start;
 	int m_sel_end;
 	wxPoint m_sel_startpoint;
@@ -647,13 +661,7 @@ private:
 	// Snippets
 	SnippetHandler m_snippetHandler;
 
-	// Stylers
-	//Styler_Users m_usersStyler;
-	Styler_SearchHL m_search_hl_styler;
-	Styler_Syntax m_syntaxstyler;
-
 	// Change state vars
-	bool do_freeze;
 	int change_pos;
 	doc_id change_doc_id;
 	int change_toppos;
@@ -680,15 +688,12 @@ private:
 
 	// Cache of last compiled regex
 	mutable wxString m_regex_cache;
-	mutable int m_options_cache;
-	mutable pcre *m_re;
 
 	// Cached env variables
 	wxString m_tmFilePath;
 	wxString m_tmDirectory;
 
 	// Symbol cache
-	mutable unsigned int m_symbolCacheToken;
 	mutable vector<SymbolRef> m_symbolCache;
 
 	// Key state

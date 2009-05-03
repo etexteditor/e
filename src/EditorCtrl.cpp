@@ -17,7 +17,6 @@
 #include <algorithm>
 #include "EditorFrame.h"
 #include "StyleRun.h"
-#include "eApp.h"
 #include <wx/tipwin.h>
 #include <wx/file.h>
 #include "FindCmdDlg.h"
@@ -36,7 +35,10 @@
 #include "ShellRunner.h"
 #include "Env.h"
 #include "Fold.h"
+
+#include "eSettings.h"
 #include "IGetSyntaxHandler.h"
+#include "IAppPaths.h"
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 

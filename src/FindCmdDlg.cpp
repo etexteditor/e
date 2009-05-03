@@ -13,7 +13,7 @@
 
 #include "FindCmdDlg.h"
 #include <algorithm>
-#include "eApp.h"
+#include "IGetSyntaxHandler.h"
 
 // Ctrl id's
 enum {
@@ -33,7 +33,7 @@ FindCmdDlg::FindCmdDlg(wxWindow *parent, const deque<const wxString*>& scope)
 	SetTitle (_("Select Bundle Item"));
 
 	// Get list of all commands available from current scope
-	((eApp*)wxTheApp)->GetSyntaxHandler().GetAllActions(m_scope, m_actions);
+	dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetAllActions(m_scope, m_actions);
 
 	// Create Layout
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);

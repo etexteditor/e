@@ -28,6 +28,7 @@
 #endif
 using namespace std;
 
+
 class FindCmdDlg : public wxDialog {
 public:
 	FindCmdDlg(wxWindow *parent, const deque<const wxString*>& scope);

@@ -618,6 +618,7 @@ EditorFrame::~EditorFrame() {
 
 void EditorFrame::RestoreState() {
 #ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
+	// Shouldn't this function be using m_settings instead of retreiving them again?
 	eSettings& settings = ((eApp*)wxTheApp)->GetSettings();
 	const unsigned int pagecount = settings.GetPageCount();
 

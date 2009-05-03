@@ -40,7 +40,7 @@ int cxExecute::Execute(const wxString& command, const vector<char>& input) {
 	wxFile logFile;
 	if (m_debugLog) {
 		// Create temp file with command
-		wxFileName logfilePath = ((eApp*)wxTheApp)->GetAppDataPath();
+		wxFileName logfilePath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath();
 		logfilePath.SetFullName(wxT("tmcmd.log"));
 		logFile.Open(logfilePath.GetFullPath(), wxFile::write);
 		if (logFile.IsOpened()) {

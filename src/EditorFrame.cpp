@@ -51,7 +51,6 @@
 #include "UndoHistory.h"
 #include "eDocumentPath.h"
 #include "SearchPanel.h"
-#include "IGetSyntaxHandler.h"
 
 #if defined (__WXMSW__)
     #include <wx/msw/registry.h>
@@ -701,7 +700,7 @@ void EditorFrame::RestoreState() {
 }
 
 wxMenu* EditorFrame::GetBundleMenu() {
-	wxMenu* bundleMenu = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetBundleMenu(); // Uses IDs in range 9000-9999
+	wxMenu* bundleMenu = m_syntax_handler.GetBundleMenu(); // Uses IDs in range 9000-9999
 	if (!bundleMenu) bundleMenu = new wxMenu;
 
 	bool enableDebug = false; // default setting
@@ -744,7 +743,7 @@ void EditorFrame::ResetSyntaxMenu() {
 	}
 
 	// Get syntaxes and sort
-	vector<cxSyntaxInfo*> syntaxes = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetSyntaxes();
+	vector<cxSyntaxInfo*> syntaxes = m_syntax_handler.GetSyntaxes();
 	sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
 
 	for (unsigned int i = 0; i < syntaxes.size(); ++i) {
@@ -913,7 +912,7 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 			BundleItemType bundleType;
 			unsigned int bundleId;
 			unsigned int itemId;
-			const PListHandler& plistHandler = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetPListHandler();
+			const PListHandler& plistHandler = m_syntax_handler.GetPListHandler();
 			if (!plistHandler.GetBundleItemFromUri(mirrorPath, bundleType, bundleId, itemId)) continue;
 			const PListDict itemDict = plistHandler.Get(bundleType, bundleId, itemId);
 			const wxDateTime bundleModDate = itemDict.GetModDate();
@@ -1521,7 +1520,7 @@ void EditorFrame::ShowBundlePane() {
 
 	if (projectPane.window == m_projectPane) {
 		m_projectPane->Hide();
-		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler());
+		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, m_syntax_handler);
 		projectPane.Window(m_bundlePane);	
 	}
 	else {
@@ -2047,7 +2046,7 @@ void EditorFrame::OnMenuReloadBundles(wxCommandEvent& WXUNUSED(event)) {
 	wxBusyCursor wait;
 
 	// Reload bundles (will send it's own event to reset bundle menu if needed)
-	dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().LoadBundles(TmSyntaxHandler::cxUPDATE);
+	m_syntax_handler.LoadBundles(TmSyntaxHandler::cxUPDATE);
 	
 	// If we have an active BundleEditor, it has to reload the new bundles
 	if (m_bundlePane) m_bundlePane->LoadBundles();
@@ -2062,7 +2061,7 @@ void EditorFrame::OnMenuManageBundles(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::ShowBundleManager() {
-	BundleManager dlg(*this, dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler());
+	BundleManager dlg(*this, m_syntax_handler);
 	dlg.ShowModal();
 
 	// If we have an active BundleEditor, it has to reload the new bundles
@@ -2078,7 +2077,6 @@ void EditorFrame::OnMenuDebugBundles(wxCommandEvent& event) {
 
 void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
 	if (editorCtrl) {
-		TmSyntaxHandler& syntaxHandler = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler();
 
 #if defined (__WXMSW__)
 		if (wxIsShiftDown()) {
@@ -2086,10 +2084,10 @@ void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
 		if (wxGetKeyState(WXK_SHIFT)) {
 #endif
 			// If shift is down, we want to edit the bundle item
-			const wxString bundlePath = syntaxHandler.GetBundleItemUriFromMenu(event.GetId());
+			const wxString bundlePath = m_syntax_handler.GetBundleItemUriFromMenu(event.GetId());
 			if (!bundlePath.empty()) OpenRemoteFile(bundlePath);
 		}
-		else syntaxHandler.DoBundleAction(event.GetId(), *editorCtrl);
+		else m_syntax_handler.DoBundleAction(event.GetId(), *editorCtrl);
 	}
 }
 
@@ -2468,7 +2466,7 @@ void EditorFrame::OnMenuSelectFold(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuEditTheme(wxCommandEvent& WXUNUSED(event)) {
-	ThemeEditor dlg(this, dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler());
+	ThemeEditor dlg(this, m_syntax_handler);
 	dlg.ShowModal();
 }
 

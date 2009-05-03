@@ -206,13 +206,18 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
 END_EVENT_TABLE()
 
-EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, const wxRect& rect)
-	: m_catalyst(cat), m_settings(eGetSettings()), dispatcher(cat.GetDispatcher()), m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
-	 m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL),
-	 m_symbolList(NULL), m_pStatBar(NULL),
-	   m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
-	   bitmap(1,1)
-	   //,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm), m_pToolBar(NULL)
+EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
+	m_catalyst(cat),
+	dispatcher(cat.GetDispatcher()),
+	m_settings(eGetSettings()),
+	m_syntax_handler(syntax_handler),
+
+	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
+	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL),
+	m_symbolList(NULL), m_pStatBar(NULL),
+	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
+	bitmap(1,1)
+	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm), m_pToolBar(NULL)
 {
 	Create(NULL, id, title, rect.GetPosition(), rect.GetSize(), wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS, wxT("eMainFrame"));
 

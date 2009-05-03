@@ -202,11 +202,11 @@ bool eApp::OnInit() {
 
     // Create the main window
 	wxLogDebug(wxT("Creating main frame"));
-	frame = new EditorFrame( *m_catalyst, -1, wxT("e"), DetermineFrameSize());
+	frame = new EditorFrame( *m_catalyst, -1, wxT("e"), DetermineFrameSize(), *m_pSyntaxHandler);
 	SetTopWindow(frame);
 
 	// Show the main window
-	frame->Show( true );
+	frame->Show(true);
 	frame->Raise(); // bring to front
 	frame->Update();
 

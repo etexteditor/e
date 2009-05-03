@@ -56,6 +56,7 @@ class BundlePane;
 class UndoHistory;
 class eSettings;
 class SearchPanel;
+class TmSyntaxHandler;
 
 // Menu id's
 enum {
@@ -176,7 +177,7 @@ class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService {
 public:
-	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect);
+	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
 	~EditorFrame();
 
 	void RestoreState();
@@ -481,8 +482,10 @@ private:
 
 	// Member variables
 	CatalystWrapper m_catalyst;
-	eSettings& m_settings;
 	Dispatcher& dispatcher;
+	eSettings& m_settings;
+	TmSyntaxHandler& m_syntax_handler;
+
 	wxImageList imageList;
 	RemoteThread *m_remoteThread;
 	DirWatcher* m_dirWatcher;

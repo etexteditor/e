@@ -12,10 +12,11 @@
  ******************************************************************************/
 
 #include "CygwinDlg.h"
-#include "eApp.h"
 #include "Execute.h"
 #include "Env.h"
 #include "eDocumentPath.h"
+#include "IAppPaths.h"
+#include "eSettings.h"
 
 BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CygwinDlg::OnButtonOk)
@@ -52,7 +53,7 @@ CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode)
 }
 
 void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
-	const wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
+	const wxString appPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath();
 	const cxCygwinInstallMode install_mode = m_autoRadio->GetValue() ? cxCYGWIN_AUTO : cxCYGWIN_MANUAL;
 	new CygwinInstallThread(install_mode, appPath);
 
@@ -128,7 +129,7 @@ void* CygwinDlg::CygwinInstallThread::Entry() {
 	// Mark this update as done
 	const wxFileName supportFile(supportScript);
 	const wxDateTime updateTime = supportFile.GetModificationTime();
-	((eApp*)wxTheApp)->GetSettings().SetSettingLong(wxT("cyg_date"), updateTime.GetValue());
+	eGetSettings().SetSettingLong(wxT("cyg_date"), updateTime.GetValue());
 
 	return NULL;
 }

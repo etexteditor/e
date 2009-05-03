@@ -1638,7 +1638,7 @@ wxDateTime EditorFrame::GetRemoteDate(const wxString& url, const RemoteProfile* 
 	return GetRemoteThread().GetModDate(url, *rp);
 }
 
-wxString EditorFrame::GetTempPath() const {
+wxString EditorFrame::GetTempPath() {
 	// Create temp buffer file
 	const wxString tempPath = ((eApp*)wxTheApp)->GetAppDataPath() + wxT("temp") + wxFILE_SEP_PATH;
 	if (!wxDirExists(tempPath)) wxMkdir(tempPath);

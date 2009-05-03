@@ -35,7 +35,7 @@ class LineListWrap;
 
 class EditorPrintout: public wxPrintout {
 public:
-	EditorPrintout(const IPrintableDocument& editorCtrl);
+	EditorPrintout(const IPrintableDocument& printDoc);
 	~EditorPrintout();
 
 	void OnPreparePrinting();
@@ -46,7 +46,7 @@ public:
 
 private:
 	// Member variables
-	const IPrintableDocument& m_editorCtrl;
+	const IPrintableDocument& m_printDoc;
 	FixedLine* m_line;
 	LineListWrap* m_lineList;
 	vector<unsigned int> m_pages;

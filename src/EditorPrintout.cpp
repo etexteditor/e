@@ -13,10 +13,10 @@
 
 #include "EditorPrintout.h"
 #include "IPrintableDocument.h"
-#include "eApp.h"
 #include "tm_syntaxhandler.h"
 #include "FixedLine.h"
 #include "LineListWrap.h"
+#include "IGetSyntaxHandler.h"
 
 // Dummy vars for line
 const vector<interval> EditorPrintout::s_sel;
@@ -24,8 +24,8 @@ const interval EditorPrintout::s_hlBracket(0,0);
 const unsigned int EditorPrintout::s_lastpos = 0;
 const bool EditorPrintout::s_isShadow = false;
 
-EditorPrintout::EditorPrintout(const IPrintableDocument& editorCtrl)
-: wxPrintout(editorCtrl.GetName()), m_editorCtrl(editorCtrl), m_line(NULL), m_lineList(NULL)
+EditorPrintout::EditorPrintout(const IPrintableDocument& printDoc)
+: wxPrintout(printDoc.GetName()), m_printDoc(printDoc), m_line(NULL), m_lineList(NULL)
 {
 }
 
@@ -45,20 +45,21 @@ void EditorPrintout::OnPreparePrinting() {
 	MapScreenSizeToPage();
 	const wxRect size = GetLogicalPageRect();
 
+	const tmTheme& theme = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetTheme();
+
 	// Set the current themes font
-	const wxFont& font = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme().font;
+	const wxFont& font = theme.font;
 	wxDC& dc = *GetDC();
 	dc.SetFont(font);
 
 	// Initialize line info
-	const tmTheme& theme = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme();
 
-	m_line = new FixedLine(dc, m_editorCtrl.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
+	m_line = new FixedLine(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
 	m_line->SetPrintMode();
 	m_line->Init();
 	m_line->SetWordWrap(cxWRAP_SMART);
-	m_lineList = new LineListWrap(*m_line, m_editorCtrl.GetDocument());
-	m_lineList->SetOffsets(m_editorCtrl.GetOffsets());
+	m_lineList = new LineListWrap(*m_line, m_printDoc.GetDocument());
+	m_lineList->SetOffsets(m_printDoc.GetOffsets());
 
 	// Calc gutter width
 	const wxSize digit_ext = dc.GetTextExtent(wxT("0"));
@@ -109,14 +110,14 @@ bool EditorPrintout::OnPrintPage(int pageNum) {
 	const wxRect rect = GetLogicalPageRect();
 	unsigned int ypos = rect.y;
 
+	const tmTheme& theme = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetTheme();
+
 	// We may have gotten a new dc, so we need a new line
 	wxDC& dc = *GetDC();
-	const wxFont& font = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme().font;
+	const wxFont& font = theme.font;
 	dc.SetFont(font);
 
-	const tmTheme& theme = ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme();
-
-	FixedLine line(dc, m_editorCtrl.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
+	FixedLine line(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
 	line.SetPrintMode();
 	line.Init();
 	line.SetWordWrap(cxWRAP_SMART);
@@ -144,7 +145,7 @@ bool EditorPrintout::OnPrintPage(int pageNum) {
 
 	// Draw footer title
 	ypos = rect.GetBottom() - m_line->GetCharHeight();
-	dc.DrawText(m_editorCtrl.GetName(), 0, ypos);
+	dc.DrawText(m_printDoc.GetName(), 0, ypos);
 
 	// Draw footer pagenum
 	const wxString pagefooter = wxString::Format(wxT("%d / %d"), pageNum, m_pages.size());

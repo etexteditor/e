@@ -698,10 +698,12 @@ void eApp::OnAssertFailure(const wxChar *file, int line, const wxChar *cond, con
 void* UpdaterThread::Entry() {
 	wxASSERT(m_http);
 
+	const eApp& app = *((eApp*)wxTheApp);
+	const unsigned int thisVersion = app.m_version_id;
 	// Set a cookie so the server can count unique requests
 	wxString cookie;
-	if (((eApp*)wxTheApp)->IsRegistered()) cookie = wxString::Format(wxT("%s.%u.*"), ((eApp*)wxTheApp)->GetId().ToString().c_str(), ((eApp*)wxTheApp)->m_version_id);
-	else cookie = wxString::Format(wxT("%s.%u.%d"), ((eApp*)wxTheApp)->GetId().ToString().c_str(), ((eApp*)wxTheApp)->m_version_id, ((eApp*)wxTheApp)->DaysLeftOfTrial());
+	if (app.IsRegistered()) cookie = wxString::Format(wxT("%s.%u.*"), app.GetId().ToString().c_str(), thisVersion);
+	else cookie = wxString::Format(wxT("%s.%u.%d"), app.GetId().ToString().c_str(), thisVersion, app.DaysLeftOfTrial());
 	m_http->SetHeader(wxT("Cookie"), cookie);
 
 	bool newrelease = false;
@@ -719,7 +721,7 @@ void* UpdaterThread::Entry() {
 					id_str = id_str.BeforeFirst(wxT(' '));
 					unsigned long id;
 					id_str.ToULong(&id);
-					if (id > ((eApp*)wxTheApp)->m_version_id) {
+					if (id > thisVersion) {
 						newrelease = true;
 						break;
 					}
@@ -730,7 +732,7 @@ void* UpdaterThread::Entry() {
 					id_str = id_str.BeforeFirst(wxT(' '));
 					unsigned long id;
 					id_str.ToULong(&id);
-					if (id > ((eApp*)wxTheApp)->m_version_id) {
+					if (id > thisVersion) {
 						newrelease = true;
 						break;
 					}
@@ -741,7 +743,7 @@ void* UpdaterThread::Entry() {
 
 			// Remember this time as last update checked
 			wxLongLong now = wxDateTime::Now().GetValue();
-			((eApp*)wxTheApp)->GetSettings().SetSettingLong(wxT("lastupdatecheck"), now);
+			eGetSettings().SetSettingLong(wxT("lastupdatecheck"), now);
 		}
 	}
 

@@ -36,6 +36,7 @@
 #include "ShellRunner.h"
 #include "Env.h"
 #include "Fold.h"
+#include "IGetSyntaxHandler.h"
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
@@ -82,7 +83,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	bitmap(bitmap), 
 	m_parentFrame(parentFrame), 
 
-	m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()),
 	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
 	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
 
@@ -194,7 +195,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	bitmap(bitmap), 
 	m_parentFrame(parentFrame),
 
-	m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()),
 	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
 	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
 	
@@ -254,7 +255,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	bitmap(bitmap), 
 	m_parentFrame(parentFrame), 
 
-	m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), 
+	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()), 
 	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
 	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
 

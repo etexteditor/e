@@ -18,26 +18,26 @@
 #include <wx/ipc.h>
 
 // pre-definitions
-class eApp;
+class IExecuteAppCommand;
 
 #ifdef __WXMSW__
 class eIpcWin : public wxFrame {
 public:
-	eIpcWin(eApp& app);
+	eIpcWin(IExecuteAppCommand& app);
 
 	wxString SetMateName();
 
 	bool ShouldPreventAppExit() const {return false;};
 private:
 	WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);
-	eApp& m_app;
+	IExecuteAppCommand& m_app;
 };
 
 #else
 
 class eServer : public wxServer {
 public:
-	eServer(eApp& app);
+	eServer(IExecuteAppCommand& app);
     wxConnectionBase *OnAcceptConnection(const wxString& topic);
 
 private:
@@ -46,7 +46,7 @@ private:
 
 class eConnection : public wxConnection {
 public:
-	eConnection(eApp& app);
+	eConnection(IExecuteAppCommand& app);
 	~eConnection();
 
     bool OnExecute(const wxString& topic, wxChar *data, int size, wxIPCFormat format);
@@ -57,7 +57,7 @@ public:
 	void SetPointer(eConnection** pConnection) {m_pConnection = pConnection;};
 
 private:
-	eApp& app;
+	IExecuteAppCommand& app;
 	eConnection** m_pConnection;
 };
 

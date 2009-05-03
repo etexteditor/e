@@ -18,7 +18,7 @@
 
 // ---- eIpcWin -----------------------------------
 
-eIpcWin::eIpcWin(eApp& app)
+eIpcWin::eIpcWin(IExecuteAppCommand& app)
 : wxFrame(NULL, wxID_ANY, wxT("eIpcWin"), wxPoint(-100,-100)), m_app(app) {
 }
 
@@ -68,7 +68,7 @@ WXLRESULT eIpcWin::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) 
 
 // ---- eServer -----------------------------------
 
-eServer::eServer(eApp& app) : app(app) {
+eServer::eServer(IExecuteAppCommand& app) : app(app) {
 }
 
 wxConnectionBase* eServer::OnAcceptConnection(const wxString& topic)
@@ -80,7 +80,7 @@ wxConnectionBase* eServer::OnAcceptConnection(const wxString& topic)
     return NULL;
 }
 
-eConnection::eConnection(eApp& app)
+eConnection::eConnection(IExecuteAppCommand& app)
 : app(app), m_pConnection(NULL) {
 }
 

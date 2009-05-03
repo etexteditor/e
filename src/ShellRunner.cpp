@@ -3,6 +3,7 @@
 #include "eDocumentPath.h"
 #include "Env.h"
 #include "Execute.h"
+#include "IAppPaths.h"
 
 // Initialize statics
 wxString ShellRunner::s_bashCmd;
@@ -23,7 +24,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 #endif
 
 	// Create temp file with command
-	wxFileName tmpfilePath = ((eApp*)wxTheApp)->GetAppDataPath();
+	wxFileName tmpfilePath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath();
 	tmpfilePath.SetFullName(isUnix ? wxT("tmcmd") : wxT("tmcmd.bat"));
 	wxFile tmpfile(tmpfilePath.GetFullPath(), wxFile::write);
 	if (!tmpfile.IsOpened()) return -1;
@@ -66,7 +67,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
             s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #endif
 
-			wxFileName initPath = ((eApp*)wxTheApp)->GetAppPath();
+			wxFileName initPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath();
 			initPath.AppendDir(wxT("Support"));
 			initPath.AppendDir(wxT("lib"));
 			initPath.SetFullName(wxT("bash_init.sh"));
@@ -89,7 +90,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 	// Get ready for execution
 	cxExecute exec(env, cwd);
 	bool debugOutput = false; // default setting
-	((eApp*)wxTheApp)->GetSettings().GetSettingBool(wxT("bundleDebug"), debugOutput);
+	eGetSettings().GetSettingBool(wxT("bundleDebug"), debugOutput);
 	exec.SetDebugLogging(debugOutput);
 
 	// Exec the command
@@ -111,7 +112,7 @@ wxString ShellRunner::GetBashCommand(const wxString& cmd, cxEnv& env) {
 #endif
 
 	if (s_bashEnv.empty()) {
-		wxFileName initPath = ((eApp*)wxTheApp)->GetAppPath();
+		wxFileName initPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath();
 		initPath.AppendDir(wxT("Support"));
 		initPath.AppendDir(wxT("lib"));
 		initPath.SetFullName(wxT("bash_init.sh"));

@@ -7144,7 +7144,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetToCurrent();
 
 	// Add app keys
-	env.AddSystemVars(isUnix, ((eApp*)wxTheApp)->GetAppPath());
+	env.AddSystemVars(isUnix, dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath());
 
 	// Add document/editor keys
 

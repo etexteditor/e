@@ -3597,7 +3597,7 @@ bool EditorFrame::DeletePage(unsigned int page_id, bool removetab) {
 
 	if (ec == editorCtrl) editorCtrl = NULL; // Make sure we don't accidentally use deleted ctrl
 
-	//((eApp*)wxTheApp)->DeletePageSettings(page_id);
+	//eGetSettings().DeletePageSettings(page_id);
 	//pages.erase(pages.begin() + page_id);
 
 	if (di.IsDraft()) {

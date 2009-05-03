@@ -85,10 +85,10 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 
 	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()),
 	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	m_lines(mdc, m_doc, *this, m_syntaxHandler.GetTheme()),
 
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
-	m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_syntaxHandler.GetTheme()), 
+	m_syntaxstyler(m_doc, m_lines, m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -196,11 +196,11 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_parentFrame(parentFrame),
 
 	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()),
-	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
+	m_theme(m_syntaxHandler.GetTheme()),
+	m_lines(mdc, m_doc, *this, m_syntaxHandler.GetTheme()),
 	
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-	m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_syntaxHandler.GetTheme()),
+	m_syntaxstyler(m_doc, m_lines, m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -256,11 +256,11 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_parentFrame(parentFrame), 
 
 	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()), 
-	m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()),
-	m_lines(mdc, m_doc, *this, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
+	m_theme(m_syntaxHandler.GetTheme()),
+	m_lines(mdc, m_doc, *this, m_syntaxHandler.GetTheme()), 
 
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, ((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), 
-	m_syntaxstyler(m_doc, m_lines, ((eApp*)wxTheApp)->GetSyntaxHandler()),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_syntaxHandler.GetTheme()), 
+	m_syntaxstyler(m_doc, m_lines, m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
 	m_activeTooltip(NULL),

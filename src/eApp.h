@@ -32,15 +32,26 @@ class EditorFrame;
 // Constants
 #define ID_UPDATES_AVAILABLE 100
 
-class eApp : public wxApp, public IGetSettings, public IGetSyntaxHandler, public IAppPaths
+class IExecuteAppCommand {
+public:
+	virtual bool ExecuteCmd(const wxString& cmd) = 0;
+	virtual bool ExecuteCmd(const wxString& cmd, wxString& result) = 0;
+};
+
+class eApp : public wxApp, 
+	public IGetSettings, 
+	public IGetSyntaxHandler, 
+	public IAppPaths, 
+	public IExecuteAppCommand
 {
 public:
 	virtual bool OnInit();
 	int OnExit();
 
-	// Member functions
-	bool ExecuteCmd(const wxString& cmd);
-	bool ExecuteCmd(const wxString& cmd, wxString& result);
+	// Execute internal commands
+	virtual bool ExecuteCmd(const wxString& cmd);
+	virtual bool ExecuteCmd(const wxString& cmd, wxString& result);
+
 	virtual TmSyntaxHandler& GetSyntaxHandler() const {return *m_pSyntaxHandler;};
 
 	virtual const wxString& GetAppPath() const {return m_appPath;};

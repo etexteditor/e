@@ -242,31 +242,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	{
 		// Load Settings
 		LoadSize();
-		bool showpreview = false;
-		bool showsymbols = false;
-		if (!m_settings.GetSettingInt(wxT("wrapmode"), (int&)m_wrapMode)) {
-			// fallback to old settings format
-			bool wordwrap;
-			if (m_settings.GetSettingBool(wxT("wordwrap"), wordwrap)) {
-				m_wrapMode = wordwrap ? cxWRAP_NORMAL : cxWRAP_NONE;
-			}
-			else m_wrapMode = cxWRAP_NORMAL;
-		}
-		if (!m_settings.GetSettingBool(wxT("showgutter"), m_showGutter)) m_showGutter = true;
-		if (!m_settings.GetSettingBool(wxT("hl_users"), m_userHighlight)) m_userHighlight = true;
-		if (!m_settings.GetSettingBool(wxT("softtabs"), m_softTabs)) m_softTabs = false;
-		if (!m_settings.GetSettingInt(wxT("tabwidth"), m_tabWidth)) m_tabWidth = 4;
-		if (!m_settings.GetSettingBool(wxT("showindent"), m_showIndent)) m_showIndent = false;
-		m_settings.GetSettingBool(wxT("showpreview"), showpreview);
-		m_settings.GetSettingBool(wxT("showsymbols"), showsymbols);
-
-#ifdef __WXMSW__
-		// Save info about the wordwrap mode to the registry so that the crash handler
-		// can include it in crash report
-		wxRegKey regKey(wxT("HKEY_CURRENT_USER\\Software\\e"));
-		const wxString ww = wxString::Format(wxT("%d"), (int)m_wrapMode);
-		regKey.SetValue(wxT("ww"), ww);
-#endif // __WXMSW__
+		InitMemberSettings();
 
 		// Set drop target so files can be dragged from explorer
 		FrameDropTarget *dropTarget = new FrameDropTarget(*this);
@@ -365,10 +341,18 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		}
 
 		// Check if we should show web preview
-		if (showpreview) ShowWebPreview();
+		{
+			bool showpreview = false;
+			m_settings.GetSettingBool(wxT("showpreview"), showpreview);
+			if (showpreview) ShowWebPreview();
+		}
 
 		// Check if we should show symbol list
-		if (showsymbols) ShowSymbolList();
+		{
+			bool showsymbols = false;
+			m_settings.GetSettingBool(wxT("showsymbols"), showsymbols);
+			if (showsymbols) ShowSymbolList();
+		}
 
 		m_frameManager.Update();
 
@@ -412,6 +396,32 @@ EditorFrame::~EditorFrame() {
 	if (undoHistory) undoHistory->Destroy();
 	if (m_changeCheckerThread) m_changeCheckerThread->Kill(); // may be locked on network drive
 	//if (m_dirWatcher) m_dirWatcher->Delete(); // may take forever
+}
+
+
+// Loads settings that end up as member variables
+void EditorFrame::InitMemberSettings() {
+	if (!m_settings.GetSettingInt(wxT("wrapmode"), (int&)m_wrapMode)) {
+		// fallback to old settings format
+		bool wordwrap = cxWRAP_NORMAL;
+		if (m_settings.GetSettingBool(wxT("wordwrap"), wordwrap)) {
+			m_wrapMode = wordwrap ? cxWRAP_NORMAL : cxWRAP_NONE;
+		}
+	}
+
+#ifdef __WXMSW__
+	// Save info about the wordwrap mode to the registry so that the crash handler
+	// can include it in crash report
+	wxRegKey regKey(wxT("HKEY_CURRENT_USER\\Software\\e"));
+	const wxString ww = wxString::Format(wxT("%d"), (int)m_wrapMode);
+	regKey.SetValue(wxT("ww"), ww);
+#endif // __WXMSW__
+
+	if (!m_settings.GetSettingBool(wxT("showgutter"), m_showGutter)) m_showGutter = true;
+	if (!m_settings.GetSettingBool(wxT("hl_users"), m_userHighlight)) m_userHighlight = true;
+	if (!m_settings.GetSettingBool(wxT("softtabs"), m_softTabs)) m_softTabs = false;
+	if (!m_settings.GetSettingInt(wxT("tabwidth"), m_tabWidth)) m_tabWidth = 4;
+	if (!m_settings.GetSettingBool(wxT("showindent"), m_showIndent)) m_showIndent = false;
 }
 
 void EditorFrame::InitStatusbar() {

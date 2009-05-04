@@ -286,6 +286,7 @@ private:
 	void InitAccelerators();
 	void InitMenus();
 	void InitStatusbar();
+	void InitMemberSettings();
 
 	EditorCtrl* GetEditorCtrlFromPage(size_t page_idx);
 

@@ -3673,37 +3673,27 @@ wxString EditorFrame::URLDecode(const wxString &value) { // static
 
 	unsigned int nEncodedPos = 0;
 
-	// eliminiate + and replace with spaces...
+	// Replace + with space
 	szEncoded.Replace(wxT("+"), wxT(" "));
 
 	while( nEncodedPos < szEncoded.length() ) {
-		if(szEncoded.GetChar(nEncodedPos) == wxT('%')) {
+		if(szEncoded.GetChar(nEncodedPos) != wxT('%')) szDecoded.Append(  szEncoded.GetChar(nEncodedPos++) );
+		else
+		{
 			nEncodedPos++;
 			if( isxdigit(szEncoded.GetChar(nEncodedPos)) && isxdigit(szEncoded.GetChar(nEncodedPos+1)) ) {
-				wxString szIntFromHex;
-				szIntFromHex.Append( szEncoded.GetChar(nEncodedPos) );
-				szIntFromHex.Append( szEncoded.GetChar(nEncodedPos+1) );
-				szDecoded.Append( (wxChar) ParseHex(szIntFromHex) );
+				
+				wxChar n1 = Catalyst::HexToNumber(szEncoded.GetChar(nEncodedPos));
+				wxChar n2 = Catalyst::HexToNumber(szEncoded.GetChar(nEncodedPos+1));
+
+				szDecoded.Append( (wxChar) ((n1 << 4) | n2) );
 				nEncodedPos += 2;
 			}
-		}
-		else {
-			szDecoded.Append(  szEncoded.GetChar(nEncodedPos++) );
 		}
 	}
 
 	return szDecoded;
 }
-
-int EditorFrame::ParseHex(const wxString& hexStr) { // static
-	wxASSERT(hexStr.size() == 2);
-
-	const int n1 = Catalyst::HexToNumber(hexStr[0]);
-	const int n2 = Catalyst::HexToNumber(hexStr[1]);
-
-	return ((n1 << 4) | n2);
-}
-
 
 // -- FrameDropTarget -----------------------------------------------------------------
 

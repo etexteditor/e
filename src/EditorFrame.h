@@ -312,7 +312,6 @@ private:
 
 	// Utility functions
 	static wxString URLDecode(const wxString& value);
-	static int ParseHex(const wxString& hexStr);
 
 	// Embedded class: FrameDropTarget
 	class FrameDropTarget : public wxFileDropTarget {

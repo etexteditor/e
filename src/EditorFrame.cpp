@@ -314,9 +314,9 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		box->Add(m_tabBar, 1, wxEXPAND);
 
 		// Create and add the searchpanel
-		sp = new SearchPanel(panel, -1, wxDefaultPosition, wxSize(10,25));
-		box->Add(sp, 0, wxEXPAND);
-		box->Show(sp, false);
+		m_searchPanel = new SearchPanel(panel, -1, wxDefaultPosition, wxSize(10,25));
+		box->Add(m_searchPanel, 0, wxEXPAND);
+		box->Show(m_searchPanel, false);
 		box->Layout();
 
 		panel->SetSizer(box);
@@ -1890,18 +1890,18 @@ void EditorFrame::SaveAllFilesInProject() {
 
 void EditorFrame::ShowSearch(bool show, bool replace) {
 	if (show) {
-		sp->InitSearch(editorCtrl->GetSelFirstLine(), replace);
-		box->Show(sp);
+		m_searchPanel->InitSearch(editorCtrl->GetSelFirstLine(), replace);
+		box->Show(m_searchPanel);
 	}
 	else {
-		box->Show(sp, false);
+		box->Show(m_searchPanel, false);
 		editorCtrl->SetFocus();
 	}
 	box->Layout();
 }
 
 bool EditorFrame::IsSearching() const {
-	return sp->IsShown();
+	return m_searchPanel->IsShown();
 }
 
 bool EditorFrame::GetSetting(const wxString& name) const {
@@ -2395,17 +2395,17 @@ void EditorFrame::OnMenuFindInSel(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuFindNext(wxCommandEvent& WXUNUSED(event)) {
-	if (sp->HasSearchString()) {
-		sp->FindNext();
-		if (!sp->IsActive()) editorCtrl->SetFocus();
+	if (m_searchPanel->HasSearchString()) {
+		m_searchPanel->FindNext();
+		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
 	}
 	else ShowSearch(true);
 }
 
 void EditorFrame::OnMenuFindPrevious(wxCommandEvent& WXUNUSED(event)) {
-	if (sp->HasSearchString()) {
-		sp->FindPrevious();
-		if (!sp->IsActive()) editorCtrl->SetFocus();
+	if (m_searchPanel->HasSearchString()) {
+		m_searchPanel->FindPrevious();
+		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
 	}
 	else ShowSearch(true);
 }
@@ -2415,8 +2415,8 @@ void EditorFrame::OnMenuFindCurrent(wxCommandEvent& WXUNUSED(event)) {
 	const wxString searchText = editorCtrl->IsSelected() ? editorCtrl->GetSelFirstLine() : editorCtrl->GetCurrentWord();
 
 	// Find first match (don't show panel if not alread shown)
-	sp->InitSearch(searchText, false);
-	sp->FindNext();
+	m_searchPanel->InitSearch(searchText, false);
+	m_searchPanel->FindNext();
 }
 
 void EditorFrame::OnMenuReplace(wxCommandEvent& WXUNUSED(event)) {

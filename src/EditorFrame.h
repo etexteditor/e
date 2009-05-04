@@ -504,8 +504,7 @@ private:
 	EditorCtrl* editorCtrl;
 	wxBoxSizer* box;
 	wxBoxSizer*	editorbox;
-	//TabBar* tabBar;
-	SearchPanel* sp;
+	SearchPanel* m_searchPanel;
 	wxAuiNotebook* m_tabBar;
 
 	// Menus

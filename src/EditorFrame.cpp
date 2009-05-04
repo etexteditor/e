@@ -2339,7 +2339,7 @@ void EditorFrame::OnMenuPageSetup(wxCommandEvent& WXUNUSED(event)) {
 }*/
 
 void EditorFrame::OnMenuPrint(wxCommandEvent& WXUNUSED(event)) {
-	EditorPrintout printout(*editorCtrl);
+	EditorPrintout printout(*editorCtrl, this->m_syntax_handler.GetTheme());
 	wxPrintDialogData printDialogData(m_printData.GetPrintData());
 	wxPrinter printer(&printDialogData);
 

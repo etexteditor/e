@@ -32,10 +32,11 @@ using namespace std;
 class IPrintableDocument;
 class FixedLine;
 class LineListWrap;
+struct tmTheme;
 
 class EditorPrintout: public wxPrintout {
 public:
-	EditorPrintout(const IPrintableDocument& printDoc);
+	EditorPrintout(const IPrintableDocument& printDoc, const tmTheme& theme);
 	~EditorPrintout();
 
 	void OnPreparePrinting();
@@ -47,8 +48,10 @@ public:
 private:
 	// Member variables
 	const IPrintableDocument& m_printDoc;
+	const tmTheme& m_theme;
 	FixedLine* m_line;
 	LineListWrap* m_lineList;
+
 	vector<unsigned int> m_pages;
 	unsigned int m_page_height;
 	unsigned int m_gutter_width;

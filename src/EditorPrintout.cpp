@@ -16,7 +16,6 @@
 #include "tm_syntaxhandler.h"
 #include "FixedLine.h"
 #include "LineListWrap.h"
-#include "IGetSyntaxHandler.h"
 
 // Dummy vars for line
 const vector<interval> EditorPrintout::s_sel;
@@ -24,10 +23,10 @@ const interval EditorPrintout::s_hlBracket(0,0);
 const unsigned int EditorPrintout::s_lastpos = 0;
 const bool EditorPrintout::s_isShadow = false;
 
-EditorPrintout::EditorPrintout(const IPrintableDocument& printDoc)
-: wxPrintout(printDoc.GetName()), m_printDoc(printDoc), m_line(NULL), m_lineList(NULL)
-{
-}
+EditorPrintout::EditorPrintout(const IPrintableDocument& printDoc, const tmTheme& theme):
+	wxPrintout(printDoc.GetName()), 
+	m_printDoc(printDoc), m_theme(theme),
+	m_line(NULL), m_lineList(NULL) {}
 
 EditorPrintout::~EditorPrintout() {
 	delete m_lineList;
@@ -45,16 +44,14 @@ void EditorPrintout::OnPreparePrinting() {
 	MapScreenSizeToPage();
 	const wxRect size = GetLogicalPageRect();
 
-	const tmTheme& theme = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetTheme();
-
 	// Set the current themes font
-	const wxFont& font = theme.font;
+	const wxFont& font = m_theme.font;
 	wxDC& dc = *GetDC();
 	dc.SetFont(font);
 
 	// Initialize line info
 
-	m_line = new FixedLine(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
+	m_line = new FixedLine(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, m_theme);
 	m_line->SetPrintMode();
 	m_line->Init();
 	m_line->SetWordWrap(cxWRAP_SMART);
@@ -110,14 +107,12 @@ bool EditorPrintout::OnPrintPage(int pageNum) {
 	const wxRect rect = GetLogicalPageRect();
 	unsigned int ypos = rect.y;
 
-	const tmTheme& theme = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetTheme();
-
 	// We may have gotten a new dc, so we need a new line
 	wxDC& dc = *GetDC();
-	const wxFont& font = theme.font;
+	const wxFont& font = m_theme.font;
 	dc.SetFont(font);
 
-	FixedLine line(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, theme);
+	FixedLine line(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, m_theme);
 	line.SetPrintMode();
 	line.Init();
 	line.SetWordWrap(cxWRAP_SMART);

@@ -85,7 +85,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	bitmap(bitmap), 
 	m_parentFrame(parentFrame), 
 
-	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()),
+	m_syntaxHandler(m_parentFrame.GetSyntaxHandler()),
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme),
 
@@ -197,7 +197,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	bitmap(bitmap), 
 	m_parentFrame(parentFrame),
 
-	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()),
+	m_syntaxHandler(m_parentFrame.GetSyntaxHandler()),
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme),
 	
@@ -257,7 +257,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	bitmap(bitmap), 
 	m_parentFrame(parentFrame), 
 
-	m_syntaxHandler(dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler()), 
+	m_syntaxHandler(m_parentFrame.GetSyntaxHandler()), 
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme), 
 

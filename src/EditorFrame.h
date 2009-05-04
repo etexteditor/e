@@ -198,6 +198,10 @@ public:
 	virtual wxControl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
 	virtual void FocusEditor();
 
+	// Expose syntax handler for now; this will remove the last
+	// of the global dependencies for getting this property
+	TmSyntaxHandler& GetSyntaxHandler() const { return this->m_syntax_handler; }
+
 	// Files
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);

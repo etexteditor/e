@@ -12,8 +12,12 @@
  ******************************************************************************/
 
 #include "Execute.h"
-#include <wx/filename.h>
-#include "IAppPaths.h"
+#include "eApp.h"
+
+#ifndef WX_PRECOMP
+	#include <wx/filename.h>
+	#include <wx/log.h>
+#endif
 
 #ifndef __WXMSW__
 #include <sys/types.h>
@@ -40,7 +44,7 @@ int cxExecute::Execute(const wxString& command, const vector<char>& input) {
 	wxFile logFile;
 	if (m_debugLog) {
 		// Create temp file with command
-		wxFileName logfilePath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath();
+		wxFileName logfilePath = wxGetApp().GetAppDataPath();
 		logfilePath.SetFullName(wxT("tmcmd.log"));
 		logFile.Open(logfilePath.GetFullPath(), wxFile::write);
 		if (logFile.IsOpened()) {

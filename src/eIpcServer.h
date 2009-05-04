@@ -19,6 +19,7 @@
 
 // pre-definitions
 class IExecuteAppCommand;
+class eApp;
 
 #ifdef __WXMSW__
 class eIpcWin : public wxFrame {
@@ -41,7 +42,7 @@ public:
     wxConnectionBase *OnAcceptConnection(const wxString& topic);
 
 private:
-	eApp& app;
+	IExecuteAppCommand& app;
 };
 
 class eConnection : public wxConnection {

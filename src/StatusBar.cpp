@@ -65,8 +65,8 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	if (!editorCtrl) return;
 
 	const unsigned int changeToken = editorCtrl->GetChangeToken();
-	const unsigned int pos = editorCtrl->GetPos();
 	const int id = editorCtrl->GetId();
+	const unsigned int pos = editorCtrl->GetPos();
 
 	// In rare cases a new editorCtrl may get same address as
 	// a previous one, so we also track the window id.
@@ -82,11 +82,10 @@ void StatusBar::UpdateBarFromActiveEditor() {
 
 	Freeze();
 	if (editorCtrl) {
-		// Get position info
+		// Caret position
 		const unsigned int line = editorCtrl->GetCurrentLineNumber();
 		const unsigned int column = editorCtrl->GetCurrentColumnNumber();
 
-		// Caret position
 		if (line != m_line || column != m_column) {
 			SetStatusText(wxString::Format(wxT("Line: %u  Column: %u"), line, column), 0);
 
@@ -123,13 +122,15 @@ void StatusBar::UpdateBarFromActiveEditor() {
 
 		// Encoding
 		wxFontEncoding enc = editorCtrl->GetEncoding();
-		if (enc == wxFONTENCODING_DEFAULT) enc = wxLocale::GetSystemEncoding();
+		wxTextFileType eol = editorCtrl->GetEOL();
+
 		wxString encoding = wxFontMapper::GetEncodingName(enc).Lower();
+		if (enc == wxFONTENCODING_DEFAULT) enc = wxLocale::GetSystemEncoding();
 		if (enc == wxFONTENCODING_UTF7 || enc == wxFONTENCODING_UTF8 || enc == wxFONTENCODING_UTF16LE ||
 			enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE) {
 			if (editorCtrl->GetBOM()) encoding += wxT("+bom");
 		}
-		wxTextFileType eol = editorCtrl->GetEOL();
+
 		if (eol == wxTextFileType_None) eol = wxTextBuffer::typeDefault;
 		if (eol == wxTextFileType_Dos) encoding += wxT(" crlf");
 		else if (eol == wxTextFileType_Unix) encoding += wxT(" lf");

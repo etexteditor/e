@@ -288,7 +288,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		box->Add(m_tabBar, 1, wxEXPAND);
 
 		// Create and add the searchpanel
-		m_searchPanel = new SearchPanel(panel, -1, wxDefaultPosition, wxSize(10,25));
+		m_searchPanel = new SearchPanel(*this, panel, -1, wxDefaultPosition, wxSize(10,25));
 		box->Add(m_searchPanel, 0, wxEXPAND);
 		box->Show(m_searchPanel, false);
 

@@ -20,10 +20,11 @@
 
 // pre-definitions
 class eSettings;
+class EditorFrame;
 
 class SearchPanel : public wxPanel {
 public:
-	SearchPanel(wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	SearchPanel(EditorFrame& editorFrame, wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~SearchPanel();
 
 	// Member functions
@@ -89,6 +90,8 @@ private:
 	void OnMenuHighlight(wxCommandEvent& evt);
 	void OnKillFocus(wxFocusEvent& event);
 	DECLARE_EVENT_TABLE();
+
+	EditorFrame& m_editorFrame;
 
 	// Member controls
 	SearchEvtHandler* searchbox_evt_handler;

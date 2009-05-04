@@ -855,7 +855,7 @@ void EditorFrame::CreateAndSetToolbar() {
 }
 */
 void EditorFrame::CreateAndSetStatusbar() {
-	m_pStatBar = new StatusBar(*this, wxID_ANY);
+	m_pStatBar = new StatusBar(*this, wxID_ANY, this->m_syntax_handler);
 
 	SetStatusBar(m_pStatBar);
 	SetStatusBarPane(-1); // disable help display

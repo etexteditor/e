@@ -38,10 +38,11 @@ using namespace std;
 // Pre-definitions
 class EditorFrame;
 class EditorCtrl;
+class TmSyntaxHandler;
 
 class StatusBar : public wxStatusBar {
 public:
-	StatusBar(EditorFrame& parent, wxWindowID id);
+	StatusBar(EditorFrame& parent, wxWindowID id, TmSyntaxHandler& syntax_handler);
 
 private:
 	void UpdateBarFromActiveEditor();
@@ -70,6 +71,7 @@ private:
 
 	// Member variables
 	EditorFrame& m_parentFrame;
+	TmSyntaxHandler& m_syntax_handler;
 
 	unsigned int m_line;
 	unsigned int m_column;

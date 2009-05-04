@@ -3752,7 +3752,7 @@ void EditorFrame::HtmlOutputWin::SetPage(const wxString& text) {
 	wxString html = text;
 	unsigned int pos = 0;
 	while (pos < html.size()) {
-		const size_t startpos = html.find(wxT("/cygdrive/"), pos);
+		const size_t startpos = html.find(eDocumentPath::CygdrivePrefix(), pos);
 		if (startpos == wxString::npos) break;
 		++pos; // to advance if we continue the loop
 

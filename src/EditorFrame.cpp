@@ -2030,9 +2030,7 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuFindCommand(wxCommandEvent& WXUNUSED(event)) {
-	if (editorCtrl) {
-		editorCtrl->DoActionFromDlg();
-	}
+	if (editorCtrl) editorCtrl->DoActionFromDlg();
 }
 
 void EditorFrame::OnMenuReloadBundles(wxCommandEvent& WXUNUSED(event)) {
@@ -2069,19 +2067,18 @@ void EditorFrame::OnMenuDebugBundles(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
-	if (editorCtrl) {
+	if (!editorCtrl) return;
 
 #if defined (__WXMSW__)
-		if (wxIsShiftDown()) {
+	if (wxIsShiftDown()) {
 #else
-		if (wxGetKeyState(WXK_SHIFT)) {
+	if (wxGetKeyState(WXK_SHIFT)) {
 #endif
-			// If shift is down, we want to edit the bundle item
-			const wxString bundlePath = m_syntax_handler.GetBundleItemUriFromMenu(event.GetId());
-			if (!bundlePath.empty()) OpenRemoteFile(bundlePath);
-		}
-		else m_syntax_handler.DoBundleAction(event.GetId(), *editorCtrl);
+		// If shift is down, we want to edit the bundle item
+		const wxString bundlePath = m_syntax_handler.GetBundleItemUriFromMenu(event.GetId());
+		if (!bundlePath.empty()) OpenRemoteFile(bundlePath);
 	}
+	else m_syntax_handler.DoBundleAction(event.GetId(), *editorCtrl);
 }
 
 void EditorFrame::OnMenuKeyDiagnostics(wxCommandEvent& event) {
@@ -2090,9 +2087,7 @@ void EditorFrame::OnMenuKeyDiagnostics(wxCommandEvent& event) {
 
 void EditorFrame::OnSubmenuSyntax(wxCommandEvent& event) {
 	wxMenuItem* syntaxItem = GetMenuBar()->FindItem(event.GetId());
-	if (syntaxItem && editorCtrl) {
-		editorCtrl->SetSyntax(syntaxItem->GetLabel(), true);
-	}
+	if (syntaxItem && editorCtrl) editorCtrl->SetSyntax(syntaxItem->GetLabel(), true);
 }
 
 void EditorFrame::OnSubmenuEncoding(wxCommandEvent& event) {
@@ -2340,28 +2335,25 @@ void EditorFrame::OnMenuPageSetup(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuPrint(wxCommandEvent& WXUNUSED(event)) {
 	EditorPrintout printout(*editorCtrl, this->m_syntax_handler.GetTheme());
+
 	wxPrintDialogData printDialogData(m_printData.GetPrintData());
 	wxPrinter printer(&printDialogData);
 
-	// Print document
-	if (!printer.Print(this, &printout, true /*prompt*/)) {
-        if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
-            wxMessageBox(_T("There was a problem printing.\nPerhaps your current printer is not set correctly?"), _T("Printing"), wxOK);
-    }
-    else {
+	if (printer.Print(this, &printout, true /*prompt*/)) {
 		// Keep the new print settings
         m_printData.SetPrintData(printer.GetPrintDialogData().GetPrintData());
     }
+    else {
+        if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
+            wxMessageBox(_T("There was a problem printing.\nPerhaps your current printer is not set correctly?"), _T("Printing"), wxOK);
+    }
 }
-
 
 void EditorFrame::OnMenuClose(wxCommandEvent& WXUNUSED(event)) {
 	wxASSERT(m_tabBar->GetPageCount() > 0);
-
 	if (m_tabBar->GetPageCount() == 1 && editorCtrl->IsEmpty()) return;
 
 	const int tab_id = m_tabBar->GetSelection();
-
 	CloseTab(tab_id);
 }
 
@@ -2528,12 +2520,10 @@ void EditorFrame::OnMenuRunCurrent(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
 #ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
 	const unsigned int tabCount = m_tabBar->GetPageCount();
+	if (tabCount <= 1) return;
 
-	if (tabCount > 1) {
-		const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
-		if (currentTab == tabCount - 1) m_tabBar->SetSelection(m_tabBar->TabToPage(0));
-		else m_tabBar->SetSelection(m_tabBar->TabToPage(currentTab + 1));
-	}
+	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
+	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
 #endif
 }
 
@@ -2574,12 +2564,10 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 void EditorFrame::OnMenuPrevTab(wxCommandEvent& WXUNUSED(event)) {
 #ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
 	const unsigned int tabCount = m_tabBar->GetPageCount();
+	if (tabCount <= 1) return;
 
-	if (tabCount > 1) {
-		const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
-		if (currentTab == 0) m_tabBar->SetSelection(m_tabBar->TabToPage(tabCount - 1));
-		else m_tabBar->SetSelection(m_tabBar->TabToPage(currentTab - 1));
-	}
+	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
+	m_tabBar->SetSelection(m_tabBar->TabToPage( (tabCount + currentTab - 1) % tabCount));
 #endif
 }
 
@@ -2594,10 +2582,7 @@ void EditorFrame::OnMenuGotoTab(wxCommandEvent& event) {
 void EditorFrame::OnMenuGotoLastTab(wxCommandEvent& WXUNUSED(event)) {
 #ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
 	const unsigned int tabcount = m_tabBar->GetPageCount();
-
-	if (tabcount) {
-		 m_tabBar->SetSelection(m_tabBar->TabToPage(tabcount-1));
-	}
+	if (tabcount) m_tabBar->SetSelection(m_tabBar->TabToPage(tabcount-1));
 #endif
 }
 
@@ -2677,16 +2662,15 @@ void EditorFrame::OnMenuOpenExt(wxCommandEvent& WXUNUSED(event)) {
 	const wxString spec = path.GetName() + wxT(".*");
 	wxDir::GetAllFiles(path.GetPath(), &files, spec, wxDIR_FILES);
 
-	if (files.GetCount() > 1) {
-		// Find current file
-		const int fileId = files.Index(path.GetFullPath());
+	if (files.GetCount() <= 1) return;
 
-		// Open next file with same base name
-		if (fileId != wxNOT_FOUND) {
-			if (fileId == (int)files.GetCount()-1) OpenFile(files[0]);
-			else OpenFile(files[fileId+1]);
-		}
-	}
+	// Find current file
+	const int fileId = files.Index(path.GetFullPath());
+	if (fileId == wxNOT_FOUND) return;
+
+	// Open next file with same base name
+	if (fileId == (int)files.GetCount()-1) OpenFile(files[0]);
+	else OpenFile(files[fileId+1]);
 }
 
 void EditorFrame::OnMenuGotoBracket(wxCommandEvent& WXUNUSED(event)) {
@@ -2712,13 +2696,10 @@ void EditorFrame::OnMenuGotoLine(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuGotoFile(wxCommandEvent& WXUNUSED(event)) {
 	wxASSERT(editorCtrl);
 
-	if (m_projectPane->HasProject()) {
-		GotoFileDlg dlg(this, *m_projectPane);
+	if (!m_projectPane->HasProject()) return;
 
-		if (dlg.ShowModal() == wxID_OK) {
-			OpenFile(dlg.GetSelection());
-		}
-	}
+	GotoFileDlg dlg(this, *m_projectPane);
+	if (dlg.ShowModal() == wxID_OK) OpenFile(dlg.GetSelection());
 }
 
 void EditorFrame::OnMenuFoldToggle(wxCommandEvent& WXUNUSED(event)) {
@@ -2846,7 +2827,6 @@ void EditorFrame::OnMenuLineNumbers(wxCommandEvent& event) {
 	if (event.IsChecked() == m_showGutter) return;
 
 	m_showGutter = event.IsChecked();
-
 	m_settings.SetSettingBool(wxT("showgutter"), m_showGutter);
 
 	// Toggle showing of linenumbers in all editorCtrls
@@ -2860,7 +2840,6 @@ void EditorFrame::OnMenuIndentGuide(wxCommandEvent& event) {
 	if (event.IsChecked() == m_showIndent) return;
 
 	m_showIndent = event.IsChecked();
-
 	m_settings.SetSettingBool(wxT("showindent"), m_showIndent);
 
 	// Toggle showing of indent guides in all editorCtrls
@@ -2924,38 +2903,26 @@ void EditorFrame::OnMenuHighlightUsers(wxCommandEvent& event) {
 }
 */
 void EditorFrame::OnMenuPreview(wxCommandEvent& event) {
-	if (event.IsChecked()) {
-		ShowWebPreview();
-	}
-	else {
-		CloseWebPreview();
-	}
+	if (event.IsChecked()) ShowWebPreview();
+	else CloseWebPreview();
 }
 
 void EditorFrame::OnMenuShowSymbols(wxCommandEvent& event) {
-	// The project pane use the same shortcut (F5) for refresh
+	// The project pane uses the same shortcut (F5) for refresh
 	if (m_projectPane->IsFocused()) {
 		m_projectPane->RefreshDirs();
 		return;
 	}
 
-	if (event.IsChecked()) {
-		ShowSymbolList();
-	}
-	else {
-		CloseSymbolList();
-	}
+	if (event.IsChecked()) ShowSymbolList();
+	else CloseSymbolList();
 }
 
 void EditorFrame::OnMenuSymbols(wxCommandEvent& WXUNUSED(event)) {
 	if (m_symbolList) {
 		// If symbol list is already open, we switch focus
-		if (FindFocus() == editorCtrl) {
-			m_symbolList->SetFocus();
-		}
-		else {
-			editorCtrl->SetFocus();
-		}
+		if (FindFocus() == editorCtrl) m_symbolList->SetFocus();
+		else editorCtrl->SetFocus();
 	}
 	else {
 		// Open symbol list
@@ -3046,8 +3013,8 @@ void EditorFrame::CloseWebPreview() {
 
 void EditorFrame::SetWebPreviewTitle(const wxString& title) {
 	if (!m_previewDlg) return; // already closed
-	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_previewDlg);
 
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_previewDlg);
 	pane.Caption(title);
 	m_frameManager.Update();
 }
@@ -3055,7 +3022,6 @@ void EditorFrame::SetWebPreviewTitle(const wxString& title) {
 
 void EditorFrame::SetUndoPaneCaption(const wxString& caption) {
 	wxAuiPaneInfo& pane = m_frameManager.GetPane(wxT("Undo"));
-
 	pane.Caption(caption);
 	m_frameManager.Update();
 }
@@ -3104,21 +3070,16 @@ void EditorFrame::OnMenuToolbar(wxCommandEvent& event) {
 */
 
 void EditorFrame::OnMenuStatusbar(wxCommandEvent& event) {
-	if (event.IsChecked()) {
-		if (!m_pStatBar) {
-			CreateAndSetStatusbar();
-
-			m_settings.SetSettingBool(wxT("statusbar"), true);
-		}
+	const bool showStatusbar = event.IsChecked();
+	if (showStatusbar && !m_pStatBar) {
+		CreateAndSetStatusbar();
+		m_settings.SetSettingBool(wxT("statusbar"), true);
 	}
-	else {
-		if (m_pStatBar) {
-			delete m_pStatBar;
-			m_pStatBar = NULL;
-			SetStatusBar(NULL);
-
-			m_settings.SetSettingBool(wxT("statusbar"), false);
-		}
+	else if (!showStatusbar && m_pStatBar) {
+		delete m_pStatBar;
+		m_pStatBar = NULL;
+		SetStatusBar(NULL);
+		m_settings.SetSettingBool(wxT("statusbar"), false);
 	}
 }
 
@@ -3134,9 +3095,7 @@ void EditorFrame::OnMenuAbout(wxCommandEvent& event) {
 		result = aboutdlg.ShowModal();
 	cxENDLOCK
 
-	if (result == 11) {
-		OnMenuRegister(event);
-	}
+	if (result == 11) OnMenuRegister(event);
 }
 
 void EditorFrame::OnMenuGotoForum(wxCommandEvent& WXUNUSED(event)) {
@@ -3151,22 +3110,21 @@ void EditorFrame::OnMenuBuy(wxCommandEvent& WXUNUSED(event)) {
 	wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com/order.html"));
 }
 
-
 void EditorFrame::OnMenuRegister(wxCommandEvent& WXUNUSED(event)) {
 	cxLOCK_WRITE(m_catalyst)
 		catalyst.ShowRegisterDlg(this);
 	cxENDLOCK
 
-	if (((eApp*)wxTheApp)->IsRegistered()) {
-		SetPath(); // to remove title bar nag
-		RemoveRegMenus();
+	if (!((eApp*)wxTheApp)->IsRegistered()) return;
 
-		// Show about dialog to confirm
-		cxLOCK_READ(m_catalyst)
-			eAbout aboutdlg(this, catalyst);
-			aboutdlg.ShowModal();
-		cxENDLOCK
-	}
+	SetPath(); // to remove title bar nag
+	RemoveRegMenus();
+
+	// Show about dialog to confirm
+	cxLOCK_READ(m_catalyst)
+		eAbout aboutdlg(this, catalyst);
+		aboutdlg.ShowModal();
+	cxENDLOCK
 }
 
 void EditorFrame::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
@@ -3285,33 +3243,33 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 	event.Skip();
 	if (!event.GetActive()) return;
 
-	if (editorCtrl) {
-		if (IsShown()) {
-			// If the frame get focus we want to pass it to the currently active editorCtrl
-			editorCtrl->SetFocus();
+	if (!editorCtrl) return;
 
-			if (!m_inAskReload) {
-				// Should we check for changed files?
-				bool doCheckChange = true;  // default
-				m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+	if (IsShown()) {
+		// If the frame get focus we want to pass it to the currently active editorCtrl
+		editorCtrl->SetFocus();
 
-				if (doCheckChange) {
-					// Check if any open files have been modified (in separate thread)
-					CheckForModifiedFilesAsync();
-				}
+		if (!m_inAskReload) {
+			// Should we check for changed files?
+			bool doCheckChange = true;  // default
+			m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+
+			if (doCheckChange) {
+				// Check if any open files have been modified (in separate thread)
+				CheckForModifiedFilesAsync();
 			}
+		}
 
-			// State should only be saved when the window is active
-			m_needStateSave = true;
-		}
-		else {
-			// Commit the documents & settings while we are inactive
-			// TODO: Wait until we have been idle for some time
-			/*SaveState();
-			cxLOCK_WRITE(m_catalyst)
-				catalyst.Commit();
-			cxENDLOCK*/
-		}
+		// State should only be saved when the window is active
+		m_needStateSave = true;
+	}
+	else {
+		// Commit the documents & settings while we are inactive
+		// TODO: Wait until we have been idle for some time
+		/*SaveState();
+		cxLOCK_WRITE(m_catalyst)
+			catalyst.Commit();
+		cxENDLOCK*/
 	}
 
 	//wxLogDebug(wxT("EditorFrame::OnActivate Done"));
@@ -3393,9 +3351,7 @@ void EditorFrame::SaveState() {
 	if (!m_needStateSave) return;
 	if (!editorCtrl) return;
 
-	if (m_sizeChanged) {
-		SaveSize();
-	}
+	if (m_sizeChanged) SaveSize();
 
 	//wxLogDebug(wxT("SaveState"));
 
@@ -3475,7 +3431,6 @@ void EditorFrame::OnIdle(wxIdleEvent& event) {
 	//wxLogDebug(wxT("EditorFrame::OnIdle"));
 
 	SaveState();
-
 	event.Skip();
 }
 
@@ -3752,8 +3707,7 @@ int EditorFrame::ParseHex(const wxString& hexStr) { // static
 
 // -- FrameDropTarget -----------------------------------------------------------------
 
-EditorFrame::FrameDropTarget::FrameDropTarget(EditorFrame& parent) : m_parent(parent) {
-}
+EditorFrame::FrameDropTarget::FrameDropTarget(EditorFrame& parent) : m_parent(parent) {}
 
 bool EditorFrame::FrameDropTarget::OnDropFiles(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), const wxArrayString& filenames) {
 	m_parent.SetCursor(wxCURSOR_WAIT);

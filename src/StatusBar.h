@@ -76,6 +76,7 @@ private:
 
 	unsigned int m_line;
 	unsigned int m_column;
+
 	unsigned int m_tabWidth;
 	bool m_isSoftTabs;
 

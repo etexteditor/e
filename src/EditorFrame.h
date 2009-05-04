@@ -543,8 +543,11 @@ private:
 	bool m_showIndent;
 	bool m_searchHighlight;
 	bool m_userHighlight;
+
+	// tab state
 	bool m_softTabs;
 	int m_tabWidth;
+
 	wxArrayString m_recentFiles;
 	wxArrayString m_recentProjects;
 

@@ -22,7 +22,6 @@
 #include "eIpcServer.h"
 #include <wx/ffile.h>
 #include "eSettings.h"
-#include "IGetSyntaxHandler.h"
 #include "IAppPaths.h"
 #include "IExecuteAppCommand.h"
 
@@ -36,7 +35,6 @@ class EditorFrame;
 
 class eApp : public wxApp, 
 	public IGetSettings, 
-	public IGetSyntaxHandler, 
 	public IAppPaths, 
 	public IExecuteAppCommand
 {
@@ -50,8 +48,6 @@ public:
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);
 	virtual bool ExecuteCmd(const wxString& cmd, wxString& result);
-
-	virtual TmSyntaxHandler& GetSyntaxHandler() const {return *m_pSyntaxHandler;};
 
 	virtual const wxString& GetAppPath() const {return m_appPath;};
 	virtual const wxString& GetAppDataPath() const {return m_appDataPath;};

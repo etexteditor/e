@@ -37,7 +37,6 @@
 #include "Fold.h"
 
 #include "eSettings.h"
-#include "IGetSyntaxHandler.h"
 #include "IAppPaths.h"
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};

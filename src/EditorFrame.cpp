@@ -291,8 +291,9 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		m_searchPanel = new SearchPanel(panel, -1, wxDefaultPosition, wxSize(10,25));
 		box->Add(m_searchPanel, 0, wxEXPAND);
 		box->Show(m_searchPanel, false);
-		box->Layout();
 
+		// Layout main components
+		box->Layout();
 		panel->SetSizer(box);
 
 		// Layout the Docks in the FrameManager
@@ -328,11 +329,12 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		}
 
 		// Open project from last session
-		wxString projectPath;
 		bool showProject;
-		const bool hasProject = m_settings.GetSettingString(wxT("project"), projectPath);
 		if (!m_settings.GetSettingBool(wxT("showproject"), showProject)) showProject = false;
 		
+		wxString projectPath;
+		const bool hasProject = m_settings.GetSettingString(wxT("project"), projectPath);
+
 #ifdef __WXGTK__ // FIXME
 		Show();
 #endif
@@ -356,14 +358,11 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 
 		m_frameManager.Update();
 
-		// Set up accelerator table
 		InitAccelerators();
-
-		// Set up the menus
 		InitMenus();
 
-		// set the application icon
 #ifdef __WXMSW__
+		// set the application icon
 		wxIcon icon(wxICON(APP_ICON));
 		SetIcon(icon);
 #endif

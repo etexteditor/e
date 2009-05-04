@@ -88,9 +88,9 @@ void GutterCtrl::UpdateTheme() {
 	const int blue = m_bgcolor.Blue();
 	const int green = m_bgcolor.Green();
 	if (red - 140 < 0) {
-		m_hlightcolor.Set(red+20, green+20, blue+20); // Pastel purple (slightly darker)
-		m_edgecolor.Set(red+100, green+100, blue+100); // Pastel purple (darker)
-		m_numbercolor.Set(red+140, green+140, blue+140); // Pastel purple (even darker)
+		m_hlightcolor.Set(0xFF & (red+20), 0xFF & (green+20), 0xFF & (blue+20)); // Pastel purple (slightly darker)
+		m_edgecolor.Set(0xFF & (red+100), 0xFF & (green+100), 0xFF & (blue+100)); // Pastel purple (darker)
+		m_numbercolor.Set(0xFF & (red+140), 0xFF & (green+140), 0xFF & (blue+140)); // Pastel purple (even darker)
 	}
 	else {
 		m_hlightcolor.Set(wxMax(0,red-20), wxMax(0,green-20), wxMax(0,blue-20)); // Pastel purple (slightly darker)

@@ -46,6 +46,7 @@ public:
 
 private:
 	void UpdateBarFromActiveEditor();
+	void UpdateTabs();
 
 	void PopupSyntaxMenu(wxRect& menuPos);
 

@@ -141,20 +141,25 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	}
 
 	// Tabs
+	UpdateTabs();
+
+	Thaw();
+}
+
+void StatusBar::UpdateTabs() {
 	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
 	const bool isSoftTabs = m_parentFrame.IsSoftTabs();
-	if (tabWidth != m_tabWidth || isSoftTabs != m_isSoftTabs) {
-		if (m_parentFrame.IsSoftTabs()) {
-			SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
-		}
-		else {
-			SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
-		}
-
-		m_tabWidth = tabWidth;
-		m_isSoftTabs = isSoftTabs;
+	if (tabWidth == m_tabWidth && isSoftTabs == m_isSoftTabs) return;
+		
+	if (m_parentFrame.IsSoftTabs()) {
+		SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
 	}
-	Thaw();
+	else {
+		SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
+	}
+
+	m_tabWidth = tabWidth;
+	m_isSoftTabs = isSoftTabs;
 }
 
 void StatusBar::OnIdle(wxIdleEvent& WXUNUSED(event)) {

@@ -141,8 +141,6 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 }
 
 PreviewDlg::~PreviewDlg() {
-	//m_parent.PreviewClosed();
-
 	// Terminate thread
 	if (m_thread) m_thread->Terminate();
 

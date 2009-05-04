@@ -3792,8 +3792,7 @@ void EditorFrame::HtmlOutputWin::AppendText(const wxString& html) {
 
 void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
     const wxString url = event.GetURL();
-	if (url == wxT("about:blank"))
-		return;
+	if (url == wxT("about:blank")) return;
 
 	if (url.StartsWith(wxT("txmt://open"))) {
 		m_parentFrame.OpenTxmtUrl(url);

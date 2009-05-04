@@ -282,6 +282,10 @@ protected:
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
 
 private:
+	// Init functions
+	void EditorFrame::InitAccelerators();
+	void EditorFrame::InitMenus();
+
 	EditorCtrl* GetEditorCtrlFromPage(size_t page_idx);
 
 	// Menu & statusdbar handling

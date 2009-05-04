@@ -8503,8 +8503,7 @@ int EditorCtrl::GetSymbols(vector<SymbolRef>& symbols) const {
 	// DEBUG: We want to be able to see in crash dumps if symbols was reloaded
 	int res = 1;
 
-	// Check if we have symbols cached (so we avoid building them
-	// twice for statusbar & symbollist).
+	// Check if we have symbols cached, to avoid building them twice for statusbar & symbollist
 	if (m_symbolCacheToken != m_changeToken) {
 		m_symbolCache.clear();
 		m_syntaxstyler.GetSymbols(m_symbolCache);

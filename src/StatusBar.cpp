@@ -158,6 +158,25 @@ void StatusBar::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	UpdateBarFromActiveEditor();
 }
 
+void StatusBar::PopupSyntaxMenu(wxRect& menuPos) {
+		const wxString& current = m_editorCtrl->GetSyntaxName();
+
+		// Get syntaxes and sort
+		vector<cxSyntaxInfo*> syntaxes = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetSyntaxes();
+		sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
+
+		// Syntax submenu
+		wxMenu syntaxMenu;
+		for (unsigned int i = 0; i < syntaxes.size(); ++i) {
+			const cxSyntaxInfo& si = *syntaxes[i];
+
+			wxMenuItem* item = syntaxMenu.Append(new BundleMenuItem(&syntaxMenu, 1000+i, si, wxITEM_CHECK));
+			if (si.name == current) item->Check();
+		}
+
+		PopupMenu(&syntaxMenu, menuPos.x, menuPos.y);
+}
+
 void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 	UpdateBarFromActiveEditor();
 	wxASSERT(m_editorCtrl);
@@ -174,22 +193,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 	GetFieldRect(4, encodingRect);
 
 	if (syntaxRect.Contains(x, y)) {
-		const wxString& current = m_editorCtrl->GetSyntaxName();
-
-		// Get syntaxes and sort
-		vector<cxSyntaxInfo*> syntaxes = dynamic_cast<IGetSyntaxHandler*>(wxTheApp)->GetSyntaxHandler().GetSyntaxes();
-		sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
-
-		// Syntax submenu
-		wxMenu syntaxMenu;
-		for (unsigned int i = 0; i < syntaxes.size(); ++i) {
-			const cxSyntaxInfo& si = *syntaxes[i];
-
-			wxMenuItem* item = syntaxMenu.Append(new BundleMenuItem(&syntaxMenu, 1000+i, si, wxITEM_CHECK));
-			if (si.name == current) item->Check();
-		}
-
-		PopupMenu(&syntaxMenu, syntaxRect.x, syntaxRect.y);
+		PopupSyntaxMenu(syntaxRect);
 	}
 	else if (tabsRect.Contains(x, y)) {
 		// Create the tabs menu

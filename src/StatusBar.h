@@ -46,6 +46,8 @@ public:
 private:
 	void UpdateBarFromActiveEditor();
 
+	void PopupSyntaxMenu(wxRect& menuPos);
+
 	void OnIdle(wxIdleEvent& event);
 	void OnMouseLeftDown(wxMouseEvent& event);
 	void OnMenuTabs2(wxCommandEvent& event);

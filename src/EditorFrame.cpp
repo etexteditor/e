@@ -236,9 +236,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	if (showToolbar) CreateAndSetToolbar(); */
 
 	// Create statusbar
-	bool showStatusbar = true; // default setting
-	m_settings.GetSettingBool(wxT("statusbar"), showStatusbar);
-	if (showStatusbar) CreateAndSetStatusbar();
+	InitStatusbar();
 
 	Freeze();
 	{
@@ -367,14 +365,10 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		}
 
 		// Check if we should show web preview
-		if (showpreview) {
-			ShowWebPreview();
-		}
+		if (showpreview) ShowWebPreview();
 
 		// Check if we should show symbol list
-		if (showsymbols) {
-			ShowSymbolList();
-		}
+		if (showsymbols) ShowSymbolList();
 
 		m_frameManager.Update();
 
@@ -418,6 +412,12 @@ EditorFrame::~EditorFrame() {
 	if (undoHistory) undoHistory->Destroy();
 	if (m_changeCheckerThread) m_changeCheckerThread->Kill(); // may be locked on network drive
 	//if (m_dirWatcher) m_dirWatcher->Delete(); // may take forever
+}
+
+void EditorFrame::InitStatusbar() {
+	bool showStatusbar = true;
+	m_settings.GetSettingBool(wxT("statusbar"), showStatusbar);
+	if (showStatusbar) CreateAndSetStatusbar();
 }
 
 void EditorFrame::InitAccelerators() {

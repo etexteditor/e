@@ -283,8 +283,9 @@ protected:
 
 private:
 	// Init functions
-	void EditorFrame::InitAccelerators();
-	void EditorFrame::InitMenus();
+	void InitAccelerators();
+	void InitMenus();
+	void InitStatusbar();
 
 	EditorCtrl* GetEditorCtrlFromPage(size_t page_idx);
 

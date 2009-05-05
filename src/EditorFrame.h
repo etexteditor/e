@@ -171,9 +171,15 @@ public:
 	virtual DirWatcher& GetDirWatcher() = 0;
 };
 
+class IFrameUndoService {
+public:
+	virtual void SetUndoPaneCaption(const wxString& caption) = 0;
+};
+
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
-	public IFrameProjectService {
+	public IFrameProjectService,
+	public IFrameUndoService {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
 	~EditorFrame();
@@ -262,7 +268,7 @@ public:
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
 
-	void SetUndoPaneCaption(const wxString& caption);
+	virtual void SetUndoPaneCaption(const wxString& caption);
 
 	virtual RemoteThread& GetRemoteThread() {return *m_remoteThread;};
 

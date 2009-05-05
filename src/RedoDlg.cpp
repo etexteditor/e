@@ -16,7 +16,7 @@
 
 RedoDlg::RedoDlg(wxWindow* parent, CatalystWrapper& cw, int editorId, const doc_id& di)
 : wxDialog (parent, -1, _("Undo History"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {
-	UndoHistory* undoHistory = new UndoHistory(cw, editorId, this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	UndoHistory* undoHistory = new UndoHistory(cw, NULL, editorId, this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	undoHistory->Connect(wxEVT_CHAR, wxKeyEventHandler(RedoDlg::OnHistoryChar), NULL, this);
 	undoHistory->Connect(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, wxCommandEventHandler(RedoDlg::OnHistoryDClick), NULL, this);
 

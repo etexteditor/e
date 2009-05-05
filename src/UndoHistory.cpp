@@ -38,10 +38,10 @@ BEGIN_EVENT_TABLE(UndoHistory, wxControl)
 	EVT_MENU(MENU_DIFF_TO_CURRENT, UndoHistory::OnMenuDiffToCurrent)
 END_EVENT_TABLE()
 
-UndoHistory::UndoHistory(CatalystWrapper& cw, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
+UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoService* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 	: wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
-	  m_catalyst(cw), m_dispatcher(cw.GetDispatcher()), m_doc(cw), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
-	  m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(NULL)
+	  m_catalyst(cw), m_doc(cw), m_dispatcher(cw.GetDispatcher()), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
+	  m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame)
 {
 	SetBackgroundStyle(wxBG_STYLE_CUSTOM); // Avoid flicker
 
@@ -280,6 +280,10 @@ void UndoHistory::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	}
 }
 
+void UndoHistory::UpdateCaption(const wxChar* caption) {
+	if (m_parentFrame) m_parentFrame->SetUndoPaneCaption(caption);
+}
+
 void UndoHistory::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	if (!IsShown() || !m_editorCtrl) return;
 
@@ -295,7 +299,7 @@ void UndoHistory::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 
 		if (selections.empty()) {
 			UpdateTree();
-			if (m_parentFrame) m_parentFrame->SetUndoPaneCaption(_("Undo"));
+			UpdateCaption(_("Undo"));
 		}
 		else {
 			cxLOCKDOC_READ(m_doc)
@@ -313,7 +317,7 @@ void UndoHistory::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 				m_selectedNode = m_rangeHistory.size()-1;
 				m_pTree->Select(m_selectedNode);
 			}
-			if (m_parentFrame) m_parentFrame->SetUndoPaneCaption(_("Undo (selection)"));
+			UpdateCaption(_("Undo (selection)"));
 		}
 
 		m_range = newrange;

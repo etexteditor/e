@@ -300,16 +300,22 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		box->Layout();
 		panel->SetSizer(box);
 
-		// Layout the Docks in the FrameManager
-		m_frameManager.AddPane(panel, wxAuiPaneInfo().Name(wxT("Center")).CenterPane().PaneBorder(false)); // The main text area
-		documentHistory = new DocHistory(m_catalyst, id, this, 1); // Add the Document History Pane
+		//// Layout the Docks in the FrameManager
+		// The main text area
+		m_frameManager.AddPane(panel, wxAuiPaneInfo().Name(wxT("Center")).CenterPane().PaneBorder(false));
+
+		// Add the Document History Pane
+		documentHistory = new DocHistory(m_catalyst, id, this, 1); 
 		m_frameManager.AddPane(documentHistory, wxAuiPaneInfo().Name(wxT("History")).Hide().Right().Caption(_("History")).BestSize(wxSize(150,200)));
-		undoHistory = new UndoHistory(m_catalyst, id, this, 1); // Add the Undo History Pane
-		undoHistory->SetParentFrame(this);
+
+		// Add the Undo History Pane
+		undoHistory = new UndoHistory(m_catalyst, this, id, this, 1);
 		m_frameManager.AddPane(undoHistory, wxAuiPaneInfo().Name(wxT("Undo")).Hide().Right().Caption(_("Undo")).BestSize(wxSize(150,50)));
+
 		//incommingPane = new Incomming(m_catalyst, this, 1); // Add the Incomming Pane
 		//incommingPane->MakeLastItemVisible();
 		//m_frameManager.AddPane(incommingPane, wxAuiPaneInfo().Name(wxT("Incoming")).Hide().Top().Caption(_("Incoming")).BestSize(wxSize(150,100)));
+
 		m_outputPane = new HtmlOutputWin(*this);
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
 

@@ -18,15 +18,14 @@
 
 // Pre-declarations
 class EditorCtrl;
-class EditorFrame;
+class IFrameUndoService;
 class VersionTree;
 class VersionTreeEvent;
 
 class UndoHistory : public wxControl {
 public:
-	UndoHistory(CatalystWrapper& cw, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	UndoHistory(CatalystWrapper& cw, IFrameUndoService* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~UndoHistory();
-	void SetParentFrame(EditorFrame* parent) {m_parentFrame = parent;};
 
 	void Clear();
 	void SetDocument(const doc_id& di, bool doCenter=false);
@@ -35,6 +34,7 @@ public:
 
 private:
 	void UpdateTree(bool doCenter=false);
+	void UpdateCaption(const wxChar* caption);
 	void DrawLayout(wxDC& dc);
 
 	// Event handlers
@@ -63,19 +63,23 @@ private:
 
 	// Member variables
 	CatalystWrapper m_catalyst;
-	Dispatcher& m_dispatcher;
 	DocumentWrapper m_doc; // Initialized with rev0
+	Dispatcher& m_dispatcher;
+
 	wxMemoryDC m_mdc;
 	wxBitmap m_bitmap;
+
+	bool m_ignoreUpdates;
+
+	EditorCtrl* m_editorCtrl;
+	IFrameUndoService* m_parentFrame;
+
 	DiffLineCell m_cell;
 	VersionTree* m_pTree;
-	bool m_ignoreUpdates;
 
 	wxBrush bgBrush;
 	wxPen linePen;
 
-	EditorCtrl* m_editorCtrl;
-	EditorFrame* m_parentFrame;
 	doc_id m_sourceDoc;
 	int m_source_win_id;
 	interval m_range;

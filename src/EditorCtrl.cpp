@@ -9471,7 +9471,7 @@ void EditorCtrl::TestMilestones() {
 
 #endif //__WXDEBUG__
 
-// -- FrameDropTarget -----------------------------------------------------------------
+// -- Editor DragDropTarget -----------------------------------------------------------------
 
 EditorCtrl::DragDropTarget::DragDropTarget(EditorCtrl& parent) : m_parent(parent) {
 	m_fileObject = new wxFileDataObject;

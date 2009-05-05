@@ -37,19 +37,17 @@ using namespace std;
 
 // Pre-definitions
 class IEditorDoAction;
-// #include "matchers.h"
+
 class matcher;
 class match_matcher;
 class span_matcher;
 class group_matcher;
-// #include "tinyxml.h"
+
 class TiXmlElement;
-// #include "catalyst.h"
+
 class DocumentWrapper;
-// #include "dispatcher.h"
+
 class Dispatcher;
-// #include "tinyxml.h"
-class TiXmlElement;
 
 struct style;
 class TmSyntaxHandler;

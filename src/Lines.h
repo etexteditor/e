@@ -4,7 +4,6 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "FixedLine.h"
-#include "styler.h"
 #include "LineListWrap.h"
 #include "LineListNoWrap.h"
 
@@ -21,6 +20,7 @@ using namespace std;
 class wxFileName;
 class IFoldingEditor;
 struct tmTheme;
+class Styler;
 
 class Lines {
 public:

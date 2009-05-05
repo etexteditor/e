@@ -1,6 +1,8 @@
 #ifndef __IFRAMEEDITORSERVICE_H__
 #define __IFRAMEEDITORSERVICE_H__
 
+#include "EditorChangeState.h"
+
 // EditorFrame implements this interface, which gathers functions
 // used to query & modify the state of, and retreive pointers to, the active editor.
 

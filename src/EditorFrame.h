@@ -23,7 +23,6 @@
 #include "DocHistory.h"
 #include <wx/dnd.h>
 #include <wx/regex.h>
-#include "StatusBar.h"
 #include <wx/aui/aui.h>
 #include <wx/imaglist.h>
 #include "RemoteThread.h"
@@ -57,6 +56,7 @@ class UndoHistory;
 class eSettings;
 class SearchPanel;
 class TmSyntaxHandler;
+class StatusBar;
 
 // Menu id's
 enum {

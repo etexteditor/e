@@ -51,6 +51,7 @@
 #include "UndoHistory.h"
 #include "eDocumentPath.h"
 #include "SearchPanel.h"
+#include "StatusBar.h"
 
 #if defined (__WXMSW__)
     #include <wx/msw/registry.h>

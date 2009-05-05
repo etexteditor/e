@@ -21,7 +21,6 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include <wx/dnd.h>
-#include <wx/regex.h>
 #include <wx/aui/aui.h>
 #include <wx/imaglist.h>
 #include "RemoteThread.h"

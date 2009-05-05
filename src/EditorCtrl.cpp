@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "EditorCtrl.h"
+#include <wx/regex.h>
 #include <wx/dataobj.h>
 #include <wx/clipbrd.h>
 #include <algorithm>

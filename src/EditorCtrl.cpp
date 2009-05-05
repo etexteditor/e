@@ -1625,14 +1625,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 					break;
 
 				case tmCommand::coHTML:
-					if (!shellout.empty()) {
-						m_parentFrame.ShowOutput(cmd->name, shellout);
-					}
-					else {
-						// Only show stderr in HTML window if there is
-						// no other output
-						m_parentFrame.ShowOutput(cmd->name, shellerr);
-					}
+					// Only show stderr in HTML window if there is no other output
+					m_parentFrame.ShowOutput(cmd->name, !shellout.empty() ? shellout : shellout);
 					break;
 
 				case tmCommand::coNEWDOC:

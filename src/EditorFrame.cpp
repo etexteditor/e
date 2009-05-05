@@ -654,75 +654,79 @@ void EditorFrame::RestoreState() {
 	eSettings& settings = eGetSettings();
 	const unsigned int pagecount = settings.GetPageCount();
 
-
-	if (pagecount > 0) {
-		wxLogDebug(wxT("Opening %d documents from last session"), pagecount);
-
-		// Only show progress dialog if more than 3 pages
-		wxProgressDialog* dlg = NULL;
-		wxString msg = _("Opening documents from last session");
-		if (pagecount > 3) dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
-
-		Freeze();
-		// Remove initial empty document
-		wxASSERT(m_tabBar->GetPageCount() == 1 && editorCtrl->IsEmpty());
-		DeletePage(0, true);
-
-		// Get selection and layout
-		int page_id;
-		wxString tablayout;
-		bool hasSelection = settings.GetSettingInt(wxT("topwin/page_id"), page_id);
-		settings.GetSettingString(wxT("topwin/tablayout"), tablayout);
-
-		// Open documents from last session
-		// CheckForModifiedFiles() is called from eApp::OnInit()
-		for (unsigned int i = 0; i < pagecount; ++i) {
-			const wxString mirrorPath = settings.GetPagePath(i);
-			const doc_id mirrorDoc = settings.GetPageDoc(i);
-			cxLOCK_READ(m_catalyst)
-				if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
-			cxENDLOCK
-
-			// Update progress dialog
-			if (dlg) dlg->Update(i, msg + wxT("\n") + mirrorPath);
-
-			wxWindow* page = NULL;
-			EditorCtrl* ec = NULL;
-			const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
-			if (isBundleItem) {
-				EditorBundlePanel* bundlePanel = new EditorBundlePanel(i, m_tabBar, *this, m_catalyst, bitmap);
-				page = bundlePanel;
-				ec = bundlePanel->GetEditor();
-			}
-			else page = ec = new EditorCtrl(i, m_catalyst, bitmap, m_tabBar, *this);
-			page->Hide();
-
-			// Remote files may fail to be downloaded
-			if (ec->IsRemote() && !ec->GetFilePath().IsOk()) {
-				delete ec;
-				if ((int)i >= page_id) hasSelection = false;
-				// TODO: better handling of deleted pages
-			}
-			else AddTab(page);
-		}
-
-		// There might have been pages we could not open (remote)
-		// So if all are gone, we have to add an initial tab
-		if (m_tabBar->GetPageCount() == 0) AddTab();
-		else {
-			if (!tablayout.empty()) {
-				m_tabBar->LoadPerspective(tablayout);
-				UpdateTabMenu();
-			}
-			else if (hasSelection) m_tabBar->SetSelection(page_id);
-		}
-		Thaw();
-
-		if (dlg) delete dlg;
+	if (pagecount <= 0) {
+		// Set last active tab to current
+		m_lastActiveTab = m_tabBar->GetSelection();
+		return;
 	}
+
+	wxLogDebug(wxT("Opening %d documents from last session"), pagecount);
+
+	// Only show progress dialog if more than 3 pages
+	wxProgressDialog* dlg = NULL;
+	wxString msg = _("Opening documents from last session");
+	if (pagecount > 3) dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
+
+	Freeze();
+	// Remove initial empty document
+	wxASSERT(m_tabBar->GetPageCount() == 1 && editorCtrl->IsEmpty());
+	DeletePage(0, true);
+
+	// Get selection and layout
+	int page_id;
+	wxString tablayout;
+	bool hasSelection = settings.GetSettingInt(wxT("topwin/page_id"), page_id);
+	settings.GetSettingString(wxT("topwin/tablayout"), tablayout);
+
+	// Open documents from last session
+	// CheckForModifiedFiles() is called from eApp::OnInit()
+	for (unsigned int i = 0; i < pagecount; ++i) {
+		const wxString mirrorPath = settings.GetPagePath(i);
+		const doc_id mirrorDoc = settings.GetPageDoc(i);
+		cxLOCK_READ(m_catalyst)
+			if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
+		cxENDLOCK
+
+		// Update progress dialog
+		if (dlg) dlg->Update(i, msg + wxT("\n") + mirrorPath);
+
+		wxWindow* page = NULL;
+		EditorCtrl* ec = NULL;
+		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
+		if (isBundleItem) {
+			EditorBundlePanel* bundlePanel = new EditorBundlePanel(i, m_tabBar, *this, m_catalyst, bitmap);
+			page = bundlePanel;
+			ec = bundlePanel->GetEditor();
+		}
+		else page = ec = new EditorCtrl(i, m_catalyst, bitmap, m_tabBar, *this);
+		page->Hide();
+
+		// Remote files may fail to be downloaded
+		if (ec->IsRemote() && !ec->GetFilePath().IsOk()) {
+			delete ec;
+			if ((int)i >= page_id) hasSelection = false;
+			// TODO: better handling of deleted pages
+		}
+		else AddTab(page);
+	}
+
+	// There might have been pages we could not open (remote)
+	// So if all are gone, we have to add an initial tab
+	if (m_tabBar->GetPageCount() == 0) AddTab();
+	else {
+		if (!tablayout.empty()) {
+			m_tabBar->LoadPerspective(tablayout);
+			UpdateTabMenu();
+		}
+		else if (hasSelection) m_tabBar->SetSelection(page_id);
+	}
+	Thaw();
+
+	if (dlg) delete dlg;
 
 	// Set last active tab to current
 	m_lastActiveTab = m_tabBar->GetSelection();
+
 #endif // __WXMSW__
 }
 

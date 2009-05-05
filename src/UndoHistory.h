@@ -18,13 +18,13 @@
 
 // Pre-declarations
 class EditorCtrl;
-class IFrameUndoService;
+class IFrameUndoPane;
 class VersionTree;
 class VersionTreeEvent;
 
 class UndoHistory : public wxControl {
 public:
-	UndoHistory(CatalystWrapper& cw, IFrameUndoService* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~UndoHistory();
 
 	void Clear();
@@ -72,7 +72,7 @@ private:
 	bool m_ignoreUpdates;
 
 	EditorCtrl* m_editorCtrl;
-	IFrameUndoService* m_parentFrame;
+	IFrameUndoPane* m_parentFrame;
 
 	DiffLineCell m_cell;
 	VersionTree* m_pTree;

@@ -31,6 +31,7 @@
 #include "IFrameEditorService.h"
 #include "IFrameSymbolService.h"
 #include "IFrameRemoteThread.h"
+#include "IFrameUndoPane.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
@@ -171,15 +172,10 @@ public:
 	virtual DirWatcher& GetDirWatcher() = 0;
 };
 
-class IFrameUndoService {
-public:
-	virtual void SetUndoPaneCaption(const wxString& caption) = 0;
-};
-
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService,
-	public IFrameUndoService {
+	public IFrameUndoPane {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
 	~EditorFrame();

@@ -13,7 +13,7 @@
 
 #include "UndoHistory.h"
 #include <algorithm>
-#include "EditorFrame.h"
+#include "IFrameUndoPane.h"
 #include "EditorCtrl.h"
 #include "VersionTree.h"
 
@@ -38,7 +38,7 @@ BEGIN_EVENT_TABLE(UndoHistory, wxControl)
 	EVT_MENU(MENU_DIFF_TO_CURRENT, UndoHistory::OnMenuDiffToCurrent)
 END_EVENT_TABLE()
 
-UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoService* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
+UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 	: wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
 	  m_catalyst(cw), m_doc(cw), m_dispatcher(cw.GetDispatcher()), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
 	  m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame)

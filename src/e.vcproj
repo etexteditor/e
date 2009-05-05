@@ -360,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IFrameUndoPane.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IPrintableDocument.h"
 				>
 			</File>

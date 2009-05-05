@@ -15,11 +15,12 @@
 #include "Catalyst.h"
 #include <vector>
 #include "Cell.h"
-#include "VersionTree.h"
 
 // Pre-declarations
 class EditorCtrl;
 class EditorFrame;
+class VersionTree;
+class VersionTreeEvent;
 
 class UndoHistory : public wxControl {
 public:

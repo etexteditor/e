@@ -15,6 +15,7 @@
 #include <algorithm>
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
+#include "VersionTree.h"
 
 // ctrl & menu id's
 enum {

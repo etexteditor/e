@@ -50,6 +50,8 @@ private:
 
 	void PopupSyntaxMenu(wxRect& menuPos);
 
+	void SetPanelTextIfDifferent(const wxString& newText, const int panelIndex);
+
 	void OnIdle(wxIdleEvent& event);
 	void OnMouseLeftDown(wxMouseEvent& event);
 	void OnMenuTabs2(wxCommandEvent& event);

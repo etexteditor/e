@@ -49,18 +49,11 @@ StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, TmSyntaxHandler& syntax
 	SetFieldsCount(WXSIZEOF(widths), widths);
 }
 
+void StatusBar::SetPanelTextIfDifferent(const wxString& newText, const int panelIndex) {
+	if (GetStatusText(panelIndex) != newText) SetStatusText(newText, panelIndex);
+}
+
 void StatusBar::UpdateBarFromActiveEditor() {
-/*
-
-	Ask the parent frame, if the editor change state is not different, then leave.
-	Get the active editor (a narrower interface to it, actually.)
-	If NULL, then leave.
-	
-	Get the new change state.
-	Proceed with work (updating the status bar panels.)
-
-*/
-
 	EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
 	if (!editorCtrl) return;
 
@@ -96,9 +89,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 		}
 
 		// Syntax
-		if (GetStatusText(1) != editorCtrl->GetSyntaxName()) {
-			SetStatusText(editorCtrl->GetSyntaxName(), 1);
-		}
+		SetPanelTextIfDifferent(editorCtrl->GetSyntaxName(), 1);
 
 		// Only reload symbol list if doc has changed
 		bool symbolsChanged = false;

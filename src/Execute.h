@@ -15,8 +15,11 @@
 #define __EXECPROCESS_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/process.h>
-#include <wx/file.h>
+
+#ifndef WX_PRECOMP
+        #include <wx/process.h>
+        #include <wx/file.h>
+#endif
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__

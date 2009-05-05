@@ -691,7 +691,7 @@ void eApp::OnAssertFailure(const wxChar *file, int line, const wxChar *cond, con
 void* UpdaterThread::Entry() {
 	wxASSERT(m_http);
 
-	const eApp& app = *((eApp*)wxTheApp);
+	const eApp& app = wxGetApp();
 	const unsigned int thisVersion = app.VersionId();
 
 	// Set a cookie so the server can count unique requests
@@ -755,5 +755,5 @@ void* UpdaterThread::Entry() {
 
 // Gloal method for getting eApp's settings object, without needing to include all of eApp.h
 eSettings& eGetSettings(void) {
-	return (dynamic_cast<IGetSettings*>(wxTheApp))->GetSettings();
+	return wxGetApp().GetSettings();
 }

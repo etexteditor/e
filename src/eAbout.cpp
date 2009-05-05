@@ -26,7 +26,7 @@ END_EVENT_TABLE()
 eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
 	const bool isregistered = cat.IsRegistered();
-	const wxString& versionName = ((eApp*)wxTheApp)->VersionName();
+	const wxString& versionName = wxGetApp().VersionName();
 
 	SetTitle (_("About e"));
 

@@ -15,11 +15,11 @@
 #include "Catalyst.h"
 #include <vector>
 #include "Cell.h"
-#include "Timeline.h"
 #include "RevTooltip.h"
 
 class VersionTree;
 class VersionTreeEvent;
+class Timeline;
 
 class DocHistory : public wxControl {
 public:

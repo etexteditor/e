@@ -15,6 +15,7 @@
 #include "ShellRunner.h"
 #include "EditorCtrl.h"
 #include "Env.h"
+#include "matchers.h" // for single static function
 
 void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippet, cxEnv& env, const tmBundle* bundle) {
 	wxASSERT(editor);

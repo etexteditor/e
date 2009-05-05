@@ -115,6 +115,7 @@ void matcher::RebuildPattern(wxString& pattern, const NodeMap& node) {
 	}
 }
 
+// Move to small separate class (for SnippetHandler.cpp, which doesn't need other matchers.)
 void matcher::RegExConvert(wxString& pattern) {
 	// Remove leading tabs (left by TinyXML)
 	s_tabspattern.ReplaceAll(&pattern, wxEmptyString);

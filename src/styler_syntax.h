@@ -18,7 +18,6 @@
 #include "Document.h"
 #include "styler.h"
 #include "pcre.h"
-#include "matchers.h"
 #include "SymbolRef.h"
 
 // STL can't compile with Level 4
@@ -35,6 +34,10 @@ using namespace std;
 class TmSyntaxHandler;
 class StyleRun;
 class Lines;
+
+class matcher;
+class span_matcher;
+struct style;
 
 class Styler_Syntax : public Styler {
 public:

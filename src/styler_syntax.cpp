@@ -16,6 +16,7 @@
 #include "tm_syntaxhandler.h"
 #include "Lines.h"
 #include <algorithm>
+#include "matchers.h"
 
 const unsigned int Styler_Syntax::EXTSIZE = 1000;
 

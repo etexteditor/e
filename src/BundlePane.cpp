@@ -13,6 +13,7 @@
 
 #include "BundlePane.h"
 #include "EditorFrame.h"
+#include "tm_syntaxhandler.h"
 
 #include "images/tmBundle.xpm"
 #include "images/tmCommand.xpm"

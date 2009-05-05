@@ -26,8 +26,7 @@
 #include "RemoteThread.h"
 #include "key_hook.h"
 
-// For cxWrapMode; was previously indirectly included through GutterCtrl
-#include "FixedLine.h"
+#include "WrapMode.h"
 
 #include "IFrameEditorService.h"
 #include "IFrameSymbolService.h"

@@ -17,6 +17,7 @@
 #include <wx/progdlg.h>
 #include <wx/ffile.h>
 #include <wx/file.h>
+#include <wx/dir.h>
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
 #include "DirWatcher.h"

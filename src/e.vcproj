@@ -3017,6 +3017,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\WrapMode.h"
+			>
+		</File>
+		<File
 			RelativePath="wxactivex.cpp"
 			>
 			<FileConfiguration

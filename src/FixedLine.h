@@ -17,6 +17,7 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "StyleRun.h"
+#include "WrapMode.h"
 
 class FastDC;
 struct tmTheme;
@@ -28,12 +29,6 @@ struct full_pos {
 	int caret_ypos;
 	bool xy_outbound;
 	bool on_newline;
-};
-
-enum cxWrapMode {
-	cxWRAP_NONE,
-	cxWRAP_NORMAL,
-	cxWRAP_SMART
 };
 
 class FixedLine {

@@ -12,22 +12,18 @@
  ******************************************************************************/
 
 #include "styler_searchhl.h"
-#include "EditorCtrl.h"
-#include "eApp.h"
+#include "Lines.h"
+#include "Document.h"
+#include "FindFlags.h"
 
 const unsigned int Styler_SearchHL::EXTSIZE = 1000;
 
-Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges)
-: m_editor(NULL), m_doc(rev), m_lines(lines), m_searchRanges(ranges),
-  m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_hlcolor(m_theme.searchHighlightColor),
+Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
+: m_doc(rev), m_lines(lines), m_searchRanges(ranges),
+  m_theme(theme), m_hlcolor(m_theme.searchHighlightColor),
   m_rangeColor(m_theme.shadowColor) {
 
 	Clear(); // Make sure all variables are empty
-}
-
-void Styler_SearchHL::Init(const EditorCtrl& editor) {
-	// We need a pointer to the editor for Regex seaching
-	m_editor = &editor;
 }
 
 void Styler_SearchHL::Clear() {
@@ -140,7 +136,6 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_last) {
 	wxASSERT(start >= 0 && start < m_doc.GetLength());
 	wxASSERT(end > start && end <= m_doc.GetLength());
-	wxASSERT(m_editor);
 
 	bool matchcase = m_options & FIND_MATCHCASE;
 
@@ -207,32 +202,31 @@ void Styler_SearchHL::Insert(unsigned int pos, unsigned int length) {
 			DoSearch(search_start, m_search_end, true);
 			return;
 		}
-		else {
-			// Find first match containing or bigger than pos
-			bool is_first = true;
-			vector<interval>::iterator p = m_matches.begin();
-			while (p != m_matches.end()) {
-				if (p->end > pos) {
-					// Remember first valid match before pos
-					if (is_first) {
-						if (p != m_matches.begin()) search_start = (p-1)->end;
-						is_first = false;
-					}
 
-					if (p->start < pos) {
-						// pos inside match. Delete and continue
-						p = m_matches.erase(p);
-						if (p != m_matches.end()) continue; // new iterator
-						else break;
-					}
-					else {
-						// Move match to correct position
-						p->start += length;
-						p->end += length;
-					}
+		// Find first match containing or bigger than pos
+		bool is_first = true;
+		vector<interval>::iterator p = m_matches.begin();
+		while (p != m_matches.end()) {
+			if (p->end > pos) {
+				// Remember first valid match before pos
+				if (is_first) {
+					if (p != m_matches.begin()) search_start = (p-1)->end;
+					is_first = false;
 				}
-				++p;
+
+				if (p->start < pos) {
+					// pos inside match. Delete and continue
+					p = m_matches.erase(p);
+					if (p != m_matches.end()) continue; // new iterator
+					else break;
+				}
+				else {
+					// Move match to correct position
+					p->start += length;
+					p->end += length;
+				}
 			}
+			++p;
 		}
 	}
 

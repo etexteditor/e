@@ -18,6 +18,9 @@
 #include "Catalyst.h"
 #include <wx/spinctrl.h>
 
+// Pre-declarations
+class eSettings;
+
 class SettingsDlg : public wxDialog {
 public:
 	SettingsDlg(wxWindow *parent, CatalystWrapper cw);
@@ -25,9 +28,14 @@ public:
 private:
 	void UpdateEncoding();
 
+#ifdef __WXMSW__
+	void UpdateUnixPage();
+#endif
+
 	// Event handlers
 	void OnButtonOk(wxCommandEvent& event);
 	void OnButtonLoadPic(wxCommandEvent& event);
+	void OnButtonCygwinAction(wxCommandEvent& event);
 	void OnCheckAutoPair(wxCommandEvent& event);
 	void OnCheckAutoWrap(wxCommandEvent& event);
 	void OnCheckKeepState(wxCommandEvent& event);
@@ -41,21 +49,36 @@ private:
 	DECLARE_EVENT_TABLE();
 
 	// Member variables
+	eSettings& m_settings;
 	CatalystWrapper m_catalyst;
 	wxImage m_userImage;
 
 	// Change trackers
 	bool m_ctUserPic;
 
-	// ctrls
+	// Controls
+	// -- Profile page
 	wxTextCtrl* m_ctrlUserName;
 	wxStaticBitmap* m_ctrlUserPic;
+
+	// -- Encoding page
 	wxComboBox* m_defLine;
 	wxComboBox* m_defEnc;
 	wxCheckBox* m_defBom;
+
+	// -- Settings page
 	wxSpinCtrl* m_marginSpin;
 	wxCheckBox* m_wrapMargin;
-};
 
+#ifdef __WXMSW__
+	// -- UNIX-on-Windws page
+	wxPanel* m_unixPage;
+
+	wxStaticText* m_labelCygInitValue;
+	wxStaticText* m_labelBashPathValue;
+	wxStaticText* m_labelCygdriveValue;
+	wxButton* m_cygwinButton;
+#endif
+};
 
 #endif // __SETTINGSDLG_H__

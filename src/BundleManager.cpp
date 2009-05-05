@@ -55,9 +55,9 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
 
-BundleManager::BundleManager(EditorFrame& parent)
+BundleManager::BundleManager(EditorFrame& parent, TmSyntaxHandler& syntaxHandler)
 : wxDialog (&parent, -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_parentFrame(parent), m_remoteThread(parent.GetRemoteThread()), m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_plistHandler(m_syntaxHandler.GetPListHandler()),
+  m_parentFrame(parent), m_remoteThread(parent.GetRemoteThread()), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
   m_allBundlesReceived(false), m_needBundleReload(false)
 {
 	m_repositories.push_back(RepoInfo(wxT("review mm"), wxT("http://macromates.com/svn/Bundles/trunk/Review/Bundles/")));
@@ -78,7 +78,7 @@ BundleManager::BundleManager(EditorFrame& parent)
 	m_bundleList->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
 #ifdef __WXMSW__
-	m_htmlDescription = new wxIEHtmlWin(this, ID_HTML_DESC);
+	m_browser = new wxIEHtmlWin(this, ID_HTML_DESC);
 #endif
 
 	wxStaticText* statusLabel = new wxStaticText(this, wxID_ANY, _("Status: "));
@@ -103,7 +103,7 @@ BundleManager::BundleManager(EditorFrame& parent)
 			statusSizer->Add(m_deleteButton, 0, wxALIGN_RIGHT|wxLEFT, 5);
 			m_mainSizer->Add(statusSizer, 0, wxEXPAND|wxLEFT|wxRIGHT, 5);
 #ifdef __WXMSW__
-		m_mainSizer->Add(m_htmlDescription, 1, wxEXPAND|wxALL, 5);
+		m_mainSizer->Add(m_browser, 1, wxEXPAND|wxALL, 5);
 #endif
 
 	SetSizerAndFit(m_mainSizer);
@@ -191,8 +191,7 @@ void BundleManager::AddItems(const wxString& repoName, const vector<cxFileInfo>&
 					remoteDate.SetSecond(0);
 					remoteDate.SetMillisecond(0);
 
-					if (installedDate == remoteDate) m_bundleList->SetItemImage(itemId, 1);
-					else m_bundleList->SetItemImage(itemId, 2);
+					m_bundleList->SetItemImage(itemId, (installedDate == remoteDate) ? 1 : 2);
 				}
 				break;
 			}
@@ -321,7 +320,7 @@ void BundleManager::SelectItem(long itemId, bool update) {
 	if (!update) {
 		// Clear description
 #ifdef __WXMSW__
-		m_htmlDescription->LoadString(wxT(""));
+		m_browser->LoadString(wxT(""));
 #endif
 		
 		// See if we can download the info.plist
@@ -354,7 +353,7 @@ void BundleManager::OnRemoteAction(cxRemoteAction& event) {
 			if (desc) {
 #ifdef __WXMSW__
 				const wxString descStr(desc, wxConvUTF8);
-				m_htmlDescription->LoadString(descStr);
+				m_browser->LoadString(descStr);
 #endif
 			}
 
@@ -367,12 +366,11 @@ void BundleManager::OnRemoteAction(cxRemoteAction& event) {
 void BundleManager::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
     const wxString url = event.GetURL();
 	if (url == wxT("about:blank")) return;
-	else {
-		wxLaunchDefaultBrowser(url);
 
-		// Don't try to open it in inline browser
-		event.Cancel(true);
-	}
+	wxLaunchDefaultBrowser(url);
+
+	// Don't try to open it in inline browser
+	event.Cancel(true);
 }
 
 void BundleManager::OnInstallButton(wxCommandEvent& WXUNUSED(event)) {
@@ -380,10 +378,10 @@ void BundleManager::OnInstallButton(wxCommandEvent& WXUNUSED(event)) {
 	case BDL_NOT_INSTALLED:
 	case BDL_INSTALLED_OLDER:
 	case BDL_INSTALLED_NEWER:
-		InstallBundle(); // Download bundle
+		InstallBundle();
 		break;
 	case BDL_DISABLED:
-		RestoreBundle(); // Restore bundle
+		RestoreBundle();
 		break;
 	case BDL_INSTALLED_UPTODATE:
 		wxASSERT(false); // should never happen
@@ -639,5 +637,4 @@ void BundleManager::DelTree(const wxString& path) {
 #else
 	wxASSERT(false); // not implemented
 #endif
-
 }

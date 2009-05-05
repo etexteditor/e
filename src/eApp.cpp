@@ -34,6 +34,7 @@
 //#include <curl/curl.h>
 #include "RemoteThread.h"
 #include "EditorFrame.h"
+#include "eDocumentPath.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -79,7 +80,6 @@ END_EVENT_TABLE()
 bool eApp::OnInit() {
 	// Initialize variables
 	frame = NULL;
-	m_settings = NULL;
 	m_pCatalyst = NULL;
 	m_catalyst = NULL;
 	m_pSyntaxHandler = NULL;
@@ -115,6 +115,7 @@ bool eApp::OnInit() {
 	bool clearLayout = false;
 	bool clearUndo = false;
 	bool clearBundleCache = false;
+	bool checkForUpdate = true;
 
 	// Parse options
 	for (int i = 1; i < argc; ++i) {
@@ -123,6 +124,7 @@ bool eApp::OnInit() {
 		else if (arg == wxT("--clearlayout")) clearLayout = true;
 		else if (arg == wxT("--clearundo")) clearUndo = true;
 		else if (arg == wxT("--clearcache")) clearBundleCache = true;
+		else if (arg == wxT("--noupdate")) checkForUpdate = false;
 		else if (arg == wxT("--mate")) {
 			++i;
 			mate = argv[i];
@@ -182,6 +184,10 @@ bool eApp::OnInit() {
 	// Quit if trial has expired
 	if (m_pCatalyst->IsExpired()) return false;
 
+	// Load Settings
+	m_settings.Load(m_appDataPath);
+	if (m_settings.IsEmpty()) m_pCatalyst->MoveOldSettings(m_settings);
+
 	// Apply options
 	if (clearState) ClearState();
 	if (clearLayout) ClearLayout();
@@ -232,53 +238,58 @@ bool eApp::OnInit() {
 
 #ifdef __WXMSW__
 	wxLogDebug(wxT("Initializing cygwin"));
-	frame->InitCygwin();
+	eDocumentPath::InitCygwinOnce(this->frame);
 #endif
 
 	wxLogDebug(wxT("Checking for modified files"));
 	frame->CheckForModifiedFilesAsync();
 	wxLogDebug(wxT("Done Checking for modified files"));
 
-	// Check website to se if there are updates
-	CheckForUpdates();
+	if (checkForUpdate) {
+		// Check website to se if there are updates
+		CheckForUpdates();
+	}
 
     return true;
 }
 
+#ifdef __WXMSW__
+bool eApp::InitCygwin(bool silent){
+	return eDocumentPath::InitCygwin(this->frame, silent);
+}
+#endif
+
+
 void eApp::ClearState() {
-	cxLOCK_WRITE((*m_catalyst))
-		// Pages
-		catalyst.DeleteAllPageSettings();
+	// Pages
+	m_settings.DeleteAllPageSettings();
 
-		// Tab layout
-		catalyst.RemoveSettingString(wxT("topwin/tablayout"));
-		catalyst.RemoveSettingBool(wxT("topwin/page_id"));
+	// Tab layout
+	m_settings.RemoveSetting(wxT("topwin/tablayout"));
+	m_settings.RemoveSetting(wxT("topwin/page_id"));
 
-		catalyst.Commit();
-	cxENDLOCK
+	m_settings.Save();
 }
 
 void eApp::ClearLayout() {
-	cxLOCK_WRITE((*m_catalyst))
-		// Window size and position
-		catalyst.RemoveSettingInt(wxT("topwin/x"));
-		catalyst.RemoveSettingInt(wxT("topwin/y"));
-		catalyst.RemoveSettingInt(wxT("topwin/width"));
-		catalyst.RemoveSettingInt(wxT("topwin/height"));
-		catalyst.RemoveSettingBool(wxT("topwin/ismax"));
+	// Window size and position
+	m_settings.RemoveSetting(wxT("topwin/x"));
+	m_settings.RemoveSetting(wxT("topwin/y"));
+	m_settings.RemoveSetting(wxT("topwin/width"));
+	m_settings.RemoveSetting(wxT("topwin/height"));
+	m_settings.RemoveSetting(wxT("topwin/ismax"));
 
-		// wxAUI perspective
-		catalyst.RemoveSettingString(wxT("topwin/panes"));
+	// wxAUI perspective
+	m_settings.RemoveSetting(wxT("topwin/panes"));
 
-		// pane settings
-		catalyst.RemoveSettingString(wxT("symbol_pane"));
-		catalyst.RemoveSettingBool(wxT("showsymbols"));
-		catalyst.RemoveSettingString(wxT("prvw_pane"));
-		catalyst.RemoveSettingBool(wxT("showpreview"));
-		catalyst.RemoveSettingBool(wxT("showproject"));
+	// pane settings
+	m_settings.RemoveSetting(wxT("symbol_pane"));
+	m_settings.RemoveSetting(wxT("showsymbols"));
+	m_settings.RemoveSetting(wxT("prvw_pane"));
+	m_settings.RemoveSetting(wxT("showpreview"));
+	m_settings.RemoveSetting(wxT("showproject"));
 
-		catalyst.Commit();
-	cxENDLOCK
+	m_settings.Save();
 }
 
 bool eApp::SendArgsToInstance() {
@@ -288,7 +299,7 @@ bool eApp::SendArgsToInstance() {
 	for (unsigned int i = 0; i < 10; ++i) {
 		hWndRecv = ::FindWindow(wxT("wxWindowClassNR"), wxT("eIpcWin"));
 		if (hWndRecv) break;
-		else if (!m_checker->IsAnotherRunning()) {
+		if (!m_checker->IsAnotherRunning()) {
 			// Instance has closed. Just open our selves
 			return false;
 		}
@@ -320,7 +331,7 @@ bool eApp::SendArgsToInstance() {
 				cmd += arg;
 			}
 			else {
-				if (EditorFrame::IsRemotePath(arg)) cmd += arg;
+				if (eDocumentPath::IsRemotePath(arg)) cmd += arg;
 				else {
 					wxFileName path(arg);
 					path.MakeAbsolute();
@@ -392,7 +403,7 @@ bool eApp::SendArgsToInstance() {
 
 				if (arg.StartsWith(wxT("txmt:"))) cmd += arg;
 				else {
-					if (EditorFrame::IsRemotePath(arg)) cmd += arg;
+					if (eDocumentPath::IsRemotePath(arg)) cmd += arg;
 					else {
 						wxFileName path(arg);
 						path.MakeAbsolute();
@@ -454,7 +465,8 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		frame->AddTab();
 		return true;
 	}
-	else if (command.StartsWith(wxT("OPEN_FILE"))) {
+	
+	if (command.StartsWith(wxT("OPEN_FILE"))) {
 		wxString path = args;
 		wxString mate;
 
@@ -474,13 +486,15 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		if (res && (lineNum || columnNum)) frame->GotoPos(lineNum, columnNum);
 		return res;
 	}
-	else if (command == wxT("view_insert")) {
+	
+	if (command == wxT("view_insert")) {
 		if (args.empty()) return false;
 		if (args.size() == 1) eCtrl->InsertChar((wxChar)args[0]);
 		else eCtrl->Insert(args);
 		return true;
 	}
-	else if (command == wxT("view_delete")) {
+	
+	if (command == wxT("view_delete")) {
 		wxString str_start = args.BeforeFirst(wxT(' '));
 		wxString str_end = args.AfterFirst(wxT(' '));
 		long start, end;
@@ -492,17 +506,20 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		eCtrl->Delete(start, end);
 		return true;
 	}
-	else if (command == wxT("view_freeze")) {
+	
+	if (command == wxT("view_freeze")) {
 		eCtrl->Freeze();
 		return true;
 	}
-	else if (command == wxT("view_getlength")) {
+	
+	if (command == wxT("view_getlength")) {
 		int length = eCtrl->GetLength();
 		result.Printf(wxT("%d"), length);
 		wxLogDebug(wxT("  returning length: %d %s"), length, result.c_str());
 		return true;
 	}
-	else if (command == wxT("view_setpos")) {
+	
+	if (command == wxT("view_setpos")) {
 		long pos;
 		if (!args.ToLong(&pos)) return false;
 		if (pos < 0 || pos > (long)eCtrl->GetLength()) return false;
@@ -510,13 +527,15 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		eCtrl->SetPos(pos);
 		return true;
 	}
-	else if (command == wxT("view_getpos")) {
+	
+	if (command == wxT("view_getpos")) {
 		int pos = eCtrl->GetPos();
 		result.Printf(wxT("%d"), pos);
 		wxLogDebug(wxT("  returning pos: %d %s"), pos, result.c_str());
 		return true;
 	}
-	else if (command == wxT("view_getversioncount")) {
+	
+	if (command == wxT("view_getversioncount")) {
 		const DocumentWrapper& dw = eCtrl->GetDocument();
 		cxLOCKDOC_READ(dw)
 			int count = doc.GetVersionCount();
@@ -525,7 +544,8 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		cxENDLOCK
 		return true;
 	}
-	else if (command == wxT("view_setversion")) {
+	
+	if (command == wxT("view_setversion")) {
 		long version_id;
 		if (!args.ToLong(&version_id)) return false;
 		const DocumentWrapper& dw = eCtrl->GetDocument();
@@ -538,10 +558,9 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		eCtrl->SetDocument(di);
 		return true;
 	}
-	else {
-		wxLogDebug(wxT("Execute command: %s "), command.c_str());
-		return false;
-	}
+
+	wxLogDebug(wxT("Execute command: %s "), command.c_str());
+	return false;
 }
 
 wxString eApp::ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) const {
@@ -599,7 +618,6 @@ int eApp::OnExit() {
 	if (m_pCatalyst) delete m_pCatalyst;
 	if (m_checker) delete m_checker;
 	if (m_pSyntaxHandler) delete m_pSyntaxHandler;
-	if (m_settings) delete m_settings;
 
 #ifdef __WXDEBUG__
 	if (blackboxLib.IsLoaded()) blackboxLib.Unload();
@@ -614,7 +632,7 @@ int eApp::OnExit() {
 void eApp::CheckForUpdates() {
 	// Check if it more than 7 days have gone since last update check
 	wxLongLong lastup;
-	if (GetSettingLong(wxT("lastupdatecheck"), lastup)) {
+	if (m_settings.GetSettingLong(wxT("lastupdatecheck"), lastup)) {
 		wxDateTime sevendaysago = wxDateTime::Now() - wxDateSpan(0, 0, 1, 0);
 		wxDateTime lastupdated(lastup);
 
@@ -723,7 +741,7 @@ void* UpdaterThread::Entry() {
 
 			// Remember this time as last update checked
 			wxLongLong now = wxDateTime::Now().GetValue();
-			((eApp*)wxTheApp)->SetSettingLong(wxT("lastupdatecheck"), now);
+			((eApp*)wxTheApp)->GetSettings().SetSettingLong(wxT("lastupdatecheck"), now);
 		}
 	}
 

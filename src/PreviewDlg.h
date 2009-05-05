@@ -30,21 +30,20 @@
 // pre-declarations
 class EditorFrame;
 class EditorCtrl;
-class CatalystWrapper;
+class eSettings;
 
 class PreviewDlg : public wxPanel {
 public:
 	PreviewDlg(EditorFrame& parent);
 	~PreviewDlg();
 
-	void LoadSettings(const CatalystWrapper& cw);
-	void SaveSettings(CatalystWrapper& cw) const;
+	void LoadSettings(const eSettings& settings);
+	void SaveSettings(eSettings& settings) const;
 	void PageClosed(const EditorCtrl* ec);
 
 	// Utility functions
 	bool InsertStyle(vector<char>& html);
 	static void InsertBase(vector<char>& html, const wxString& path);
-	static wxString ConvertPathToUNC(const wxString& path);
 
 private:
 	class CommandThread : public wxThread {

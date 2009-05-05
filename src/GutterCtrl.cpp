@@ -33,9 +33,8 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id)
   m_currentSel(-1)
 {
 	m_mdc.SelectObject(m_bitmap);
-	if (false == m_mdc.Ok()) {
-                wxLogError(wxT("wxMemoryDC() constructor was failed in creating!"));
-        }
+	if (!m_mdc.Ok()) wxLogError(wxT("wxMemoryDC() constructor was failed in creating!"));
+
 	// Initialize the memoryDC for dubblebuffering
 	UpdateTheme();
 

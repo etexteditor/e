@@ -33,6 +33,12 @@ else
 	PKGSUFF  = -debug
 endif
 
+# Use 64bit version of libecore on x86_64
+LBITS := $(shell getconf LONG_BIT)
+ifeq ($(LBITS),64)
+	ECORE    := $(ECORE)64
+endif
+
 E_DEPLOY_DIR = $(ROOTDIR)/.deploy
 E_STUFF_DIR  = $(ROOTDIR)/external/stuff
 

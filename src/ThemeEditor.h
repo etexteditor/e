@@ -24,7 +24,7 @@
 
 class ThemeEditor : public wxDialog {
 public:
-	ThemeEditor(wxWindow *parent);
+	ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler);
 	~ThemeEditor();
 
 	static bool ParseColour(const char* text, wxColour& colour, unsigned int& alpha);

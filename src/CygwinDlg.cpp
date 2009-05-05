@@ -12,16 +12,16 @@
  ******************************************************************************/
 
 #include "CygwinDlg.h"
-#include "EditorCtrl.h"
 #include "eApp.h"
 #include "Execute.h"
+#include "eDocumentPath.h"
 
 BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CygwinDlg::OnButtonOk)
 END_EVENT_TABLE()
 
-CygwinDlg::CygwinDlg(wxWindow *parent, CatalystWrapper& cw, cxCygwinDlgMode mode)
-: wxDialog (parent, wxID_ANY, wxEmptyString, wxDefaultPosition), m_catalyst(cw), m_mode(mode) {
+CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode)
+: wxDialog (parent, wxID_ANY, wxEmptyString, wxDefaultPosition), m_mode(mode) {
 	if (m_mode == cxCYGWIN_INSTALL) SetTitle(_("Cygwin not installed!"));
 	else SetTitle(_("Update Cygwin"));
 
@@ -52,27 +52,22 @@ CygwinDlg::CygwinDlg(wxWindow *parent, CatalystWrapper& cw, cxCygwinDlgMode mode
 
 void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	const wxString appPath = ((eApp*)wxTheApp)->GetAppPath();
-
-	if (m_autoRadio->GetValue()) {
-		new CygwinInstallThread(m_catalyst, cxCYGWIN_AUTO, appPath);
-	}
-	else {
-		new CygwinInstallThread(m_catalyst, cxCYGWIN_MANUAL, appPath);
-	}
+	const cxCygwinInstallMode install_mode = m_autoRadio->GetValue() ? cxCYGWIN_AUTO : cxCYGWIN_MANUAL;
+	new CygwinInstallThread(install_mode, appPath);
 
 	EndModal(wxID_OK);
 }
 
 // ---- CygwinInstallThread ------------------------------------------------------------
 
-CygwinDlg::CygwinInstallThread::CygwinInstallThread(CatalystWrapper& cw, cxCygwinInstallMode mode, const wxString& appPath)
-: m_catalyst(cw), m_mode(mode), m_appPath(appPath) {
+CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath)
+: m_mode(mode), m_appPath(appPath) {
 	Create();
     Run();
 }
 
 void* CygwinDlg::CygwinInstallThread::Entry() {
-	wxString cygPath = EditorCtrl::GetCygwinDir();
+	wxString cygPath = eDocumentPath::GetCygwinDir();
 	if (cygPath.empty()) {
 		// Make sure it get eventual proxy settings from IE
 		wxFileName::Mkdir(wxT("C:\\cygwin\\etc\\setup\\"), 0777, wxPATH_MKDIR_FULL);
@@ -109,13 +104,13 @@ void* CygwinDlg::CygwinInstallThread::Entry() {
 	}
 
 	// Path may have been changed during install
-	cygPath = EditorCtrl::GetCygwinDir();
+	cygPath = eDocumentPath::GetCygwinDir();
 	if (cygPath.empty()) return NULL;
 
 	// Setup environment
 	cxEnv env;
 	env.SetToCurrent();
-	env.SetEnv(wxT("TM_SUPPORT_PATH"), EditorCtrl::WinPathToCygwin(m_appPath + wxT("Support"))); // needed by post-install
+	env.SetEnv(wxT("TM_SUPPORT_PATH"), eDocumentPath::WinPathToCygwin(m_appPath + wxT("Support"))); // needed by post-install
 
 	// Run postinstall
 	cxExecute exec(env);
@@ -132,10 +127,7 @@ void* CygwinDlg::CygwinInstallThread::Entry() {
 	// Mark this update as done
 	const wxFileName supportFile(supportScript);
 	const wxDateTime updateTime = supportFile.GetModificationTime();
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.SetSettingLong(wxT("cyg_date"), updateTime.GetValue());
-	cxENDLOCK
+	((eApp*)wxTheApp)->GetSettings().SetSettingLong(wxT("cyg_date"), updateTime.GetValue());
 
 	return NULL;
 }
-

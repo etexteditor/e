@@ -16,14 +16,13 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "CloseButton.h"
-#include "EditorCtrl.h"
+#include "FindFlags.h"
 
 // pre-definitions
-//enum cxFindResult;
+class eSettings;
 
 class SearchPanel : public wxPanel {
 public:
-	// Constructors
 	SearchPanel(wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~SearchPanel();
 
@@ -36,7 +35,7 @@ public:
 	void ReplaceAll();
 	void HidePanel();
 
-	bool HasSearchString() const {return !searchbox->IsEmpty();};
+	bool HasSearchString() const {return !searchbox->GetValue().IsEmpty();};
 	bool IsActive() const;
 
 private:
@@ -60,6 +59,7 @@ private:
 	private:
 		// Event handlers
 		void OnChar(wxKeyEvent &evt);
+		void OnFocusLost(wxFocusEvent& evt);
 		DECLARE_EVENT_TABLE();
 		// Member variables
 		wxWindow* parent;
@@ -67,11 +67,16 @@ private:
 
 	// Member functions
 	void SetState(cxFindResult result);
+	void RefreshSearchHistory();
+	void UpdateSearchHistory();
+	void RefreshReplaceHistory();
+	void UpdateReplaceHistory();
 
 	// Event handlers
 	void OnSearchPopup(wxCommandEvent& evt);
 	void OnSearchText(wxCommandEvent& evt);
 	void OnSearchTextEnter(wxCommandEvent& evt);
+	void OnSearchTextCombo(wxCommandEvent& evt);
 	void OnNext(wxCommandEvent& evt);
 	void OnPrevious(wxCommandEvent& evt);
 	void OnCloseButton(wxCommandEvent& evt);
@@ -91,13 +96,13 @@ private:
 	wxMenu m_popupMenu;
 	wxBoxSizer* box;
 	wxBoxSizer* vbox;
-	wxTextCtrl* searchbox;
+	wxComboBox* searchbox;
 	SeperatorLine* sepline;
 	wxButton* nextButton;
 	wxButton* prevButton;
 	wxButton* replaceButton;
 	CloseButton* closeButton;
-	wxTextCtrl* replaceBox;
+	wxComboBox* replaceBox;
 	wxButton* allButton;
 	wxBitmapButton* searchButton;
 	wxBitmap m_searchBitmap;
@@ -112,6 +117,7 @@ private:
 	// Member variables (internal)
 	bool restart_next_search;
 	bool nosearch;
+	eSettings& m_settings;
 };
 
 #endif // __SEARCHPANEL_H__

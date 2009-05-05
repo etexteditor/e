@@ -9,6 +9,7 @@
 #include "tm_syntaxhandler.h"
 #include "LineListWrap.h"
 #include "LineListNoWrap.h"
+#include "IFoldingEditor.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -20,12 +21,9 @@
 #endif
 using namespace std;
 
-// pre-definitions
-class EditorCtrl;
-
 class Lines {
 public:
-	Lines(wxDC& dc, DocumentWrapper& dw, EditorCtrl& editorCtrl);
+	Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme);
 	void Init();
 
 	int GetHeight() const;
@@ -136,7 +134,7 @@ private:
 	// Member variables
 	wxDC& dc;
 	DocumentWrapper& m_doc;
-	EditorCtrl& m_editorCtrl;
+	IFoldingEditor& m_editorCtrl;
 	bool NewlineTerminated;
 	unsigned int pos;
 	unsigned int lastpos;

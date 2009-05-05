@@ -14,7 +14,6 @@
 #include "ThemeEditor.h"
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
-#include "eApp.h"
 
 enum {
 	CTRL_FONTSELECT,
@@ -58,9 +57,9 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_GRID_CELL_CHANGE(ThemeEditor::OnGridCellChange)
 END_EVENT_TABLE()
 
-ThemeEditor::ThemeEditor(wxWindow *parent)
+ThemeEditor::ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-   m_syntaxHandler(((eApp*)wxTheApp)->GetSyntaxHandler()), m_plistHandler(m_syntaxHandler.GetPListHandler()),
+   m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
    m_themeNdx(-1), m_currentRow(-1) {
 
 	SetTitle (_("Edit Themes"));

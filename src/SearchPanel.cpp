@@ -16,6 +16,7 @@
 #include "images/search_png.h"
 #include "images/search_re_png.h"
 #include <wx/mstream.h>
+#include "eSettings.h"
 
 // control ids
 enum
@@ -41,6 +42,7 @@ enum
 BEGIN_EVENT_TABLE(SearchPanel, wxPanel)
 	EVT_TEXT(SEARCH_BOX, SearchPanel::OnSearchText)
 	EVT_TEXT_ENTER(SEARCH_BOX, SearchPanel::OnSearchTextEnter)
+	EVT_COMBOBOX(SEARCH_BOX, SearchPanel::OnSearchTextCombo)
 	EVT_BUTTON(SEARCH_BUTTON, SearchPanel::OnSearchPopup)
 	EVT_BUTTON(SEARCH_NEXT, SearchPanel::OnNext)
 	EVT_BUTTON(SEARCH_PREV, SearchPanel::OnPrevious)
@@ -56,7 +58,8 @@ END_EVENT_TABLE()
 
 SearchPanel::SearchPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 : wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE),
-  m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false) {
+  m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false),
+  m_settings(eGetSettings()) {
 
 	// Create custom event handlers
 	searchbox_evt_handler = new SearchEvtHandler(this);
@@ -84,41 +87,30 @@ SearchPanel::SearchPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, co
 	closeButton = new CloseButton(this, SEARCH_CLOSE);
 	wxStaticText *searchlabel = new wxStaticText(this, -1, _("Search: "));
 
-	wxPanel* searchBgr = new wxPanel(this, -1);
-	searchBgr->SetWindowStyle(wxSUNKEN_BORDER);
-
 	// Load bitmaps
 	wxMemoryInputStream searchIn(search_png, SEARCH_PNG_LEN);
 	m_searchBitmap = wxBitmap(wxImage(searchIn, wxBITMAP_TYPE_PNG));
 	wxMemoryInputStream searchReIn(search_re_png, SEARCH_RE_PNG_LEN);
 	m_searchReBitmap = wxBitmap(wxImage(searchReIn, wxBITMAP_TYPE_PNG));
 
-	searchButton = new wxBitmapButton(searchBgr, SEARCH_BUTTON, m_searchBitmap);
+	searchButton = new wxBitmapButton(this, SEARCH_BUTTON, m_searchBitmap);
 	if (m_use_regex) searchButton->SetBitmapLabel(m_searchReBitmap);
 	searchButton->SetWindowStyle(0);
-	searchButton->SetBackgroundColour(*wxWHITE);
 	searchButton->SetToolTip(_("Set search options (Shortcut Alt-Down)"));
 
-	searchbox = new wxTextCtrl(searchBgr, SEARCH_BOX);
-	searchbox->SetWindowStyle(wxNO_BORDER|wxTE_PROCESS_ENTER);
+	searchbox = new wxComboBox(this, SEARCH_BOX);
+	searchbox->SetWindowStyle(wxTE_PROCESS_ENTER);
 	searchbox->PushEventHandler(searchbox_evt_handler);
-
-	wxBoxSizer *bgr_box = new wxBoxSizer(wxHORIZONTAL);
-	bgr_box->Add(searchButton, 0, wxALIGN_CENTER);
-	bgr_box->Add(searchbox, 1, wxALIGN_CENTER|wxEXPAND);
-	searchBgr->SetSizer(bgr_box);
-	wxSize brgsize = bgr_box->GetMinSize();
-	searchBgr->SetSize(brgsize);
-	searchBgr->SetSizeHints(brgsize.x, brgsize.y, -1, brgsize.y);
-	//bgr_box->Layout();
+	RefreshSearchHistory();
 
 	nextButton = new wxButton(this, SEARCH_NEXT, wxT("&Next"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	nextButton->SetToolTip(_("Find next match (Shortcut F3)"));
 	//nextButton->PushEventHandler(evt_handler);
 	prevButton = new wxButton(this, SEARCH_PREV, wxT("&Previous"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	prevButton->SetToolTip(_("Find previous match (Shortcut Shift-F3)"));
-	replaceBox = new wxTextCtrl(this, REPLACE_BOX);
+	replaceBox = new wxComboBox(this, REPLACE_BOX);
 	replaceBox->PushEventHandler(replacebox_evt_handler);
+	RefreshReplaceHistory();
 	replaceButton = new wxButton(this, REPLACE_REPLACE, wxT("&Replace"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	replaceButton->SetToolTip(_("Replace current match (Shortcut Alt-R)"));
 	allButton = new wxButton(this, REPLACE_ALL, wxT("&All"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
@@ -136,9 +128,8 @@ SearchPanel::SearchPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, co
 	box = new wxBoxSizer(wxHORIZONTAL);
 	box->Add(closeButton, 0, wxALIGN_CENTER|wxRIGHT, 2);
 	box->Add(searchlabel, 0, wxALIGN_CENTER);
-	//box->Add(searchButton, 0, wxALIGN_CENTER);
-	//box->Add(searchbox, 3, wxALIGN_CENTER|wxEXPAND|wxTOP|wxBOTTOM, 2);
-	box->Add(searchBgr, 3, wxALIGN_CENTER|wxEXPAND|wxTOP|wxBOTTOM, 2);
+	box->Add(searchButton, 0, wxALIGN_CENTER);
+	box->Add(searchbox, 3, wxALIGN_CENTER|wxEXPAND|wxTOP|wxBOTTOM, 2);
 	box->Add(nextButton, 0, wxALIGN_CENTER|wxTOP|wxBOTTOM, 2);
 	box->Add(prevButton, 0, wxALIGN_CENTER|wxTOP|wxBOTTOM, 2);
 	box->Add(replaceBox, 2, wxALIGN_CENTER|wxEXPAND|wxTOP|wxBOTTOM, 2);
@@ -185,8 +176,10 @@ void SearchPanel::InitSearch(const wxString& searchtext, bool replace) {
 		else searchbox->SetFocus();
 		return;
 	}
-	else if (!replace && focus_win == searchbox) {
-		FindNext(); return;
+	
+	if (!replace && focus_win == searchbox) {
+		FindNext(); 
+		return;
 	}
 
 	nosearch = true;
@@ -207,20 +200,17 @@ void SearchPanel::InitSearch(const wxString& searchtext, bool replace) {
 void SearchPanel::SetState(cxFindResult result) {
 	// Give visual feedback in the search field
 	if (result == cxFOUND) {
-		searchButton->SetBackgroundColour(*wxWHITE);
 		searchbox->SetBackgroundColour(*wxWHITE);
 		searchbox->SetForegroundColour(*wxBLACK);
 		restart_next_search = false;
 	}
 	else if (result == cxFOUND_AFTER_RESTART) {
 		const wxColour restartColor(166,202,240);
-		searchButton->SetBackgroundColour(restartColor);
 		searchbox->SetBackgroundColour(restartColor);
 		searchbox->SetForegroundColour(*wxBLACK);
 		restart_next_search = false;
 	}
 	else {
-		searchButton->SetBackgroundColour(*wxRED);
 		searchbox->SetBackgroundColour(*wxRED);
 		searchbox->SetForegroundColour(*wxWHITE);
 		restart_next_search = true;
@@ -273,10 +263,9 @@ void SearchPanel::FindPrevious() {
 	if (m_use_regex) options |= FIND_USE_REGEX;
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
-	bool result = editorCtrl->FindPrevious(searchbox->GetValue(), options);
 
-	if (result) SetState(cxFOUND);
-	else SetState(cxNOT_FOUND);
+	bool result = editorCtrl->FindPrevious(searchbox->GetValue(), options);
+	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::Replace() {
@@ -289,10 +278,9 @@ void SearchPanel::Replace() {
 	if (m_use_regex) options |= FIND_USE_REGEX;
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
-	bool result = editorCtrl->Replace(searchbox->GetValue(), replaceBox->GetValue(), options);
 
-	if (result) SetState(cxFOUND);
-	else SetState(cxNOT_FOUND);
+	bool result = editorCtrl->Replace(searchbox->GetValue(), replaceBox->GetValue(), options);
+	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::ReplaceAll() {
@@ -303,10 +291,9 @@ void SearchPanel::ReplaceAll() {
 	int options = 0;
 	if (m_match_case) options |= FIND_MATCHCASE;
 	if (m_use_regex) options |= FIND_USE_REGEX;
-	bool result = editorCtrl->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
 
-	if (result) SetState(cxFOUND);
-	else SetState(cxNOT_FOUND);
+	bool result = editorCtrl->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
+	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::HidePanel() {
@@ -367,6 +354,12 @@ void SearchPanel::OnSearchTextEnter(wxCommandEvent& WXUNUSED(evt)) {
 	else FindNext();
 }
 
+void SearchPanel::OnSearchTextCombo(wxCommandEvent& evt) {
+	wxString pattern;
+	m_settings.GetSearch(evt.GetSelection(), pattern, m_use_regex, m_match_case);
+	searchButton->SetBitmapLabel(m_use_regex ? m_searchReBitmap : m_searchBitmap);
+}
+
 void SearchPanel::OnNext(wxCommandEvent& WXUNUSED(evt)) {
 	FindNext();
 }
@@ -377,10 +370,12 @@ void SearchPanel::OnPrevious(wxCommandEvent& WXUNUSED(evt)) {
 
 void SearchPanel::OnReplace(wxCommandEvent& WXUNUSED(evt)) {
 	Replace();
+	UpdateReplaceHistory();
 }
 
 void SearchPanel::OnReplaceAll(wxCommandEvent& WXUNUSED(evt)) {
 	ReplaceAll();
+	UpdateReplaceHistory();
 }
 
 void SearchPanel::OnChar(wxKeyEvent& evt) {
@@ -399,8 +394,7 @@ void SearchPanel::OnSysColourChanged(wxSysColourChangedEvent& event) {
 void SearchPanel::OnMenuRegex(wxCommandEvent& WXUNUSED(evt)) {
 	m_use_regex = !m_use_regex; // WORKAROUND: evt.IsChecked() returns wrong value
 
-	if (m_use_regex) searchButton->SetBitmapLabel(m_searchReBitmap);
-	else searchButton->SetBitmapLabel(m_searchBitmap);
+	searchButton->SetBitmapLabel(m_use_regex ? m_searchReBitmap : m_searchBitmap);
 
 	Find(); // Redo the search with the new settings
 }
@@ -413,7 +407,7 @@ void SearchPanel::OnMenuMatchCase(wxCommandEvent& WXUNUSED(evt)) {
 void SearchPanel::OnMenuHighlight(wxCommandEvent& WXUNUSED(evt)) {
 	m_highlight = !m_highlight; // WORKAROUND: evt.IsChecked() returns wrong value
 
-	((EditorFrame*)GetGrandParent())->SetSetting(wxT("search/highlight"), m_highlight);
+	m_settings.SetSettingBool(wxT("search/highlight"), m_highlight);
 
 	Find(); // Redo the search with the new settings
 }
@@ -421,6 +415,53 @@ void SearchPanel::OnMenuHighlight(wxCommandEvent& WXUNUSED(evt)) {
 void SearchPanel::OnKillFocus(wxFocusEvent& WXUNUSED(evt)) {
 	wxLogDebug(wxT("SearchPanel lost focus"));
 }
+
+void SearchPanel::RefreshSearchHistory() {
+	// Clear() also deletes the text in search box, so we have to cache it
+	const wxString searchText = searchbox->GetValue();
+	searchbox->Clear();
+	searchbox->SetValue(searchText);
+
+	const size_t sCount = m_settings.GetSearchCount();
+	for (size_t i = 0; i < sCount; ++i) {
+		wxString pattern;
+		bool isRegex;
+		bool matchCase;
+		m_settings.GetSearch(i, pattern, isRegex, matchCase);
+
+		searchbox->Append(pattern);
+	}
+}
+
+void SearchPanel::UpdateSearchHistory() {
+	if (searchbox->GetValue().IsEmpty()) return;
+
+	if (m_settings.AddSearch(searchbox->GetValue(), m_use_regex, m_match_case)) {
+		RefreshSearchHistory();
+	}
+}
+
+void SearchPanel::RefreshReplaceHistory() {
+	// Clear() also deletes the text in search box, so we have to cache it
+	const wxString repText = replaceBox->GetValue();
+	replaceBox->Clear();
+	replaceBox->SetValue(repText);
+
+	const size_t rCount = m_settings.GetReplaceCount();
+	for (size_t i = 0; i < rCount; ++i) {
+		const wxString pattern = m_settings.GetReplace(i);
+		replaceBox->Append(pattern);
+	}
+}
+
+void SearchPanel::UpdateReplaceHistory() {
+	if (replaceBox->GetValue().IsEmpty()) return;
+
+	if (m_settings.AddReplace(replaceBox->GetValue())) {
+		RefreshReplaceHistory();
+	}
+}
+
 
 // -- SeperatorLine -----------------------------------------------------------------
 
@@ -458,6 +499,7 @@ void SearchPanel::SeperatorLine::OnEraseBackground(wxEraseEvent& WXUNUSED(event)
 
 BEGIN_EVENT_TABLE(SearchPanel::SearchEvtHandler, wxEvtHandler)
 	EVT_CHAR(SearchPanel::SearchEvtHandler::OnChar)
+	EVT_KILL_FOCUS(SearchPanel::SearchEvtHandler::OnFocusLost)
 END_EVENT_TABLE()
 
 SearchPanel::SearchEvtHandler::SearchEvtHandler(wxWindow* parent)
@@ -473,6 +515,14 @@ void SearchPanel::SearchEvtHandler::OnChar(wxKeyEvent &evt) {
 		if (evt.ShiftDown()) ((SearchPanel*)parent)->FindPrevious();
 		else ((SearchPanel*)parent)->FindNext();
 	}*/
+
+	evt.Skip();
+}
+
+void SearchPanel::SearchEvtHandler::OnFocusLost(wxFocusEvent& evt) {
+	// We don't want to save partial searches during incremental search
+	// so we only save when the ctrl loses focus. 
+	((SearchPanel*)parent)->UpdateSearchHistory();
 
 	evt.Skip();
 }

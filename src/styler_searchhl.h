@@ -18,7 +18,6 @@
 #include "Catalyst.h"
 #include "StyleRun.h"
 #include "styler.h"
-//#include "Lines.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -30,15 +29,10 @@
 #endif
 using namespace std;
 
-// Pre-definitions
-class EditorCtrl;
-
 class Styler_SearchHL : public Styler {
 public:
-	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges);
+	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme);
 	virtual ~Styler_SearchHL() {};
-
-	void Init(const EditorCtrl& editor);
 
 	void Clear();
 	void Invalidate();
@@ -54,7 +48,6 @@ private:
 	void DoSearch(unsigned int start, unsigned int end, bool from_last=false);
 
 	// Member variables
-	const EditorCtrl* m_editor;
 	const DocumentWrapper& m_doc;
 	const Lines& m_lines;
 	wxString m_text;

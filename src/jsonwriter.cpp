@@ -283,10 +283,12 @@ wxJSONWriter::DoWrite( const wxJSONValue& value, const wxString* key,
       // break;
 
     case wxJSONTYPE_INT :
+	case wxJSONTYPE_INT64 :
       // lastChar = WriteInt( value.AsInt());
       // break;
 
     case wxJSONTYPE_UINT :
+	case wxJSONTYPE_UINT64 :
       // lastChar = WriteUInt( value.AsUInt());
       // break;
 

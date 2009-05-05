@@ -36,7 +36,7 @@ class wxDragImage;
 
 class BundlePane : public wxPanel {
 public:
-	BundlePane(EditorFrame& parent);
+	BundlePane(EditorFrame& parent, TmSyntaxHandler& syntaxHandler);
 	void LoadBundles();
 
 private:

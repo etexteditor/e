@@ -14,7 +14,6 @@
 #ifndef __CYGWINDDLG_H__
 #define __CYGWINDDLG_H__
 
-#include "Catalyst.h"
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
 enum cxCygwinDlgMode {
@@ -29,7 +28,7 @@ enum cxCygwinInstallMode {
 
 class CygwinDlg : public wxDialog {
 public:
-	CygwinDlg(wxWindow *parent, CatalystWrapper& cw, cxCygwinDlgMode mode);
+	CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode);
 
 private:
 	// Event handlers
@@ -38,20 +37,17 @@ private:
 
 	class CygwinInstallThread : public wxThread {
 	public:
-		CygwinInstallThread(CatalystWrapper& cw, cxCygwinInstallMode mode, const wxString& appPath);
+		CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath);
 		virtual void *Entry();
 	private:
-		CatalystWrapper& m_catalyst;
 		const cxCygwinInstallMode m_mode;
 		const wxString m_appPath;
 	};
 
 	// Member variables
-	CatalystWrapper& m_catalyst;
 	const cxCygwinDlgMode m_mode;
 	wxRadioButton* m_autoRadio;
 	wxRadioButton* m_manualRadio;
 };
 
 #endif // __CYGWINDDLG_H__
-

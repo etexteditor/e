@@ -13,14 +13,14 @@
 
 #include "FixedLine.h"
 #include <algorithm>
-#include "eApp.h"
+#include "Document.h"
 
 // Initialize static variables
 wxString FixedLine::s_text;
 
-FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow)
+FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme)
 : dc((FastDC&)dc), m_doc(dw), textstart(0), textend(0), m_lineLen(0), m_lineBufferLen(0), width(0), old_width(0), m_tabChars(4), lastpos(lastpos), m_isSelShadow(isShadow), selections(sel), m_hlBracket(hlBracket),
-  m_theme(((eApp*)wxTheApp)->GetSyntaxHandler().GetTheme()), m_sr(m_theme, (FastDC&)dc),
+  m_theme(theme), m_sr(m_theme, (FastDC&)dc),
   m_wrapMode(cxWRAP_NONE), m_showIndent(false), m_indentWidth(0),
   bmFold(1, 1), bmNewline(1, 1), bmSpace(1, 1), bmTab(1, 1)
 {
@@ -269,8 +269,7 @@ unsigned int FixedLine::SetLine(unsigned int startpos, unsigned int endpos, bool
 	m_inSetLine = false; // re-entrancy check
 #endif
 
-	if (m_wrapMode == cxWRAP_NONE) return m_lineWidth;
-	else return height;
+	return (m_wrapMode == cxWRAP_NONE) ? m_lineWidth : height;
 }
 
 void FixedLine::FlushCache(unsigned int pos) {
@@ -313,8 +312,7 @@ void FixedLine::SetTabWidth(unsigned int tabChars) {
 }
 
 unsigned int FixedLine::GetLineWidth() const {
-	if (m_wrapMode == cxWRAP_NONE) return m_lineWidth;
-	else return width;
+	return  (m_wrapMode == cxWRAP_NONE) ? m_lineWidth : width;
 }
 
 int FixedLine::GetHeight() const {
@@ -331,15 +329,15 @@ unsigned int FixedLine::GetQuickLineWidth(unsigned int startpos, unsigned int en
 		const unsigned int len = endpos - startpos;
 		return len * charwidth;
 	}
-	else {
-		wxString text;
-		cxLOCKDOC_READ(m_doc)
-			text = doc.GetTextPart(startpos, endpos);
-		cxENDLOCK
 
-		const wxSize extent = dc.GetTextExtent(text);
-		return extent.x;
-	}
+	// Proportional width font
+	wxString text;
+	cxLOCKDOC_READ(m_doc)
+		text = doc.GetTextPart(startpos, endpos);
+	cxENDLOCK
+
+	const wxSize extent = dc.GetTextExtent(text);
+	return extent.x;
 }
 
 unsigned int FixedLine::GetQuickLineHeight(unsigned int startpos, unsigned int endpos) {
@@ -355,30 +353,29 @@ unsigned int FixedLine::GetQuickLineHeight(unsigned int startpos, unsigned int e
 
 		return breaklines * charheight;
 	}
-	else {
-		wxString text;
-		cxLOCKDOC_READ(m_doc)
-			text = doc.GetTextPart(startpos, endpos);
-		cxENDLOCK
 
-		wxArrayInt widths;
-		dc.GetPartialTextExtents(text, widths);
+	// Proportional width font
+	wxString text;
+	cxLOCKDOC_READ(m_doc)
+		text = doc.GetTextPart(startpos, endpos);
+	cxENDLOCK
 
-		if (widths.Last() <= width) return charheight;
-		else {
-			unsigned int breaklines = 1;
-			unsigned int margin = width;
+	wxArrayInt widths;
+	dc.GetPartialTextExtents(text, widths);
 
-			for (size_t i = 0; i < widths.Count(); ++i) {
-				if (widths[i] > (int)margin) {
-					++breaklines;
-					margin += width;
-				}
-			}
+	if (widths.Last() <= width) return charheight;
 
-			return breaklines * charheight;
+	unsigned int breaklines = 1;
+	unsigned int margin = width;
+
+	for (size_t i = 0; i < widths.Count(); ++i) {
+		if (widths[i] > (int)margin) {
+			++breaklines;
+			margin += width;
 		}
 	}
+
+	return breaklines * charheight;
 }
 
 wxPoint FixedLine::GetCaretPos(unsigned int pos, bool tryfront) const {
@@ -900,8 +897,7 @@ bool FixedLine::IsTabPos(unsigned int pos) const {
 		else tabpos += 1;
 	}
 
-	if (tabpos == 0) return true;
-	else return (tabpos % m_tabChars == 0);
+	return (tabpos == 0) || (tabpos % m_tabChars == 0);
 }
 
 int FixedLine::GetTabPoint(int xpos) const {

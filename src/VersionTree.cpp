@@ -173,69 +173,68 @@ void VersionTree::DrawTree(wxRect& rect) {
 	mdc.DrawRectangle(rect.x, rect.y - scrollPos, rect.width, rect.height);
 
 	const size_t nodecount = parents.size();
+	if (!nodecount) return;
 
-	if (nodecount) {
-		// Calculate first visible node
-		vector<int>::iterator p = lower_bound(node_ypos.begin(), node_ypos.end(), rect.y);
-		size_t topnode = distance(node_ypos.begin(), p);
-		if (topnode > 0) --topnode;
+	// Calculate first visible node
+	vector<int>::iterator p = lower_bound(node_ypos.begin(), node_ypos.end(), rect.y);
+	size_t topnode = distance(node_ypos.begin(), p);
+	if (topnode > 0) --topnode;
 
-		// Calculate last visible node
-		const int yBottom = rect.GetBottom();
-		size_t endnode = node_ypos.size()-1;
-		for (size_t n = topnode; n < node_ypos.size(); ++n) {
-			if (node_ypos[n]+lineheight >= yBottom) {
-				endnode = n;
-				break;
-			}
+	// Calculate last visible node
+	const int yBottom = rect.GetBottom();
+	size_t endnode = node_ypos.size()-1;
+	for (size_t n = topnode; n < node_ypos.size(); ++n) {
+		if (node_ypos[n]+lineheight >= yBottom) {
+			endnode = n;
+			break;
+		}
+	}
+
+	int halfwidth = nodewidth / 2;
+
+	// Draw the nodes
+	mdc.SetPen(nodePen);
+	for (size_t i = topnode; i <= endnode; ++i) {
+		// Give parent ctrl a chance to change the item style
+		VersionTreeEvent vt_event(wxEVT_VERSIONTREE_DRAWITEM, GetId());
+		vt_event.SetEventObject(this);
+		vt_event.SetItem(i);
+		vt_event.SetItemStyle(VTREESTYLE_NONE); // default is no tooltip
+		GetEventHandler()->ProcessEvent(vt_event);
+
+		const int style = vt_event.GetItemStyle();
+		const int ypos = node_ypos[i] + yoffset;
+
+		if (style & VTREESTYLE_DRAFT) {
+			if (i == selectedNode) mdc.DrawBitmap(m_bmDraftSelected, node_xpos[i], ypos - scrollPos, true);
+			else mdc.DrawBitmap(m_bmDraft, node_xpos[i], ypos - scrollPos, true);
+		}
+		else {
+			// Draw base node
+			if (style & VTREESTYLE_PENDING) mdc.DrawBitmap(m_bmDocPending, node_xpos[i], ypos - scrollPos, true);
+			else mdc.DrawBitmap(m_bmDoc, node_xpos[i], ypos - scrollPos, true);
+
+			// Draw color overlay (selected or unread)
+			if (i == selectedNode) mdc.DrawBitmap(m_bmOverlaySelected, node_xpos[i], ypos - scrollPos, true);
+			else if (style & VTREESTYLE_UNREAD) mdc.DrawBitmap(m_bmOverlayUnread, node_xpos[i], ypos - scrollPos, true);
 		}
 
-		int halfwidth = nodewidth / 2;
+		// Draw mirror overlay
+		if (style & VTREESTYLE_SAVED) mdc.DrawBitmap(m_bmOverlayMirrored, node_xpos[i], ypos - scrollPos, true);
+	}
 
-		// Draw the nodes
-		mdc.SetPen(nodePen);
-		for (size_t i = topnode; i <= endnode; ++i) {
-			// Give parent ctrl a chance to change the item style
-			VersionTreeEvent vt_event(wxEVT_VERSIONTREE_DRAWITEM, GetId());
-			vt_event.SetEventObject(this);
-			vt_event.SetItem(i);
-			vt_event.SetItemStyle(VTREESTYLE_NONE); // default is no tooltip
-			GetEventHandler()->ProcessEvent(vt_event);
+	// Draw lines between the nodes
+	mdc.SetPen(linePen);
+	for (size_t m = 1; m < nodecount; ++m) {
+		const size_t parent = parents[m];
+		if (parent <= endnode && m >= topnode) {
+			const int parentypos = (node_ypos[parent] + yoffset) - scrollPos;
+			const int nodeypos = (node_ypos[m] + yoffset) - scrollPos;
+			mdc.DrawLine(node_xpos[parent] + halfwidth, parentypos + nodeheight,
+                         node_xpos[m] + halfwidth, parentypos + nodeheight + nodespacing);
 
-			const int style = vt_event.GetItemStyle();
-			const int ypos = node_ypos[i] + yoffset;
-
-			if (style & VTREESTYLE_DRAFT) {
-				if (i == selectedNode) mdc.DrawBitmap(m_bmDraftSelected, node_xpos[i], ypos - scrollPos, true);
-				else mdc.DrawBitmap(m_bmDraft, node_xpos[i], ypos - scrollPos, true);
-			}
-			else {
-				// Draw base node
-				if (style & VTREESTYLE_PENDING) mdc.DrawBitmap(m_bmDocPending, node_xpos[i], ypos - scrollPos, true);
-				else mdc.DrawBitmap(m_bmDoc, node_xpos[i], ypos - scrollPos, true);
-
-				// Draw color overlay (selected or unread)
-				if (i == selectedNode) mdc.DrawBitmap(m_bmOverlaySelected, node_xpos[i], ypos - scrollPos, true);
-				else if (style & VTREESTYLE_UNREAD) mdc.DrawBitmap(m_bmOverlayUnread, node_xpos[i], ypos - scrollPos, true);
-			}
-
-			// Draw mirror overlay
-			if (style & VTREESTYLE_SAVED) mdc.DrawBitmap(m_bmOverlayMirrored, node_xpos[i], ypos - scrollPos, true);
-		}
-
-		// Draw lines between the nodes
-		mdc.SetPen(linePen);
-		for (size_t m = 1; m < nodecount; ++m) {
-			const size_t parent = parents[m];
-			if (parent <= endnode && m >= topnode) {
-				const int parentypos = (node_ypos[parent] + yoffset) - scrollPos;
-				const int nodeypos = (node_ypos[m] + yoffset) - scrollPos;
-				mdc.DrawLine(node_xpos[parent] + halfwidth, parentypos + nodeheight,
-                             node_xpos[m] + halfwidth, parentypos + nodeheight + nodespacing);
-
-				mdc.DrawLine(node_xpos[m] + halfwidth, parentypos + nodeheight + nodespacing,
-                             node_xpos[m] + halfwidth, nodeypos);
-			}
+			mdc.DrawLine(node_xpos[m] + halfwidth, parentypos + nodeheight + nodespacing,
+                         node_xpos[m] + halfwidth, nodeypos);
 		}
 	}
 }
@@ -467,21 +466,20 @@ void VersionTree::OnMouseMotion(wxMouseEvent& event) {
 		if (y >= node_ypos[node_id] && y <= (node_ypos[node_id] + nodeheight)) {
 			const int x = event.GetX();
 			if (x >= node_xpos[node_id] && x <= (node_xpos[node_id] + nodewidth)) {
-				if (node_id != tooltippedNode) {
-					// Give parent ctrl a chance to set tooltip
-					VersionTreeEvent vt_event(wxEVT_VERSIONTREE_TOOLTIP, GetId());
-					vt_event.SetEventObject(this);
-					vt_event.SetItem(node_id);
-					vt_event.Veto(); // default is no tooltip
-					GetEventHandler()->ProcessEvent(vt_event);
+				if (node_id == tooltippedNode) return; // tooltip already set
 
-					if (vt_event.IsAllowed()) {
-						SetToolTip(vt_event.GetToolTip());
-						tooltippedNode = node_id;
-						return;
-					}
+				// Give parent ctrl a chance to set tooltip
+				VersionTreeEvent vt_event(wxEVT_VERSIONTREE_TOOLTIP, GetId());
+				vt_event.SetEventObject(this);
+				vt_event.SetItem(node_id);
+				vt_event.Veto(); // default is no tooltip
+				GetEventHandler()->ProcessEvent(vt_event);
+
+				if (vt_event.IsAllowed()) {
+					SetToolTip(vt_event.GetToolTip());
+					tooltippedNode = node_id;
+					return;
 				}
-				else return; // tooltip already set
 			}
 		}
 	}
@@ -493,4 +491,3 @@ void VersionTree::OnMouseMotion(wxMouseEvent& event) {
 		tooltippedNode = size_t(-1);
 	}
 }
-

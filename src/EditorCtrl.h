@@ -29,8 +29,13 @@
 #include "Execute.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
+#include "FindFlags.h"
 
 #include <wx/dnd.h>
+
+#include "IFoldingEditor.h"
+#include "IEditorDoAction.h"
+#include "IPrintableDocument.h"
 
 // Pre-definitions
 class GutterCtrl;
@@ -48,26 +53,11 @@ class EditorBundlePanel;
 									  Document& doc = m_doc.GetDoc(); \
 									  Lines& lines = m_lines;
 */
-// Define option bits for Find
-static const unsigned int FIND_MATCHCASE = 1;
-static const unsigned int FIND_USE_REGEX = 2;
-static const unsigned int FIND_RESTART   = 4;
-static const unsigned int FIND_HIGHLIGHT = 8;
 
-enum cxFindResult {
-	cxFOUND,
-	cxFOUND_AFTER_RESTART,
-	cxNOT_FOUND
-};
-
-enum cxCase {
-	cxUPPERCASE,
-	cxLOWERCASE,
-	cxTITLECASE,
-	cxREVERSECASE
-};
-
-class EditorCtrl : public KeyHookable<wxControl> {
+class EditorCtrl : public KeyHookable<wxControl>, 
+	public IFoldingEditor,
+	public IEditorDoAction,
+	public IPrintableDocument {
 public:
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -149,11 +139,11 @@ public:
 	bool SaveText(bool askforpath=false);
 	bool IsModified() const;
 	DocumentWrapper& GetDocument() {return m_doc;};
-	const DocumentWrapper& GetDocument() const {return m_doc;};
+	virtual const DocumentWrapper& GetDocument() const {return m_doc;};
 	bool SetDocument(const doc_id& di, const wxString& path=wxEmptyString, const RemoteProfile* rp=NULL);
 	doc_id GetDocID() const;
-	wxString GetName() const;
-	const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
+	virtual wxString GetName() const;
+	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
@@ -267,7 +257,7 @@ public:
 	// Commands & Shell
 	void DoActionFromDlg();
 	void ShowScopeTip();
-	void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
+	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
 	void FilterThroughCommand();
 
 	// DragCommands
@@ -278,12 +268,9 @@ public:
 	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 
 	// Shell
-	enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);
-	long RawShell(const vector<char>& command, const vector<char>& input, vector<char>* output, vector<char>* errorOut, cxEnv& env, bool isUnix=true, const wxString& cwd=wxEmptyString);
 	wxString RunShellCommand(const vector<char>& command, bool doSetEnv=true);
-	void RunCurrent(bool doReplace);
-	wxString GetBashCommand(const wxString& cmd, cxEnv& env);
+	void RunCurrentSelectionAsCommand(bool doReplace);
 
 	// Track if doc has been modified
 	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};
@@ -307,39 +294,22 @@ public:
 	wxString GetSymbolString(const Styler_Syntax::SymbolRef& sr) const;
 
 	// Bracket Highlighting
-	const interval& GetHlBracket() const {return m_hlBracket;};
+	virtual const interval& GetHlBracket() const {return m_hlBracket;};
 
-	// Folding
-	enum cxFoldType {
-		cxFOLD_START,
-		cxFOLD_START_FOLDED,
-		cxFOLD_END
-	};
-	struct cxFold {
-	public:
-		cxFold(unsigned int line, cxFoldType type, unsigned int indent);
-		cxFold(unsigned int line) : line_id(line) {};
-		bool operator<(const cxFold& f) const {return line_id < f.line_id;};
-		bool operator<(unsigned int line) const {return line_id < line;};
-		unsigned int line_id;
-		cxFoldType type;
-		unsigned int count;
-		unsigned int indent;
-	};
 	vector<unsigned int> GetFoldedLines() const;
-	const vector<cxFold>& GetFolds() const {return m_folds;};
+	virtual const vector<cxFold>& GetFolds() const {return m_folds;};
 	void UpdateFolds() {ParseFoldMarkers();};
 	void Fold(unsigned int line_id);
 	void FoldAll();
 	void FoldOthers();
 	void UnFold(unsigned int line_id);
-	void UnFoldParents(unsigned int line_id);
+	virtual void UnFoldParents(unsigned int line_id);
 	void UnFoldAll();
 	void ToggleFold();
 	void SelectFold();
 	void SelectFold(unsigned int line_id);
 	bool IsLineFolded(unsigned int line_id) const;
-	bool IsPosInFold(unsigned int pos, unsigned int* fold_start=NULL, unsigned int* fold_end=NULL);
+	virtual bool IsPosInFold(unsigned int pos, unsigned int* fold_start=NULL, unsigned int* fold_end=NULL);
 	bool HasFoldedFolds() const;
 	vector<cxFold*> GetFoldStack(unsigned int line_id);
 
@@ -352,16 +322,8 @@ public:
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
-#ifdef __WXMSW__
-	bool InitCygwin(bool silent=false);
-	static wxString GetCygwinDir();
-	static wxString CygwinPathToWin(const wxString& path);
-#endif // __WXMSW__
-
 	virtual bool OnPreKeyDown(wxKeyEvent& event);
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
-
-    static wxString WinPathToCygwin(const wxFileName& path);
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -698,13 +660,6 @@ private:
 	vector<interval> m_searchRanges;
 
 	wxString m_indent;
-	static wxString s_bashCmd;
-	static wxString s_bashEnv;
-	static wxString s_tmBashInit;
-#ifdef __WXMSW__
-	static bool s_isCygwinInitialized;
-	static wxString s_cygPath;
-#endif // __WXMSW__
 
 	// Auto-pair brackets
 	bool m_doAutoPair;

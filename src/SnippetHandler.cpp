@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "SnippetHandler.h"
+#include "ShellRunner.h"
 #include "EditorCtrl.h"
 
 void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippet, cxEnv& env, const tmBundle* bundle) {
@@ -29,12 +30,12 @@ void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippe
 
 	// Convert indents in snippet to match current tab settings
 	const wxString& indentUnit = m_editor->GetIndentUnit();
-	if (indentUnit != wxT('\t')) {
+	if (indentUnit == wxT('\t')) m_indentUnit.clear();
+	else {
 		const wxCharBuffer utfIndent = indentUnit.mb_str();
 		const unsigned int indentLen = strlen(utfIndent.data());
 		m_indentUnit.assign(utfIndent.data(), utfIndent.data()+indentLen);
 	}
-	else m_indentUnit.clear();
 
 	if (Parse()) {
 		m_offset = m_editor->GetPos();
@@ -423,7 +424,7 @@ void SnippetHandler::DoPipe(const TabStop& ts) {
 	m_editor->GetTextPart(m_offset+iv.start, m_offset+iv.end, input);
 
 	vector<char> output;
-	const int pid = m_editor->RawShell(ts.pipeCmd, input, &output, NULL, env);
+	const int pid = ShellRunner::RawShell(ts.pipeCmd, input, &output, NULL, env);
 	if (pid == 0 && !output.empty()) {		
 		if (output.back() == '\n') output.pop_back(); // Strip the ending newline
 
@@ -444,45 +445,43 @@ void SnippetHandler::AdjustIndentUnit() {
 	// This function should be called before Parse(), since it
 	// does not adjust intervals
 	const wxString& indentUnit = m_editor->GetIndentUnit();
-	if (indentUnit != wxT('\t')) {
-		// Convert indent to utf-8
-		const wxCharBuffer utfIndent = indentUnit.mb_str();
-		const unsigned int indentLen = strlen(utfIndent.data());
+	if (indentUnit == wxT('\t')) return;
 
-		// Replace all tabs
-		for (unsigned int i = 0; i < m_snipText.size(); ++i) {
-			if (m_snipText[i] == '\t') {
-				// Replace the tab
-				m_snipText.erase(m_snipText.begin()+i, m_snipText.begin()+i+1);
-				m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
+	// Convert indent to utf-8
+	const wxCharBuffer utfIndent = indentUnit.mb_str();
+	const unsigned int indentLen = strlen(utfIndent.data());
 
-				i += indentLen;
-			}
+	// Replace all tabs
+	for (unsigned int i = 0; i < m_snipText.size(); ++i) {
+		if (m_snipText[i] == '\t') {
+			// Replace the tab
+			m_snipText.erase(m_snipText.begin()+i, m_snipText.begin()+i+1);
+			m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
+
+			i += indentLen;
 		}
 	}
 }
 
 void SnippetHandler::AdjustIndent() {
 	m_indent = m_editor->GetLineIndentFromPos(m_offset);
+	if (m_indent.empty()) return;
 
-	// Indent entire snippet to match current indentation level in editor
-	if (!m_indent.empty()) {
-		// Convert indent to utf-8
-		const wxCharBuffer utfIndent = m_indent.mb_str();
-		const unsigned int indentLen = strlen(utfIndent.data());
+	// Convert indent to utf-8
+	const wxCharBuffer utfIndent = m_indent.mb_str();
+	const unsigned int indentLen = strlen(utfIndent.data());
 
-		// Insert indent after all newlines
-		for (unsigned int i = 0; i < m_snipText.size(); ++i) {
-			if (m_snipText[i] == '\n') {
-				// move all intervals following (or containing) insertion
-				UpdateIntervalsFromPos(i, indentLen);
+	// Insert indent after all newlines
+	for (unsigned int i = 0; i < m_snipText.size(); ++i) {
+		if (m_snipText[i] == '\n') {
+			// move all intervals following (or containing) insertion
+			UpdateIntervalsFromPos(i, indentLen);
 
-				// Insert the indent
-				++i;
-				m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
+			// Insert the indent
+			++i;
+			m_snipText.insert(m_snipText.begin()+i, utfIndent.data(), utfIndent.data()+indentLen);
 
-				i += indentLen;
-			}
+			i += indentLen;
 		}
 	}
 }
@@ -503,48 +502,48 @@ void SnippetHandler::IndentString(wxString& text) const {
 void SnippetHandler::UpdateIntervals(unsigned int id, int diff) {
 	wxASSERT(id < m_intervals.size());
 
-	if (diff != 0) {
-		// Update the changed interval
-		TabInterval& iv = m_intervals[id];
-		iv.end += diff;
+	if (diff == 0) return;
 
-		// Resize parents
-		int parent = iv.parent;
-		while (parent != -1) {
-			TabInterval& tp = m_intervals[parent];
-			tp.end += diff;
-			parent = tp.parent;
-		}
+	// Update the changed interval
+	TabInterval& iv = m_intervals[id];
+	iv.end += diff;
 
-		// Move intervals following pos
-		for (vector<TabInterval>::iterator vi = m_intervals.begin()+id+1; vi != m_intervals.end(); ++vi) {
-			// children are resized rather than moved
-			if (vi->start != iv.start || vi->parent < (int)id) {
-				vi->start += diff;
-			}
-			vi->end += diff;
-		}
-
-		// Move endpos
-		if (m_endpos >= iv.start) m_endpos += diff;
+	// Resize parents
+	int parent = iv.parent;
+	while (parent != -1) {
+		TabInterval& tp = m_intervals[parent];
+		tp.end += diff;
+		parent = tp.parent;
 	}
+
+	// Move intervals following pos
+	for (vector<TabInterval>::iterator vi = m_intervals.begin()+id+1; vi != m_intervals.end(); ++vi) {
+		// children are resized rather than moved
+		if (vi->start != iv.start || vi->parent < (int)id) {
+			vi->start += diff;
+		}
+		vi->end += diff;
+	}
+
+	// Move endpos
+	if (m_endpos >= iv.start) m_endpos += diff;
 }
 
 void SnippetHandler::UpdateIntervalsFromPos(unsigned int pos, int diff) {
-	if (diff != 0) {
-		// Move invervals containing or beyond pos
-		vector<TabInterval>::iterator vi = m_intervals.begin();
-		for (; vi != m_intervals.end(); ++vi) {
-			if (pos < vi->end) {
+	if (diff == 0) return;
 
-				if (pos < vi->start) vi->start += diff; // If contained, only resize
-				vi->end += diff;
-			}
+	// Move invervals containing or beyond pos
+	vector<TabInterval>::iterator vi = m_intervals.begin();
+	for (; vi != m_intervals.end(); ++vi) {
+		if (pos < vi->end) {
+
+			if (pos < vi->start) vi->start += diff; // If contained, only resize
+			vi->end += diff;
 		}
-
-		// Move endpos
-		if (m_endpos > pos) m_endpos += diff;
 	}
+
+	// Move endpos
+	if (m_endpos > pos) m_endpos += diff;
 }
 
 void SnippetHandler::RemoveChildren(TabStop& ts) {
@@ -635,7 +634,7 @@ bool SnippetHandler::Parse(bool isWrapped) {
 							wxBusyCursor wait;
 
 							wxASSERT(m_env);
-							const int pid = m_editor->RawShell(cmd, vector<char>(), &output, NULL, *m_env);
+							const int pid = ShellRunner::RawShell(cmd, vector<char>(), &output, NULL, *m_env);
 							if (pid == 0 && !output.empty()) {
 								// Strip the ending newline
 								if (output.back() == '\n') output.pop_back();

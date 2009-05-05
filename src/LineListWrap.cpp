@@ -13,6 +13,7 @@
 
 #include "LineListWrap.h"
 #include <algorithm>
+#include "Document.h"
 
 // Initializing static constants
 const unsigned int LineListWrap::WINSIZE = 200;
@@ -22,34 +23,32 @@ LineListWrap::LineListWrap(FixedLine& l, const DocumentWrapper& dw) : line(l), m
 }
 
 unsigned int LineListWrap::offset(unsigned int index) {
-	wxASSERT(index >= 0 && index < textOffsets.size());
+	wxASSERT(0 <= index && index < textOffsets.size());
 
-	if (index) {
-		validate_offsets(index-1);
-		return textOffsets[index-1];
-	}
-	else return 0;
+	if (!index) return 0;
+
+	validate_offsets(index-1);
+	return textOffsets[index-1];
 }
 
 unsigned int LineListWrap::end(unsigned int index) {
-	wxASSERT(index >= 0 && index < textOffsets.size());
+	wxASSERT(0 <= index && index < textOffsets.size());
 
 	validate_offsets(index);
 	return textOffsets[index];
 }
 
 unsigned int LineListWrap::top(unsigned int index) {
-	wxASSERT(index == 0 || (index > 0 && index < yPositions.size()));
+	wxASSERT(index == 0 || (0 < index && index < yPositions.size()));
+	
+	if (!index) return 0;
 
-	if (index) {
-		validate_positions(index-1);
-		return yPositions[index-1];
-	}
-	else return 0;
+	validate_positions(index-1);
+	return yPositions[index-1];
 }
 
 unsigned int LineListWrap::bottom(unsigned int index) {
-	wxASSERT(index >= 0 && index < yPositions.size());
+	wxASSERT(0 <= index && index < yPositions.size());
 
 	validate_positions(index);
 	return yPositions[index];
@@ -69,20 +68,21 @@ unsigned int LineListWrap::last() const {
 }
 
 unsigned int LineListWrap::height() const {
-	if (!yPositions.empty()) {
-		wxASSERT(lastLoadedPos != 0);
-		wxASSERT(yPositions.size() == size());
+	if (yPositions.empty()) return 0;
 
-		if (lastLoadedPos < yPositions.size()) {
-			int last = yPositions[lastLoadedPos-1];
-			if (lastValidPos < lastLoadedPos) last += posDiff;
+	wxASSERT(lastLoadedPos != 0);
+	wxASSERT(yPositions.size() == size());
 
-			return last + approxBottom;
-		}
-		else if (lastValidPos < yPositions.size()) return yPositions.back() + posDiff;
-		else return yPositions.back();
+	if (lastLoadedPos < yPositions.size()) {
+		int last = yPositions[lastLoadedPos-1];
+		if (lastValidPos < lastLoadedPos) last += posDiff;
+
+		return last + approxBottom;
 	}
-	else return 0;
+	
+	if (lastValidPos < yPositions.size()) return yPositions.back() + posDiff;
+	
+	return yPositions.back();
 }
 
 unsigned int LineListWrap::width() const {
@@ -92,10 +92,10 @@ unsigned int LineListWrap::width() const {
 };
 
 unsigned int LineListWrap::length() const {
-	if (!textOffsets.empty())
-		if (lastValidOffset < textOffsets.size()) return textOffsets.back() + offsetDiff;
-		else return textOffsets.back();
-	else return 0;
+	if (textOffsets.empty()) return 0;
+
+	if (lastValidOffset < textOffsets.size()) return textOffsets.back() + offsetDiff;
+	else return textOffsets.back();
 }
 
 void LineListWrap::add_line(int end) {
@@ -464,7 +464,7 @@ unsigned int LineListWrap::EndFromPos(unsigned int pos) {
 
 	vector<unsigned int>::const_iterator posline = lower_bound(textOffsets.begin(), textOffsets.end(), pos);
 	if (pos != *posline) return *posline;
-	else return pos == textOffsets.back() ? pos : *(++posline);
+	return pos == textOffsets.back() ? pos : *(++posline);
 }
 
 unsigned int LineListWrap::StartFromPos(unsigned int pos) {
@@ -473,14 +473,14 @@ unsigned int LineListWrap::StartFromPos(unsigned int pos) {
 	wxASSERT(pos <= textOffsets.back());
 
 	vector<unsigned int>::const_iterator posline = lower_bound(textOffsets.begin(), textOffsets.end(), pos);
-	if (pos != *posline) return (posline == textOffsets.begin()) ? 0 : *(--posline);
-	else return pos;
+	if (pos == *posline) return pos;
+	return (posline == textOffsets.begin()) ? 0 : *(--posline);
 }
 
 int LineListWrap::find_offset(int pos) {
 	if (!size()) return 0;
 	validate_offsets(size()-1);
-	wxASSERT(pos >= 0 && pos <= (int)textOffsets.back());
+	wxASSERT(0 <= pos && pos <= (int)textOffsets.back());
 
 	vector<unsigned int>::iterator posline = lower_bound(textOffsets.begin(), textOffsets.end(), (unsigned int)pos);
 	return distance(textOffsets.begin(), posline);

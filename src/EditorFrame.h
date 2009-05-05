@@ -22,7 +22,6 @@
 #include "Catalyst.h"
 #include "DocHistory.h"
 #include "EditorCtrl.h"
-#include "SearchPanel.h"
 #include <wx/dnd.h>
 #include "GutterCtrl.h"
 #include <wx/regex.h>
@@ -46,9 +45,10 @@ class PreviewDlg;
 class SymbolList;
 class wxFilesChangedEvent;
 class ChangeCheckerThread;
-class BundleEditor;
 class BundlePane;
 class UndoHistory;
+class eSettings;
+class SearchPanel;
 
 // Menu id's
 enum {
@@ -158,7 +158,6 @@ public:
 	~EditorFrame();
 
 	void RestoreState();
-	void InitCygwin();
 
 	// Tabs
 	void AddTab(wxWindow* page=NULL);
@@ -184,7 +183,6 @@ public:
 	wxString GetSaveDir() const;
 
 	// RemoteFile support functions
-	static bool IsRemotePath(const wxString& path);
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);
 	wxString DownloadFile(const wxString& url, const RemoteProfile* rp);
 	wxDateTime GetRemoteDate(const wxString& url, const RemoteProfile* rp);
@@ -192,7 +190,6 @@ public:
 	wxString GetTempPath() const;
 
 	// Bundle Editor support functions
-	static bool IsBundlePath(const wxString& path);
 	void ShowBundleManager();
 
 	// Search Bar
@@ -287,7 +284,6 @@ private:
 	void ShowBundlePane();
 
 	// Utility functions
-	static void ConvertPathToWin(wxString& path);
 	static wxString URLDecode(const wxString& value);
 	static int ParseHex(const wxString& hexStr);
 
@@ -458,6 +454,7 @@ private:
 
 	// Member variables
 	CatalystWrapper m_catalyst;
+	eSettings& m_settings;
 	Dispatcher& dispatcher;
 	wxImageList imageList;
 	RemoteThread *m_remoteThread;
@@ -521,10 +518,6 @@ private:
 	int m_tabWidth;
 	wxArrayString m_recentFiles;
 	wxArrayString m_recentProjects;
-
-	// BundleEditor
-	BundleEditor* m_bundleEditor;
-	bool m_bundleEditorModified;
 
 	// Printing
 	wxPageSetupDialogData m_printData;

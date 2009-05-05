@@ -140,6 +140,7 @@ public:
   wxArrayString  GetMemberNames() const;
 
   // appending items, resizing and deleting items
+  wxJSONValue& Insert( unsigned index, const wxJSONValue& value );
   wxJSONValue& Append( const wxJSONValue& value );
   wxJSONValue& Append( bool b );
   wxJSONValue& Append( int i );
@@ -153,6 +154,7 @@ public:
   wxJSONValue& Append( const wxString& str );
   bool         Remove( int index );
   bool         Remove( const wxString& key );
+  void         RemoveAll();
   void         Clear();
   bool         Cat( const wxChar* str );
   bool         Cat( const wxString& str );

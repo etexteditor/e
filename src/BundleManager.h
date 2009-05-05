@@ -24,10 +24,13 @@
 class TmSyntaxHandler;
 class EditorFrame;
 class wxProgressDialog;
+#ifdef __WXMSW__
+class wxIEHtmlWin;
+#endif
 
 class BundleManager : public wxDialog {
 public:
-	BundleManager(EditorFrame& parent);
+	BundleManager(EditorFrame& parent, TmSyntaxHandler& syntaxHandler);
 	~BundleManager();
 
 	bool NeedBundleReload() const {return m_needBundleReload;};

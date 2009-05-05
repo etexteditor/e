@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "LineListNoWrap.h"
+#include "Document.h"
 
 LineListNoWrap::LineListNoWrap(FixedLine& l, const DocumentWrapper& dw)
 : m_line(l), m_doc(dw), m_maxWidth(0) {
@@ -23,31 +24,21 @@ bool LineListNoWrap::IsValidIndex(unsigned int index) const {
 
 unsigned int LineListNoWrap::offset(unsigned int index) {
 	wxASSERT(IsValidIndex(index));
-
-	if (index) {
-		return m_textOffsets[index-1];
-	}
-	else return 0;
+	return index ? m_textOffsets[index-1] : 0;
 }
 
 unsigned int LineListNoWrap::end(unsigned int index) {
 	wxASSERT(IsValidIndex(index));
-
 	return m_textOffsets[index];
 }
 
 unsigned int LineListNoWrap::top(unsigned int index) {
 	wxASSERT(IsValidIndex(index));
-
-	if (index) {
-		return index * m_line.GetCharHeight();
-	}
-	else return 0;
+	return index ? index * m_line.GetCharHeight() : 0;
 }
 
 unsigned int LineListNoWrap::bottom(unsigned int index) {
 	wxASSERT(IsValidIndex(index));
-
 	return (index+1) * m_line.GetCharHeight();
 }
 
@@ -57,7 +48,6 @@ unsigned int LineListNoWrap::size() const {
 
 unsigned int LineListNoWrap::last() const {
 	wxASSERT(!m_textOffsets.empty());
-
 	return m_textOffsets.size()-1;
 }
 
@@ -66,8 +56,7 @@ unsigned int LineListNoWrap::height() const {
 }
 
 unsigned int LineListNoWrap::length() const {
-	if (!m_textOffsets.empty()) return m_textOffsets.back();
-	else return 0;
+	return (!m_textOffsets.empty()) ? m_textOffsets.back() : 0;
 }
 
 bool LineListNoWrap::IsLineEnd(unsigned int pos) {
@@ -84,7 +73,7 @@ unsigned int LineListNoWrap::EndFromPos(unsigned int pos) {
 
 	vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
 	if (pos != *posline) return *posline;
-	else return pos == m_textOffsets.back() ? pos : *(++posline);
+	return pos == m_textOffsets.back() ? pos : *(++posline);
 }
 
 unsigned int LineListNoWrap::StartFromPos(unsigned int pos) {
@@ -92,8 +81,8 @@ unsigned int LineListNoWrap::StartFromPos(unsigned int pos) {
 	wxASSERT(pos <= m_textOffsets.back());
 
 	vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
-	if (pos != *posline) return (posline == m_textOffsets.begin()) ? 0 : *(--posline);
-	else return pos;
+	if (pos == *posline) return pos;
+	return (posline == m_textOffsets.begin()) ? 0 : *(--posline);
 }
 
 vector<unsigned int>& LineListNoWrap::GetOffsets() {

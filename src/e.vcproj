@@ -333,41 +333,6 @@
 			>
 		</File>
 		<File
-			RelativePath="BundleEditor.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="BundleEditor.h"
-			>
-		</File>
-		<File
 			RelativePath="BundleManager.cpp"
 			>
 			<FileConfiguration
@@ -436,37 +401,6 @@
 		<File
 			RelativePath="BundleMenu.h"
 			>
-		</File>
-		<File
-			RelativePath="BundleMenuEditor.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\BundlePane.cpp"
@@ -1150,6 +1084,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\eAppSettings.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\EditorBundlePanel.cpp"
 			>
 		</File>
@@ -1298,6 +1236,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\eDocumentPath.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\eDocumentPath.h"
+			>
+		</File>
+		<File
 			RelativePath="eIpcServer.cpp"
 			>
 			<FileConfiguration
@@ -1330,6 +1276,14 @@
 		</File>
 		<File
 			RelativePath="eIpcServer.h"
+			>
+		</File>
+		<File
+			RelativePath=".\eSettings.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\eSettings.h"
 			>
 		</File>
 		<File
@@ -1539,6 +1493,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\FindFlags.h"
+			>
+		</File>
+		<File
 			RelativePath="FixedLine.cpp"
 			>
 			<FileConfiguration
@@ -1714,6 +1672,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\IEditorDoAction.h"
+			>
+		</File>
+		<File
 			RelativePath="IEHtmlWin.cpp"
 			>
 			<FileConfiguration
@@ -1746,6 +1708,14 @@
 		</File>
 		<File
 			RelativePath="IEHtmlWin.h"
+			>
+		</File>
+		<File
+			RelativePath=".\IFoldingEditor.h"
+			>
+		</File>
+		<File
+			RelativePath=".\IPrintableDocument.h"
 			>
 		</File>
 		<File
@@ -2618,6 +2588,14 @@
 		</File>
 		<File
 			RelativePath="ShellContextMenu.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ShellRunner.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ShellRunner.h"
 			>
 		</File>
 		<File

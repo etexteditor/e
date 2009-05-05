@@ -36,7 +36,7 @@
 using namespace std;
 
 // Pre-definitions
-class EditorCtrl;
+class IEditorDoAction;
 // #include "matchers.h"
 class matcher;
 class match_matcher;
@@ -392,7 +392,7 @@ public:
 
 	wxMenu* GetBundleMenu();
 	wxString GetBundleItemUriFromMenu(unsigned int id) const;
-	void DoBundleAction(unsigned int id, EditorCtrl& editor);
+	void DoBundleAction(unsigned int id, IEditorDoAction& editor);
 
 	// Paths for bundles
 	wxFileName GetBundleSupportPath(unsigned int bundleId) const;

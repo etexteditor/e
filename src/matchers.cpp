@@ -34,40 +34,40 @@ wxRegEx matcher::s_backref(wxT("\\\\([[:digit:]]+)"));
 wxRegEx span_matcher::s_refToCapture(wxT("\\\\([[:digit:]]+)"));
 
 void matcher::OptimizeRegex(wxString& pattern) {
-	if (s_alternatives.Matches(pattern)) {
-		size_t start, len;
-		s_alternatives.GetMatch(&start, &len, 2);
-		size_t end = start+len;
+	if (!s_alternatives.Matches(pattern)) return;
 
-		// Build the tree
-		NodeMap* root = new NodeMap;
-		NodeMap* node = root;
-		NodeMap* prevNode = NULL;
-		wxChar prevChar = '\0';
-		for (size_t i = start; i < end; ++i) {
-			const wxChar c = pattern[i];
+	size_t start, len;
+	s_alternatives.GetMatch(&start, &len, 2);
+	size_t end = start+len;
 
-			if (!node) {
-				node = new map<wxChar, void*>;
-				(*prevNode)[prevChar] = node;
-			}
-			prevNode = node;
-			prevChar = c;
-			node = (NodeMap*)(*node)[c];
+	// Build the tree
+	NodeMap* root = new NodeMap;
+	NodeMap* node = root;
+	NodeMap* prevNode = NULL;
+	wxChar prevChar = '\0';
+	for (size_t i = start; i < end; ++i) {
+		const wxChar c = pattern[i];
 
-			if (c == wxT('|')) node = root;
+		if (!node) {
+			node = new map<wxChar, void*>;
+			(*prevNode)[prevChar] = node;
 		}
+		prevNode = node;
+		prevChar = c;
+		node = (NodeMap*)(*node)[c];
 
-		// Rebuild the pattern from tree
-		wxString newpattern;
-		RebuildPattern(newpattern, *root);
-
-		pattern.replace(start, len, newpattern);
-		//wxLogDebug(wxT("%s"), pattern);
-
-		// Clean up
-		DeleteNode(root);
+		if (c == wxT('|')) node = root;
 	}
+
+	// Rebuild the pattern from tree
+	wxString newpattern;
+	RebuildPattern(newpattern, *root);
+
+	pattern.replace(start, len, newpattern);
+	//wxLogDebug(wxT("%s"), pattern);
+
+	// Clean up
+	DeleteNode(root);
 }
 
 void matcher::DeleteNode(NodeMap* node) {
@@ -152,17 +152,16 @@ bool matcher::RegExVerify(const wxString& pattern, bool matchcase) {
 		free(compiledPattern);
 		return true;
 	}
-	else {
-		wxLogDebug(wxT("RegEx error: %s"), error);
-		wxLogDebug(wxT("offset: %d\n%s"), erroffset, &pattern[erroffset]);
 
-		wxFile file(wxT("pattern.debug"), wxFile::write);
-		file.Write(pattern);
-		file.Close();
+	wxLogDebug(wxT("RegEx error: %s"), error);
+	wxLogDebug(wxT("offset: %d\n%s"), erroffset, &pattern[erroffset]);
 
-		wxASSERT(false);
-		return false;
-	}
+	wxFile file(wxT("pattern.debug"), wxFile::write);
+	file.Write(pattern);
+	file.Close();
+
+	wxASSERT(false);
+	return false;
 }
 #endif //__WXDEBUG__
 
@@ -190,20 +189,19 @@ bool match_matcher::RegExCompile(const wxString& pattern, bool matchcase) {
 		m_patternStudy = pcre_study(m_compiledPattern, 0, &error);
 		return true;
 	}
-	else {
-		wxLogDebug(wxT("RegEx error: %s"), wxString(error, wxConvUTF8).c_str());
-		wxLogDebug(wxT("Invalid pattern: %s"), pattern.c_str());
-		wxString loc = pattern;
-		loc.Remove(0, erroffset);
-		wxLogDebug(wxT("Location: %s"), loc.c_str());
 
-		// Notify user of error
-		wxString msg = m_name + _(" contains invalid regex pattern!\n");
-		msg += wxT("Error: ") + wxString(error, wxConvUTF8) + wxT("\n\n");
-		//msg += pattern;
-		wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
-		return false;
-	}
+	wxLogDebug(wxT("RegEx error: %s"), wxString(error, wxConvUTF8).c_str());
+	wxLogDebug(wxT("Invalid pattern: %s"), pattern.c_str());
+	wxString loc = pattern;
+	loc.Remove(0, erroffset);
+	wxLogDebug(wxT("Location: %s"), loc.c_str());
+
+	// Notify user of error
+	wxString msg = m_name + _(" contains invalid regex pattern!\n");
+	msg += wxT("Error: ") + wxString(error, wxConvUTF8) + wxT("\n\n");
+	//msg += pattern;
+	wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
+	return false;
 }
 
 
@@ -416,8 +414,7 @@ bool span_matcher::IsSpanEnd(unsigned int callout_id) {
 
 	//if (callout_id >= m_endrefs_start) return true;
 	//if (callout_id == m_endref) return true;
-	if (callout_id == 0) return true;
-	else return false;
+	return (callout_id == 0);
 }
 
 size_t span_matcher::GetMembers(vector<calloutref>& refs) {
@@ -433,9 +430,6 @@ size_t span_matcher::GetMembers(vector<calloutref>& refs) {
 
 	return count;
 }
-
-
-
 
 // -------------------------------------------------------------------------------------
 

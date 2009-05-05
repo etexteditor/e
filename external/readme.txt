@@ -28,8 +28,7 @@ The libraries can be manually downloaded from the following sites:
   tinyxml
   http://sourceforge.net/projects/tinyxml
   
-They all need to be built as static libraries. If you have problems
-with any of these libs, you should be able to upgrade to a later version.
+They all need to be built as static libraries.
 
 There are project files for Visual C++ in the subdir "build_msvc".
 If you choose to use these, they will have to be copied into the source

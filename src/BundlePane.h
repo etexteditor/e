@@ -138,4 +138,3 @@ private:
 };
 
 #endif // __BUNDLEPANE_H__
-

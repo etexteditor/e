@@ -21,6 +21,7 @@
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
 #include "DirWatcher.h"
+#include "RemoteThread.h"
 
 #include "images/NewFolder.xpm"
 #include "images/NewDocument.xpm"

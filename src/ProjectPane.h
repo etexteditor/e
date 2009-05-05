@@ -20,7 +20,6 @@
 #include <wx/dnd.h>
 #include <wx/imaglist.h>
 #include "ProjectInfo.h"
-#include "RemoteThread.h"
 
 #ifdef __WXMSW__
     #include "ShellContextMenu.h"
@@ -30,6 +29,7 @@
 #ifdef __WXMSW__
     #pragma warning(push, 1)
 #endif
+#include <deque>
 #include <vector>
 #include "tinyxml.h" // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
@@ -37,9 +37,14 @@
 #endif
 using namespace std;
 
+
 // pre-definitions
 class IFrameProjectService;
 class wxDirWatcherEvent;
+class RemoteThread;
+class RemoteProfile;
+class cxRemoteListEvent;
+class cxRemoteAction;
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:

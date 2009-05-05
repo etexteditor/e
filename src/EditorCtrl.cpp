@@ -2956,28 +2956,27 @@ bool EditorCtrl::SaveText(bool askforpath) {
 	// Check if file is write protected
 	if (filepath.FileExists() && !filepath.IsFileWritable()) {
 		const int answer = wxMessageBox(filepath.GetFullPath() + _T(" is write protected.\nDo you want to save it anyway?"), _T("Save"), wxOK|wxCANCEL|wxICON_QUESTION);
-		if (answer == wxOK) {
+		if (answer != wxOK) return false;
+
 #ifdef __WXMSW__
-			DWORD dwAttrs = ::GetFileAttributes(newpath);
-			if (dwAttrs & FILE_ATTRIBUTE_READONLY) {
-				dwAttrs &= ~FILE_ATTRIBUTE_READONLY; // remove read-only bit
-				if (!::SetFileAttributes(newpath, dwAttrs)) {
-					wxMessageBox(_T("Unable to remove write protection!"), _T("e Error"), wxICON_ERROR);
-					return false;
-				}
+		DWORD dwAttrs = ::GetFileAttributes(newpath);
+		if (dwAttrs & FILE_ATTRIBUTE_READONLY) {
+			dwAttrs &= ~FILE_ATTRIBUTE_READONLY; // remove read-only bit
+			if (!::SetFileAttributes(newpath, dwAttrs)) {
+				wxMessageBox(_T("Unable to remove write protection!"), _T("e Error"), wxICON_ERROR);
+				return false;
 			}
-#else
-            // Get protection
-			struct stat s;
-			int res = stat(newpath.mb_str(wxConvUTF8), &s);
-			if (res == 0) res = chmod(newpath.mb_str(wxConvUTF8), s.st_mode |= S_IWUSR);
-			if (res != 0) {
-			    wxMessageBox(_T("Unable to remove write protection!"), _T("e Error"), wxICON_ERROR);
-                return false;
-			}
-#endif
 		}
-		else return false;
+#else
+        // Get protection
+		struct stat s;
+		int res = stat(newpath.mb_str(wxConvUTF8), &s);
+		if (res == 0) res = chmod(newpath.mb_str(wxConvUTF8), s.st_mode |= S_IWUSR);
+		if (res != 0) {
+		    wxMessageBox(_T("Unable to remove write protection!"), _T("e Error"), wxICON_ERROR);
+            return false;
+		}
+#endif
 	}
 
 	// Check if we need to force the native end-of-line

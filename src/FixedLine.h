@@ -17,8 +17,8 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "StyleRun.h"
-#include "FastDC.h"
 
+class FastDC;
 struct tmTheme;
 class Styler;
 

@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "FixedLine.h"
+#include "FastDC.h"
 #include <algorithm>
 #include "Document.h"
 #include "tm_syntaxhandler.h"

@@ -16,6 +16,7 @@
 #include "Document.h"
 #include "IFoldingEditor.h"
 #include "Fold.h"
+#include "tm_syntaxhandler.h"
 
 Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme)
 : dc(dc), m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),

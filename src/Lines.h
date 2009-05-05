@@ -6,7 +6,6 @@
 #include "FixedLine.h"
 #include <wx/filename.h>
 #include "styler.h"
-#include "tm_syntaxhandler.h"
 #include "LineListWrap.h"
 #include "LineListNoWrap.h"
 
@@ -21,6 +20,7 @@
 using namespace std;
 
 class IFoldingEditor;
+struct tmTheme;
 
 class Lines {
 public:

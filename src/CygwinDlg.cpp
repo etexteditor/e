@@ -18,6 +18,8 @@
 #include "IAppPaths.h"
 #include "eSettings.h"
 
+#include "eApp.h"
+
 BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CygwinDlg::OnButtonOk)
 END_EVENT_TABLE()
@@ -28,7 +30,6 @@ CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode)
 	else SetTitle(_("Update Cygwin"));
 
 	const wxString installMsg = _("e uses the Cygwin package to provide many of the powerful Unix-like commands not usually available on Windows. Without Cygwin, some of e's advanced features will be disabled.\n\nWould you like to install Cygwin now? (If you say no, e will ask you again when you try to use an advanced feature.)");
-	//const wxString updateMsg = installMsg;
 	const wxString updateMsg = _("To get full benefit of the bundle commands, your cygwin installation needs to be updated.");
 
 	// Create controls

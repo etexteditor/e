@@ -13,6 +13,7 @@
 
 #include "Execute.h"
 #include "eApp.h"
+#include <wx/process.h>
 
 #ifndef WX_PRECOMP
 	#include <wx/filename.h>

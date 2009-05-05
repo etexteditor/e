@@ -17,7 +17,6 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
 #ifndef WX_PRECOMP
-        #include <wx/process.h>
         #include <wx/file.h>
 #endif
 
@@ -35,7 +34,7 @@
 using namespace std;
 
 class cxEnv;
-
+class wxProcessEvent;
 
 class cxExecute : public wxEvtHandler {
 public:

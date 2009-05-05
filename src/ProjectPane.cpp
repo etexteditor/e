@@ -19,6 +19,7 @@
 #include <wx/file.h>
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
+#include "DirWatcher.h"
 
 #include "images/NewFolder.xpm"
 #include "images/NewDocument.xpm"

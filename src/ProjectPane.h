@@ -223,6 +223,7 @@ private:
 	wxCriticalSection m_iconPathsCrit;
 	deque<wxString> m_iconPathsForRetrieval;
 	wxCriticalSection m_newIconsCrit;
+
 	class PathIcon {
 	public:
 		PathIcon(const wxString& path, const wxIcon& icon) : path(path), icon(icon) {};
@@ -230,10 +231,12 @@ private:
 		wxString path;
 		wxIcon icon;
 	};
+
 	vector<PathIcon> m_newIcons;
 #ifdef __WXGTK__
 	bool isDirWatched;
 #endif
+
 	friend class DropTarget;
 };
 

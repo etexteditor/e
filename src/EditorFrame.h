@@ -25,7 +25,6 @@
 #include <wx/aui/aui.h>
 #include <wx/imaglist.h>
 #include "RemoteThread.h"
-#include "DirWatcher.h"
 #include "key_hook.h"
 
 // For cxWrapMode; was previously indirectly included through GutterCtrl
@@ -57,6 +56,7 @@ class eSettings;
 class SearchPanel;
 class TmSyntaxHandler;
 class StatusBar;
+class DirWatcher;
 
 // Menu id's
 enum {

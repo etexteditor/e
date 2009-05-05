@@ -13,6 +13,7 @@
 
 #include "LineListNoWrap.h"
 #include "Document.h"
+#include "FixedLine.h"
 
 LineListNoWrap::LineListNoWrap(FixedLine& l, const DocumentWrapper& dw)
 : m_line(l), m_doc(dw), m_maxWidth(0) {

@@ -14,6 +14,7 @@
 #include "FixedLine.h"
 #include <algorithm>
 #include "Document.h"
+#include "tm_syntaxhandler.h"
 
 // Initialize static variables
 wxString FixedLine::s_text;

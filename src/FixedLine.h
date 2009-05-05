@@ -18,8 +18,9 @@
 #include "Catalyst.h"
 #include "StyleRun.h"
 #include "styler.h"
-#include "tm_syntaxhandler.h"
 #include "FastDC.h"
+
+struct tmTheme;
 
 struct full_pos {
 	int pos;

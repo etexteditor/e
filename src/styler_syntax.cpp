@@ -12,6 +12,8 @@
  ******************************************************************************/
 
 #include "styler_syntax.h"
+#include "StyleRun.h"
+#include "tm_syntaxhandler.h"
 #include "Lines.h"
 #include <algorithm>
 

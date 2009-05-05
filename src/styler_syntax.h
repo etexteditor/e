@@ -16,11 +16,9 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Document.h"
-#include "StyleRun.h"
 #include "styler.h"
 #include "pcre.h"
 #include "matchers.h"
-#include "tm_syntaxhandler.h"
 #include "SymbolRef.h"
 
 // STL can't compile with Level 4
@@ -28,10 +26,14 @@
     #pragma warning(push, 1)
 #endif
 #include "auto_vector.h"
+#include <deque>
 #ifdef __WXMSW__
     #pragma warning(pop)
 #endif
 using namespace std;
+
+class TmSyntaxHandler;
+class StyleRun;
 
 class Styler_Syntax : public Styler {
 public:

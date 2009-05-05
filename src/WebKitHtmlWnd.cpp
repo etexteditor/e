@@ -20,6 +20,8 @@ BEGIN_EVENT_TABLE(wxBrowser, wxWebView)
 END_EVENT_TABLE()
 
 wxBrowser::wxBrowser(wxWindow *parent, wxWindowID id) : wxWebView(parent, id), m_realLocation(wxT("")) {
+	/* force JSC threading initialization until Webkit fix this */
+	wxWebView::SetPageSource(wxT("<html><head /><body /></html>"));
 }
 
 wxWindow* wxBrowser::GetWindow() {

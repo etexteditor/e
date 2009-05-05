@@ -14,13 +14,14 @@
 #include "LineListWrap.h"
 #include <algorithm>
 #include "Document.h"
+#include "FixedLine.h"
 
 // Initializing static constants
 const unsigned int LineListWrap::WINSIZE = 200;
 
-LineListWrap::LineListWrap(FixedLine& l, const DocumentWrapper& dw) : line(l), m_doc(dw), lastValidOffset(0), lastValidPos(0),
-		firstLoadedPos(0), lastLoadedPos(0), offsetDiff(0), posDiff(0), avr_lineheight(0) {
-}
+LineListWrap::LineListWrap(FixedLine& l, const DocumentWrapper& dw):
+	line(l), m_doc(dw), lastValidOffset(0), lastValidPos(0),
+	firstLoadedPos(0), lastLoadedPos(0), offsetDiff(0), posDiff(0), avr_lineheight(0) {}
 
 unsigned int LineListWrap::offset(unsigned int index) {
 	wxASSERT(0 <= index && index < textOffsets.size());

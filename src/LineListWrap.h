@@ -15,8 +15,9 @@
 #define __LINELISTWRAP_H__
 
 #include "LineList.h"
-#include "FixedLine.h"
-#include "Catalyst.h"
+
+class FixedLine;
+class DocumentWrapper;
 
 class LineListWrap : public LineList {
 public:

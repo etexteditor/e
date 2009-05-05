@@ -19,6 +19,8 @@ public:
 
 	static wxString GetAppDataTempPath();
 
+	static bool MakeWritable(const wxString& path);
+
 #ifdef __WXMSW__
 
 	static wxString GetCygwinDir();

@@ -12,6 +12,23 @@
 eDocumentPath::eDocumentPath(void){}
 eDocumentPath::~eDocumentPath(void){}
 
+bool eDocumentPath::MakeWritable(const wxString& path) {
+#ifdef __WXMSW__
+		DWORD dwAttrs = ::GetFileAttributes(path);
+		if (dwAttrs & FILE_ATTRIBUTE_READONLY) {
+			dwAttrs &= ~FILE_ATTRIBUTE_READONLY;
+			return SetFileAttributes(path, dwAttrs) != 0;
+		}
+		else return true;
+#else
+        // Get protection
+		struct stat s;
+		int res = stat(path.mb_str(wxConvUTF8), &s);
+		if (res == 0) res = chmod(path.mb_str(wxConvUTF8), s.st_mode |= S_IWUSR);
+		return res == 0;
+#endif
+}
+
 wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) { 
 	wxASSERT(path.IsOk() && path.IsAbsolute());
 

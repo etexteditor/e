@@ -17,10 +17,10 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "StyleRun.h"
-#include "styler.h"
 #include "FastDC.h"
 
 struct tmTheme;
+class Styler;
 
 struct full_pos {
 	int pos;

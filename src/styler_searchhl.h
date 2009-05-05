@@ -16,7 +16,6 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
-#include "StyleRun.h"
 #include "styler.h"
 
 // STL can't compile with Level 4
@@ -28,6 +27,10 @@
     #pragma warning(pop)
 #endif
 using namespace std;
+
+class DocumentWrapper;
+class StyleRun;
+struct tmTheme;
 
 class Styler_SearchHL : public Styler {
 public:

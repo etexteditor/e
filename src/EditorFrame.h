@@ -216,6 +216,7 @@ public:
 	// RemoteFile support functions
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);
 	wxString DownloadFile(const wxString& url, const RemoteProfile* rp);
+	bool UploadFile(const wxString& url, const wxString& buffPath, const RemoteProfile* rp);
 	wxDateTime GetRemoteDate(const wxString& url, const RemoteProfile* rp);
 	virtual bool AskRemoteLogin(const RemoteProfile* rp);
 

@@ -2965,7 +2965,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 	}
 
 	// Check if we need to force the native end-of-line
-	bool forceNativeEOL = false; // default value
+	bool forceNativeEOL = false;
 	eGetSettings().GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
 
 	// Save the text
@@ -3004,23 +3004,8 @@ bool EditorCtrl::SaveText(bool askforpath) {
 	}
 
 	if (!m_remotePath.empty()) {
-		while(1) {
-			// Upload file
-			wxBeginBusyCursor();
-			const CURLcode res =  m_parentFrame.GetRemoteThread().UploadAndDate(m_remotePath, pathStr, *m_remoteProfile);
-			wxEndBusyCursor();
-
-			if (res == CURLE_LOGIN_DENIED) {
-				if (!m_parentFrame.AskRemoteLogin(m_remoteProfile)) return false;
-			}
-			else if (res != CURLE_OK) {
-				wxString msg = _T("Could not upload file: ") + m_remotePath;
-				msg += wxT("\n") + m_parentFrame.GetRemoteThread().GetLastError();
-				wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
-				return false;
-			}
-			else break; // download succeded
-		}
+		if (!m_parentFrame.UploadFile(m_remotePath, pathStr, m_remoteProfile))
+			return false;
 
 		// Set mirror to new modDate so it matches file on server
 		const wxDateTime modDate = filepath.GetModificationTime();

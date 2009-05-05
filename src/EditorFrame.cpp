@@ -1664,6 +1664,28 @@ wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp)
 	return buffPath;
 }
 
+bool EditorFrame::UploadFile(const wxString& url, const wxString& buffPath, const RemoteProfile* rp) {
+	while(1) {
+		// Upload file
+		wxBeginBusyCursor();
+		const CURLcode res =  this->GetRemoteThread().UploadAndDate(url, buffPath, *rp);
+		wxEndBusyCursor();
+
+		if (res == CURLE_LOGIN_DENIED) {
+			if (!this->AskRemoteLogin(rp)) return false;
+		}
+		else if (res != CURLE_OK) {
+			wxString msg = _T("Could not upload file: ") + url;
+			msg += wxT("\n") + this->GetRemoteThread().GetLastError();
+			wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
+			return false;
+		}
+		else break; // download succeded
+	}
+
+	return true;
+}
+
 wxDateTime EditorFrame::GetRemoteDate(const wxString& url, const RemoteProfile* rp) {
 	wxASSERT(rp && rp->IsValid());
 	return GetRemoteThread().GetModDate(url, *rp);

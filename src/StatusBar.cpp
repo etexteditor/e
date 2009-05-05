@@ -81,6 +81,8 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	m_editorCtrlId = id;
 
 	Freeze();
+	UpdateTabs();
+
 	if (editorCtrl) {
 		// Caret position
 		const unsigned int line = editorCtrl->GetCurrentLineNumber();
@@ -140,9 +142,6 @@ void StatusBar::UpdateBarFromActiveEditor() {
 
 		m_pos = pos;
 	}
-
-	// Tabs
-	UpdateTabs();
 
 	Thaw();
 }

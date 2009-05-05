@@ -34,6 +34,7 @@ using namespace std;
 
 class TmSyntaxHandler;
 class StyleRun;
+class Lines;
 
 class Styler_Syntax : public Styler {
 public:

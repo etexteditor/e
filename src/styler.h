@@ -14,17 +14,12 @@
 #ifndef __STYLER_H__
 #define __STYLER_H__
 
-class Lines;
-class Revision;
-
-// pre-definitions
 class StyleRun;
 
 // Abstract base class for stylers
 class Styler {
 public:
     virtual ~Styler() {};
-
 	virtual void Style(StyleRun& sr) = 0;
 };
 

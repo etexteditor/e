@@ -31,6 +31,7 @@ using namespace std;
 class DocumentWrapper;
 class StyleRun;
 struct tmTheme;
+class Lines;
 
 class Styler_SearchHL : public Styler {
 public:

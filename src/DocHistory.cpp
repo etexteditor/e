@@ -13,6 +13,7 @@
 
 #include "DocHistory.h"
 #include "EditorCtrl.h"
+#include "VersionTree.h"
 
 enum {
 	ID_TOOLTIP_TIMER

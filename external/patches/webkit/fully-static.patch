@@ -1,5 +1,6 @@
---- WebKit/wx/wxwebkit.bkl.bak	2009-04-09 08:44:49.000000000 +0400
-+++ WebKit/wx/wxwebkit.bkl	2009-04-09 08:51:59.000000000 +0400
+diff -Naurp WebKit-r43110/WebKit/wx/wxwebkit.bkl webkit/WebKit/wx/wxwebkit.bkl
+--- WebKit-r43110/WebKit/wx/wxwebkit.bkl	2009-05-01 08:15:10.000000000 +0400
++++ webkit/WebKit/wx/wxwebkit.bkl	2009-05-02 12:40:46.000000000 +0400
 @@ -34,7 +34,7 @@ This file builds the wxWebKit library.
  <makefile>
      <include file="wxwk-settings.bkl"/>
@@ -40,8 +41,9 @@
 +    </lib>
  
  </makefile>
---- WebKit/wx/wxwk-settings.bkl.bak	2009-04-09 08:48:02.000000000 +0400
-+++ WebKit/wx/wxwk-settings.bkl	2009-04-09 08:49:55.000000000 +0400
+diff -Naurp WebKit-r43110/WebKit/wx/wxwk-settings.bkl webkit/WebKit/wx/wxwk-settings.bkl
+--- WebKit-r43110/WebKit/wx/wxwk-settings.bkl	2009-04-30 04:34:15.000000000 +0400
++++ webkit/WebKit/wx/wxwk-settings.bkl	2009-05-02 12:40:46.000000000 +0400
 @@ -31,7 +31,7 @@ JavaScriptCore Bakefile project file.
  
  <makefile>
@@ -60,8 +62,9 @@
          <if cond="PLATFORM_WIN32=='1'">
              <define>WXUSINGDLL=1</define>
          </if>
---- WebCore/webcore-base.bkl.bak	2009-04-09 09:10:24.000000000 +0400
-+++ WebCore/webcore-base.bkl	2009-04-09 09:11:28.000000000 +0400
+diff -Naurp WebKit-r43110/WebCore/webcore-base.bkl webkit/WebCore/webcore-base.bkl
+--- WebKit-r43110/WebCore/webcore-base.bkl	2009-04-30 04:04:21.000000000 +0400
++++ webkit/WebCore/webcore-base.bkl	2009-05-02 12:40:46.000000000 +0400
 @@ -60,7 +60,7 @@ wxWebCore port Bakefile project file.
          $(WEBCORE_SOURCES_JPEG)
      </set>
@@ -71,8 +74,9 @@
          <include>$(SRCDIR)</include>
          <include>$(SRCDIR)/bindings/js</include>
          <include>$(SRCDIR)/bridge</include>
---- WebCore/webcore-wx.bkl.bak	2009-04-09 09:11:36.000000000 +0400
-+++ WebCore/webcore-wx.bkl	2009-04-09 09:12:25.000000000 +0400
+diff -Naurp WebKit-r43110/WebCore/webcore-wx.bkl webkit/WebCore/webcore-wx.bkl
+--- WebKit-r43110/WebCore/webcore-wx.bkl	2009-04-30 04:34:15.000000000 +0400
++++ webkit/WebCore/webcore-wx.bkl	2009-05-02 12:40:46.000000000 +0400
 @@ -34,7 +34,7 @@ wxWebCore port Bakefile project file.
  <makefile>
      <include file="webcore-base.bkl"/>

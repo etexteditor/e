@@ -1,0 +1,15 @@
+--- WebKit/WebKit/wx/WebKitSupport/FrameLoaderClientWx.cpp	2009-05-02 17:17:33.000000000 +0400
++++ webkit/WebKit/wx/WebKitSupport/FrameLoaderClientWx.cpp	2009-05-02 17:59:52.000000000 +0400
+@@ -559,10 +559,9 @@ void FrameLoaderClientWx::committedLoad(
+     fl->addData(data, length);
+ }
+ 
+-WebCore::ResourceError FrameLoaderClientWx::cancelledError(const WebCore::ResourceRequest&)
++WebCore::ResourceError FrameLoaderClientWx::cancelledError(const WebCore::ResourceRequest& request)
+ {
+-    notImplemented();
+-    return ResourceError();
++    return ResourceError("Error", -999, request.url().string(), "Load request cancelled");
+ }
+ 
+ WebCore::ResourceError FrameLoaderClientWx::blockedError(const ResourceRequest&)

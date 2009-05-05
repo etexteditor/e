@@ -49,6 +49,7 @@
 #include "EditorBundlePanel.h"
 #include "BundlePane.h"
 #include "UndoHistory.h"
+#include "DocHistory.h"
 #include "eDocumentPath.h"
 #include "SearchPanel.h"
 #include "StatusBar.h"

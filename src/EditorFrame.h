@@ -20,7 +20,6 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
-#include "DocHistory.h"
 #include <wx/dnd.h>
 #include <wx/regex.h>
 #include <wx/aui/aui.h>
@@ -52,6 +51,7 @@ class SymbolList;
 class wxFilesChangedEvent;
 class ChangeCheckerThread;
 class BundlePane;
+class DocHistory;
 class UndoHistory;
 class eSettings;
 class SearchPanel;

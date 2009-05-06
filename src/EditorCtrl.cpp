@@ -7287,8 +7287,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_PROJECT_DIRECTORY
 	if (m_parentFrame.HasProject() && !m_parentFrame.IsProjectRemote()) {
 		const wxFileName& prjPath = m_parentFrame.GetProject();
-		if (isUnix) env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), eDocumentPath::WinPathToCygwin(prjPath));
-		else env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), prjPath.GetPath());
+		env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), isUnix ? eDocumentPath::WinPathToCygwin(prjPath) : prjPath.GetPath());
 
 		// Set project specific env vars
 		env.SetEnv(m_parentFrame.GetProjectEnv());
@@ -7297,15 +7296,14 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// TM_SELECTED_FILE & TM_SELECTED_FILES
 	const wxArrayString selections = m_parentFrame.GetSelectionsInProject();
 	if (!selections.IsEmpty()) {
-		if (isUnix) env.SetEnv(wxT("TM_SELECTED_FILE"), eDocumentPath::WinPathToCygwin(selections[0]));
-		else env.SetEnv(wxT("TM_SELECTED_FILE"), selections[0]);
+		env.SetEnv(wxT("TM_SELECTED_FILE"), isUnix ? eDocumentPath::WinPathToCygwin(selections[0]) : selections[0]);
 
 		wxString sels;
 		for (unsigned int i = 0; i < selections.GetCount(); ++i) {
 			if (i) sels += wxT(" '");
 			else sels += wxT('\'');
 			if (isUnix) sels += eDocumentPath::WinPathToCygwin(selections[i]);
-			else sels += selections[0];
+			else sels += selections[0]; // Adam V: shouldn't this be += selections[i]?
 			sels += wxT('\'');
 		}
 		env.SetEnv(wxT("TM_SELECTED_FILES"), sels);

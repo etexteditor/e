@@ -142,7 +142,7 @@ ThemeEditor::ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler)
 	// Font
 	wxStaticText* fontLabel = new wxStaticText(this, wxID_ANY, _("Font:"));
 	m_fontDesc = new wxTextCtrl(this, wxID_ANY, wxT("font"), wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
-	wxButton *fontSelect = new wxButton(this, CTRL_FONTSELECT, _("Select.."));
+	wxButton *fontSelect = new wxButton(this, CTRL_FONTSELECT, _("Select..."));
 
 	// Set the font description
 	const wxFont& font = m_syntaxHandler.GetFont();

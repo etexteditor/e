@@ -110,7 +110,7 @@ BundlePane::BundlePane(EditorFrame& parent, TmSyntaxHandler& syntaxHandler)
 	m_bundleTree->SetMinSize(wxSize(50,50)); // ensure resizeability
 	m_bundlePlus = new wxButton(this, CTRL_NEWBUNDLEITEM, wxT("+"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	m_bundleMinus = new wxButton(this, CTRL_DELBUNDLE, wxT("-"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-	wxButton* bundleManage = new wxButton(this, CTRL_MANAGE, wxT("Manage.."));
+	wxButton* bundleManage = new wxButton(this, CTRL_MANAGE, wxT("Manage..."));
 	m_bundleTree->SetImageList(&m_imageList);
 
 	// Set tooltips
@@ -470,7 +470,7 @@ void BundlePane::OnTreeMenu(wxTreeEvent& event) {
 	if (inBundle && !inMenu) {
 		popupMenu.AppendSeparator();
 		popupMenu.Append(MENU_DELETE, _("&Delete"));
-		popupMenu.Append(MENU_EXPORT, _("E&xport.."));
+		popupMenu.Append(MENU_EXPORT, _("E&xport..."));
 	}
 
 	PopupMenu(&popupMenu);

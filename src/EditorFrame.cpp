@@ -2276,7 +2276,7 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 	SetCursor(wxCURSOR_WAIT);
 	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
 		wxFileName newpath = filenames[i];
-		if (OpenFile(newpath, enc) == false) break;
+		if (!OpenFile(newpath, enc)) break;
 		Update();
 	}
 	SetCursor(*wxSTANDARD_CURSOR);
@@ -2288,11 +2288,10 @@ void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
 	if (!m_settings.GetSettingString(wxT("project"), lastDir)) lastDir = wxGetCwd();
 
 	wxDirDialog dlg(this, _("Open Project"), lastDir, wxDD_NEW_DIR_BUTTON);
+	if (dlg.ShowModal() != wxID_OK) return;
 
-	if (dlg.ShowModal() == wxID_OK) {
-		const wxFileName path(dlg.GetPath(), wxEmptyString);
-		OpenDirProject(path);
-	}
+	const wxFileName path(dlg.GetPath(), wxEmptyString);
+	OpenDirProject(path);
 }
 
 void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {

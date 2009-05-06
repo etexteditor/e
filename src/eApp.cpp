@@ -623,11 +623,11 @@ int eApp::OnExit() {
 }
 
 wxString eApp::GetAppTitle() {
-	if (this->IsRegistered()) return wxT("e");
+	if (this->IsRegistered()) return _("e");
 
 	int daysleft = this->DaysLeftOfTrial();
 	if (daysleft == 1) return _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
-	if (daysleft > 1) return _("e  [UNREGISTERED - ") + wxString::Format(wxT("%d"), daysleft) + _(" DAYS LEFT OF TRIAL]");
+	if (daysleft > 1) return wxString::Format(wxT("e  [UNREGISTERED - %d DAYS LEFT OF TRIAL]"), daysleft);
 	return _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
 }
 

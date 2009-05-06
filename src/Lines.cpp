@@ -32,8 +32,7 @@ Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tm
 	caretpos.x = 0;
 	caretpos.y = 0;
 
-	if (m_wrapMode != cxWRAP_NONE) ll = &llWrap;
-	else ll = &llNoWrap;
+	ll = (m_wrapMode == cxWRAP_NONE) ? (LineList*)&llNoWrap : (LineList*)&llWrap;
 	line.SetWordWrap(m_wrapMode);
 
 #ifdef __WXDEBUG__

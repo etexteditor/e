@@ -15,9 +15,26 @@
 #define __GOTOFILEDLG_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#ifdef __WXGTK__
+   #include <wx/wx.h>
+#endif
+
+// STL can't compile with Level 4
+#ifdef __WXMSW__
+    #pragma warning(disable:4786)
+    #pragma warning(push, 1)
+#endif
+#include <map>
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
+using namespace std;
+
 #include <wx/dir.h>
-#include "ProjectPane.h"
 #include "SearchListBox.h"
+
+class ProjectPane;
+class cxProjectInfo;
 
 class GotoFileDlg : public wxDialog {
 public:

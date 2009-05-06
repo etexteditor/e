@@ -15,11 +15,11 @@
 #define __EDITORBUNDLEPANEL_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/statline.h>
 #include "BundleItemType.h"
 #include "key_hook.h"
 
 // Pre-definitions
+class wxStaticLine;
 class EditorFrame;
 class EditorCtrl;
 class CatalystWrapper;

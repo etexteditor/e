@@ -15,6 +15,7 @@
 #include "EditorCtrl.h"
 #include "tm_syntaxhandler.h"
 #include <wx/gbsizer.h>
+#include <wx/statline.h>
 
 IMPLEMENT_DYNAMIC_CLASS(EditorBundlePanel, wxPanel)
 
@@ -179,9 +180,8 @@ void EditorBundlePanel::LayoutCtrls() {
 	if (m_currentType == type) return;
 
 	// Clear previous panel layout
-	if (m_currentType != BUNDLE_NONE) {
-		m_mainSizer->Remove(1);
-	}
+	if (m_currentType != BUNDLE_NONE) m_mainSizer->Remove(1);
+
 	m_currentType = type;
 
 	// Hide all ctrls

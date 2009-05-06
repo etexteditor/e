@@ -1064,4 +1064,3 @@ int BundlePane::SortTreeCtrl::OnCompareItems(const wxTreeItemId& item1, const wx
 	const wxString name2 = GetItemText(item2);
 	return name1.CmpNoCase(name2);
 }
-

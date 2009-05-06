@@ -845,45 +845,6 @@ bool ProjectPane::IsDirEmpty(const wxString& path) const {
     if (!dir.HasSubDirs() && !dir.HasFiles()) return true;
 
 	return false;
-
-	/*// Get filters
-	wxArrayString includeDirs;
-	wxArrayString excludeDirs;
-	wxArrayString includeFiles;
-	wxArrayString excludeFiles;
-	GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
-
-	// Filter all subdirs
-	wxString eachFilename;
- 	int style = wxDIR_DIRS;
-    if (dir.GetFirst(&eachFilename, wxEmptyString, style)) {
-        do {
-            if ((eachFilename != wxT(".")) && (eachFilename != wxT(".."))) {
-                if (MatchFilter(eachFilename, includeDirs, excludeDirs)) {
-					// There just have to be one matching dir
-					return false;
-				}
-            }
-        }
-        while (dir.GetNext(&eachFilename));
-    }
-
-	// Filter all files in dir
-	style = wxDIR_FILES;
-	if (dir.GetFirst(&eachFilename, wxEmptyString, style)) {
-        do {
-            if ((eachFilename != wxT(".")) && (eachFilename != wxT(".."))) {
-                if (MatchFilter(eachFilename, includeFiles, excludeFiles)) {
-					// There just have to be one matching file
-					return false;
-				}
-            }
-        }
-        while (dir.GetNext(&eachFilename));
-    }
-
-	// No matching dirs
-	return true;*/
 }
 
 void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {

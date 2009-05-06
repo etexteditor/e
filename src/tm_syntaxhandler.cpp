@@ -923,31 +923,25 @@ bool TmSyntaxHandler::ParseSpan(span_matcher* sm, const PListDict& patternDict) 
 
 	// Start matcher
 	const char* begin = patternDict.GetString("begin");
-	if (begin) {
-		beginM = NewMatcher();
-		beginM->SetPattern(begin);
-
-		sm->SetStartMatcher(beginM);
-	}
-	else return false; // need start matcher
+	if (!begin) return false;  // need start matcher
+	beginM = NewMatcher();
+	beginM->SetPattern(begin);
+	sm->SetStartMatcher(beginM);
 
 	// End matcher
 	const char* end = patternDict.GetString("end");
-	if (end) {
-		const wxString endPattern(end, wxConvUTF8);
-		sm->SetEndPattern(endPattern);
+	if (!end) return false; // need end matcher
 
-		// The end matcher is only used for captures
-		endM = NewMatcher();
-		sm->SetEndMatcher(endM);
-	}
-	else return false; // need end matcher
+	const wxString endPattern(end, wxConvUTF8);
+	sm->SetEndPattern(endPattern);
+
+	// The end matcher is only used for captures
+	endM = NewMatcher();
+	sm->SetEndMatcher(endM);
 
 	// Embedded patterns
 	PListArray groupArray;
-	if (patternDict.GetArray("patterns", groupArray)) {
-		if (!ParseGroup(groupArray, *sm)) return false;
-	}
+	if (patternDict.GetArray("patterns", groupArray) && !ParseGroup(groupArray, *sm)) return false;
 
 	// Scope name for entire contents
 	const char* contentName = patternDict.GetString("contentName");

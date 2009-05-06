@@ -2939,6 +2939,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tmTheme.h"
+			>
+		</File>
+		<File
 			RelativePath="UndoHistory.cpp"
 			>
 			<FileConfiguration

@@ -23,6 +23,8 @@
 #include <wx/dir.h>
 #include "plistHandler.h"
 
+#include "tmTheme.h"
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -80,21 +82,6 @@ private:
 	static map<wxChar, wxKeyCode> s_numMap;
 	static map<int, wxString> s_keyText;
 	static map<int, wxChar> s_keyBind;
-};
-
-struct tmTheme {
-	wxString name;
-	wxString uuid;
-	wxColour backgroundColor;
-	wxColour foregroundColor;
-	wxColour selectionColor;
-	wxColour shadowColor;
-	wxColour invisiblesColor;
-	wxColour lineHighlightColor;
-	wxColour searchHighlightColor;
-	wxColour bracketHighlightColor;
-	wxColour gutterColor;
-	wxFont font;
 };
 
 struct tmBundle {

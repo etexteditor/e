@@ -1035,11 +1035,10 @@ void TmSyntaxHandler::GetSyntaxes(wxArrayString& nameArray) const {
 
 matcher* TmSyntaxHandler::GetMatcher(const wxString& scope) {
 	for (vector<cxSyntaxInfo*>::iterator p = m_syntaxes.begin(); p != m_syntaxes.end(); ++p) {
-		if ((*p)->scope == scope) {
-			const cxSyntaxInfo* si = InitSyntax(*(*p), false); // loaded but not necessarily initialized yet
-			if (si) return si->topmatcher;
-			else return NULL;
-		}
+		if ((*p)->scope != scope) continue;
+
+		const cxSyntaxInfo* si = InitSyntax(*(*p), false); // loaded but not necessarily initialized yet
+		return si ? si->topmatcher : NULL;
 	}
 
 	// If we reached here, no syntaxes matched scope

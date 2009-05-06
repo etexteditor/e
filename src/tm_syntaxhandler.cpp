@@ -991,10 +991,8 @@ bool TmSyntaxHandler::ParseCaptures(match_matcher& m, const PListDict& captureDi
 		if (sscanf(key, "%u", &capkey) != 1) return false;
 
 		PListDict capnameDict;
-		if (captureDict.GetDict(key, capnameDict)) {
-			m.AddCapture(capkey, capnameDict.wxGetString("name"));
-		}
-		else return false;
+		if (!captureDict.GetDict(key, capnameDict)) return false;
+		m.AddCapture(capkey, capnameDict.wxGetString("name"));
 	}
 
 	return true;

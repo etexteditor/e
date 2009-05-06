@@ -15,6 +15,7 @@
 #include <wx/regex.h>
 #include <wx/dataobj.h>
 #include <wx/clipbrd.h>
+#include <wx/filename.h>
 #include <algorithm>
 #include "EditorFrame.h"
 #include "StyleRun.h"

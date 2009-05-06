@@ -18,8 +18,6 @@
 #include "Catalyst.h"
 #include "Lines.h"
 #include <wx/caret.h>
-#include <wx/filename.h>
-#include <wx/ffile.h>
 //#include "styler_users.h"
 #include "styler_searchhl.h"
 #include "styler_syntax.h"
@@ -36,6 +34,8 @@
 #include "IEditorSymbols.h"
 
 // Pre-definitions
+class wxFileName;
+
 class cxEnv;
 class GutterCtrl;
 class EditorFrame;

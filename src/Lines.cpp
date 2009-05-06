@@ -16,7 +16,7 @@
 #include "Document.h"
 #include "IFoldingEditor.h"
 #include "Fold.h"
-#include "tm_syntaxhandler.h"
+#include "tmTheme.h"
 #include <wx/filename.h>
 #include "styler.h"
 

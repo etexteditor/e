@@ -188,7 +188,7 @@ public:
 
 	// Editor
 	void OpenDocument(const doc_id& di);
-	void SetPath();
+	void UpdateWindowTitle();
 	void UpdateTabs();
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);

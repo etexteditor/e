@@ -1123,7 +1123,7 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 				ec->SetModSkipDate(modDates[i]);
 			}
 
-			SetPath(); // Update tabs and title
+			UpdateWindowTitle(); // Update tabs and title
 		}
 	}
 	else {
@@ -1161,7 +1161,7 @@ void EditorFrame::OpenDocument(const doc_id& di) {
 	}
 
 	editorCtrl->SetFocus();
-	SetPath();
+	UpdateWindowTitle();
 	editorCtrl->ReDraw();
 }
 
@@ -1231,7 +1231,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	ec->EnableRedraw(true);
 	editorCtrl = ec;
 	m_tabBar->AddPage(page, tabText, true, tabIcon);
-	SetPath();
+	UpdateWindowTitle();
 	Thaw();
 
 	// Notify that we are editing a new document
@@ -1239,7 +1239,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	UpdateTabMenu();
 }
 
-void EditorFrame::SetPath() {
+void EditorFrame::UpdateWindowTitle() {
 	if (!editorCtrl) return; // Can be called before editorCtrl is set
 
 	const wxString path = editorCtrl->GetPath();
@@ -1871,7 +1871,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 		
 		AddTab(page);
 	}
-	SetPath();
+	UpdateWindowTitle();
 	editorCtrl->ReDraw();
 
 	// Bring frame to front
@@ -2335,12 +2335,12 @@ void EditorFrame::OnMenuOpenRecentProject(wxCommandEvent& event) {
 
 void EditorFrame::OnMenuSave(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->SaveText();
-	SetPath();
+	UpdateWindowTitle();
 }
 
 void EditorFrame::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event)) {
 	if (!editorCtrl->SaveText(true)) return;
-	SetPath();
+	UpdateWindowTitle();
 
 	// Add to recent files list
 	const wxString path = editorCtrl->GetPath();
@@ -2364,7 +2364,7 @@ void EditorFrame::OnMenuSaveAll(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	// Update tabs and title
-	SetPath();
+	UpdateWindowTitle();
 }
 
 void EditorFrame::OnMenuPageSetup(wxCommandEvent& WXUNUSED(event)) {
@@ -3174,7 +3174,7 @@ void EditorFrame::OnMenuRegister(wxCommandEvent& WXUNUSED(event)) {
 
 	if (!((eApp*)wxTheApp)->IsRegistered()) return;
 
-	SetPath(); // to remove title bar nag
+	UpdateWindowTitle(); // to remove title bar nag
 	RemoveRegMenus();
 
 	// Show about dialog to confirm
@@ -3202,7 +3202,7 @@ void EditorFrame::OnNotebook(wxAuiNotebookEvent& event) {
 	// Set page settings
 	editorCtrl = GetEditorCtrlFromPage(idx);
 
-	SetPath();
+	UpdateWindowTitle();
 
 	// Notify that we are editing a new document
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
@@ -3213,7 +3213,7 @@ void EditorFrame::UpdateNotebook() {
 	if (editorCtrl == page) return;
 
 	editorCtrl = page;
-	SetPath();
+	UpdateWindowTitle();
 
 	// Notify that we are editing a new document
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
@@ -3650,7 +3650,7 @@ void EditorFrame::OnDocChange(EditorFrame* self, void* data, int WXUNUSED(filter
 	// Update title after doc change so that the modification status
 	// is correct.
 	// TODO: only update after first mod
-	self->SetPath();
+	self->UpdateWindowTitle();
 }
 
 // static notification handler

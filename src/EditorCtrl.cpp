@@ -1426,7 +1426,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 		// beforeRunningCommand
 		if (cmd->save == tmCommand::csDOC && IsModified()) {
 			if (!SaveText()) return;
-			m_parentFrame.SetPath(); // update tabs
+			m_parentFrame.UpdateWindowTitle(); // update tabs
 		}
 		else if (cmd->save == tmCommand::csALL) {
 			if (m_parentFrame.HasProject()) {
@@ -1435,7 +1435,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 			}
 			else {
 				if (!SaveText()) return;
-				m_parentFrame.SetPath(); // update tabs
+				m_parentFrame.UpdateWindowTitle(); // update tabs
 			}
 		}
 
@@ -3155,7 +3155,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	SetFocus();
 
 	// Update the path (title)
-	m_parentFrame.SetPath();
+	m_parentFrame.UpdateWindowTitle();
 
 	// If this is a bundle item we also have to update the panel
 	if (m_bundlePanel) m_bundlePanel->UpdatePanel();

@@ -1344,33 +1344,35 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 			}
 
 			// Always open file in e if shift is held down
-			if (!shiftDown) {
-				bool isBinary = projectpane_is_binary_file(data->m_path);
+			if (shiftDown) {
+				m_parentFrame.OpenFile(data->m_path);
+				continue;
+			}
 
-				if (isBinary) {
-					// Check if another app is assigned to this file type
-					const wxString ext = data->m_name.AfterLast(wxT('.'));
-					if (!ext.empty()) {
-						// TODO: Check if this file ext is forced to open in e
+			bool isBinary = projectpane_is_binary_file(data->m_path);
+			if (isBinary) {
+				// Check if another app is assigned to this file type
+				const wxString ext = data->m_name.AfterLast(wxT('.'));
+				if (!ext.empty()) {
+					// TODO: Check if this file ext is forced to open in e
 
-						// .exe files are just run directly
-						if (ext == wxT("exe")) {
-							const wxString cmd = wxT("\"") + data->m_path + wxT("\"");
+					// .exe files are just run directly
+					if (ext == wxT("exe")) {
+						const wxString cmd = wxT("\"") + data->m_path + wxT("\"");
+						wxExecute(cmd);
+						continue;
+					}
+
+					wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
+					if (ft) {
+						wxString mime;
+						ft->GetMimeType(&mime);
+						const wxString cmd = ft->GetOpenCommand(data->m_path);
+						delete ft;
+
+						if (mime != wxT("text/plain") && !cmd.empty()) {
 							wxExecute(cmd);
 							continue;
-						}
-
-						wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
-						if (ft) {
-							wxString mime;
-							ft->GetMimeType(&mime);
-							const wxString cmd = ft->GetOpenCommand(data->m_path);
-							delete ft;
-
-							if (mime != wxT("text/plain") && !cmd.empty()) {
-								wxExecute(cmd);
-								continue;
-							}
 						}
 					}
 				}

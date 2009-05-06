@@ -22,7 +22,6 @@
 #include <wx/filename.h>
 #include <wx/dir.h>
 #include "plistHandler.h"
-
 #include "tmTheme.h"
 
 // STL can't compile with Level 4

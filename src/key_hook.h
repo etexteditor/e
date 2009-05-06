@@ -1,12 +1,16 @@
 #ifndef __KEY_HOOK_H__
 #define __KEY_HOOK_H__
 
-#include <wx/event.h>
-
 #include "RecursiveCriticalSection.h"
 
+#ifndef WX_PRECOMP
+	#include <wx/event.h>
+	#include <wx/log.h>
+	#include <wx/textctrl.h>
+#endif
+
 #ifdef __WXGTK__
-#include <gtk/gtk.h>
+	#include <gtk/gtk.h>
 //#include <gdk/gdkevents.h>
 //#include <gdk/gdkwindow.h>
 #endif

@@ -18,6 +18,7 @@
 
 #ifndef WX_PRECOMP
         #include <wx/file.h>
+        #include <wx/event.h>
 #endif
 
 // STL can't compile with Level 4

@@ -14,9 +14,17 @@
 #ifndef __EDITORBUNDLEPANEL_H__
 #define __EDITORBUNDLEPANEL_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "BundleItemType.h"
 #include "key_hook.h"
+
+#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+
+#ifndef WX_PRECOMP
+	#include <wx/panel.h>
+	#include <wx/choice.h>
+	#include <wx/stattext.h>
+	#include <wx/sizer.h>
+#endif
 
 // Pre-definitions
 class wxStaticLine;

@@ -1109,8 +1109,6 @@ void ProjectPane::SetPlistArray(const wxArrayString& stringArray, TiXmlElement* 
 	}
 }
 
-
-
 bool ProjectPane::MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter) { // static
 	if (!incFilter.IsEmpty()) {
 		bool doInclude = false;
@@ -1209,8 +1207,6 @@ wxTreeItemId ProjectPane::FindSubItem(const wxTreeItemId& item, const wxString& 
 
 	return subItem;
 }
-
-
 
 void ProjectPane::OnExpandItem(wxTreeEvent &event)
 {
@@ -1332,55 +1328,55 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 
 			if (m_isRemote) {
 				m_parentFrame.OpenRemoteFile(data->m_path, m_remoteProfile);
+				continue;
 			}
-			else {
-				// Always open file in e if shift is held down
-				if (!shiftDown) {
-					bool isBinary = false;
 
-					// Read the first few bytes to see if this is a text file
-					wxFFile file(data->m_path);
-					char buffer[1024];
-					const size_t bufLen = file.Read(buffer, 1024);
-					for(size_t i = 0; i < bufLen; ++i) {
-						if (buffer[i] == '\0') {
-							isBinary = true;
-							break;
-						}
+			// Always open file in e if shift is held down
+			if (!shiftDown) {
+				bool isBinary = false;
+
+				// Read the first few bytes to see if this is a text file
+				wxFFile file(data->m_path);
+				char buffer[1024];
+				const size_t bufLen = file.Read(buffer, 1024);
+				for(size_t i = 0; i < bufLen; ++i) {
+					if (buffer[i] == '\0') {
+						isBinary = true;
+						break;
 					}
+				}
 
-					if (isBinary) {
-						// Check if another app is assigned to this file type
-						const wxString ext = data->m_name.AfterLast(wxT('.'));
-						if (!ext.empty()) {
-							// TODO: Check if this file ext is forced to open in e
+				if (isBinary) {
+					// Check if another app is assigned to this file type
+					const wxString ext = data->m_name.AfterLast(wxT('.'));
+					if (!ext.empty()) {
+						// TODO: Check if this file ext is forced to open in e
 
-							// .exe files are just run directly
-							if (ext == wxT("exe")) {
-								const wxString cmd = wxT("\"") + data->m_path + wxT("\"");
+						// .exe files are just run directly
+						if (ext == wxT("exe")) {
+							const wxString cmd = wxT("\"") + data->m_path + wxT("\"");
+							wxExecute(cmd);
+							continue;
+						}
+
+						wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
+						if (ft) {
+							wxString mime;
+							ft->GetMimeType(&mime);
+							const wxString cmd = ft->GetOpenCommand(data->m_path);
+							delete ft;
+
+							if (mime != wxT("text/plain") && !cmd.empty()) {
 								wxExecute(cmd);
 								continue;
-							}
-
-							wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
-							if (ft) {
-								wxString mime;
-								ft->GetMimeType(&mime);
-								const wxString cmd = ft->GetOpenCommand(data->m_path);
-								delete ft;
-
-								if (mime != wxT("text/plain") && !cmd.empty()) {
-									wxExecute(cmd);
-									continue;
-								}
 							}
 						}
 					}
 				}
-
-				// If we get to here we should just open the file in e
-				m_parentFrame.OpenFile(data->m_path);
 			}
+
+			// If we get to here we should just open the file in e
+			m_parentFrame.OpenFile(data->m_path);
 		}
 	}
 }

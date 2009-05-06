@@ -15,7 +15,6 @@
 #include "FileActionThread.h"
 #include <wx/dir.h>
 #include "Catalyst.h"
-#include "jsonval.h"
 #include "jsonwriter.h"
 #include "jsonreader.h"
 #include "FileActionThread.h"

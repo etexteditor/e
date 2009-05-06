@@ -19,8 +19,21 @@
 #endif
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "tm_syntaxhandler.h"
 #include <wx/grid.h>
+
+#include "plistHandler.h"
+
+// STL can't compile with Level 4
+#ifdef __WXMSW__
+    #pragma warning(push, 1)
+#endif
+#include <vector>
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
+using namespace std;
+
+class TmSyntaxHandler;
 
 class ThemeEditor : public wxDialog {
 public:

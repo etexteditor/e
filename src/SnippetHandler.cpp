@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "SnippetHandler.h"
+#include "tm_syntaxhandler.h"
 #include "ShellRunner.h"
 #include "EditorCtrl.h"
 #include "Env.h"

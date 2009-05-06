@@ -15,12 +15,12 @@
 #define __SNIPPETHANDLER_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "tm_syntaxhandler.h"
 #include "Catalyst.h"
 
 // Pre-definitions
 class EditorCtrl;
 class cxEnv;
+struct tmBundle;
 
 class SnippetHandler {
 public:

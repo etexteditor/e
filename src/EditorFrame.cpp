@@ -1256,19 +1256,33 @@ void EditorFrame::SetPath() {
 	}
 
 	if (editorCtrl->IsModified()) {
-		title += wxT(" *");
-		filename += wxT(" *");
+#ifdef __WXMSW__
+		wxString modifiedBug = wxT("\x2022 ");
+		title = modifiedBug + title;
+		filename = modifiedBug + filename;
+#else
+		wxString modifiedBug = wxT(" *");
+		title += modifiedBug;
+		filename += modifiedBug;
+#endif
 	}
 
+	title += wxT( " - ");
+
 	if (((eApp*)wxTheApp)->IsRegistered()){
-		SetTitle(title + wxT(" - e"));
+		title += wxT("e");
 	}
 	else {
 		int daysleft = ((eApp*)wxTheApp)->DaysLeftOfTrial();
-		if (daysleft == 1) SetTitle(title + _(" - e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]"));
-		else if (daysleft > 1) SetTitle(title + _(" - e  [UNREGISTERED - ") + wxString::Format(wxT("%d"), daysleft) + _(" DAYS LEFT OF TRIAL]"));
-		else SetTitle(title + _(" - e  [UNREGISTERED - *TRIAL EXPIRED*]"));
+		if (daysleft == 1) title += _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
+		else if (daysleft > 1) title += _("e  [UNREGISTERED - ") + wxString::Format(wxT("%d"), daysleft) + _(" DAYS LEFT OF TRIAL]");
+		else title += _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
 	}
+
+#ifdef __WXDEBUG__
+	title += wxT(" [DEBUG]");
+#endif
+	SetTitle(title);
 
 	const int ndx = m_tabBar->GetSelection();
 	if (m_tabBar->GetPageText(ndx) != filename) {
@@ -1286,7 +1300,15 @@ void EditorFrame::UpdateTabs() {
 		if (!name.empty()) title = name;
 		else title = _("Untitled");
 		
-		if (editorCtrl->IsModified()) title += wxT(" *");
+		if (editorCtrl->IsModified()) {
+#ifdef __WXMSW__
+			wxString modifiedBug = wxT("\x2022 ");
+			title = modifiedBug + title;
+#else
+			wxString modifiedBug = wxT(" *");
+			title += modifiedBug;
+#endif
+		}
 		
 		if (m_tabBar->GetPageText(i) != title) m_tabBar->SetPageText(i, title);	
 	}
@@ -2302,9 +2324,7 @@ void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
 	if (profile_id == -1) return;
 
 	// Get the profile from db
-	const RemoteProfile* rp = NULL;
-	rp = m_settings.GetRemoteProfile(profile_id);
-
+	const RemoteProfile* rp = m_settings.GetRemoteProfile(profile_id);
 	if (rp) OpenRemoteProject(rp);
 }
 
@@ -2357,7 +2377,6 @@ void EditorFrame::OnMenuSaveAll(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuPageSetup(wxCommandEvent& WXUNUSED(event)) {
-
 	wxPageSetupDialog pageSetupDialog(this, &m_printData);
     if (pageSetupDialog.ShowModal() == wxID_OK) {
 		m_printData = pageSetupDialog.GetPageSetupData();

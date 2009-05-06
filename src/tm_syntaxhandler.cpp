@@ -1012,17 +1012,16 @@ matcher* TmSyntaxHandler::GetFromRepo(const char* name) {
 	if (p2 != m_repsInParsing->end()) return *p2->second;
 
 	PListDict patternDict;
-	if (m_currentRepo->GetDict(name, patternDict)) {
-		matcher* m = NULL;
-		(*m_repsInParsing)[name] = &m;
+	if (!m_currentRepo->GetDict(name, patternDict)) return NULL;
 
-		ParsePattern(patternDict, m);
+	matcher* m = NULL;
+	(*m_repsInParsing)[name] = &m;
 
-		if (m) (*m_currentParsedReps)[name] = m;
-		m_repsInParsing->erase(name);
-		return m;
-	}
-	else return NULL;
+	ParsePattern(patternDict, m);
+
+	if (m) (*m_currentParsedReps)[name] = m;
+	m_repsInParsing->erase(name);
+	return m;
 }
 
 void TmSyntaxHandler::GetSyntaxes(wxArrayString& nameArray) const {

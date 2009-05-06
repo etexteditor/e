@@ -2783,6 +2783,12 @@ wxString PListDict::GetJSON(bool strip) const {
 	}
 
 	// Write JSON object to string
+	// Adam V: BUG: If we are getting the JSON for a Syntax, then we really ought to be
+	// ordering the keys in the dicts in a rational matter
+	// Capture numbers, for instance, should be ordered by int value.
+	// This order should also be in effect when serializing JSON back to PList format for
+	// Syntax items, so that the diffs don't get spammed.
+
 	wxJSONWriter writer(wxJSONWRITER_STYLED|wxJSONWRITER_MULTILINE_STRING);
 	wxString str;
 	writer.Write( root, str );

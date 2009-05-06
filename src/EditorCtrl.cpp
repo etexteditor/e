@@ -7300,10 +7300,8 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 		wxString sels;
 		for (unsigned int i = 0; i < selections.GetCount(); ++i) {
-			if (i) sels += wxT(" '");
-			else sels += wxT('\'');
-			if (isUnix) sels += eDocumentPath::WinPathToCygwin(selections[i]);
-			else sels += selections[0]; // Adam V: shouldn't this be += selections[i]?
+			sels += (i ? wxT(" '") : wxT("'"));
+			sels += (isUnix ? eDocumentPath::WinPathToCygwin(selections[i]) : selections[i]);
 			sels += wxT('\'');
 		}
 		env.SetEnv(wxT("TM_SELECTED_FILES"), sels);

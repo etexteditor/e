@@ -17,6 +17,7 @@
 #include <wx/filename.h>
 #include "DirWatcher.h"
 #include <wx/dir.h>
+#include "eDocumentPath.h"
 #include "urlencode.h"
 
 // tinyxml includes unused vars so it can't compile with Level 4
@@ -541,7 +542,7 @@ CURLcode RemoteThread::DoGetDir(const wxString& url, const RemoteAction& ra, vec
 			ftpparse_struct fp;
 			if (ftpparse(&fp, &*linestart, lineend - linestart)) {
 				const wxString name(fp.name, wxConvUTF8, fp.namelen);
-				if (name != wxT(".") && name != wxT("..")) { // ignore meta dirs
+				if (!eDocumentPath::IsDotDirectory(name)) { // ignore meta dirs
 					cxFileInfo fi;
 					fi.m_name = name;
 					fi.m_size = fp.size;

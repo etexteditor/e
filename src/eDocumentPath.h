@@ -17,6 +17,8 @@ public:
 	static bool IsBundlePath(const wxString& path);
 	static bool IsRemotePath(const wxString& path);
 
+	static bool IsDotDirectory(const wxString& path);
+
 	static wxString GetAppDataTempPath();
 
 	static bool MakeWritable(const wxString& path);

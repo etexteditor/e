@@ -29,6 +29,10 @@ bool eDocumentPath::MakeWritable(const wxString& path) {
 #endif
 }
 
+bool eDocumentPath::IsDotDirectory(const wxString& path) {
+	return path == wxT(".") || path == wxT("..");
+}
+
 wxString eDocumentPath::WinPathToCygwin(const wxFileName& path) { 
 	wxASSERT(path.IsOk() && path.IsAbsolute());
 

@@ -22,7 +22,7 @@
 #include "FileActionThread.h"
 #include "DirWatcher.h"
 #include "RemoteThread.h"
-
+#include "eDocumentPath.h"
 #include "images/NewFolder.xpm"
 #include "images/NewDocument.xpm"
 
@@ -810,12 +810,10 @@ bool ProjectPane::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, 
     {
         do
         {
-            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
-            {
-                if (MatchFilter(eachFilename, includeDirs, excludeDirs)) {
-					dirs.Add(eachFilename);
-				}
-            }
+			if (eDocumentPath::IsDotDirectory(eachFilename)) continue;
+
+            if (MatchFilter(eachFilename, includeDirs, excludeDirs))
+				dirs.Add(eachFilename);
         }
         while (d.GetNext(&eachFilename));
     }
@@ -827,12 +825,10 @@ bool ProjectPane::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, 
     {
         do
         {
-            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
-            {
-                if (MatchFilter(eachFilename, includeFiles, excludeFiles)) {
-					files.Add(eachFilename);
-				}
-            }
+			if (eDocumentPath::IsDotDirectory(eachFilename)) continue;
+
+			if (MatchFilter(eachFilename, includeFiles, excludeFiles))
+				files.Add(eachFilename);
         }
         while (d.GetNext(&eachFilename));
     }
@@ -2185,15 +2181,15 @@ void ProjectPane::WatchTree(const wxString &path) {
  	int style = wxDIR_DIRS;
 	if (d.GetFirst(&CurrentDir, wxEmptyString, style)) {
 		do {
-			if ((CurrentDir != wxT(".")) && (CurrentDir != wxT(".."))) {
-                		if (MatchFilter(CurrentDir, includeDirs, excludeDirs)) {
-					// watch dir and all subdirs
-					wxString FullPath = path + wxT("/") + CurrentDir;
-					m_parentFrame.GetDirWatcher().WatchDirectory(FullPath, *this, true);
-					WatchTree(FullPath);
-				}
-            		}
-        	} while (d.GetNext(&CurrentDir));
+			if (eDocumentPath::IsDotDirectory(CurrentDir)) continue;
+
+			if (MatchFilter(CurrentDir, includeDirs, excludeDirs)) {
+				// watch dir and all subdirs
+				wxString FullPath = path + wxT("/") + CurrentDir;
+				m_parentFrame.GetDirWatcher().WatchDirectory(FullPath, *this, true);
+				WatchTree(FullPath);
+			}
+		} while (d.GetNext(&CurrentDir));
 	}
 }
 #endif

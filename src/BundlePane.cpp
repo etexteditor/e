@@ -300,19 +300,22 @@ void BundlePane::OnTreeItemActivated(wxTreeEvent& WXUNUSED(event)) {
 	AddPendingEvent(openEvent);
 }
 
+static bool bundlepane_can_open_item(BundleItemType itemType){
+	return !(itemType == BUNDLE_NONE || itemType == BUNDLE_BUNDLE || itemType == BUNDLE_SUBDIR || itemType == BUNDLE_MENU);
+}
+
 void BundlePane::OnMenuOpenItem(wxCommandEvent& WXUNUSED(event)) {
 	const wxTreeItemId selItem = m_bundleTree->GetSelection();
 	if (!selItem.IsOk()) return;
 
 	const BundleItemData* data = (BundleItemData*)m_bundleTree->GetItemData(selItem);
-	if (!data || data->m_type == BUNDLE_NONE || data->m_type == BUNDLE_BUNDLE || data->m_type == BUNDLE_SUBDIR || data->m_type == BUNDLE_MENU) return;
+	if (!data || !bundlepane_can_open_item(data->m_type)) return;
 
 	const wxString bundlePath = m_plistHandler.GetBundleItemUri(data->m_type, data->m_bundleId, data->m_itemId);
 	if (bundlePath.empty()) return;
 
 	m_parentFrame.Open(bundlePath);
 }
-
 
 void BundlePane::OnTreeItemSelected(wxTreeEvent& event) {
 	const wxTreeItemId selItem = event.GetItem();

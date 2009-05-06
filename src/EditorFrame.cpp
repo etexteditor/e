@@ -78,6 +78,14 @@ enum {
 	CTRL_TABBAR=100
 };
 
+wxString EditorFrame::DefaultFileFilters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
+						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
+						wxT("C/C++ Files (*.c, *.cpp, *.cxx)|*.c;*.cpp;*.cxx|") \
+						wxT("Header Files (*.h, *.hpp, *.hxx)|*.h;*.hpp;*.hxx|") \
+						wxT("HTML Files (*.html, *.htm, *.css)|*.html;*.htm;*.css|") \
+						wxT("Perl Files (*.pl, *.pm, *.pod)|*.pl;*.pm;*.pod|") \
+						wxT("Python Files (*.py, *.pyw)|*.py;*.pyw");
+
 BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_SIZE(EditorFrame::OnSize)
 	EVT_MENU_OPEN(EditorFrame::OnOpeningMenu)
@@ -2250,21 +2258,8 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 	// Get the last used dir
 	const wxString lastDir = GetSaveDir();
 
-	wxString filters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
-						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
-						wxT("C/C++ Files (*.c, *.cpp, *.cxx)|*.c;*.cpp;*.cxx|") \
-						wxT("Header Files (*.h, *.hpp, *.hxx)|*.h;*.hpp;*.hxx|") \
-						wxT("HTML Files (*.html, *.htm, *.css)|*.html;*.htm;*.css|") \
-						wxT("Perl Files (*.pl, *.pm, *.pod)|*.pl;*.pm;*.pod|") \
-						wxT("Python Files (*.py, *.pyw)|*.py;*.pyw");
-						// Also defined in EditorCtrl::SaveText()
-
-	wxFileDialog dlg(this, _T("Choose a file"),
-                        lastDir, _T(""), filters,
-                        wxFD_OPEN|wxFD_MULTIPLE);
-
-	if (dlg.ShowModal() != wxID_OK)
-		return;
+	wxFileDialog dlg(this, _T("Choose a file"), lastDir, _T(""), EditorFrame::DefaultFileFilters, wxFD_OPEN|wxFD_MULTIPLE);
+	if (dlg.ShowModal() != wxID_OK) return;
 
 	m_settings.SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
 

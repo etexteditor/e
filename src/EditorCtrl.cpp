@@ -41,7 +41,6 @@
 #include "eSettings.h"
 #include "IAppPaths.h"
 
-
 // Embedded class: Sort list based on bundle
 class CompareActionBundle : public binary_function<size_t, size_t, bool> {
 public:
@@ -2919,18 +2918,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 	}
 
 	if (askforpath || newpath.empty()) {
-		wxString filters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
-						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
-						wxT("C/C++ Files (*.c, *.cpp, *.cxx)|*.c;*.cpp;*.cxx|") \
-						wxT("Header Files (*.h, *.hpp, *.hxx)|*.h;*.hpp;*.hxx|") \
-						wxT("HTML Files (*.html, *.htm, *.css)|*.html;*.htm;*.css|") \
-						wxT("Perl Files (*.pl, *.pm, *.pod)|*.pl;*.pm;*.pod|") \
-						wxT("Python Files (*.py, *.pyw)|*.py;*.pyw");
-						// Also defined in EditorFrame::OnMenuOpen()
-
-		wxFileDialog dlg(this, _T("Save as..."),
-						_T(""), _T(""), filters,
-						wxSAVE|wxCHANGE_DIR);
+		wxFileDialog dlg(this, _T("Save as..."), _T(""), _T(""), EditorFrame::DefaultFileFilters, wxSAVE|wxCHANGE_DIR);
 
 		if (!newpath.empty()) dlg.SetPath(newpath);
 		else dlg.SetPath(_("Untitled"));

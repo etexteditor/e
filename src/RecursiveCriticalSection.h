@@ -3,6 +3,10 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
+#ifndef WX_PRECOMP
+	#include <wx/thread.h>
+#endif
+
 class RecursiveCriticalSection : public wxCriticalSection {
 #ifndef __WXMSW__ // Windows version is already recursive-aware
 public:

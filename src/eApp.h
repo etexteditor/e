@@ -56,6 +56,8 @@ public:
 	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};
 	virtual eSettings& GetSettings(){return m_settings;};
 
+	wxString GetAppTitle();
+
 	// Registration functions
 	bool IsRegistered() const {return m_pCatalyst->IsRegistered();};
 	int DaysLeftOfTrial() const {return m_pCatalyst->DaysLeftOfTrial();};

@@ -622,6 +622,15 @@ int eApp::OnExit() {
 	return 0;
 }
 
+wxString eApp::GetAppTitle() {
+	if (this->IsRegistered()) return wxT("e");
+
+	int daysleft = this->DaysLeftOfTrial();
+	if (daysleft == 1) return _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
+	if (daysleft > 1) return _("e  [UNREGISTERED - ") + wxString::Format(wxT("%d"), daysleft) + _(" DAYS LEFT OF TRIAL]");
+	return _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
+}
+
 void eApp::CheckForUpdates() {
 	// Check if it more than 7 days have gone since last update check
 	wxLongLong lastup;

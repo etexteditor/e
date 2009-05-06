@@ -1268,20 +1268,11 @@ void EditorFrame::SetPath() {
 	}
 
 	title += wxT( " - ");
-
-	if (((eApp*)wxTheApp)->IsRegistered()){
-		title += wxT("e");
-	}
-	else {
-		int daysleft = ((eApp*)wxTheApp)->DaysLeftOfTrial();
-		if (daysleft == 1) title += _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
-		else if (daysleft > 1) title += _("e  [UNREGISTERED - ") + wxString::Format(wxT("%d"), daysleft) + _(" DAYS LEFT OF TRIAL]");
-		else title += _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
-	}
-
+	title += ((eApp*)wxTheApp)->GetAppTitle();
 #ifdef __WXDEBUG__
 	title += wxT(" [DEBUG]");
 #endif
+
 	SetTitle(title);
 
 	const int ndx = m_tabBar->GetSelection();

@@ -1315,6 +1315,18 @@ void ProjectPane::OnItemActivated(wxTreeEvent& WXUNUSED(event)) {
 	AddPendingEvent(openEvent);
 }
 
+static bool projectpane_is_binary_file(const wxString& path) {
+	// Read the first few bytes to see if this is a text file
+	wxFFile file(path);
+	char buffer[1024];
+	const size_t bufLen = file.Read(buffer, 1024);
+	for(size_t i = 0; i < bufLen; ++i) {
+		if (buffer[i] == '\0') return true;
+	}
+
+	return false;
+}
+
 void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
 
@@ -1333,18 +1345,7 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 
 			// Always open file in e if shift is held down
 			if (!shiftDown) {
-				bool isBinary = false;
-
-				// Read the first few bytes to see if this is a text file
-				wxFFile file(data->m_path);
-				char buffer[1024];
-				const size_t bufLen = file.Read(buffer, 1024);
-				for(size_t i = 0; i < bufLen; ++i) {
-					if (buffer[i] == '\0') {
-						isBinary = true;
-						break;
-					}
-				}
+				bool isBinary = projectpane_is_binary_file(data->m_path);
 
 				if (isBinary) {
 					// Check if another app is assigned to this file type

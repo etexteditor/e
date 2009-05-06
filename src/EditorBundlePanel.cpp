@@ -13,6 +13,7 @@
 
 #include "EditorBundlePanel.h"
 #include "EditorCtrl.h"
+#include "tm_syntaxhandler.h"
 #include <wx/gbsizer.h>
 
 IMPLEMENT_DYNAMIC_CLASS(EditorBundlePanel, wxPanel)

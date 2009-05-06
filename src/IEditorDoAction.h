@@ -15,6 +15,8 @@
     #pragma warning(pop)
 #endif
 
+class tmAction;
+
 class IEditorDoAction {
 public:
 	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw) = 0;

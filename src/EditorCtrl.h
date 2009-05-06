@@ -24,6 +24,7 @@
 #include "SnippetHandler.h"
 #include "key_hook.h"
 #include "FindFlags.h"
+#include "BundleItemType.h"
 
 #include <wx/dnd.h>
 #include "wx/popupwin.h"
@@ -398,17 +399,6 @@ private:
 	private:
 		bool m_keepAlive;
 	};
-
-        // Embedded class: Sort list based on bundle
-        class CompareActionBundle : public binary_function<size_t, size_t, bool> {
-        public:
-                CompareActionBundle(const vector<const tmAction*>& actionList) : m_list(actionList) {};
-                bool operator() (const size_t a1, const size_t a2) const {
-                        return m_list[a1]->bundle > m_list[a2]->bundle;
-                }
-        private:
-                const vector<const tmAction*>& m_list;
-        };
 
 	// Event handlers
 	void OnPaint(wxPaintEvent& event);

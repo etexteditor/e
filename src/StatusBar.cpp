@@ -16,6 +16,7 @@
 #include "BundleMenu.h"
 #include <wx/fontmap.h>
 #include "EditorCtrl.h"
+#include "tm_syntaxhandler.h"
 
 // Menu id's
 enum {

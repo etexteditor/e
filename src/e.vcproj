@@ -377,6 +377,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\BundleItemType.h"
+			>
+		</File>
+		<File
 			RelativePath="BundleManager.cpp"
 			>
 			<FileConfiguration

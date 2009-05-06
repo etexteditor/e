@@ -21,6 +21,8 @@
 #include "mk4.h"
 #include <wx/filename.h>
 
+#include "BundleItemType.h"
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -37,20 +39,6 @@ class TiXmlElement;
 class PListDict;
 class PListArray;
 class wxJSONValue;
-
-enum BundleItemType {
-	BUNDLE_NONE,
-	BUNDLE_BUNDLE,
-	BUNDLE_COMMAND,
-	BUNDLE_SNIPPET,
-	BUNDLE_DRAGCMD,
-	BUNDLE_PREF,
-	BUNDLE_LANGUAGE,
-
-	BUNDLE_MENU,
-	BUNDLE_SUBDIR,
-	BUNDLE_SEPARATOR
-};
 
 class PListHandler : public wxEvtHandler {
 public:

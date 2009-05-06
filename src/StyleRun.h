@@ -19,7 +19,7 @@
 #endif
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "tm_syntaxhandler.h"
+#include "tmTheme.h"
 #include "FastDC.h"
 
 // STL can't compile with Level 4

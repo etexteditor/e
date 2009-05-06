@@ -22,6 +22,7 @@
 class FastDC;
 struct tmTheme;
 class Styler;
+class DocumentWrapper;
 
 struct full_pos {
 	int pos;

@@ -16,7 +16,7 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/statline.h>
-#include "plistHandler.h"
+#include "BundleItemType.h"
 #include "key_hook.h"
 
 // Pre-definitions

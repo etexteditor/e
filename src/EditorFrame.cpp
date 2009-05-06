@@ -1802,7 +1802,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 			}
 		}
 #endif
-	}
+	} // end if(isMirror)
 
 	wxWindow* page = ec;
 	if (doReload) {

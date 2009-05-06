@@ -23,14 +23,12 @@
 //#include "styler_users.h"
 #include "styler_searchhl.h"
 #include "styler_syntax.h"
-#include "RevTooltip.h"
-#include "tm_syntaxhandler.h"
 #include "SnippetHandler.h"
-#include "RemoteThread.h"
 #include "key_hook.h"
 #include "FindFlags.h"
 
 #include <wx/dnd.h>
+#include "wx/popupwin.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -46,6 +44,10 @@ class cxRemoteAction;
 class MultilineDataObject;
 class EditorBundlePanel;
 
+struct thTheme;
+class tmAction;
+class tmDragCommand;
+class TmSyntaxHandler;
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,

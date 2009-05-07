@@ -29,6 +29,10 @@
 #include <wx/tokenzr.h>
 #include <wx/artprov.h>
 
+#ifdef __WXMSW__
+    #include "ShellContextMenu.h"
+#endif
+
 
 #ifndef SHGFI_ADDOVERLAYS
 	// Not defined in shellapi.h (version 5.0 only)

@@ -21,10 +21,6 @@
 #include <wx/imaglist.h>
 #include "ProjectInfo.h"
 
-#ifdef __WXMSW__
-    #include "ShellContextMenu.h"
-#endif
-
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -40,6 +36,10 @@ using namespace std;
 
 // pre-definitions
 class wxDirWatcherEvent;
+
+#ifdef __WXMSW__
+class ShellContextMenu;
+#endif
 
 class IFrameProjectService;
 class RemoteThread;

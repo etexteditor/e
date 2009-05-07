@@ -996,7 +996,7 @@ bool projectpane_interal_load_project_info(const wxFileName& rootPath, const wxS
 	}
 
 	if (onlyFilters && !projectInfo.hasFilters) return false;
-	else return true;
+	return true;
 }
 
 bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {

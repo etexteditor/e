@@ -9,7 +9,6 @@
 #ifdef __WXGTK__
    #include <wx/wx.h>
 #endif
-#include <wx/file.h>
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -25,7 +24,7 @@ using namespace std;
 // pre-declarations
 class wxRegEx;
 class interval;
-// #include "pcre.h"
+
 struct real_pcre;                 // This double pre-definition is needed
 typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h
 struct pcre_extra;

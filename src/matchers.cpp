@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "matchers.h"
+#include <wx/file.h>
 #include "pcre.h"
 #include "Catalyst.h"
 #include <wx/regex.h>

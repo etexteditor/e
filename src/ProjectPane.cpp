@@ -30,6 +30,14 @@
 #include <wx/artprov.h>
 
 #ifdef __WXMSW__
+    #pragma warning(push, 1)
+#endif
+#include "tinyxml.h" // tinyxml includes unused vars so it can't compile with Level 4
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
+
+#ifdef __WXMSW__
     #include "ShellContextMenu.h"
 #endif
 
@@ -1087,21 +1095,21 @@ void ProjectPane::ClearTrigger(const wxString& trigger) {
 	m_projectInfo.triggers.erase(trigger);
 }
 
-void ProjectPane::SetPlistKey(const char* key, TiXmlElement* parent) const {
+void ProjectPane::SetPlistKey(const char* key, TiXmlElement* parent) {
 	TiXmlElement* keytag = new TiXmlElement("key");
 	parent->LinkEndChild(keytag);
 	TiXmlText* text = new TiXmlText(key);
 	keytag->LinkEndChild(text);
 }
 
-void ProjectPane::SetPlistString(const char* str, TiXmlElement* parent) const {
+void ProjectPane::SetPlistString(const char* str, TiXmlElement* parent) {
 	TiXmlElement* strtag = new TiXmlElement("string");
 	parent->LinkEndChild(strtag);
 	TiXmlText* text = new TiXmlText(str);
 	strtag->LinkEndChild(text);
 }
 
-void ProjectPane::SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent) const {
+void ProjectPane::SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent) {
 	TiXmlElement* array = new TiXmlElement("array");
 	parent->LinkEndChild(array);
 

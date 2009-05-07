@@ -27,7 +27,6 @@
 #endif
 #include <deque>
 #include <vector>
-#include "tinyxml.h" // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(pop)
 #endif
@@ -46,6 +45,7 @@ class RemoteThread;
 class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
+class TiXmlElement;
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
@@ -136,9 +136,9 @@ private:
 	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
 
 	// Support functions
-	void SetPlistKey(const char* key, TiXmlElement* parent) const;
-	void SetPlistString(const char* str, TiXmlElement* parent) const;
-	void SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent) const;
+	static void SetPlistKey(const char* key, TiXmlElement* parent);
+	static void SetPlistString(const char* str, TiXmlElement* parent);
+	static void SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent);
 
 	// Icon retrieval thread
 	void* Entry();

@@ -130,7 +130,6 @@ private:
 
 	void ExpandAndSelect(wxTreeItemId item, wxArrayString& expandedDirs, wxArrayString& selections);
 	void GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs);
-	bool IsDirEmpty(const wxString& path) const;
 
 	// Filters
 	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;

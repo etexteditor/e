@@ -84,6 +84,15 @@ int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
     return s1->CmpNoCase(*s2);
 }
 
+bool projectpane_is_dir_empty(const wxString& path) {
+	if (path.empty()) return true;
+
+    wxDir dir;
+	if (!dir.Open(path)) return true;
+    if (!dir.HasSubDirs() && !dir.HasFiles()) return true;
+	return false;
+}
+
 ProjectPane::ProjectPane(IFrameProjectService& parent, wxWindowID id)
 : wxPanel(dynamic_cast<wxWindow*>(&parent), id), m_parentFrame(parent), m_imageList(16,16), m_dirWatchHandle(NULL),
   m_isRemote(false), m_isDestroying(false),  m_remoteThread(parent.GetRemoteThread()),
@@ -677,7 +686,7 @@ void ProjectPane::ExpandDir(wxTreeItemId parentId, DirItemData *data, const wxAr
         // (There are two situations when a dir has children: either it
         // has subdirectories or it contains files that weren't filtered
         // out. The latter only applies to dirctrl with files.)
-        if (m_isRemote || !IsDirEmpty(path)) {
+        if (m_isRemote || !projectpane_is_dir_empty(path)) {
             m_prjTree->SetItemHasChildren(id);
         }
     }
@@ -847,16 +856,6 @@ bool ProjectPane::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, 
 	files.Sort(wxStringSortAscendingNoCase);
 
 	return true;
-}
-
-bool ProjectPane::IsDirEmpty(const wxString& path) const {
-	if (path.empty()) return true;
-
-    wxDir dir;
-	if (!dir.Open(path)) return true;
-    if (!dir.HasSubDirs() && !dir.HasFiles()) return true;
-
-	return false;
 }
 
 void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
@@ -1792,7 +1791,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 					excludeFiles.Empty();
 					GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
 
-					if (!IsDirEmpty(path))	{
+					if (!projectpane_is_dir_empty(path))	{
 						m_prjTree->SetItemHasChildren(id);
 					}
 				}

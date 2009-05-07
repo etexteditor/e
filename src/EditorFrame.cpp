@@ -659,8 +659,7 @@ void EditorFrame::InitMenus() {
 void EditorFrame::RestoreState() {
 #ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
 	// Shouldn't this function be using m_settings instead of retreiving them again?
-	eSettings& settings = eGetSettings();
-	const unsigned int pagecount = settings.GetPageCount();
+	const unsigned int pagecount = m_settings.GetPageCount();
 
 	if (pagecount <= 0) {
 		// Set last active tab to current
@@ -683,14 +682,14 @@ void EditorFrame::RestoreState() {
 	// Get selection and layout
 	int page_id;
 	wxString tablayout;
-	bool hasSelection = settings.GetSettingInt(wxT("topwin/page_id"), page_id);
-	settings.GetSettingString(wxT("topwin/tablayout"), tablayout);
+	bool hasSelection = m_settings.GetSettingInt(wxT("topwin/page_id"), page_id);
+	m_settings.GetSettingString(wxT("topwin/tablayout"), tablayout);
 
 	// Open documents from last session
 	// CheckForModifiedFiles() is called from eApp::OnInit()
 	for (unsigned int i = 0; i < pagecount; ++i) {
-		const wxString mirrorPath = settings.GetPagePath(i);
-		const doc_id mirrorDoc = settings.GetPageDoc(i);
+		const wxString mirrorPath = m_settings.GetPagePath(i);
+		const doc_id mirrorDoc = m_settings.GetPageDoc(i);
 		cxLOCK_READ(m_catalyst)
 			if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
 		cxENDLOCK

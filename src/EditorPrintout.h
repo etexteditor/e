@@ -16,7 +16,6 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/print.h>
-#include "Catalyst.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -33,6 +32,7 @@ class IPrintableDocument;
 class FixedLine;
 class LineListWrap;
 struct tmTheme;
+class interval;
 
 class EditorPrintout: public wxPrintout {
 public:

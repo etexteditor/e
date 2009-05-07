@@ -16,6 +16,7 @@
 #include "tm_syntaxhandler.h"
 #include "FixedLine.h"
 #include "LineListWrap.h"
+#include "Catalyst.h"
 
 // Dummy vars for line
 const vector<interval> EditorPrintout::s_sel;

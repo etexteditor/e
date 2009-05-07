@@ -19,7 +19,6 @@
    #include <wx/wx.h>
 #endif
 #include "Env.h"
-#include "pcre.h"
 
 #ifdef __WXMSW__
 #include "IEHtmlWin.h"
@@ -28,6 +27,8 @@
 #endif
 
 // pre-declarations
+struct real_pcre;                 // This double pre-definition is needed
+typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h
 class EditorFrame;
 class EditorCtrl;
 class eSettings;

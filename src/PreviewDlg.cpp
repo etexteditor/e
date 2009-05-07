@@ -20,6 +20,7 @@
 #include "ShellRunner.h"
 #include "eSettings.h"
 #include "Execute.h"
+#include "pcre.h"
 
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"

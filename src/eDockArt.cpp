@@ -21,11 +21,6 @@
 #endif
 #endif
 
-
-// these functions live in dockart.cpp -- they'll eventually
-// be moved to a new utility cpp file
-wxString wxAuiChopText(wxDC& dc, const wxString& text, int max_size);
-
 ModernDockArt::ModernDockArt(wxWindow* win) : wxAuiDefaultDockArt(), m_win(win)
 {
 	ModernInit();

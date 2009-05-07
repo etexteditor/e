@@ -18,6 +18,7 @@
 #include "images/search_re_png.h"
 #include <wx/mstream.h>
 #include "eSettings.h"
+#include "CloseButton.h"
 
 // control ids
 enum

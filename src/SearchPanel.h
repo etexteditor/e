@@ -15,10 +15,10 @@
 #define __SEARCHPANEL_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "CloseButton.h"
 #include "FindFlags.h"
 
 // pre-definitions
+class CloseButton;
 class eSettings;
 class EditorFrame;
 

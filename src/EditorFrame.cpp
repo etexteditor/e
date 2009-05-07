@@ -56,6 +56,11 @@
 #include "StatusBar.h"
 #include "DirWatcher.h"
 
+#ifdef __WXMSW__
+// For multi-monitor-aware position restore on Windows.
+#include "Winuser.h"
+#endif
+
 #if defined (__WXMSW__)
     #include <wx/msw/registry.h>
     #include "IEHtmlWin.h"
@@ -3370,12 +3375,19 @@ void EditorFrame::LoadSize() {
 	// Dont try to set default size if maximized
 	if (ismax && (x < 0 || y < 0 || width < 0 || height < 0)) return;
 
+#ifndef __WXMSW__
 	// Make sure that window fits on current screen
 	const int screenWidth = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 	const int screenHeight = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
 	if (y >= -5 &&  screenHeight && y + height <= screenHeight && x < screenWidth) {
 		SetSize(x, y, width, height, wxSIZE_USE_EXISTING);
 	}
+#else
+	POINT pt; pt.x=x; pt.y = y;
+	if (::MonitorFromPoint( pt, MONITOR_DEFAULTTONULL ) != NULL) {
+		SetSize(x, y, width, height, wxSIZE_USE_EXISTING);
+	}
+#endif
 }
 
 void EditorFrame::SaveSize() {

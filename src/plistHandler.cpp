@@ -2428,9 +2428,7 @@ void PListHandler::SaveArray(TiXmlElement* parent, unsigned int ndx, const c4_Ro
 
 int PListHandler::LoadString(const char* str, c4_RowRef& rPlist) {
 	c4_View vStrings = pStrings(rPlist);
-
-	if (str) return vStrings.Add(pString[str]);
-	else return vStrings.Add(pString[""]);
+	return vStrings.Add(pString[ str ? str : "" ]);
 }
 
 void PListHandler::SaveString(TiXmlElement* parent, unsigned int ndx, const c4_RowRef& rPlist) const {

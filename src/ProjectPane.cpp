@@ -887,12 +887,10 @@ void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArr
 	GetFilters(dirPath.GetPath(), incDirs, excDirs, incFiles, excFiles);
 }
 
-bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {
-	if (m_isRemote) return false;
-
+bool projectpane_interal_load_project_info(const wxFileName& rootPath, const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) {
 	wxFileName projectPath(path, wxEmptyString);
 	projectInfo.path = path;
-	projectInfo.isRoot = (m_prjPath == projectPath);
+	projectInfo.isRoot = (projectPath == rootPath);
 
 	projectPath.SetFullName(wxT(".eprj"));
 	if (!projectPath.FileExists()) return false;
@@ -986,7 +984,7 @@ bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProj
 
 				if (key && value) {
 					wxFileName path(wxString(value, wxConvUTF8));
-					path.MakeAbsolute(m_prjPath.GetPath());
+					path.MakeAbsolute(rootPath.GetPath());
 
 					projectInfo.triggers[wxString(key, wxConvUTF8)] = path.GetFullPath();
 				}
@@ -1000,6 +998,11 @@ bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProj
 
 	if (onlyFilters && !projectInfo.hasFilters) return false;
 	else return true;
+}
+
+bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {
+	if (m_isRemote) return false;
+	return projectpane_interal_load_project_info(m_prjPath, path, onlyFilters, projectInfo);
 }
 
 void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {

@@ -39,8 +39,9 @@ using namespace std;
 
 
 // pre-definitions
-class IFrameProjectService;
 class wxDirWatcherEvent;
+
+class IFrameProjectService;
 class RemoteThread;
 class RemoteProfile;
 class cxRemoteListEvent;

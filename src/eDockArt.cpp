@@ -12,9 +12,16 @@
  ******************************************************************************/
 
 #include "eDockArt.h"
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+
+#include <wx/renderer.h>
+
+#ifdef __WXMSW__
+#if wxUSE_UXTHEME
+    #include "wx/msw/uxtheme.h" // XP theme handling
 #endif
+#endif
+
+
 // these functions live in dockart.cpp -- they'll eventually
 // be moved to a new utility cpp file
 wxString wxAuiChopText(wxDC& dc, const wxString& text, int max_size);

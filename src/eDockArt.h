@@ -15,14 +15,11 @@
 #define __EDOCKART_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/aui/aui.h>
-#include <wx/renderer.h>
+#ifdef __WXGTK__
+   #include <wx/wx.h>
+#endif
 
-#ifdef __WXMSW__
-#if wxUSE_UXTHEME
-    #include "wx/msw/uxtheme.h" // XP theme handling
-#endif
-#endif
+#include <wx/aui/aui.h>
 
 class ModernDockArt : public wxAuiDefaultDockArt
 {

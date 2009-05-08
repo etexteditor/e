@@ -446,8 +446,7 @@ int GotoFileDlg::ActionList::FindPath(const wxString& path) const {
 
 const GotoFileDlg::FileEntry* GotoFileDlg::ActionList::GetSelectedAction() {
 	const int sel = GetSelection();
-	if (sel == -1) return NULL;
-	else return m_items[sel].action;
+	return (sel == -1) ? NULL : m_items[sel].action;
 }
 
 // --- aItem --------------------------------------------------------

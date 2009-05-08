@@ -78,7 +78,7 @@ TiXmlElement* EasyPlistWriter::AddDict(TiXmlElement* parent, const char* key) {
 }
 
 bool EasyPlistWriter::Save(const wxString& filepath) const {
-	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
+	wxLogDebug(wxT("Saving %s"), filepath.c_str());
 	wxFFile docffile(filepath, _T("wb"));
 
 	bool result = docffile.IsOpened() && m_doc->SaveFile(docffile.fp());

@@ -12,8 +12,10 @@
  ******************************************************************************/
 
 #include "ProjectSettings.h"
+#include "ProjectInfo.h"
 #include <wx/notebook.h>
 #include <wx/tokenzr.h>
+#include <wx/grid.h>
 
 // ctrl ids
 enum {

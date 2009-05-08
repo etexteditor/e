@@ -15,8 +15,10 @@
 #define __PROJECTSETTINGS_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "ProjectInfo.h"
-#include <wx/grid.h>
+
+class cxProjectInfo;
+class wxGrid;
+class wxGridEvent;
 
 class ProjectSettings : public wxDialog {
 public:

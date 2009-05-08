@@ -11,8 +11,6 @@
 
 #include <wx/filename.h>
 #include <wx/ffile.h>
-#include <wx/file.h>
-#include <wx/dir.h>
 
 EasyPlistWriter::EasyPlistWriter(void): 
 	m_doc(new TiXmlDocument()) 
@@ -72,4 +70,13 @@ TiXmlElement* EasyPlistWriter::AddDict(TiXmlElement* parent, const char* key) {
 	TiXmlElement* dict = new TiXmlElement("dict");
 	parent->LinkEndChild(dict);
 	return dict;
+}
+
+bool EasyPlistWriter::Save(const wxString& filepath) const {
+	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
+	wxFFile docffile(filepath, _T("wb"));
+	bool result = docffile.IsOpened() && m_doc->SaveFile(docffile.fp());
+	wxCHECK2_MSG(result, return result, wxT("  save failed"));
+
+	return result;
 }

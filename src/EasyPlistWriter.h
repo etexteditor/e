@@ -17,6 +17,8 @@ public:
 	void AddList(TiXmlElement* parent, const char* key, const wxArrayString& list);
 	TiXmlElement* AddDict(TiXmlElement* parent, const char* key);
 
+	bool Save(const wxString& filepath) const;
+
 private:
 	TiXmlDocument* m_doc;
 	TiXmlElement* m_rootDict;

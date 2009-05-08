@@ -20,6 +20,7 @@
 #include <wx/dnd.h>
 #include <wx/imaglist.h>
 #include "ProjectInfo.h"
+#include "IProjectManager.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -45,18 +46,6 @@ class RemoteThread;
 class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
-
-class IProjectManager {
-public:
-	virtual bool HasProject() const = 0;
-	virtual const wxFileName& GetProject() const = 0;
-
-	virtual bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const = 0;
-
-	virtual const map<wxString,wxString>& GetTriggers() const = 0;
-	virtual void SetTrigger(const wxString& trigger, const wxString& path) = 0;
-	virtual void ClearTrigger(const wxString& trigger) = 0;
-};
 
 class ProjectPane : 
 	public wxPanel, public wxThreadHelper,

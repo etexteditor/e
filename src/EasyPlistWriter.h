@@ -12,7 +12,6 @@ public:
 	EasyPlistWriter(void);
 	~EasyPlistWriter(void);
 
-	void AddKey(TiXmlElement* parent, const char* key);
 	void AddString(TiXmlElement* parent, const char* key, const char* value);
 	void AddList(TiXmlElement* parent, const char* key, const wxArrayString& list);
 	TiXmlElement* AddDict(TiXmlElement* parent, const char* key);
@@ -20,6 +19,8 @@ public:
 	bool Save(const wxString& filepath) const;
 
 private:
+	void AddKey(TiXmlElement* parent, const char* key);
+
 	TiXmlDocument* m_doc;
 	TiXmlElement* m_rootDict;
 };

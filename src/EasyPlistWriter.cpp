@@ -35,6 +35,8 @@ EasyPlistWriter::~EasyPlistWriter(void){
 }
 
 void EasyPlistWriter::AddKey(TiXmlElement* parent, const char* key) {
+	if (parent == NULL) parent = this->m_rootDict;
+
 	TiXmlElement* keytag = new TiXmlElement("key");
 	parent->LinkEndChild(keytag);
 	TiXmlText* text = new TiXmlText(key);
@@ -42,6 +44,7 @@ void EasyPlistWriter::AddKey(TiXmlElement* parent, const char* key) {
 }
 
 void EasyPlistWriter::AddString(TiXmlElement* parent, const char* key, const char* value){
+	if (parent == NULL) parent = this->m_rootDict;
 	AddKey(parent, key);
 
 	TiXmlElement* strtag = new TiXmlElement("string");
@@ -51,6 +54,7 @@ void EasyPlistWriter::AddString(TiXmlElement* parent, const char* key, const cha
 }
 
 void EasyPlistWriter::AddList(TiXmlElement* parent, const char* key, const wxArrayString& list) {
+	if (parent == NULL) parent = this->m_rootDict;
 	AddKey(parent, key);
 
 	TiXmlElement* array = new TiXmlElement("array");
@@ -65,6 +69,7 @@ void EasyPlistWriter::AddList(TiXmlElement* parent, const char* key, const wxArr
 }
 
 TiXmlElement* EasyPlistWriter::AddDict(TiXmlElement* parent, const char* key) {
+	if (parent == NULL) parent = this->m_rootDict;
 	AddKey(parent, key);
 
 	TiXmlElement* dict = new TiXmlElement("dict");
@@ -75,6 +80,7 @@ TiXmlElement* EasyPlistWriter::AddDict(TiXmlElement* parent, const char* key) {
 bool EasyPlistWriter::Save(const wxString& filepath) const {
 	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
 	wxFFile docffile(filepath, _T("wb"));
+
 	bool result = docffile.IsOpened() && m_doc->SaveFile(docffile.fp());
 	wxCHECK2_MSG(result, return result, wxT("  save failed"));
 

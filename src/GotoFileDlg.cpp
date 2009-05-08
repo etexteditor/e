@@ -13,7 +13,7 @@
 
 #include "GotoFileDlg.h"
 #include <algorithm>
-#include "ProjectPane.h"
+#include "IProjectManager.h"
 
 // Ctrl id's
 enum {

@@ -19,7 +19,6 @@
 #include <wx/filename.h>
 #include <wx/dnd.h>
 #include <wx/imaglist.h>
-#include "ProjectInfo.h"
 #include "IProjectManager.h"
 
 // STL can't compile with Level 4

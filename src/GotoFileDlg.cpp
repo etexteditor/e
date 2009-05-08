@@ -66,51 +66,52 @@ GotoFileDlg::~GotoFileDlg() {
 }
 
 void GotoFileDlg::OnIdle(wxIdleEvent& event) {
-	if (!m_filesLoaded && m_project.HasProject()) {
-		if (m_dirStack.empty()) {
-			const wxString path = m_project.GetProject().GetPath();
-			m_files.reserve(100);
+	if (m_filesLoaded) return; // Already done loading files.
+	if (!m_project.HasProject()) return; // No project, so no files to load.
 
-			BuildFileList(path);
+	if (m_dirStack.empty()) {
+		const wxString path = m_project.GetProject().GetPath();
+		m_files.reserve(100);
+
+		BuildFileList(path);
+	}
+	else {
+		DirState& dirState = *m_dirStack.back();
+
+		// Get next subdir
+		bool cont;
+		if (dirState.nextDirName.empty()) {
+			cont = dirState.dir.GetFirst(&dirState.nextDirName, wxEmptyString, wxDIR_DIRS);
 		}
-		else {
-			DirState& dirState = *m_dirStack.back();
+		else cont = dirState.dir.GetNext(&dirState.nextDirName);
 
-			// Get next subdir
-			bool cont;
-			if (dirState.nextDirName.empty()) {
-				cont = dirState.dir.GetFirst(&dirState.nextDirName, wxEmptyString, wxDIR_DIRS);
+		// Enter subdir if it matches filter
+		while (cont) {
+			const wxString fulldirname = dirState.prefix + dirState.nextDirName;
+
+			if (!dirState.filter || ProjectPane::MatchFilter(dirState.nextDirName, dirState.filter->includeDirs, dirState.filter->excludeDirs)) {
+				wxLogDebug(fulldirname);
+				BuildFileList(fulldirname);
+				break;
 			}
 			else cont = dirState.dir.GetNext(&dirState.nextDirName);
-
-			// Enter subdir if it matches filter
-			while (cont) {
-				const wxString fulldirname = dirState.prefix + dirState.nextDirName;
-
-				if (!dirState.filter || ProjectPane::MatchFilter(dirState.nextDirName, dirState.filter->includeDirs, dirState.filter->excludeDirs)) {
-					wxLogDebug(fulldirname);
-					BuildFileList(fulldirname);
-					break;
-				}
-				else cont = dirState.dir.GetNext(&dirState.nextDirName);
-			}
-
-			if (!cont) {
-				// All sub-dirs visited
-				if (dirState.info) {
-					m_filters.pop_back();
-					delete dirState.info;
-				}
-				delete m_dirStack.back();
-				m_dirStack.pop_back();
-
-				if (m_dirStack.empty()) m_filesLoaded = true;
-			}
 		}
 
-		m_cmdList->UpdateList();
-		if (!m_dirStack.empty()) event.RequestMore();
+		if (!cont) {
+			// All sub-dirs visited
+			if (dirState.info) {
+				m_filters.pop_back();
+				delete dirState.info;
+			}
+			delete m_dirStack.back();
+			m_dirStack.pop_back();
+
+			if (m_dirStack.empty()) m_filesLoaded = true;
+		}
 	}
+
+	m_cmdList->UpdateList();
+	if (!m_dirStack.empty()) event.RequestMore();
 }
 
 void GotoFileDlg::BuildFileList(const wxString& path) {

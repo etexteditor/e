@@ -8,9 +8,7 @@
     #pragma warning(pop)
 #endif
 
-#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/platform.h>
 	#include <wx/filename.h>
 	#include <wx/log.h>
 #endif

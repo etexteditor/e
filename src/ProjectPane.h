@@ -45,7 +45,6 @@ class RemoteThread;
 class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
-class TiXmlElement;
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
@@ -133,11 +132,6 @@ private:
 
 	// Filters
 	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
-
-	// Support functions
-	static void SetPlistKey(const char* key, TiXmlElement* parent);
-	static void SetPlistString(const char* str, TiXmlElement* parent);
-	static void SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent);
 
 	// Icon retrieval thread
 	void* Entry();

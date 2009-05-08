@@ -29,6 +29,8 @@
 #include <wx/tokenzr.h>
 #include <wx/artprov.h>
 
+#include "EasyPlistWriter.h"
+
 #ifdef __WXMSW__
     #pragma warning(push, 1)
 #endif
@@ -1013,74 +1015,43 @@ void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {
 	if (path.FileExists()) wxRemoveFile(filepath);
 	if (!projectInfo.hasFilters && projectInfo.env.empty() && projectInfo.triggers.empty()) return;
 
-	// Build document
-	TiXmlDocument doc;
-	TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
-	doc.LinkEndChild(decl);
-
-	TiXmlUnknown* dt = new TiXmlUnknown();
-	dt->SetValue("!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"");
-	doc.LinkEndChild(dt);
-	TiXmlElement* plist = new TiXmlElement( "plist" );
-	plist->SetAttribute("version", "1.0");
-	doc.LinkEndChild(plist);
-
-	// Build top Dict
-	TiXmlElement* dict = new TiXmlElement("dict");
-	plist->LinkEndChild(dict);
+	EasyPlistWriter eprj;
 
 	// Filters
 	if (projectInfo.hasFilters) {
-		// Add key
-		SetPlistKey("filters", dict);
-		TiXmlElement* filterDict = new TiXmlElement("dict");
-		dict->LinkEndChild(filterDict);
-
-		SetPlistKey("excludeDirs", filterDict);
-		SetPlistArray(projectInfo.excludeDirs, filterDict);
-		SetPlistKey("excludeFiles", filterDict);
-		SetPlistArray(projectInfo.excludeFiles, filterDict);
-		SetPlistKey("includeDirs", filterDict);
-		SetPlistArray(projectInfo.includeDirs, filterDict);
-		SetPlistKey("includeFiles", filterDict);
-		SetPlistArray(projectInfo.includeFiles, filterDict);
+		TiXmlElement *filterDict = eprj.AddDict(NULL, "filters");
+		eprj.AddList(filterDict, "excludeDirs", projectInfo.excludeDirs);
+		eprj.AddList(filterDict, "excludeFiles", projectInfo.excludeFiles);
+		eprj.AddList(filterDict, "includeDirs", projectInfo.includeDirs);
+		eprj.AddList(filterDict, "includeFiles", projectInfo.includeFiles);
 	}
 
 	// Environment variables
 	if (!projectInfo.env.empty()) {
-		SetPlistKey("environment", dict);
-		TiXmlElement* envDict = new TiXmlElement("dict");
-		dict->LinkEndChild(envDict);
+		TiXmlElement* envDict = eprj.AddDict(NULL, "environment");
 
 		for (map<wxString,wxString>::const_iterator p = projectInfo.env.begin(); p != projectInfo.env.end(); ++p) {
 			if (!p->first.empty()) {
-				SetPlistKey(p->first.mb_str(wxConvUTF8), envDict);
-				SetPlistString(p->second.mb_str(wxConvUTF8), envDict);
+				eprj.AddString(envDict, p->first.mb_str(wxConvUTF8), p->second.mb_str(wxConvUTF8));
 			}
 		}
 	}
 
 	// GotoFile triggers
 	if (!projectInfo.triggers.empty()) {
-		SetPlistKey("fileTriggers", dict);
-		TiXmlElement* trigDict = new TiXmlElement("dict");
-		dict->LinkEndChild(trigDict);
+		TiXmlElement* trigDict = eprj.AddDict(NULL, "fileTriggers");
 
 		for (map<wxString,wxString>::const_iterator p = projectInfo.triggers.begin(); p != projectInfo.triggers.end(); ++p) {
 			if (!p->first.empty()) {
-				SetPlistKey(p->first.mb_str(wxConvUTF8), trigDict);
-
 				wxFileName path(p->second);
 				path.MakeRelativeTo(m_prjPath.GetPath());
-				SetPlistString(path.GetFullPath().mb_str(wxConvUTF8), trigDict);
+
+				eprj.AddString(trigDict, p->first.mb_str(wxConvUTF8), path.GetFullPath().mb_str(wxConvUTF8));
 			}
 		}
 	}
 
-	// Save the file
-	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
-	wxFFile docffile(filepath, _T("wb"));
-	wxCHECK_RET(docffile.IsOpened() && doc.SaveFile(docffile.fp()), wxT("  save failed"));
+	eprj.Save(filepath);
 
 #ifdef __WXMSW__
 	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());
@@ -1095,32 +1066,6 @@ void ProjectPane::SetTrigger(const wxString& trigger, const wxString& path) {
 
 void ProjectPane::ClearTrigger(const wxString& trigger) {
 	m_projectInfo.triggers.erase(trigger);
-}
-
-void ProjectPane::SetPlistKey(const char* key, TiXmlElement* parent) {
-	TiXmlElement* keytag = new TiXmlElement("key");
-	parent->LinkEndChild(keytag);
-	TiXmlText* text = new TiXmlText(key);
-	keytag->LinkEndChild(text);
-}
-
-void ProjectPane::SetPlistString(const char* str, TiXmlElement* parent) {
-	TiXmlElement* strtag = new TiXmlElement("string");
-	parent->LinkEndChild(strtag);
-	TiXmlText* text = new TiXmlText(str);
-	strtag->LinkEndChild(text);
-}
-
-void ProjectPane::SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent) {
-	TiXmlElement* array = new TiXmlElement("array");
-	parent->LinkEndChild(array);
-
-	for (unsigned int i = 0; i < stringArray.GetCount(); ++i) {
-		TiXmlElement* strtag = new TiXmlElement("string");
-		array->LinkEndChild(strtag);
-		TiXmlText* text = new TiXmlText(stringArray[i].mb_str(wxConvUTF8));
-		strtag->LinkEndChild(text);
-	}
 }
 
 bool ProjectPane::MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter) { // static

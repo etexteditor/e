@@ -57,7 +57,51 @@ public:
 
 	bool IsEmpty() const {
 		return hasFilters || !env.empty() || !triggers.empty();
-	}
+	};
+
+	bool IsFileIncluded(const wxString& file_name) const {
+		if (!includeFiles.IsEmpty()) {
+			bool doInclude = false;
+			for (unsigned int i = 0; i < includeFiles.GetCount(); ++i) {
+				if (wxMatchWild(includeFiles[i], file_name, false)) {
+					doInclude = true;
+					break;
+				}
+			}
+
+			if (!doInclude) return false;
+		}
+
+		for (unsigned int i = 0; i < excludeFiles.GetCount(); ++i) {
+			if (wxMatchWild(excludeFiles[i], file_name, false)) {
+				return false;
+			}
+		}
+
+		return true;
+	};
+
+	bool IsDirectoryIncluded(const wxString& dir_name) const {
+		if (!includeFiles.IsEmpty()) {
+			bool doInclude = false;
+			for (unsigned int i = 0; i < includeDirs.GetCount(); ++i) {
+				if (wxMatchWild(includeDirs[i], dir_name, false)) {
+					doInclude = true;
+					break;
+				}
+			}
+
+			if (!doInclude) return false;
+		}
+
+		for (unsigned int i = 0; i < excludeFiles.GetCount(); ++i) {
+			if (wxMatchWild(excludeDirs[i], dir_name, false)) {
+				return false;
+			}
+		}
+
+		return true;
+	};
 
 	bool isRoot;
 	wxString path;

@@ -890,7 +890,7 @@ void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArr
 
 bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {
 	if (m_isRemote) return false;
-	projectInfo.Load(m_prjPath, path, onlyFilters, projectInfo);
+	return projectInfo.Load(m_prjPath, path, onlyFilters);
 }
 
 void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {

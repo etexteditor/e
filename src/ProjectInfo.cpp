@@ -75,10 +75,10 @@ bool cxProjectInfo::IsDirectoryIncluded(const wxString& dir_name) const {
 };
 
 
-bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) {
+bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters) {
 	wxFileName projectPath(path, wxEmptyString);
-	projectInfo.path = path;
-	projectInfo.isRoot = (projectPath == rootPath);
+	this->path = path;
+	this->isRoot = (projectPath == rootPath);
 
 	projectPath.SetFullName(wxT(".eprj"));
 	if (!projectPath.FileExists()) return false;
@@ -108,10 +108,10 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 				// Set target array
 				wxArrayString* filterArray = NULL;
 				const char* filterName = filter->GetText();
-				if (strcmp(filterName, "includeDirs") == 0) filterArray = &projectInfo.includeDirs;
-				else if (strcmp(filterName, "excludeDirs") == 0) filterArray = &projectInfo.excludeDirs;
-				else if (strcmp(filterName, "includeFiles") == 0) filterArray = &projectInfo.includeFiles;
-				else if (strcmp(filterName, "excludeFiles") == 0) filterArray = &projectInfo.excludeFiles;
+				if (strcmp(filterName, "includeDirs") == 0) filterArray = &this->includeDirs;
+				else if (strcmp(filterName, "excludeDirs") == 0) filterArray = &this->excludeDirs;
+				else if (strcmp(filterName, "includeFiles") == 0) filterArray = &this->includeFiles;
+				else if (strcmp(filterName, "excludeFiles") == 0) filterArray = &this->excludeFiles;
 				else {
 					wxASSERT(false);
 					break;
@@ -136,7 +136,7 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 				filter = array; // jump over value
 			}
 
-			projectInfo.hasFilters = true;
+			this->hasFilters = true;
 			if (onlyFilters) return true;
 		}
 		else if (strcmp(entry->GetText(), "environment") == 0) {
@@ -152,7 +152,7 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 				const char* value = val->GetText();
 
 				if (key) {
-					projectInfo.env[wxString(key, wxConvUTF8)] = value ? wxString(value, wxConvUTF8) : *wxEmptyString;
+					this->env[wxString(key, wxConvUTF8)] = value ? wxString(value, wxConvUTF8) : *wxEmptyString;
 				}
 
 				env = val; // jump over value
@@ -174,7 +174,7 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 					wxFileName path(wxString(value, wxConvUTF8));
 					path.MakeAbsolute(rootPath.GetPath());
 
-					projectInfo.triggers[wxString(key, wxConvUTF8)] = path.GetFullPath();
+					this->triggers[wxString(key, wxConvUTF8)] = path.GetFullPath();
 				}
 
 				trigger = val; // jump over value
@@ -184,6 +184,6 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 		entry = value; // jump over value
 	}
 
-	if (onlyFilters && !projectInfo.hasFilters) return false;
+	if (onlyFilters && !this->hasFilters) return false;
 	return true;
 }

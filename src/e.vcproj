@@ -1751,6 +1751,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\EasyPlistWriter.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\EasyPlistWriter.h"
+			>
+		</File>
+		<File
 			RelativePath=".\EditorBundlePanel.cpp"
 			>
 		</File>

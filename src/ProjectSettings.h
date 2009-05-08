@@ -16,9 +16,16 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 
+#ifndef WX_PRECOMP
+	#include <wx/dialog.h>
+#endif
+
 class cxProjectInfo;
 class wxGrid;
 class wxGridEvent;
+class wxCheckBox;
+class wxTextCtrl;
+class wxCommandEvent;
 
 class ProjectSettings : public wxDialog {
 public:

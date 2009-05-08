@@ -1,6 +1,5 @@
 #include "EasyPlistWriter.h"
 
-#include "wx/platform.h"
 #ifdef __WXMSW__
     #pragma warning(push, 1)
 #endif
@@ -9,8 +8,14 @@
     #pragma warning(pop)
 #endif
 
-#include <wx/filename.h>
-#include <wx/ffile.h>
+#include "wx/wxprec.h"
+
+#ifndef WX_PRECOMP
+	#include <wx/platform.h>
+	#include <wx/filename.h>
+	#include <wx/ffile.h>
+	#include <wx/log.h>
+#endif
 
 EasyPlistWriter::EasyPlistWriter(void): 
 	m_doc(new TiXmlDocument()) 

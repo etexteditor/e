@@ -279,7 +279,7 @@ public:
 	void CreateEncodingMenu(wxMenu& menu) const;
 	void UpdateEncodingMenu(wxMenu& menu) const;
 
-	static wxString EditorFrame::DefaultFileFilters;
+	static wxString DefaultFileFilters;
 
 protected:
 	virtual bool OnPreKeyUp(wxKeyEvent& event);

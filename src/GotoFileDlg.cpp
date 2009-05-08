@@ -30,7 +30,7 @@ BEGIN_EVENT_TABLE(GotoFileDlg, wxDialog)
 	EVT_IDLE(GotoFileDlg::OnIdle)
 END_EVENT_TABLE()
 
-GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectPane& project)
+GotoFileDlg::GotoFileDlg(wxWindow *parent, IProjectManager& project)
 :  wxDialog (parent, -1, _("Go to File"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
    m_project(project), m_isDone(false), m_filesLoaded(false)
 {

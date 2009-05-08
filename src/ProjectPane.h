@@ -46,7 +46,22 @@ class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
 
-class ProjectPane : public wxPanel, public wxThreadHelper {
+class IProjectManager {
+public:
+	virtual bool HasProject() const = 0;
+	virtual const wxFileName& GetProject() const = 0;
+
+	virtual bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const = 0;
+
+	virtual const map<wxString,wxString>& GetTriggers() const = 0;
+	virtual void SetTrigger(const wxString& trigger, const wxString& path) = 0;
+	virtual void ClearTrigger(const wxString& trigger) = 0;
+};
+
+class ProjectPane : 
+	public wxPanel, public wxThreadHelper,
+	public IProjectManager
+{
 public:
 	ProjectPane(IFrameProjectService& parent, wxWindowID id = wxID_ANY);
 	~ProjectPane();
@@ -60,8 +75,8 @@ public:
 	bool SetRemoteProject(const RemoteProfile* rp);
 
 	void Clear();
-	bool HasProject() const {return m_prjPath.IsOk();};
-	const wxFileName& GetProject() const {return m_prjPath;};
+	virtual bool HasProject() const {return m_prjPath.IsOk();};
+	virtual const wxFileName& GetProject() const {return m_prjPath;};
 	wxString GetProjectString() const {if (IsRemote()) return m_prjUrl; else return m_prjPath.GetFullPath();};
 	wxArrayString GetSelections() const;
 	const map<wxString,wxString>& GetEnv() const {return m_projectInfo.env;};
@@ -73,12 +88,12 @@ public:
 	void Upload(const wxString& url, const wxString& path);
 
 	// GotoFile triggers
-	const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
-	void SetTrigger(const wxString& trigger, const wxString& path);
-	void ClearTrigger(const wxString& trigger);
+	virtual const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
+	virtual void SetTrigger(const wxString& trigger, const wxString& path);
+	virtual void ClearTrigger(const wxString& trigger);
 
 	// Utility functions
-	bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const;
+	virtual bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const;
 	void SaveProjectInfo(const cxProjectInfo& projectInfo) const;
 	void SaveCurrentProjectInfo() const {SaveProjectInfo(m_projectInfo);};
 	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);

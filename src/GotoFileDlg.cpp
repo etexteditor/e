@@ -89,7 +89,7 @@ void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 		while (cont) {
 			const wxString fulldirname = dirState.prefix + dirState.nextDirName;
 
-			if (!dirState.filter || ProjectPane::MatchFilter(dirState.nextDirName, dirState.filter->includeDirs, dirState.filter->excludeDirs)) {
+			if (!dirState.filter || dirState.filter->IsDirectoryIncluded(dirState.nextDirName)) {
 				wxLogDebug(fulldirname);
 				BuildFileList(fulldirname);
 				break;
@@ -146,7 +146,7 @@ void GotoFileDlg::BuildFileList(const wxString& path) {
 	int style = wxDIR_FILES;
 	bool cont = dirState->dir.GetFirst(&eachFilename, wxEmptyString, style);
 	while (cont) {
-		if (!dirState->filter || ProjectPane::MatchFilter(eachFilename, dirState->filter->includeFiles, dirState->filter->excludeFiles)) {
+		if (!dirState->filter || dirState->filter->IsFileIncluded(eachFilename)) {
 			m_files.push_back(new FileEntry(dirState->prefix, eachFilename));
 		}
 

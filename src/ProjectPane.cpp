@@ -240,8 +240,7 @@ void ProjectPane::Init() {
 	}
 
 	// Load project info (if available)
-	m_projectInfo.Clear();
-	LoadProjectInfo(strpath, false, m_projectInfo);
+	if (!m_isRemote) m_infoHandler.SetRoot(m_prjPath);
 
 	// Always start with root expanded
 	Freeze();
@@ -607,7 +606,7 @@ void ProjectPane::ExpandDir(wxTreeItemId parentId) {
 
 		wxArrayString dirs;
 		wxArrayString filenames;
-		GetDirAndFileLists(dirName, dirs, filenames);
+		m_infoHandler.GetDirAndFileLists(dirName, dirs, filenames);
 
 		ExpandDir(parentId, data, dirs, filenames);
 	}
@@ -784,59 +783,6 @@ void ProjectPane::CollapseDir(wxTreeItemId parentId) {
 	//m_prjTree->CollapseAndReset(parentId);
 }
 
-bool ProjectPane::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const {
-	wxASSERT(!path.empty());
-
-	// Open directory
-	wxDir d;
-	d.Open(path);
-	if (!d.IsOpened()) return false;
-
-	// Check for project settings
-	wxArrayString includeDirs;
-	wxArrayString excludeDirs;
-	wxArrayString includeFiles;
-	wxArrayString excludeFiles;
-	GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
-
-	// Get all subdirs
-	wxString eachFilename;
- 	int style = wxDIR_DIRS;
-    if (d.GetFirst(&eachFilename, wxEmptyString, style))
-    {
-        do
-        {
-            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
-            {
-                if (MatchFilter(eachFilename, includeDirs, excludeDirs)) {
-					dirs.Add(eachFilename);
-				}
-            }
-        }
-        while (d.GetNext(&eachFilename));
-    }
-	dirs.Sort(wxStringSortAscendingNoCase);
-
-	// Get all files
-	style = wxDIR_FILES;
-	if (d.GetFirst(&eachFilename, wxEmptyString, style))
-    {
-        do
-        {
-            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
-            {
-                if (MatchFilter(eachFilename, includeFiles, excludeFiles)) {
-					files.Add(eachFilename);
-				}
-            }
-        }
-        while (d.GetNext(&eachFilename));
-    }
-	files.Sort(wxStringSortAscendingNoCase);
-
-	return true;
-}
-
 bool ProjectPane::IsDirEmpty(const wxString& path) const {
 	if (path.empty()) return true;
 
@@ -884,292 +830,6 @@ bool ProjectPane::IsDirEmpty(const wxString& path) const {
 
 	// No matching dirs
 	return true;*/
-}
-
-void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
-	wxFileName dirPath(path, wxEmptyString);
-
-	//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
-
-	if (m_prjPath == dirPath) {
-		// Return root filters
-		incDirs = m_projectInfo.includeDirs;
-		excDirs = m_projectInfo.excludeDirs;
-		incFiles = m_projectInfo.includeFiles;
-		excFiles = m_projectInfo.excludeFiles;
-		return;
-	}
-
-	cxProjectInfo info;
-	if (LoadProjectInfo(dirPath.GetPath(), true, info)) {
-		incDirs = info.includeDirs;
-		excDirs = info.excludeDirs;
-		incFiles = info.includeFiles;
-		excFiles = info.excludeFiles;
-		return;
-	}
-
-	// See if we can inherit filters from parent
-	dirPath.RemoveLastDir();
-	GetFilters(dirPath.GetPath(), incDirs, excDirs, incFiles, excFiles);
-}
-
-bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {
-	if (m_isRemote) return false;
-
-	wxFileName projectPath(path, wxEmptyString);
-	projectInfo.path = path;
-	projectInfo.isRoot = (m_prjPath == projectPath);
-
-	projectPath.SetFullName(wxT(".eprj"));
-	if (!projectPath.FileExists()) return false;
-
-	// Load plist file
-	TiXmlDocument doc;
-	wxFFile docffile(projectPath.GetFullPath(), _T("rb"));
-	wxCHECK(docffile.IsOpened() && doc.LoadFile(docffile.fp()), false);
-
-	// Get top dict
-	const TiXmlHandle docHandle(&doc);
-	const TiXmlElement* topDict = docHandle.FirstChildElement("plist").FirstChildElement().Element();
-	if (!topDict || strcmp(topDict->Value(), "dict") != 0) return false; // empty plist
-
-	// Parse entries
-	const TiXmlElement* entry = topDict->FirstChildElement();
-	for(; entry; entry = entry->NextSiblingElement() ) {
-		if (strcmp(entry->Value(), "key") != 0) return false; // invalid dict
-		const TiXmlElement* const value = entry->NextSiblingElement();
-
-		if (strcmp(entry->GetText(), "filters") == 0) {
-			// Load all filters
-			const TiXmlElement* filter = value->FirstChildElement();
-			for(; filter; filter = filter->NextSiblingElement() ) {
-				if (strcmp(filter->Value(), "key") != 0) return false; // invalid dict
-
-				// Set target array
-				wxArrayString* filterArray = NULL;
-				const char* filterName = filter->GetText();
-				if (strcmp(filterName, "includeDirs") == 0) filterArray = &projectInfo.includeDirs;
-				else if (strcmp(filterName, "excludeDirs") == 0) filterArray = &projectInfo.excludeDirs;
-				else if (strcmp(filterName, "includeFiles") == 0) filterArray = &projectInfo.includeFiles;
-				else if (strcmp(filterName, "excludeFiles") == 0) filterArray = &projectInfo.excludeFiles;
-				else {
-					wxASSERT(false);
-					break;
-				}
-
-				const TiXmlElement* const array = filter->NextSiblingElement();
-				if (strcmp(array->Value(), "array") != 0) return false; // invalid dict
-
-				const TiXmlElement* child = array->FirstChildElement();
-				for(; child; child = child->NextSiblingElement() ) {
-					const char* valType = child->Value();
-
-					if (strcmp(valType, "string") == 0) {
-						const char* pattern = child->GetText();
-						if (pattern) filterArray->Add(wxString(pattern, wxConvUTF8));
-					}
-					else {
-						wxASSERT(false);
-					}
-				}
-
-				filter = array; // jump over value
-			}
-
-			projectInfo.hasFilters = true;
-			if (onlyFilters) return true;
-		}
-		else if (strcmp(entry->GetText(), "environment") == 0) {
-			// Load all env variables
-			const TiXmlElement* env = value->FirstChildElement();
-			for(; env; env = env->NextSiblingElement() ) {
-				// Get Key
-				if (strcmp(env->Value(), "key") != 0) return false; // invalid dict
-				const char* key = env->GetText();
-
-				const TiXmlElement* const val = env->NextSiblingElement();
-				if (strcmp(val->Value(), "string") != 0) return false; // invalid dict
-				const char* value = val->GetText();
-
-				if (key) {
-					projectInfo.env[wxString(key, wxConvUTF8)] = value ? wxString(value, wxConvUTF8) : *wxEmptyString;
-				}
-
-				env = val; // jump over value
-			}
-		}
-		else if (strcmp(entry->GetText(), "fileTriggers") == 0) {
-			// Load all env variables
-			const TiXmlElement* trigger = value->FirstChildElement();
-			for(; trigger; trigger = trigger->NextSiblingElement() ) {
-				// Get Key
-				if (strcmp(trigger->Value(), "key") != 0) return false; // invalid dict
-				const char* key = trigger->GetText();
-
-				const TiXmlElement* const val = trigger->NextSiblingElement();
-				if (strcmp(val->Value(), "string") != 0) return false; // invalid dict
-				const char* value = val->GetText();
-
-				if (key && value) {
-					wxFileName path(wxString(value, wxConvUTF8));
-					path.MakeAbsolute(m_prjPath.GetPath());
-
-					projectInfo.triggers[wxString(key, wxConvUTF8)] = path.GetFullPath();
-				}
-
-				trigger = val; // jump over value
-			}
-		}
-
-		entry = value; // jump over value
-	}
-
-	if (onlyFilters && !projectInfo.hasFilters) return false;
-	else return true;
-}
-
-void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {
-	wxFileName path(projectInfo.path, wxEmptyString);
-	path.SetFullName(wxT(".eprj"));
-	const wxString filepath = path.GetFullPath();
-
-	// Remove empty files
-	if (path.FileExists()) wxRemoveFile(filepath);
-	if (!projectInfo.hasFilters && projectInfo.env.empty() && projectInfo.triggers.empty()) return;
-
-	// Build document
-	TiXmlDocument doc;
-	TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
-	doc.LinkEndChild(decl);
-
-	TiXmlUnknown* dt = new TiXmlUnknown();
-	dt->SetValue("!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"");
-	doc.LinkEndChild(dt);
-	TiXmlElement* plist = new TiXmlElement( "plist" );
-	plist->SetAttribute("version", "1.0");
-	doc.LinkEndChild(plist);
-
-	// Build top Dict
-	TiXmlElement* dict = new TiXmlElement("dict");
-	plist->LinkEndChild(dict);
-
-	// Filters
-	if (projectInfo.hasFilters) {
-		// Add key
-		SetPlistKey("filters", dict);
-		TiXmlElement* filterDict = new TiXmlElement("dict");
-		dict->LinkEndChild(filterDict);
-
-		SetPlistKey("excludeDirs", filterDict);
-		SetPlistArray(projectInfo.excludeDirs, filterDict);
-		SetPlistKey("excludeFiles", filterDict);
-		SetPlistArray(projectInfo.excludeFiles, filterDict);
-		SetPlistKey("includeDirs", filterDict);
-		SetPlistArray(projectInfo.includeDirs, filterDict);
-		SetPlistKey("includeFiles", filterDict);
-		SetPlistArray(projectInfo.includeFiles, filterDict);
-	}
-
-	// Environment variables
-	if (!projectInfo.env.empty()) {
-		SetPlistKey("environment", dict);
-		TiXmlElement* envDict = new TiXmlElement("dict");
-		dict->LinkEndChild(envDict);
-
-		for (map<wxString,wxString>::const_iterator p = projectInfo.env.begin(); p != projectInfo.env.end(); ++p) {
-			if (!p->first.empty()) {
-				SetPlistKey(p->first.mb_str(wxConvUTF8), envDict);
-				SetPlistString(p->second.mb_str(wxConvUTF8), envDict);
-			}
-		}
-	}
-
-	// GotoFile triggers
-	if (!projectInfo.triggers.empty()) {
-		SetPlistKey("fileTriggers", dict);
-		TiXmlElement* trigDict = new TiXmlElement("dict");
-		dict->LinkEndChild(trigDict);
-
-		for (map<wxString,wxString>::const_iterator p = projectInfo.triggers.begin(); p != projectInfo.triggers.end(); ++p) {
-			if (!p->first.empty()) {
-				SetPlistKey(p->first.mb_str(wxConvUTF8), trigDict);
-
-				wxFileName path(p->second);
-				path.MakeRelativeTo(m_prjPath.GetPath());
-				SetPlistString(path.GetFullPath().mb_str(wxConvUTF8), trigDict);
-			}
-		}
-	}
-
-	// Save the file
-	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
-	wxFFile docffile(filepath, _T("wb"));
-	wxCHECK_RET(docffile.IsOpened() && doc.SaveFile(docffile.fp()), wxT("  save failed"));
-
-#ifdef __WXMSW__
-	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());
-	::SetFileAttributes(filepath.c_str(), dwAttrs | FILE_ATTRIBUTE_HIDDEN);
-#endif //__WXMSW__
-}
-
-void ProjectPane::SetTrigger(const wxString& trigger, const wxString& path) {
-	m_projectInfo.triggers[trigger] = path;
-	SaveCurrentProjectInfo();
-}
-
-void ProjectPane::ClearTrigger(const wxString& trigger) {
-	m_projectInfo.triggers.erase(trigger);
-}
-
-void ProjectPane::SetPlistKey(const char* key, TiXmlElement* parent) const {
-	TiXmlElement* keytag = new TiXmlElement("key");
-	parent->LinkEndChild(keytag);
-	TiXmlText* text = new TiXmlText(key);
-	keytag->LinkEndChild(text);
-}
-
-void ProjectPane::SetPlistString(const char* str, TiXmlElement* parent) const {
-	TiXmlElement* strtag = new TiXmlElement("string");
-	parent->LinkEndChild(strtag);
-	TiXmlText* text = new TiXmlText(str);
-	strtag->LinkEndChild(text);
-}
-
-void ProjectPane::SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent) const {
-	TiXmlElement* array = new TiXmlElement("array");
-	parent->LinkEndChild(array);
-
-	for (unsigned int i = 0; i < stringArray.GetCount(); ++i) {
-		TiXmlElement* strtag = new TiXmlElement("string");
-		array->LinkEndChild(strtag);
-		TiXmlText* text = new TiXmlText(stringArray[i].mb_str(wxConvUTF8));
-		strtag->LinkEndChild(text);
-	}
-}
-
-
-
-bool ProjectPane::MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter) { // static
-	if (!incFilter.IsEmpty()) {
-		bool doInclude = false;
-		for (unsigned int i = 0; i < incFilter.GetCount(); ++i) {
-			if (wxMatchWild(incFilter[i], name, false)) {
-				doInclude = true;
-				break;
-			}
-		}
-
-		if (!doInclude) return false;
-	}
-
-	for (unsigned int i = 0; i < excFilter.GetCount(); ++i) {
-		if (wxMatchWild(excFilter[i], name, false)) {
-			return false;
-		}
-	}
-
-	return true;
 }
 
 void ProjectPane::GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs) {
@@ -1736,8 +1396,8 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				wxArrayString includeFiles;
 				wxArrayString excludeFiles;
 				const wxFileName parentPath(path);
-				GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
-				if (!MatchFilter(newFile.GetFullName(), includeDirs, excludeDirs)) {
+				m_infoHandler.GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
+				if (!m_infoHandler.MatchFilter(newFile.GetFullName(), includeDirs, excludeDirs)) {
 					if (itemFound) m_prjTree->Delete(subItem);
 					return;
 				}
@@ -1796,10 +1456,10 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 			wxArrayString includeFiles;
 			wxArrayString excludeFiles;
 			const wxFileName parentPath(path);
-			GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
+			m_infoHandler.GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
 
 			if (wxDir::Exists(path)) {
-				if (!MatchFilter(fileName, includeDirs, excludeDirs)) return;
+				if (!m_infoHandler.MatchFilter(fileName, includeDirs, excludeDirs)) return;
 				wxTreeItemId id = FindSubItem(item, fileName);
 				if (!id.IsOk()) {
 					// The dir may have been deleted/renamed again
@@ -1815,7 +1475,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 					excludeDirs.Empty();
 					includeFiles.Empty();
 					excludeFiles.Empty();
-					GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
+					m_infoHandler.GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
 
 					if (!IsDirEmpty(path))	{
 						m_prjTree->SetItemHasChildren(id);
@@ -1832,7 +1492,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				}
 			}
 			else {
-				if (!MatchFilter(fileName, includeFiles, excludeFiles)) return;
+				if (!m_infoHandler.MatchFilter(fileName, includeFiles, excludeFiles)) return;
 
 				wxTreeItemId id = FindSubItem(item, fileName);
 				if (!id.IsOk()) {
@@ -2006,13 +1666,13 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 
 	// Load project settings for current dir
 	cxProjectInfo currentInfo;
-	LoadProjectInfo(path.GetPath(), false, currentInfo);
+	m_infoHandler.LoadProjectInfo(path.GetPath(), false, currentInfo);
 
 	// Load inherited filters
 	cxProjectInfo pInfo;
 	if (!currentInfo.hasFilters && path != m_prjPath) {
 		path.RemoveLastDir();
-		GetFilters(path.GetPath(), pInfo.includeDirs, pInfo.excludeDirs, pInfo.includeFiles, pInfo.excludeFiles);
+		m_infoHandler.GetFilters(path.GetPath(), pInfo.includeDirs, pInfo.excludeDirs, pInfo.includeFiles, pInfo.excludeFiles);
 	}
 
 	// Show dialog
@@ -2020,7 +1680,7 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 	if (dlg.ShowModal() == wxID_OK && dlg.IsModified()) {
 		wxLogDebug(wxT("projectInfo ok and modified"));
 		dlg.GetSettings(currentInfo);
-		SaveProjectInfo(currentInfo);
+		m_infoHandler.SaveProjectInfo(currentInfo);
 		RefreshDirs();
 	}
 }
@@ -2287,6 +1947,357 @@ WXLRESULT ProjectPane::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lPar
 	return wxPanel::MSWWindowProc(nMsg, wParam, lParam);
 }
 #endif //__WXMSW__
+
+// ---- ProjectInfoHandler ----------------------------------------------------
+
+void ProjectInfoHandler::SetRoot(const wxFileName& path) {
+	m_prjPath = path;
+	m_projectInfo.Clear();
+
+	const wxString rootPath = path.GetPath() + wxFILE_SEP_PATH;
+	LoadProjectInfo(rootPath, false, m_projectInfo);
+}
+
+void ProjectInfoHandler::SaveRootInfo() const {
+	SaveProjectInfo(m_projectInfo);
+}
+
+bool ProjectInfoHandler::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const {
+	wxASSERT(!path.empty());
+
+	// Open directory
+	wxDir d;
+	d.Open(path);
+	if (!d.IsOpened()) return false;
+
+	// Check for project settings
+	wxArrayString includeDirs;
+	wxArrayString excludeDirs;
+	wxArrayString includeFiles;
+	wxArrayString excludeFiles;
+	GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
+
+	// Get all subdirs
+	wxString eachFilename;
+ 	int style = wxDIR_DIRS;
+    if (d.GetFirst(&eachFilename, wxEmptyString, style))
+    {
+        do
+        {
+            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
+            {
+                if (MatchFilter(eachFilename, includeDirs, excludeDirs)) {
+					dirs.Add(eachFilename);
+				}
+            }
+        }
+        while (d.GetNext(&eachFilename));
+    }
+	dirs.Sort(wxStringSortAscendingNoCase);
+
+	// Get all files
+	style = wxDIR_FILES;
+	if (d.GetFirst(&eachFilename, wxEmptyString, style))
+    {
+        do
+        {
+            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
+            {
+                if (MatchFilter(eachFilename, includeFiles, excludeFiles)) {
+					files.Add(eachFilename);
+				}
+            }
+        }
+        while (d.GetNext(&eachFilename));
+    }
+	files.Sort(wxStringSortAscendingNoCase);
+
+	return true;
+}
+
+void ProjectInfoHandler::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
+	wxFileName dirPath(path, wxEmptyString);
+
+	//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
+
+	if (m_prjPath == dirPath) {
+		// Return root filters
+		incDirs = m_projectInfo.includeDirs;
+		excDirs = m_projectInfo.excludeDirs;
+		incFiles = m_projectInfo.includeFiles;
+		excFiles = m_projectInfo.excludeFiles;
+		return;
+	}
+
+	cxProjectInfo info;
+	if (LoadProjectInfo(dirPath.GetPath(), true, info)) {
+		incDirs = info.includeDirs;
+		excDirs = info.excludeDirs;
+		incFiles = info.includeFiles;
+		excFiles = info.excludeFiles;
+		return;
+	}
+
+	// See if we can inherit filters from parent
+	dirPath.RemoveLastDir();
+	GetFilters(dirPath.GetPath(), incDirs, excDirs, incFiles, excFiles);
+}
+
+bool ProjectInfoHandler::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {
+	//if (m_isRemote) return false;
+
+	wxFileName projectPath(path, wxEmptyString);
+	projectInfo.path = path;
+	projectInfo.isRoot = (m_prjPath == projectPath);
+
+	projectPath.SetFullName(wxT(".eprj"));
+	if (!projectPath.FileExists()) return false;
+
+	// Load plist file
+	TiXmlDocument doc;
+	wxFFile docffile(projectPath.GetFullPath(), _T("rb"));
+	wxCHECK(docffile.IsOpened() && doc.LoadFile(docffile.fp()), false);
+
+	// Get top dict
+	const TiXmlHandle docHandle(&doc);
+	const TiXmlElement* topDict = docHandle.FirstChildElement("plist").FirstChildElement().Element();
+	if (!topDict || strcmp(topDict->Value(), "dict") != 0) return false; // empty plist
+
+	// Parse entries
+	const TiXmlElement* entry = topDict->FirstChildElement();
+	for(; entry; entry = entry->NextSiblingElement() ) {
+		if (strcmp(entry->Value(), "key") != 0) return false; // invalid dict
+		const TiXmlElement* const value = entry->NextSiblingElement();
+
+		if (strcmp(entry->GetText(), "filters") == 0) {
+			// Load all filters
+			const TiXmlElement* filter = value->FirstChildElement();
+			for(; filter; filter = filter->NextSiblingElement() ) {
+				if (strcmp(filter->Value(), "key") != 0) return false; // invalid dict
+
+				// Set target array
+				wxArrayString* filterArray = NULL;
+				const char* filterName = filter->GetText();
+				if (strcmp(filterName, "includeDirs") == 0) filterArray = &projectInfo.includeDirs;
+				else if (strcmp(filterName, "excludeDirs") == 0) filterArray = &projectInfo.excludeDirs;
+				else if (strcmp(filterName, "includeFiles") == 0) filterArray = &projectInfo.includeFiles;
+				else if (strcmp(filterName, "excludeFiles") == 0) filterArray = &projectInfo.excludeFiles;
+				else {
+					wxASSERT(false);
+					break;
+				}
+
+				const TiXmlElement* const array = filter->NextSiblingElement();
+				if (strcmp(array->Value(), "array") != 0) return false; // invalid dict
+
+				const TiXmlElement* child = array->FirstChildElement();
+				for(; child; child = child->NextSiblingElement() ) {
+					const char* valType = child->Value();
+
+					if (strcmp(valType, "string") == 0) {
+						const char* pattern = child->GetText();
+						if (pattern) filterArray->Add(wxString(pattern, wxConvUTF8));
+					}
+					else {
+						wxASSERT(false);
+					}
+				}
+
+				filter = array; // jump over value
+			}
+
+			projectInfo.hasFilters = true;
+			if (onlyFilters) return true;
+		}
+		else if (strcmp(entry->GetText(), "environment") == 0) {
+			// Load all env variables
+			const TiXmlElement* env = value->FirstChildElement();
+			for(; env; env = env->NextSiblingElement() ) {
+				// Get Key
+				if (strcmp(env->Value(), "key") != 0) return false; // invalid dict
+				const char* key = env->GetText();
+
+				const TiXmlElement* const val = env->NextSiblingElement();
+				if (strcmp(val->Value(), "string") != 0) return false; // invalid dict
+				const char* value = val->GetText();
+
+				if (key) {
+					projectInfo.env[wxString(key, wxConvUTF8)] = value ? wxString(value, wxConvUTF8) : *wxEmptyString;
+				}
+
+				env = val; // jump over value
+			}
+		}
+		else if (strcmp(entry->GetText(), "fileTriggers") == 0) {
+			// Load all env variables
+			const TiXmlElement* trigger = value->FirstChildElement();
+			for(; trigger; trigger = trigger->NextSiblingElement() ) {
+				// Get Key
+				if (strcmp(trigger->Value(), "key") != 0) return false; // invalid dict
+				const char* key = trigger->GetText();
+
+				const TiXmlElement* const val = trigger->NextSiblingElement();
+				if (strcmp(val->Value(), "string") != 0) return false; // invalid dict
+				const char* value = val->GetText();
+
+				if (key && value) {
+					wxFileName path(wxString(value, wxConvUTF8));
+					path.MakeAbsolute(m_prjPath.GetPath());
+
+					projectInfo.triggers[wxString(key, wxConvUTF8)] = path.GetFullPath();
+				}
+
+				trigger = val; // jump over value
+			}
+		}
+
+		entry = value; // jump over value
+	}
+
+	if (onlyFilters && !projectInfo.hasFilters) return false;
+	else return true;
+}
+
+void ProjectInfoHandler::SaveProjectInfo(const cxProjectInfo& projectInfo) const {
+	wxFileName path(projectInfo.path, wxEmptyString);
+	path.SetFullName(wxT(".eprj"));
+	const wxString filepath = path.GetFullPath();
+
+	// Remove empty files
+	if (path.FileExists()) wxRemoveFile(filepath);
+	if (!projectInfo.hasFilters && projectInfo.env.empty() && projectInfo.triggers.empty()) return;
+
+	// Build document
+	TiXmlDocument doc;
+	TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
+	doc.LinkEndChild(decl);
+
+	TiXmlUnknown* dt = new TiXmlUnknown();
+	dt->SetValue("!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"");
+	doc.LinkEndChild(dt);
+	TiXmlElement* plist = new TiXmlElement( "plist" );
+	plist->SetAttribute("version", "1.0");
+	doc.LinkEndChild(plist);
+
+	// Build top Dict
+	TiXmlElement* dict = new TiXmlElement("dict");
+	plist->LinkEndChild(dict);
+
+	// Filters
+	if (projectInfo.hasFilters) {
+		// Add key
+		SetPlistKey("filters", dict);
+		TiXmlElement* filterDict = new TiXmlElement("dict");
+		dict->LinkEndChild(filterDict);
+
+		SetPlistKey("excludeDirs", filterDict);
+		SetPlistArray(projectInfo.excludeDirs, filterDict);
+		SetPlistKey("excludeFiles", filterDict);
+		SetPlistArray(projectInfo.excludeFiles, filterDict);
+		SetPlistKey("includeDirs", filterDict);
+		SetPlistArray(projectInfo.includeDirs, filterDict);
+		SetPlistKey("includeFiles", filterDict);
+		SetPlistArray(projectInfo.includeFiles, filterDict);
+	}
+
+	// Environment variables
+	if (!projectInfo.env.empty()) {
+		SetPlistKey("environment", dict);
+		TiXmlElement* envDict = new TiXmlElement("dict");
+		dict->LinkEndChild(envDict);
+
+		for (map<wxString,wxString>::const_iterator p = projectInfo.env.begin(); p != projectInfo.env.end(); ++p) {
+			if (!p->first.empty()) {
+				SetPlistKey(p->first.mb_str(wxConvUTF8), envDict);
+				SetPlistString(p->second.mb_str(wxConvUTF8), envDict);
+			}
+		}
+	}
+
+	// GotoFile triggers
+	if (!projectInfo.triggers.empty()) {
+		SetPlistKey("fileTriggers", dict);
+		TiXmlElement* trigDict = new TiXmlElement("dict");
+		dict->LinkEndChild(trigDict);
+
+		for (map<wxString,wxString>::const_iterator p = projectInfo.triggers.begin(); p != projectInfo.triggers.end(); ++p) {
+			if (!p->first.empty()) {
+				SetPlistKey(p->first.mb_str(wxConvUTF8), trigDict);
+
+				wxFileName path(p->second);
+				path.MakeRelativeTo(m_prjPath.GetPath());
+				SetPlistString(path.GetFullPath().mb_str(wxConvUTF8), trigDict);
+			}
+		}
+	}
+
+	// Save the file
+	wxLogDebug(wxT("Saving projectInfo %s"), filepath.c_str());
+	wxFFile docffile(filepath, _T("wb"));
+	wxCHECK_RET(docffile.IsOpened() && doc.SaveFile(docffile.fp()), wxT("  save failed"));
+
+#ifdef __WXMSW__
+	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());
+	::SetFileAttributes(filepath.c_str(), dwAttrs | FILE_ATTRIBUTE_HIDDEN);
+#endif //__WXMSW__
+}
+
+void ProjectInfoHandler::SetTrigger(const wxString& trigger, const wxString& path) {
+	m_projectInfo.triggers[trigger] = path;
+	SaveRootInfo();
+}
+
+void ProjectInfoHandler::ClearTrigger(const wxString& trigger) {
+	m_projectInfo.triggers.erase(trigger);
+}
+
+bool ProjectInfoHandler::MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter) { // static
+	if (!incFilter.IsEmpty()) {
+		bool doInclude = false;
+		for (unsigned int i = 0; i < incFilter.GetCount(); ++i) {
+			if (wxMatchWild(incFilter[i], name, false)) {
+				doInclude = true;
+				break;
+			}
+		}
+
+		if (!doInclude) return false;
+	}
+
+	for (unsigned int i = 0; i < excFilter.GetCount(); ++i) {
+		if (wxMatchWild(excFilter[i], name, false)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void ProjectInfoHandler::SetPlistKey(const char* key, TiXmlElement* parent) const {
+	TiXmlElement* keytag = new TiXmlElement("key");
+	parent->LinkEndChild(keytag);
+	TiXmlText* text = new TiXmlText(key);
+	keytag->LinkEndChild(text);
+}
+
+void ProjectInfoHandler::SetPlistString(const char* str, TiXmlElement* parent) const {
+	TiXmlElement* strtag = new TiXmlElement("string");
+	parent->LinkEndChild(strtag);
+	TiXmlText* text = new TiXmlText(str);
+	strtag->LinkEndChild(text);
+}
+
+void ProjectInfoHandler::SetPlistArray(const wxArrayString& stringArray, TiXmlElement* parent) const {
+	TiXmlElement* array = new TiXmlElement("array");
+	parent->LinkEndChild(array);
+
+	for (unsigned int i = 0; i < stringArray.GetCount(); ++i) {
+		TiXmlElement* strtag = new TiXmlElement("string");
+		array->LinkEndChild(strtag);
+		TiXmlText* text = new TiXmlText(stringArray[i].mb_str(wxConvUTF8));
+		strtag->LinkEndChild(text);
+	}
+}
 
 //-----------------------------------------------------------------------------
 // DirItemData

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="e"
 	ProjectGUID="{34A9B5C4-22D3-4F14-A896-0F12FDF194C5}"
 	RootNamespace="e"
@@ -1494,6 +1494,14 @@
 		</File>
 		<File
 			RelativePath=".\FindFlags.h"
+			>
+		</File>
+		<File
+			RelativePath=".\FindInProjectDlg.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\FindInProjectDlg.h"
 			>
 		</File>
 		<File

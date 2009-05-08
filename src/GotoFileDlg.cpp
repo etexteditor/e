@@ -29,7 +29,7 @@ BEGIN_EVENT_TABLE(GotoFileDlg, wxDialog)
 	EVT_IDLE(GotoFileDlg::OnIdle)
 END_EVENT_TABLE()
 
-GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectPane& project)
+GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project)
 :  wxDialog (parent, -1, _("Go to File"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
    m_project(project), m_isDone(false), m_filesLoaded(false)
 {
@@ -67,7 +67,7 @@ GotoFileDlg::~GotoFileDlg() {
 void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 	if (!m_filesLoaded && m_project.HasProject()) {
 		if (m_dirStack.empty()) {
-			const wxString path = m_project.GetProject().GetPath();
+			const wxString path = m_project.GetRoot().GetPath();
 			m_files.reserve(100);
 
 			BuildFileList(path);
@@ -86,7 +86,7 @@ void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 			while (cont) {
 				const wxString fulldirname = dirState.prefix + dirState.nextDirName;
 
-				if (!dirState.filter || ProjectPane::MatchFilter(dirState.nextDirName, dirState.filter->includeDirs, dirState.filter->excludeDirs)) {
+				if (!dirState.filter || ProjectInfoHandler::MatchFilter(dirState.nextDirName, dirState.filter->includeDirs, dirState.filter->excludeDirs)) {
 					wxLogDebug(fulldirname);
 					BuildFileList(fulldirname);
 					break;
@@ -144,7 +144,7 @@ void GotoFileDlg::BuildFileList(const wxString& path) {
 	int style = wxDIR_FILES;
 	bool cont = dirState->dir.GetFirst(&eachFilename, wxEmptyString, style);
 	while (cont) {
-		if (!dirState->filter || ProjectPane::MatchFilter(eachFilename, dirState->filter->includeFiles, dirState->filter->excludeFiles)) {
+		if (!dirState->filter || ProjectInfoHandler::MatchFilter(eachFilename, dirState->filter->includeFiles, dirState->filter->excludeFiles)) {
 			m_files.push_back(new FileEntry(dirState->prefix, eachFilename));
 		}
 

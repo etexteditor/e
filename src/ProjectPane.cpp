@@ -1013,7 +1013,7 @@ void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {
 
 	// Remove empty files
 	if (path.FileExists()) wxRemoveFile(filepath);
-	if (!projectInfo.hasFilters && projectInfo.env.empty() && projectInfo.triggers.empty()) return;
+	if (projectInfo.IsEmpty()) return;
 
 	EasyPlistWriter eprj;
 

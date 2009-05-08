@@ -55,6 +55,10 @@ public:
 		env.clear();
 	};
 
+	bool IsEmpty() const {
+		return hasFilters || !env.empty() || !triggers.empty();
+	}
+
 	bool isRoot;
 	wxString path;
 	bool hasFilters;

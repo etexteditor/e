@@ -1,7 +1,14 @@
 #ifndef __EASYPLISTWRITER_H__
 #define __EASYPLISTWRITER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+/* Easy Plist Writer
+
+This class provides a wrapper around TinyXML for generating non-bundle-item PLists.
+It is used to store .eprj (E Project) files, and was extracted from code in ProjectPane.
+
+*/
+
+#include "wx/wxprec.h"
 
 #ifndef WX_PRECOMP
 	#include <wx/arrstr.h>

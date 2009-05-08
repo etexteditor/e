@@ -96,7 +96,6 @@ public:
 	virtual bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const;
 	void SaveProjectInfo(const cxProjectInfo& projectInfo) const;
 	void SaveCurrentProjectInfo() const {SaveProjectInfo(m_projectInfo);};
-	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
 
 #ifdef __WXMSW__
 	WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);
@@ -125,6 +124,8 @@ private:
 	static bool GetDefaultIcon(wxIcon &icon);
 	void WatchTree(const wxString &path);
 #endif
+	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
+
 	void Init();
 
 	void ExpandDir(wxTreeItemId parentId);

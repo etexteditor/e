@@ -19,6 +19,8 @@
    #include <wx/wx.h>
 #endif
 
+#include "wx/filename.h"
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(disable:4786)
@@ -32,76 +34,16 @@ using namespace std;
 
 class cxProjectInfo {
 public:
-	cxProjectInfo(): isRoot(false), hasFilters(false) {};
-	cxProjectInfo(const cxProjectInfo& info) {
-		isRoot = info.isRoot;
-		hasFilters = info.hasFilters;
-		path = info.path;
-		includeDirs = info.includeDirs;
-		excludeDirs = info.excludeDirs;
-		includeFiles = info.includeFiles;
-		excludeFiles = info.excludeFiles;
-		env = info.env;
-	};
+	cxProjectInfo();
+	cxProjectInfo(const cxProjectInfo& info);
 
-	void Clear() {
-		isRoot = false;
-		hasFilters = false;
-		path.clear();
-		includeDirs.Empty();
-		excludeDirs.Empty();
-		includeFiles.Empty();
-		excludeFiles.Empty();
-		env.clear();
-	};
+	void Clear();
+	bool Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo);
 
-	bool IsEmpty() const {
-		return hasFilters || !env.empty() || !triggers.empty();
-	};
+	bool IsEmpty() const;
 
-	bool IsFileIncluded(const wxString& file_name) const {
-		if (!includeFiles.IsEmpty()) {
-			bool doInclude = false;
-			for (unsigned int i = 0; i < includeFiles.GetCount(); ++i) {
-				if (wxMatchWild(includeFiles[i], file_name, false)) {
-					doInclude = true;
-					break;
-				}
-			}
-
-			if (!doInclude) return false;
-		}
-
-		for (unsigned int i = 0; i < excludeFiles.GetCount(); ++i) {
-			if (wxMatchWild(excludeFiles[i], file_name, false)) {
-				return false;
-			}
-		}
-
-		return true;
-	};
-
-	bool IsDirectoryIncluded(const wxString& dir_name) const {
-		if (!includeFiles.IsEmpty()) {
-			bool doInclude = false;
-			for (unsigned int i = 0; i < includeDirs.GetCount(); ++i) {
-				if (wxMatchWild(includeDirs[i], dir_name, false)) {
-					doInclude = true;
-					break;
-				}
-			}
-
-			if (!doInclude) return false;
-		}
-
-		for (unsigned int i = 0; i < excludeFiles.GetCount(); ++i) {
-			if (wxMatchWild(excludeDirs[i], dir_name, false)) {
-				return false;
-			}
-		}
-
-		return true;
-	};
+	bool IsFileIncluded(const wxString& file_name) const;
+	bool IsDirectoryIncluded(const wxString& dir_name) const;
 
 	bool isRoot;
 	wxString path;

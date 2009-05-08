@@ -2496,6 +2496,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ProjectInfo.cpp"
+			>
+		</File>
+		<File
 			RelativePath="ProjectInfo.h"
 			>
 		</File>

@@ -21,7 +21,7 @@
 
 class GotoFileDlg : public wxDialog {
 public:
-	GotoFileDlg(wxWindow *parent, ProjectPane& project);
+	GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project);
 	~GotoFileDlg();
 
 	const wxString& GetSelection() const {return m_cmdList->GetSelectedAction()->path;};
@@ -104,7 +104,7 @@ private:
 	};
 
 	// Member variables
-	ProjectPane& m_project;
+	ProjectInfoHandler& m_project;
 	vector<FileEntry*> m_files;
 	bool m_isDone;
 

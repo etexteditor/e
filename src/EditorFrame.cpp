@@ -2688,7 +2688,7 @@ void EditorFrame::OnMenuGotoFile(wxCommandEvent& WXUNUSED(event)) {
 	wxASSERT(editorCtrl);
 
 	if (m_projectPane->HasProject()) {
-		GotoFileDlg dlg(this, *m_projectPane);
+		GotoFileDlg dlg(this, m_projectPane->GetInfoHandler());
 
 		if (dlg.ShowModal() == wxID_OK) {
 			OpenFile(dlg.GetSelection());

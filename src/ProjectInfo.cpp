@@ -27,7 +27,7 @@ void cxProjectInfo::Clear() {
 };
 
 bool cxProjectInfo::IsEmpty() const {
-	return hasFilters || !env.empty() || !triggers.empty();
+	return !hasFilters && env.empty() && triggers.empty();
 };
 
 bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {

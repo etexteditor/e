@@ -15,7 +15,7 @@ cxProjectInfo::cxProjectInfo(const cxProjectInfo& info) {
 	includeFiles = info.includeFiles;
 	excludeFiles = info.excludeFiles;
 	env = info.env;
-};
+}
 
 void cxProjectInfo::Clear() {
 	isRoot = false;
@@ -26,11 +26,11 @@ void cxProjectInfo::Clear() {
 	includeFiles.Empty();
 	excludeFiles.Empty();
 	env.clear();
-};
+}
 
 bool cxProjectInfo::IsEmpty() const {
 	return !hasFilters && env.empty() && triggers.empty();
-};
+}
 
 bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
 	if (!includeFiles.IsEmpty()) {
@@ -52,7 +52,7 @@ bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
 	}
 
 	return true;
-};
+}
 
 bool cxProjectInfo::IsDirectoryIncluded(const wxString& dir_name) const {
 	if (!includeFiles.IsEmpty()) {
@@ -74,7 +74,7 @@ bool cxProjectInfo::IsDirectoryIncluded(const wxString& dir_name) const {
 	}
 
 	return true;
-};
+}
 
 
 bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters) {

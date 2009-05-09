@@ -29,8 +29,6 @@
 #include <wx/tokenzr.h>
 #include <wx/artprov.h>
 
-#include "EasyPlistWriter.h"
-
 #ifdef __WXMSW__
     #pragma warning(push, 1)
 #endif
@@ -895,62 +893,9 @@ bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProj
 	return projectInfo.Load(m_prjPath, path, onlyFilters);
 }
 
-void ProjectPane::SaveProjectInfo(const cxProjectInfo& projectInfo) const {
-	wxFileName path(projectInfo.path, wxEmptyString);
-	path.SetFullName(wxT(".eprj"));
-	const wxString filepath = path.GetFullPath();
-
-	// Remove empty files
-	if (path.FileExists()) wxRemoveFile(filepath);
-	if (projectInfo.IsEmpty()) return;
-
-	EasyPlistWriter eprj;
-
-	// Filters
-	if (projectInfo.hasFilters) {
-		TiXmlElement *filterDict = eprj.AddDict(NULL, "filters");
-		eprj.AddList(filterDict, "excludeDirs", projectInfo.excludeDirs);
-		eprj.AddList(filterDict, "excludeFiles", projectInfo.excludeFiles);
-		eprj.AddList(filterDict, "includeDirs", projectInfo.includeDirs);
-		eprj.AddList(filterDict, "includeFiles", projectInfo.includeFiles);
-	}
-
-	// Environment variables
-	if (!projectInfo.env.empty()) {
-		TiXmlElement* envDict = eprj.AddDict(NULL, "environment");
-
-		for (map<wxString,wxString>::const_iterator p = projectInfo.env.begin(); p != projectInfo.env.end(); ++p) {
-			if (!p->first.empty()) {
-				eprj.AddString(envDict, p->first.mb_str(wxConvUTF8), p->second.mb_str(wxConvUTF8));
-			}
-		}
-	}
-
-	// GotoFile triggers
-	if (!projectInfo.triggers.empty()) {
-		TiXmlElement* trigDict = eprj.AddDict(NULL, "fileTriggers");
-
-		for (map<wxString,wxString>::const_iterator p = projectInfo.triggers.begin(); p != projectInfo.triggers.end(); ++p) {
-			if (!p->first.empty()) {
-				wxFileName path(p->second);
-				path.MakeRelativeTo(m_prjPath.GetPath());
-
-				eprj.AddString(trigDict, p->first.mb_str(wxConvUTF8), path.GetFullPath().mb_str(wxConvUTF8));
-			}
-		}
-	}
-
-	eprj.Save(filepath);
-
-#ifdef __WXMSW__
-	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());
-	::SetFileAttributes(filepath.c_str(), dwAttrs | FILE_ATTRIBUTE_HIDDEN);
-#endif //__WXMSW__
-}
-
 void ProjectPane::SetTrigger(const wxString& trigger, const wxString& path) {
 	m_projectInfo.triggers[trigger] = path;
-	SaveCurrentProjectInfo();
+	m_projectInfo.Save(m_prjPath.GetPath());
 }
 
 void ProjectPane::ClearTrigger(const wxString& trigger) {
@@ -1828,7 +1773,7 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 	if (dlg.ShowModal() == wxID_OK && dlg.IsModified()) {
 		wxLogDebug(wxT("projectInfo ok and modified"));
 		dlg.GetSettings(currentInfo);
-		SaveProjectInfo(currentInfo);
+		currentInfo.Save(m_prjPath.GetPath());
 		RefreshDirs();
 	}
 }

@@ -1,6 +1,8 @@
 #include "ProjectInfo.h"
-#include "tinyxml.h"
 #include <wx/ffile.h>
+
+#include "tinyxml.h"
+#include "EasyPlistWriter.h"
 
 cxProjectInfo::cxProjectInfo(): isRoot(false), hasFilters(false) {};
 
@@ -186,4 +188,57 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 
 	if (onlyFilters && !this->hasFilters) return false;
 	return true;
+}
+
+void cxProjectInfo::Save(const wxString& rootPath) const {
+	wxFileName path(this->path, wxEmptyString);
+	path.SetFullName(wxT(".eprj"));
+	const wxString filepath = path.GetFullPath();
+
+	// Remove empty files
+	if (path.FileExists()) wxRemoveFile(filepath);
+	if (this->IsEmpty()) return;
+
+	EasyPlistWriter eprj;
+
+	// Filters
+	if (this->hasFilters) {
+		TiXmlElement *filterDict = eprj.AddDict(NULL, "filters");
+		eprj.AddList(filterDict, "excludeDirs", this->excludeDirs);
+		eprj.AddList(filterDict, "excludeFiles", this->excludeFiles);
+		eprj.AddList(filterDict, "includeDirs", this->includeDirs);
+		eprj.AddList(filterDict, "includeFiles", this->includeFiles);
+	}
+
+	// Environment variables
+	if (!this->env.empty()) {
+		TiXmlElement* envDict = eprj.AddDict(NULL, "environment");
+
+		for (map<wxString,wxString>::const_iterator p = this->env.begin(); p != this->env.end(); ++p) {
+			if (!p->first.empty()) {
+				eprj.AddString(envDict, p->first.mb_str(wxConvUTF8), p->second.mb_str(wxConvUTF8));
+			}
+		}
+	}
+
+	// GotoFile triggers
+	if (!this->triggers.empty()) {
+		TiXmlElement* trigDict = eprj.AddDict(NULL, "fileTriggers");
+
+		for (map<wxString,wxString>::const_iterator p = this->triggers.begin(); p != this->triggers.end(); ++p) {
+			if (!p->first.empty()) {
+				wxFileName path(p->second);
+				path.MakeRelativeTo(rootPath);
+
+				eprj.AddString(trigDict, p->first.mb_str(wxConvUTF8), path.GetFullPath().mb_str(wxConvUTF8));
+			}
+		}
+	}
+
+	eprj.Save(filepath);
+
+#ifdef __WXMSW__
+	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());
+	::SetFileAttributes(filepath.c_str(), dwAttrs | FILE_ATTRIBUTE_HIDDEN);
+#endif //__WXMSW__
 }

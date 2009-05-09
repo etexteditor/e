@@ -82,8 +82,6 @@ public:
 
 	// Utility functions
 	virtual bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const;
-	void SaveProjectInfo(const cxProjectInfo& projectInfo) const;
-	void SaveCurrentProjectInfo() const {SaveProjectInfo(m_projectInfo);};
 
 #ifdef __WXMSW__
 	WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);

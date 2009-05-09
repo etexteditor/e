@@ -215,8 +215,8 @@ void cxProjectInfo::Save(const wxString& rootPath) const {
 		TiXmlElement* envDict = eprj.AddDict(NULL, "environment");
 
 		for (map<wxString,wxString>::const_iterator p = this->env.begin(); p != this->env.end(); ++p) {
-			if (p->first.empty()) continue;
-			eprj.AddString(envDict, p->first.mb_str(wxConvUTF8), p->second.mb_str(wxConvUTF8));
+			if (!p->first.empty())
+				eprj.AddString(envDict, p->first.mb_str(wxConvUTF8), p->second.mb_str(wxConvUTF8));
 		}
 	}
 

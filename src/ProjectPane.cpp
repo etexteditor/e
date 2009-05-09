@@ -863,29 +863,31 @@ bool ProjectPane::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, 
 void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
 	wxFileName dirPath(path, wxEmptyString);
 
-	//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
+	while(1) // the first if will eventually be true as we walk up the directory tree
+	{
+		//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
 
-	if (m_prjPath == dirPath) {
-		// Return root filters
-		incDirs = m_projectInfo.includeDirs;
-		excDirs = m_projectInfo.excludeDirs;
-		incFiles = m_projectInfo.includeFiles;
-		excFiles = m_projectInfo.excludeFiles;
-		return;
+		if (m_prjPath == dirPath) {
+			// Return root filters
+			incDirs = m_projectInfo.includeDirs;
+			excDirs = m_projectInfo.excludeDirs;
+			incFiles = m_projectInfo.includeFiles;
+			excFiles = m_projectInfo.excludeFiles;
+			return;
+		}
+
+		cxProjectInfo info;
+		if (LoadProjectInfo(dirPath.GetPath(), true, info)) {
+			incDirs = info.includeDirs;
+			excDirs = info.excludeDirs;
+			incFiles = info.includeFiles;
+			excFiles = info.excludeFiles;
+			return;
+		}
+
+		// See if we can inherit filters from parent
+		dirPath.RemoveLastDir();
 	}
-
-	cxProjectInfo info;
-	if (LoadProjectInfo(dirPath.GetPath(), true, info)) {
-		incDirs = info.includeDirs;
-		excDirs = info.excludeDirs;
-		incFiles = info.includeFiles;
-		excFiles = info.excludeFiles;
-		return;
-	}
-
-	// See if we can inherit filters from parent
-	dirPath.RemoveLastDir();
-	GetFilters(dirPath.GetPath(), incDirs, excDirs, incFiles, excFiles);
 }
 
 bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {

@@ -1861,7 +1861,7 @@ void ProjectPane::WatchTree(const wxString &path) {
 	wxArrayString excludeDirs;
 	wxArrayString includeFiles;
 	wxArrayString excludeFiles;
-	GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
+	m_infoHandler.GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
 
 	// Get all subdirs
 	wxString CurrentDir;
@@ -1870,7 +1870,7 @@ void ProjectPane::WatchTree(const wxString &path) {
 		do {
 			if (eDocumentPath::IsDotDirectory(CurrentDir)) continue;
 
-			if (MatchFilter(CurrentDir, includeDirs, excludeDirs)) {
+			if (ProjectInfoHandler::MatchFilter(CurrentDir, includeDirs, excludeDirs)) {
 				// watch dir and all subdirs
 				wxString FullPath = path + wxT("/") + CurrentDir;
 				m_parentFrame.GetDirWatcher().WatchDirectory(FullPath, *this, true);

@@ -55,6 +55,10 @@ class StatusBar;
 class DirWatcher;
 class FindInProjectDlg;
 
+#ifdef __WXMSW__
+class wxIEHtmlWin;
+#endif
+
 // Menu id's
 enum {
 	MENU_OPENPROJECT,

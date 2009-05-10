@@ -159,6 +159,10 @@ void EditorBundlePanel::Init() {
 	m_editorCtrl->SetBundlePanel(this);
 }
 
+EditorCtrl* EditorBundlePanel::GetEditor() {
+	return m_editorCtrl; // Downcast
+}
+
 bool EditorBundlePanel::Show(bool show) {
 	// When hiding, we want to hide panel first to avoid flicker
 	bool result = false;

@@ -41,7 +41,7 @@ public:
 	EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 	EditorBundlePanel(int page_id, wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 
-	EditorCtrl* GetEditor() {return (EditorCtrl*)m_editorCtrl;}; // Downcast.
+	EditorCtrl* GetEditor();
 	
 	void UpdatePanel();
 

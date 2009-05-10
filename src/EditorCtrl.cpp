@@ -6326,13 +6326,20 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					const unsigned int currentLine = m_lines.GetCurrentLine();
 					const unsigned int indentPos = GetLineIndentPos(currentLine);
 
-					if (oldpos <= indentPos) {
-						// Move to start-of-line
-						m_lines.SetPos(m_lines.GetLineStartpos(currentLine));
-					}
-					else {
+					if (indentPos < oldpos) {
 						// Move to first text after indentation
 						m_lines.SetPos(indentPos);
+					}
+					else {
+						const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
+						if (oldpos == startOfLine) {
+							// Move back to text after indentation
+							m_lines.SetPos(indentPos);
+						}
+						else {
+							// Move to start-of-line
+							m_lines.SetPos(startOfLine);
+						}
 					}
 
 					// Handle selection

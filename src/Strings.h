@@ -3,6 +3,8 @@
 
 #include "wx/arrstr.h"
 
+int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2);
+
 // Back-port of wxJoin and wxSplit from newer versions of wxWidgets
 
 // ----------------------------------------------------------------------------

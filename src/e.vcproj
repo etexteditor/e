@@ -2648,6 +2648,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ProjectInfoHandler.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ProjectInfoHandler.h"
+			>
+		</File>
+		<File
 			RelativePath="ProjectPane.cpp"
 			>
 			<FileConfiguration

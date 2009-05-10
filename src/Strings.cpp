@@ -1,10 +1,15 @@
 #include "Strings.h"
+#include "wx/tokenzr.h"
+
+int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
+{
+    return s1->CmpNoCase(*s2);
+}
+
 
 // ===========================================================================
 // wxJoin and wxSplit
 // ===========================================================================
-
-#include "wx/tokenzr.h"
 
 wxString wxJoin(const wxArrayString& arr, const wxChar sep, const wxChar escape)
 {

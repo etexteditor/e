@@ -13,7 +13,6 @@
 
 #include "EditorBundlePanel.h"
 #include "EditorCtrl.h"
-#include "tm_syntaxhandler.h"
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
 #include <wx/stattext.h>

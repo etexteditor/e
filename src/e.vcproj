@@ -2722,6 +2722,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\RecursiveCriticalSection.h"
+			>
+		</File>
+		<File
 			RelativePath="RemoteThread.cpp"
 			>
 			<FileConfiguration

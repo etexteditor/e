@@ -2870,6 +2870,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ShortcutCtrl.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ShortcutCtrl.h"
+			>
+		</File>
+		<File
 			RelativePath="SnippetHandler.cpp"
 			>
 			<FileConfiguration

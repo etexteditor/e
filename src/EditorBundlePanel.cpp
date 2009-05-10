@@ -16,6 +16,7 @@
 #include "tm_syntaxhandler.h"
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
+#include "ShortcutCtrl.h"
 
 IMPLEMENT_DYNAMIC_CLASS(EditorBundlePanel, wxPanel)
 
@@ -643,49 +644,4 @@ void EditorBundlePanel::OnChildFocus(wxChildFocusEvent& event) {
 	// editorCtrl, focus will shift to another ctrl and the event propagate
 	// to AUI Notebook (switching selection back to the previous tab).
 	if (IsShown()) wxPanel::OnChildFocus(event);
-}
-
-// ----- ShortcutField -----------------------------------------------
-
-EditorBundlePanel::ShortcutCtrl::ShortcutCtrl(wxWindow* parent, wxWindowID id) {
-	Create(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY|wxTE_CENTRE);
-    RegisterKeyHook(); // TextCtrl isn't automatically hooked, hook now
-}
-
-void EditorBundlePanel::ShortcutCtrl::Clear() {
-	m_binding.clear();
-	wxTextCtrl::Clear();
-}
-
-void EditorBundlePanel::ShortcutCtrl::SetKey(const wxString& binding) {
-	m_binding = binding;
-
-	const tmKey key(binding);
-	ChangeValue(key.shortcut);
-}
-
-bool EditorBundlePanel::ShortcutCtrl::OnPreKeyDown(wxKeyEvent& event) {
-	int id = event.GetKeyCode();
-
-	// Ignore initial presses on modifier key
-	if (id != WXK_SHIFT &&
-		id != WXK_ALT &&
-		id != WXK_CONTROL &&
-		id != WXK_WINDOWS_LEFT &&
-		id != WXK_WINDOWS_RIGHT)
-	{	
-		int modifiers = event.GetModifiers();
-#if __WXMSW
-		if (HIWORD(event.m_rawFlags) & KF_EXTENDED) modifiers |= 0x0010; // Extended (usually keypad)
-#endif
-		tmKey key(id, modifiers);
-
-		SetValue(key.shortcut);
-
-		m_binding = key.getBinding();
-		wxLogDebug(wxT("Binding: %s"), m_binding.c_str());
-		return true;
-	}
-
-	return false;
 }

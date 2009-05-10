@@ -52,21 +52,6 @@ private:
 
 	void UpdateSelector(BundleItemType type, const DocumentWrapper& dw);
 
-	class ShortcutCtrl : public KeyHookable<wxTextCtrl> {
-	public:
-		ShortcutCtrl(wxWindow* parent, wxWindowID id=wxID_ANY);
-		void Clear();
-		bool IsEmpty() const {return m_binding.empty();};
-
-		void SetKey(const wxString& binding);
-		const wxString& GetBinding() const {return m_binding;};
-
-		virtual bool OnPreKeyDown(wxKeyEvent& event);
-
-	private:
-		wxString m_binding;
-	};
-
 	// Event handlers
 	void OnChoice(wxCommandEvent& event);
 	void OnTriggerChoice(wxCommandEvent& event);

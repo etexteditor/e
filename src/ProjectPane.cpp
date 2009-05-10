@@ -266,7 +266,7 @@ void ProjectPane::Init() {
 
 	// Load project info (if available)
 	m_projectInfo.Clear();
-	LoadProjectInfo(strpath, false, m_projectInfo);
+	if (!m_isRemote) LoadProjectInfo(strpath, false, m_projectInfo);
 
 	// Always start with root expanded
 	Freeze();
@@ -875,7 +875,7 @@ void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArr
 		}
 
 		cxProjectInfo info;
-		if (LoadProjectInfo(dirPath.GetPath(), true, info)) {
+		if (!m_isRemote && LoadProjectInfo(dirPath.GetPath(), true, info)) {
 			incDirs = info.includeDirs;
 			excDirs = info.excludeDirs;
 			incFiles = info.includeFiles;

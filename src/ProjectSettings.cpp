@@ -116,7 +116,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 
 	// Load filters
-	if (project.hasFilters || project.IsRoot()) {
+	if (project.HasFilters() || project.IsRoot()) {
 		unsigned int i = 0;
 		for (i = 0; i < project.includeDirs.GetCount(); ++i) {
 			if (i) m_includeDirs->AppendText(wxT("\n"));
@@ -179,7 +179,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 }
 
 bool ProjectSettings::IsModified() const {
-	if (m_inheritCheck->GetValue() == m_projectInfo.hasFilters) return true;
+	if (m_inheritCheck->GetValue() == m_projectInfo.HasFilters()) return true;
 	if (m_includeDirs->IsModified()) return true;
 	if (m_excludeDirs->IsModified()) return true;
 	if (m_includeFiles->IsModified()) return true;
@@ -191,15 +191,9 @@ bool ProjectSettings::IsModified() const {
 }
 
 void ProjectSettings::GetSettings(cxProjectInfo& project) const {
-	project.includeDirs.Empty();
-	project.excludeDirs.Empty();
-	project.includeFiles.Empty();
-	project.excludeFiles.Empty();
+	project.ClearFilters();
 
-	if (m_inheritCheck->GetValue()) {
-		project.hasFilters = false;
-	}
-	else {
+	if (!m_inheritCheck->GetValue()) {
 		project.hasFilters = true;
 
 		wxStringTokenizer tokens(m_includeDirs->GetValue(), wxT("\n"));

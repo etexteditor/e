@@ -39,6 +39,7 @@ public:
 	cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters);
 
 	void Clear();
+	void ClearFilters();
 
 	bool Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters);
 	void Save(const wxString& rootPath) const;
@@ -49,15 +50,17 @@ public:
 	bool IsDirectoryIncluded(const wxString& dir_name) const;
 
 	bool IsRoot() const { return isRoot; }
+	bool HasFilters() const { return hasFilters; }
 
 	wxString path;
-	bool hasFilters;
 	wxArrayString includeDirs;
 	wxArrayString excludeDirs;
 	wxArrayString includeFiles;
 	wxArrayString excludeFiles;
 	map<wxString, wxString> env;
 	map<wxString, wxString> triggers;
+
+	bool hasFilters;
 
 private:
 	bool isRoot;

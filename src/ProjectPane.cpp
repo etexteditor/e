@@ -1697,7 +1697,7 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 
 	// Load inherited filters
 	cxProjectInfo pInfo;
-	if (!currentInfo.hasFilters && path != m_prjPath) {
+	if (!currentInfo.HasFilters() && path != m_prjPath) {
 		path.RemoveLastDir();
 		m_infoHandler.GetFilters(path.GetPath(), pInfo.includeDirs, pInfo.excludeDirs, pInfo.includeFiles, pInfo.excludeFiles);
 	}

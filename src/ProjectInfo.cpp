@@ -28,6 +28,14 @@ void cxProjectInfo::Clear() {
 	env.clear();
 }
 
+void cxProjectInfo::ClearFilters() {
+	includeDirs.Empty();
+	excludeDirs.Empty();
+	includeFiles.Empty();
+	excludeFiles.Empty();
+	hasFilters = false;
+}
+
 cxProjectInfo::cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters) {
 	this->Load(rootPath, path, onlyFilters);
 }

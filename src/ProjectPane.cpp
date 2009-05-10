@@ -2047,8 +2047,6 @@ bool ProjectInfoHandler::GetDirAndFileLists(const wxString& path, wxArrayString&
 void ProjectInfoHandler::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
 	wxFileName dirPath(path, wxEmptyString);
 
-	//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
-
 	while(1) {
 	if (m_prjPath == dirPath) {
 		// Return root filters
@@ -2061,7 +2059,7 @@ void ProjectInfoHandler::GetFilters(const wxString& path, wxArrayString& incDirs
 
 	cxProjectInfo info;
 	
-	if (info.Load(m_prjPath, dirPath.GetPath(), true) /*LoadProjectInfo(dirPath.GetPath(), true, info)*/) {
+	if (info.Load(m_prjPath, dirPath.GetPath(), true)) {
 		incDirs = info.includeDirs;
 		excDirs = info.excludeDirs;
 		incFiles = info.includeFiles;
@@ -2071,7 +2069,6 @@ void ProjectInfoHandler::GetFilters(const wxString& path, wxArrayString& incDirs
 
 	// See if we can inherit filters from parent
 	dirPath.RemoveLastDir();
-//	GetFilters(dirPath.GetPath(), incDirs, excDirs, incFiles, excFiles);
 	}
 }
 

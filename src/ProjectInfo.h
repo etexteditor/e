@@ -62,10 +62,9 @@ public:
 	map<wxString, wxString> env;
 	map<wxString, wxString> triggers;
 
-	bool hasFilters;
-
 private:
 	bool isRoot;
+	bool hasFilters;
 };
 
 #endif // __PROJECTINFO_H__

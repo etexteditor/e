@@ -15,7 +15,6 @@
 #include "EditorCtrl.h"
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
-#include <wx/stattext.h>
 #include "ShortcutCtrl.h"
 
 IMPLEMENT_DYNAMIC_CLASS(EditorBundlePanel, wxPanel)

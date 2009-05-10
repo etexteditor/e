@@ -19,20 +19,18 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/panel.h>
-	#include <wx/choice.h>
-	#include <wx/sizer.h>
+	#include <wx/wx.h>
 #endif
 
 // Pre-definitions
 class wxStaticLine;
+
 class EditorFrame;
 class EditorCtrl;
 class BundleItemEditorCtrl;
 class CatalystWrapper;
 class DocumentWrapper;
 class ShortcutCtrl;
-class wxStaticText;
 
 class EditorBundlePanel : public wxPanel {
 public:

@@ -292,16 +292,15 @@ void ProjectPane::Init() {
 
 wxArrayString ProjectPane::GetSelections() const {
 	wxArrayTreeItemIds items;
-	if (m_prjTree->GetSelections(items)) {
-		wxArrayString selections;
-		for (unsigned int i = 0; i < items.GetCount(); ++i) {
-			const DirItemData *data = (DirItemData*)m_prjTree->GetItemData( items[i] );
-			selections.Add(data->m_path);
-		}
+	if (!m_prjTree->GetSelections(items)) return wxArrayString();
 
-		return selections;
+	wxArrayString selections;
+	for (unsigned int i = 0; i < items.GetCount(); ++i) {
+		const DirItemData *data = (DirItemData*)m_prjTree->GetItemData( items[i] );
+		selections.Add(data->m_path);
 	}
-	else return wxArrayString();
+
+	return selections;
 }
 
 void ProjectPane::OnRemoteListReceived(cxRemoteListEvent& event) {

@@ -266,7 +266,7 @@ void ProjectPane::Init() {
 
 	// Load project info (if available)
 	m_projectInfo.Clear();
-	if (!m_isRemote) LoadProjectInfo(strpath, false, m_projectInfo);
+	if (!m_isRemote) m_projectInfo.Load(m_prjPath, strpath, false);
 
 	// Always start with root expanded
 	Freeze();
@@ -874,7 +874,7 @@ void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArr
 		}
 
 		cxProjectInfo info;
-		if (!m_isRemote && LoadProjectInfo(dirPath.GetPath(), true, info)) {
+		if (!m_isRemote && info.Load(m_prjPath, dirPath.GetPath(), true)) {
 			incDirs = info.includeDirs;
 			excDirs = info.excludeDirs;
 			incFiles = info.includeFiles;
@@ -885,11 +885,6 @@ void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArr
 		// See if we can inherit filters from parent
 		dirPath.RemoveLastDir();
 	}
-}
-
-bool ProjectPane::LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const {
-	if (m_isRemote) return false;
-	return projectInfo.Load(m_prjPath, path, onlyFilters);
 }
 
 void ProjectPane::SetTrigger(const wxString& trigger, const wxString& path) {
@@ -1758,7 +1753,7 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 
 	// Load project settings for current dir
 	cxProjectInfo currentInfo;
-	LoadProjectInfo(path.GetPath(), false, currentInfo);
+	currentInfo.Load(m_prjPath, path.GetPath(), false);
 
 	// Load inherited filters
 	cxProjectInfo pInfo;

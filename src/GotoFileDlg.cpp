@@ -70,7 +70,7 @@ void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 	if (!m_project.HasProject()) return; // No project, so no files to load.
 
 	if (m_dirStack.empty()) {
-		const wxString path = m_project.GetProject().GetPath();
+		const wxString path = m_project.GetRootPath().GetPath();
 		m_files.reserve(100);
 
 		BuildFileList(path);
@@ -127,7 +127,7 @@ void GotoFileDlg::BuildFileList(const wxString& path) {
 
 	// Load filters for this dir
 	dirState->info = new cxProjectInfo;
-	if (m_project.LoadProjectInfo(path, true, *dirState->info)) {
+	if (dirState->info->Load(m_project.GetRootPath(), path, true)) {
 		m_filters.push_back(dirState->info);
 	}
 	else {

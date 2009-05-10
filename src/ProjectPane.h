@@ -64,7 +64,7 @@ public:
 
 	void Clear();
 	virtual bool HasProject() const {return m_prjPath.IsOk();};
-	virtual const wxFileName& GetProject() const {return m_prjPath;};
+	virtual const wxFileName& GetRootPath() const {return m_prjPath;};
 	wxString GetProjectString() const {if (IsRemote()) return m_prjUrl; else return m_prjPath.GetFullPath();};
 	wxArrayString GetSelections() const;
 	const map<wxString,wxString>& GetEnv() const {return m_projectInfo.env;};
@@ -79,9 +79,6 @@ public:
 	virtual const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
 	virtual void SetTrigger(const wxString& trigger, const wxString& path);
 	virtual void ClearTrigger(const wxString& trigger);
-
-	// Utility functions
-	virtual bool LoadProjectInfo(const wxString& path, bool onlyFilters, cxProjectInfo& projectInfo) const;
 
 #ifdef __WXMSW__
 	WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);
@@ -197,7 +194,9 @@ private:
 	bool m_isDestroying;
 	RemoteThread& m_remoteThread;
 	wxTreeCtrl* m_prjTree;
+
 	wxFileName m_prjPath;
+
 	const RemoteProfile* m_remoteProfile;
 	wxString m_prjUrl;
 	cxProjectInfo m_projectInfo;

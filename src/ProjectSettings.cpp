@@ -16,6 +16,7 @@
 #include <wx/notebook.h>
 #include <wx/tokenzr.h>
 #include <wx/grid.h>
+#include "Strings.h"
 
 // ctrl ids
 enum {
@@ -116,49 +117,33 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 
 	// Load filters
+	const cxProjectInfo *projectToLoad = NULL;
+
 	if (project.HasFilters() || project.IsRoot()) {
-		unsigned int i = 0;
-		for (i = 0; i < project.includeDirs.GetCount(); ++i) {
-			if (i) m_includeDirs->AppendText(wxT("\n"));
-			m_includeDirs->AppendText(project.includeDirs[i]);
-		}
-		for (i = 0; i < project.includeFiles.GetCount(); ++i) {
-			if (i) m_includeFiles->AppendText(wxT("\n"));
-			m_includeFiles->AppendText(project.includeFiles[i]);
-		}
-		for (i = 0; i < project.excludeDirs.GetCount(); ++i) {
-			if (i) m_excludeDirs->AppendText(wxT("\n"));
-			m_excludeDirs->AppendText(project.excludeDirs[i]);
-		}
-		for (i = 0; i < project.excludeFiles.GetCount(); ++i) {
-			if (i) m_excludeFiles->AppendText(wxT("\n"));
-			m_excludeFiles->AppendText(project.excludeFiles[i]);
-		}
+		projectToLoad = &project;
 	}
 	else {
-		unsigned int i = 0;
-		for (i = 0; i < parentProject.includeDirs.GetCount(); ++i) {
-			if (i) m_includeDirs->AppendText(wxT("\n"));
-			m_includeDirs->AppendText(parentProject.includeDirs[i]);
-		}
-		for (i = 0; i < parentProject.includeFiles.GetCount(); ++i) {
-			if (i) m_includeFiles->AppendText(wxT("\n"));
-			m_includeFiles->AppendText(parentProject.includeFiles[i]);
-		}
-		for (i = 0; i < parentProject.excludeDirs.GetCount(); ++i) {
-			if (i) m_excludeDirs->AppendText(wxT("\n"));
-			m_excludeDirs->AppendText(parentProject.excludeDirs[i]);
-		}
-		for (i = 0; i < parentProject.excludeFiles.GetCount(); ++i) {
-			if (i) m_excludeFiles->AppendText(wxT("\n"));
-			m_excludeFiles->AppendText(parentProject.excludeFiles[i]);
-		}
+		projectToLoad = &parentProject;
 
 		m_includeDirs->Disable();
 		m_excludeDirs->Disable();
 		m_includeFiles->Disable();
 		m_excludeFiles->Disable();
 		m_inheritCheck->SetValue(true);
+	}
+
+	if (projectToLoad) {
+		const wxString ind = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		m_includeDirs->SetValue(ind);
+
+		const wxString inf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		m_includeFiles->SetValue(inf);
+
+		const wxString exd = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		m_excludeDirs->SetValue(exd);
+
+		const wxString exf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		m_excludeFiles->SetValue(exf);
 	}
 
 	// Load env variables

@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 #include "EditorBundlePanel.h"
-#include "EditorCtrl.h"
+#include "BundleItemEditorCtrl.h"
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
 #include "ShortcutCtrl.h"

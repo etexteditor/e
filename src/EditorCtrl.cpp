@@ -2809,22 +2809,20 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 void EditorCtrl::SetPath(const wxString& newpath) {
 	wxASSERT(!eDocumentPath::IsRemotePath(newpath)); // just to catch a bug
-	
-	if (IsBundleItem()) return; // bundleItem only has remotePath
 
-	if (m_path.GetFullPath() != newpath) {
-		m_path = newpath;
-		wxASSERT(m_path.IsAbsolute());
+	if (m_path.GetFullPath() == newpath) return;
 
-		// Clear the env var cache
-		m_tmFilePath.clear();
-		m_tmDirectory.clear();
+	m_path = newpath;
+	wxASSERT(m_path.IsAbsolute());
 
-		// Set the syntax to match the new path
-		if (m_syntaxstyler.UpdateSyntax()) {
-			// Redraw (since syntax have changed)
-			DrawLayout();
-		}
+	// Clear the env var cache
+	m_tmFilePath.clear();
+	m_tmDirectory.clear();
+
+	// Set the syntax to match the new path
+	if (m_syntaxstyler.UpdateSyntax()) {
+		// Redraw (since syntax for this file has changed)
+		DrawLayout();
 	}
 }
 

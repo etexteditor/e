@@ -49,6 +49,10 @@ bool BundleItemEditorCtrl::SaveText(bool WXUNUSED(askforpath)) {
 	return SaveBundleItem();
 }
 
+void BundleItemEditorCtrl::SetPath(const wxString& WXUNUSED(newpath)) {
+	// Bundles items can't have their path set.
+}
+
 bool BundleItemEditorCtrl::SaveBundleItem() {
 	wxASSERT(IsBundleItem());
 

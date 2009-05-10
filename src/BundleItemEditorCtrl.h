@@ -13,6 +13,7 @@ public:
 
 	virtual const char** RecommendedIcon();
 	virtual bool SaveText(bool askforpath=false);
+	virtual void SetPath(const wxString& newpath);
 
 	bool SaveBundleItem();
 	BundleItemType GetBundleType() const {return m_bundleType;};

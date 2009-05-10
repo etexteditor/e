@@ -166,7 +166,7 @@ public:
 	// Path
 	const wxFileName& GetFilePath() const {return m_path;};
 	const wxString GetPath() const {return (m_remotePath.empty() ? m_path.GetFullPath() : m_remotePath);};
-	void SetPath(const wxString& newpath);
+	virtual void SetPath(const wxString& newpath);
 
 	// Copy/Paste
 	void OnCopy();

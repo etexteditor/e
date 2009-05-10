@@ -41,6 +41,15 @@
 #include "eSettings.h"
 #include "IAppPaths.h"
 
+// Document Icons
+#include "document.xpm"
+#include "images/tmCommand.xpm"
+#include "images/tmSnippet.xpm"
+#include "images/tmDragCmd.xpm"
+#include "images/tmPrefs.xpm"
+#include "images/tmLanguage.xpm"
+
+
 // Embedded class: Sort list based on bundle
 class CompareActionBundle : public binary_function<size_t, size_t, bool> {
 public:
@@ -434,6 +443,10 @@ EditorCtrl::~EditorCtrl() {
 	}
 
 	ClearRemoteInfo();
+}
+
+const char** EditorCtrl::RecommendedIcon() {
+	return document_xpm;
 }
 
 void EditorCtrl::ClearRemoteInfo() {
@@ -9486,3 +9499,27 @@ BundleItemEditorCtrl::BundleItemEditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap
 	EditorCtrl(cw, bitmap, parent, parentFrame, pos, size){}
 
 BundleItemEditorCtrl::~BundleItemEditorCtrl(){}
+
+const char** BundleItemEditorCtrl::RecommendedIcon() {
+	switch (GetBundleType()) {
+		case BUNDLE_COMMAND:
+			return tmcommand_xpm;
+
+		case BUNDLE_DRAGCMD:
+			return tmdragcmd_xpm;
+
+		case BUNDLE_SNIPPET:
+			return tmsnippet_xpm;
+
+		case BUNDLE_PREF:
+			return tmprefs_xpm;
+
+		case BUNDLE_LANGUAGE: 
+			return tmlanguage_xpm;
+
+		default: wxASSERT(false);
+	}
+
+	return document_xpm;
+}
+

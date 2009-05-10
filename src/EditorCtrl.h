@@ -148,6 +148,7 @@ public:
 	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
 	// Bundle Editing
+	virtual const char** RecommendedIcon();
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
 	BundleItemType GetBundleType() const {return m_bundleType;};
 	bool CheckBundleItemModified() const;
@@ -699,6 +700,8 @@ public:
 	BundleItemEditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 
 	virtual ~BundleItemEditorCtrl();
+
+	virtual const char** RecommendedIcon();
 };
 
 #endif // __EDITORCTRL_H__

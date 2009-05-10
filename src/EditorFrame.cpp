@@ -71,14 +71,6 @@
     #endif
 #endif
 
-// Images
-#include "document.xpm"
-#include "images/tmCommand.xpm"
-#include "images/tmSnippet.xpm"
-#include "images/tmDragCmd.xpm"
-#include "images/tmPrefs.xpm"
-#include "images/tmLanguage.xpm"
-
 // ctrl id's
 enum {
 	CTRL_TABBAR=100
@@ -1221,18 +1213,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	//if (editorCtrl) editorCtrl->EnableRedraw(false);
 	
 	// Get tab icon
-	wxBitmap tabIcon;
-	if (ec->IsBundleItem()) {
-		switch (ec->GetBundleType()) {
-			case BUNDLE_COMMAND:  tabIcon = wxBitmap(tmcommand_xpm); break;
-			case BUNDLE_DRAGCMD:  tabIcon = wxBitmap(tmdragcmd_xpm); break;
-			case BUNDLE_SNIPPET:  tabIcon = wxBitmap(tmsnippet_xpm); break;
-			case BUNDLE_PREF:     tabIcon = wxBitmap(tmprefs_xpm); break;
-			case BUNDLE_LANGUAGE: tabIcon = wxBitmap(tmlanguage_xpm); break;
-			default: wxASSERT(false);
-		}
-	}
-	else tabIcon = wxBitmap(document_xpm);
+	wxBitmap tabIcon = wxBitmap(ec->RecommendedIcon());
 	
 	ec->EnableRedraw(true);
 	editorCtrl = ec;

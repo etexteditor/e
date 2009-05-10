@@ -28,13 +28,13 @@ using namespace std;
 // pre-definitions
 class EditorFrame;
 class MMapBuffer;
-class ProjectPane;
+class ProjectInfoHandler;
 class wxFileName;
 class ProjectInfoHandler;
 
 class FindInProjectDlg : public wxDialog {
 public:
-	FindInProjectDlg(EditorFrame& parentFrame, const ProjectPane& projectPane);
+	FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHandler& projectPane);
 	~FindInProjectDlg();
  
 private:
@@ -112,7 +112,7 @@ private:
 
 	// member variables
 	EditorFrame& m_parentFrame;
-	const ProjectPane& m_projectPane;
+	const ProjectInfoHandler& m_projectPane;
 	SearchThread* m_searchThread;
 	wxString m_output;
 };

@@ -2940,6 +2940,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Strings.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Strings.h"
+			>
+		</File>
+		<File
 			RelativePath="styler.h"
 			>
 		</File>

@@ -1401,9 +1401,9 @@ bool EditorFrame::IsProjectRemote() const {
 	return m_projectPane->IsRemote();
 }
 
-const wxFileName& EditorFrame::GetProject() const {
+const wxFileName& EditorFrame::GetRootPath() const {
 	wxASSERT(m_projectPane);
-	return m_projectPane->GetProject();
+	return m_projectPane->GetRootPath();
 }
 
 wxArrayString EditorFrame::GetSelectionsInProject() const {
@@ -1946,7 +1946,7 @@ bool EditorFrame::AskToSaveMulti(int keep_tab) {
 void EditorFrame::SaveAllFilesInProject() {
 	if (!HasProject()) return;
 
-	const wxString projectPath = GetProject().GetFullPath();
+	const wxString projectPath = GetRootPath().GetFullPath();
 
 	// Save all files that are modified and in current project
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
@@ -2257,7 +2257,7 @@ wxString EditorFrame::GetSaveDir() const {
 
 	// Else current project
 	if (HasProject() && !IsProjectRemote()) {
-		const wxFileName& projectPath = m_projectPane->GetProject();
+		const wxFileName& projectPath = m_projectPane->GetRootPath();
 		return projectPath.GetPath();
 	}
 

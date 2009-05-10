@@ -7286,7 +7286,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// TM_PROJECT_DIRECTORY
 	if (m_parentFrame.HasProject() && !m_parentFrame.IsProjectRemote()) {
-		const wxFileName& prjPath = m_parentFrame.GetProject();
+		const wxFileName& prjPath = m_parentFrame.GetRootPath();
 		env.SetEnv(wxT("TM_PROJECT_DIRECTORY"), isUnix ? eDocumentPath::WinPathToCygwin(prjPath) : prjPath.GetPath());
 
 		// Set project specific env vars

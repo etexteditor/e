@@ -250,7 +250,7 @@ public:
 	bool OpenRemoteProject(const RemoteProfile* rp);
 	bool HasProject() const;
 	bool IsProjectRemote() const;
-	const wxFileName& GetProject() const;
+	const wxFileName& GetRootPath() const;
 	wxArrayString GetSelectionsInProject() const;
 	const map<wxString,wxString>& GetProjectEnv() const;
 

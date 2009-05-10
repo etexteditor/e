@@ -14,7 +14,13 @@
 #include "FindInProjectDlg.h"
 #include "MMapBuffer.h"
 #include "EditorFrame.h"
-#include "ProjectPane.h"
+#include "ProjectInfoHandler.h"
+
+#ifdef __WXMSW__
+    #include "IEHtmlWin.h"
+#elif defined __WXGTK__
+    #include "WebKitHtmlWnd.h"
+#endif
 
 // Ctrl id's
 enum {
@@ -31,7 +37,7 @@ BEGIN_EVENT_TABLE(FindInProjectDlg, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(CTRL_BROWSER, FindInProjectDlg::OnBeforeLoad)
 END_EVENT_TABLE()
 
-FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectPane& projectPane)
+FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHandler& projectPane)
 : wxDialog (&parentFrame, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
   m_parentFrame(parentFrame), m_projectPane(projectPane), m_searchThread(NULL)
 {
@@ -91,7 +97,7 @@ void FindInProjectDlg::OnSearch(wxCommandEvent& WXUNUSED(event)) {
 	const wxString searchtext = m_searchCtrl->GetValue();
 	if (searchtext.empty()) return;
 
-	const wxFileName& projectDir = m_projectPane.GetRootPath();
+	const wxFileName& projectDir = m_projectPane.GetRoot();
 
 	// There might be a running search that we have to cancel first
 	m_searchThread->CancelSearch();

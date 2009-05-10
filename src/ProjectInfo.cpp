@@ -28,15 +28,38 @@ void cxProjectInfo::Clear() {
 	env.clear();
 }
 
+void cxProjectInfo::ClearFilters() {
+	includeDirs.Empty();
+	excludeDirs.Empty();
+	includeFiles.Empty();
+	excludeFiles.Empty();
+	hasFilters = false;
+}
+
+void cxProjectInfo::SetFilters(const wxArrayString& ind, const wxArrayString& exd, const wxArrayString& inf, const wxArrayString& exf) {
+	ClearFilters();
+
+	includeDirs = ind;
+	excludeDirs = exd;
+	includeFiles = inf;
+	excludeFiles = exf;
+
+	hasFilters = true;
+}
+
+cxProjectInfo::cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters) {
+	this->Load(rootPath, path, onlyFilters);
+}
+
 bool cxProjectInfo::IsEmpty() const {
 	return !hasFilters && env.empty() && triggers.empty();
 }
 
-bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
-	if (!includeFiles.IsEmpty()) {
+static bool projectinfo_match(const wxString& path, const wxArrayString& includes, const wxArrayString& excludes) {
+	if (!includes.IsEmpty()) {
 		bool doInclude = false;
-		for (unsigned int i = 0; i < includeFiles.GetCount(); ++i) {
-			if (wxMatchWild(includeFiles[i], file_name, false)) {
+		for (unsigned int i = 0; i < includes.GetCount(); ++i) {
+			if (wxMatchWild(includes[i], path, false)) {
 				doInclude = true;
 				break;
 			}
@@ -45,8 +68,8 @@ bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
 		if (!doInclude) return false;
 	}
 
-	for (unsigned int i = 0; i < excludeFiles.GetCount(); ++i) {
-		if (wxMatchWild(excludeFiles[i], file_name, false)) {
+	for (unsigned int i = 0; i < excludes.GetCount(); ++i) {
+		if (wxMatchWild(excludes[i], path, false)) {
 			return false;
 		}
 	}
@@ -54,26 +77,12 @@ bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
 	return true;
 }
 
+bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
+	return projectinfo_match(file_name, includeFiles, excludeFiles);
+}
+
 bool cxProjectInfo::IsDirectoryIncluded(const wxString& dir_name) const {
-	if (!includeFiles.IsEmpty()) {
-		bool doInclude = false;
-		for (unsigned int i = 0; i < includeDirs.GetCount(); ++i) {
-			if (wxMatchWild(includeDirs[i], dir_name, false)) {
-				doInclude = true;
-				break;
-			}
-		}
-
-		if (!doInclude) return false;
-	}
-
-	for (unsigned int i = 0; i < excludeFiles.GetCount(); ++i) {
-		if (wxMatchWild(excludeDirs[i], dir_name, false)) {
-			return false;
-		}
-	}
-
-	return true;
+	return projectinfo_match(dir_name, includeDirs, excludeDirs);
 }
 
 

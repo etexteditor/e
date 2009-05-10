@@ -33,9 +33,6 @@
 #include "IFrameRemoteThread.h"
 #include "IFrameUndoPane.h"
 
-#ifdef __WXMSW__
-    #include "IEHtmlWin.h"
-#endif
 #include "IHtmlWnd.h"
 
 // pre-declearations

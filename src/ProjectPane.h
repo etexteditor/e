@@ -19,7 +19,9 @@
 #include <wx/filename.h>
 #include <wx/dnd.h>
 #include <wx/imaglist.h>
-#include "IProjectManager.h"
+
+#include "ProjectInfoHandler.h"
+#include "ProjectInfo.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -45,34 +47,6 @@ class RemoteThread;
 class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
-
-class ProjectInfoHandler {
-public:
-	void SetRoot(const wxFileName& path);
-	const wxFileName& GetRoot() const {return m_prjPath;};
-	bool HasProject() const {return m_prjPath.IsOk();};
-
-	// Root info
-	const cxProjectInfo& GetRootInfo() const {return m_projectInfo;};
-	void SaveRootInfo() const;
-
-	bool GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const;
-
-	// Filters
-	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
-	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
-
-	// GotoFile triggers
-	const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
-	void SetTrigger(const wxString& trigger, const wxString& path);
-	void ClearTrigger(const wxString& trigger);
-
-private:
-
-	// Member variables
-	wxFileName m_prjPath;
-	cxProjectInfo m_projectInfo;
-};
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
@@ -130,7 +104,6 @@ private:
 	static bool GetDefaultIcon(wxIcon &icon);
 	void WatchTree(const wxString &path);
 #endif
-	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
 
 	void Init();
 
@@ -152,9 +125,6 @@ private:
 	void ExpandAndSelect(wxTreeItemId item, wxArrayString& expandedDirs, wxArrayString& selections);
 	void GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs);
 	bool IsDirEmpty(const wxString& path) const;
-
-	// Filters
-	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
 
 	// Icon retrieval thread
 	void* Entry();

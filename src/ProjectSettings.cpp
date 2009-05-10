@@ -16,6 +16,7 @@
 #include <wx/notebook.h>
 #include <wx/tokenzr.h>
 #include <wx/grid.h>
+#include "Strings.h"
 
 // ctrl ids
 enum {
@@ -52,7 +53,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 			// Layout
 			wxBoxSizer* pageSizer = new wxBoxSizer(wxVERTICAL);
 				pageSizer->Add(m_inheritCheck, 0, wxALL, 5);
-				if (project.isRoot) pageSizer->Hide(m_inheritCheck);
+				if (project.IsRoot()) pageSizer->Hide(m_inheritCheck);
 
 				wxFlexGridSizer* filterSizer = new wxFlexGridSizer(4, 2, 0, 0);
 				filterSizer->AddGrowableCol(0);
@@ -73,7 +74,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 			notebook->AddPage(filterPage, _("Filters"), true);
 		}
 
-		if (project.isRoot) {
+		if (project.IsRoot()) {
 			// Create the environment variable page
 			wxPanel* envPage = new wxPanel(notebook, wxID_ANY);
 			{
@@ -116,43 +117,13 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 
 	// Load filters
-	if (project.hasFilters || project.isRoot) {
-		unsigned int i = 0;
-		for (i = 0; i < project.includeDirs.GetCount(); ++i) {
-			if (i) m_includeDirs->AppendText(wxT("\n"));
-			m_includeDirs->AppendText(project.includeDirs[i]);
-		}
-		for (i = 0; i < project.includeFiles.GetCount(); ++i) {
-			if (i) m_includeFiles->AppendText(wxT("\n"));
-			m_includeFiles->AppendText(project.includeFiles[i]);
-		}
-		for (i = 0; i < project.excludeDirs.GetCount(); ++i) {
-			if (i) m_excludeDirs->AppendText(wxT("\n"));
-			m_excludeDirs->AppendText(project.excludeDirs[i]);
-		}
-		for (i = 0; i < project.excludeFiles.GetCount(); ++i) {
-			if (i) m_excludeFiles->AppendText(wxT("\n"));
-			m_excludeFiles->AppendText(project.excludeFiles[i]);
-		}
+	const cxProjectInfo *projectToLoad = NULL;
+
+	if (project.HasFilters() || project.IsRoot()) {
+		projectToLoad = &project;
 	}
 	else {
-		unsigned int i = 0;
-		for (i = 0; i < parentProject.includeDirs.GetCount(); ++i) {
-			if (i) m_includeDirs->AppendText(wxT("\n"));
-			m_includeDirs->AppendText(parentProject.includeDirs[i]);
-		}
-		for (i = 0; i < parentProject.includeFiles.GetCount(); ++i) {
-			if (i) m_includeFiles->AppendText(wxT("\n"));
-			m_includeFiles->AppendText(parentProject.includeFiles[i]);
-		}
-		for (i = 0; i < parentProject.excludeDirs.GetCount(); ++i) {
-			if (i) m_excludeDirs->AppendText(wxT("\n"));
-			m_excludeDirs->AppendText(parentProject.excludeDirs[i]);
-		}
-		for (i = 0; i < parentProject.excludeFiles.GetCount(); ++i) {
-			if (i) m_excludeFiles->AppendText(wxT("\n"));
-			m_excludeFiles->AppendText(parentProject.excludeFiles[i]);
-		}
+		projectToLoad = &parentProject;
 
 		m_includeDirs->Disable();
 		m_excludeDirs->Disable();
@@ -161,8 +132,22 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 		m_inheritCheck->SetValue(true);
 	}
 
+	if (projectToLoad) {
+		const wxString ind = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		m_includeDirs->SetValue(ind);
+
+		const wxString inf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		m_includeFiles->SetValue(inf);
+
+		const wxString exd = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		m_excludeDirs->SetValue(exd);
+
+		const wxString exf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		m_excludeFiles->SetValue(exf);
+	}
+
 	// Load env variables
-	if (project.isRoot) {
+	if (project.IsRoot()) {
 		for (map<wxString,wxString>::const_iterator p = project.env.begin(); p != project.env.end(); ++p) {
 			const unsigned int rowId = m_envList->GetNumberRows();
 			m_envList->InsertRows(rowId);
@@ -179,52 +164,29 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 }
 
 bool ProjectSettings::IsModified() const {
-	if (m_inheritCheck->GetValue() == m_projectInfo.hasFilters) return true;
+	if (m_inheritCheck->GetValue() == m_projectInfo.HasFilters()) return true;
 	if (m_includeDirs->IsModified()) return true;
 	if (m_excludeDirs->IsModified()) return true;
 	if (m_includeFiles->IsModified()) return true;
 	if (m_excludeFiles->IsModified()) return true;
 
-	if (m_projectInfo.isRoot && m_envModified) return true;
+	if (m_projectInfo.IsRoot() && m_envModified) return true;
 
 	return false;
 }
 
 void ProjectSettings::GetSettings(cxProjectInfo& project) const {
-	project.includeDirs.Empty();
-	project.excludeDirs.Empty();
-	project.includeFiles.Empty();
-	project.excludeFiles.Empty();
+	project.ClearFilters();
 
-	if (m_inheritCheck->GetValue()) {
-		project.hasFilters = false;
-	}
-	else {
-		project.hasFilters = true;
-
-		wxStringTokenizer tokens(m_includeDirs->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.includeDirs.Add(token);
-		}
-		tokens.SetString(m_excludeDirs->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.excludeDirs.Add(token);
-		}
-		tokens.SetString(m_includeFiles->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.includeFiles.Add(token);
-		}
-		tokens.SetString(m_excludeFiles->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.excludeFiles.Add(token);
-		}
+	if (!m_inheritCheck->GetValue()) {
+		const wxArrayString ind = wxSplit(m_includeDirs->GetValue(), wxT('\n'), NULL);
+		const wxArrayString exd = wxSplit(m_excludeDirs->GetValue(), wxT('\n'), NULL);
+		const wxArrayString inf = wxSplit(m_includeFiles->GetValue(), wxT('\n'), NULL);
+		const wxArrayString exf = wxSplit(m_excludeFiles->GetValue(), wxT('\n'), NULL);
+		project.SetFilters(ind, exd, inf, exf);
 	}
 
-	if (m_projectInfo.isRoot) {
+	if (m_projectInfo.IsRoot()) {
 		project.env.clear();
 
 		for (int i = 0; i < m_envList->GetNumberRows(); ++i) {

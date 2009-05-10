@@ -367,10 +367,6 @@
 				RelativePath=".\IPrintableDocument.h"
 				>
 			</File>
-			<File
-				RelativePath=".\IProjectManager.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Controls"
@@ -2652,6 +2648,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ProjectInfoHandler.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ProjectInfoHandler.h"
+			>
+		</File>
+		<File
 			RelativePath="ProjectPane.cpp"
 			>
 			<FileConfiguration
@@ -2949,6 +2953,14 @@
 		</File>
 		<File
 			RelativePath="StatusBar.h"
+			>
+		</File>
+		<File
+			RelativePath=".\Strings.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Strings.h"
 			>
 		</File>
 		<File

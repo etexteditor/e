@@ -2457,7 +2457,7 @@ void EditorFrame::OnMenuFind(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuFindInProject(wxCommandEvent& WXUNUSED(event)) {
-	if (!m_findInProjectDlg) m_findInProjectDlg = new FindInProjectDlg(*this, *m_projectPane);
+	if (!m_findInProjectDlg) m_findInProjectDlg = new FindInProjectDlg(*this, m_projectPane->GetInfoHandler());
 	m_findInProjectDlg->Show();
 }
 

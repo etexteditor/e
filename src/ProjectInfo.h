@@ -36,8 +36,12 @@ class cxProjectInfo {
 public:
 	cxProjectInfo();
 	cxProjectInfo(const cxProjectInfo& info);
+	cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters);
 
 	void Clear();
+
+	void ClearFilters();
+	void SetFilters(const wxArrayString& ind, const wxArrayString& exd, const wxArrayString& inf, const wxArrayString& exf);
 
 	bool Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters);
 	void Save(const wxString& rootPath) const;
@@ -47,15 +51,20 @@ public:
 	bool IsFileIncluded(const wxString& file_name) const;
 	bool IsDirectoryIncluded(const wxString& dir_name) const;
 
-	bool isRoot;
+	bool IsRoot() const { return isRoot; }
+	bool HasFilters() const { return hasFilters; }
+
 	wxString path;
-	bool hasFilters;
 	wxArrayString includeDirs;
 	wxArrayString excludeDirs;
 	wxArrayString includeFiles;
 	wxArrayString excludeFiles;
 	map<wxString, wxString> env;
 	map<wxString, wxString> triggers;
+
+private:
+	bool isRoot;
+	bool hasFilters;
 };
 
 #endif // __PROJECTINFO_H__

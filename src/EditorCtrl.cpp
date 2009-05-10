@@ -9482,8 +9482,8 @@ wxDragResult EditorCtrl::DragDropTarget::OnData(wxCoord WXUNUSED(x), wxCoord WXU
 BundleItemEditorCtrl::BundleItemEditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
 	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size){}
 
-BundleItemEditorCtrl::BundleItemEditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
-	EditorCtrl(di, mirrorPath, cw, bitmap, parent, parentFrame, pos, size){}
+//BundleItemEditorCtrl::BundleItemEditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
+//	EditorCtrl(di, mirrorPath, cw, bitmap, parent, parentFrame, pos, size){}
 
 BundleItemEditorCtrl::BundleItemEditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
 	EditorCtrl(cw, bitmap, parent, parentFrame, pos, size){}

@@ -14,7 +14,10 @@
 #ifndef _FINDINPROJECTDLG_H_
 #define _FINDINPROJECTDLG_H_
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+   #include <wx/wx.h>
+#endif
 
 #ifdef __WXMSW__
 #include "IEHtmlWin.h"

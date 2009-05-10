@@ -265,8 +265,7 @@ void ProjectPane::Init() {
 	}
 
 	// Load project info (if available)
-	m_projectInfo.Clear();
-	if (!m_isRemote) m_projectInfo.Load(m_prjPath, strpath, false);
+	if (!m_isRemote) m_infoHandler.SetRoot(m_prjPath);
 
 	// Always start with root expanded
 	Freeze();
@@ -631,7 +630,7 @@ void ProjectPane::ExpandDir(wxTreeItemId parentId) {
 
 		wxArrayString dirs;
 		wxArrayString filenames;
-		GetDirAndFileLists(dirName, dirs, filenames);
+		m_infoHandler.GetDirAndFileLists(dirName, dirs, filenames);
 
 		ExpandDir(parentId, data, dirs, filenames);
 	}
@@ -808,114 +807,53 @@ void ProjectPane::CollapseDir(wxTreeItemId parentId) {
 	//m_prjTree->CollapseAndReset(parentId);
 }
 
-bool ProjectPane::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const {
-	wxASSERT(!path.empty());
+bool ProjectPane::IsDirEmpty(const wxString& path) const {
+	if (path.empty()) return true;
 
-	// Open directory
-	wxDir d;
-	d.Open(path);
-	if (!d.IsOpened()) return false;
+    wxDir dir;
+	if (!dir.Open(path)) return true;
+    if (!dir.HasSubDirs() && !dir.HasFiles()) return true;
 
-	// Check for project settings
+	return false;
+
+	/*// Get filters
 	wxArrayString includeDirs;
 	wxArrayString excludeDirs;
 	wxArrayString includeFiles;
 	wxArrayString excludeFiles;
 	GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
 
-	// Get all subdirs
+	// Filter all subdirs
 	wxString eachFilename;
  	int style = wxDIR_DIRS;
-    if (d.GetFirst(&eachFilename, wxEmptyString, style))
-    {
-        do
-        {
-			if (eDocumentPath::IsDotDirectory(eachFilename)) continue;
-
-            if (MatchFilter(eachFilename, includeDirs, excludeDirs))
-				dirs.Add(eachFilename);
+    if (dir.GetFirst(&eachFilename, wxEmptyString, style)) {
+        do {
+            if ((eachFilename != wxT(".")) && (eachFilename != wxT(".."))) {
+                if (MatchFilter(eachFilename, includeDirs, excludeDirs)) {
+					// There just have to be one matching dir
+					return false;
+				}
+            }
         }
-        while (d.GetNext(&eachFilename));
+        while (dir.GetNext(&eachFilename));
     }
-	dirs.Sort(wxStringSortAscendingNoCase);
 
-	// Get all files
+	// Filter all files in dir
 	style = wxDIR_FILES;
-	if (d.GetFirst(&eachFilename, wxEmptyString, style))
-    {
-        do
-        {
-			if (eDocumentPath::IsDotDirectory(eachFilename)) continue;
-
-			if (MatchFilter(eachFilename, includeFiles, excludeFiles))
-				files.Add(eachFilename);
+	if (dir.GetFirst(&eachFilename, wxEmptyString, style)) {
+        do {
+            if ((eachFilename != wxT(".")) && (eachFilename != wxT(".."))) {
+                if (MatchFilter(eachFilename, includeFiles, excludeFiles)) {
+					// There just have to be one matching file
+					return false;
+				}
+            }
         }
-        while (d.GetNext(&eachFilename));
+        while (dir.GetNext(&eachFilename));
     }
-	files.Sort(wxStringSortAscendingNoCase);
 
-	return true;
-}
-
-void ProjectPane::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
-	wxFileName dirPath(path, wxEmptyString);
-
-	while(1) // the first if will eventually be true as we walk up the directory tree
-	{
-		//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
-
-		if (m_prjPath == dirPath) {
-			// Return root filters
-			incDirs = m_projectInfo.includeDirs;
-			excDirs = m_projectInfo.excludeDirs;
-			incFiles = m_projectInfo.includeFiles;
-			excFiles = m_projectInfo.excludeFiles;
-			return;
-		}
-
-		cxProjectInfo info;
-		if (!m_isRemote && info.Load(m_prjPath, dirPath.GetPath(), true)) {
-			incDirs = info.includeDirs;
-			excDirs = info.excludeDirs;
-			incFiles = info.includeFiles;
-			excFiles = info.excludeFiles;
-			return;
-		}
-
-		// See if we can inherit filters from parent
-		dirPath.RemoveLastDir();
-	}
-}
-
-void ProjectPane::SetTrigger(const wxString& trigger, const wxString& path) {
-	m_projectInfo.triggers[trigger] = path;
-	m_projectInfo.Save(m_prjPath.GetPath());
-}
-
-void ProjectPane::ClearTrigger(const wxString& trigger) {
-	m_projectInfo.triggers.erase(trigger);
-}
-
-bool ProjectPane::MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter) { // static
-	if (!incFilter.IsEmpty()) {
-		bool doInclude = false;
-		for (unsigned int i = 0; i < incFilter.GetCount(); ++i) {
-			if (wxMatchWild(incFilter[i], name, false)) {
-				doInclude = true;
-				break;
-			}
-		}
-
-		if (!doInclude) return false;
-	}
-
-	for (unsigned int i = 0; i < excFilter.GetCount(); ++i) {
-		if (wxMatchWild(excFilter[i], name, false)) {
-			return false;
-		}
-	}
-
-	return true;
+	// No matching dirs
+	return true;*/
 }
 
 void ProjectPane::GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs) {
@@ -994,6 +932,8 @@ wxTreeItemId ProjectPane::FindSubItem(const wxTreeItemId& item, const wxString& 
 
 	return subItem;
 }
+
+
 
 void ProjectPane::OnExpandItem(wxTreeEvent &event)
 {
@@ -1483,8 +1423,8 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				wxArrayString includeFiles;
 				wxArrayString excludeFiles;
 				const wxFileName parentPath(path);
-				GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
-				if (!MatchFilter(newFile.GetFullName(), includeDirs, excludeDirs)) {
+				m_infoHandler.GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
+				if (!m_infoHandler.MatchFilter(newFile.GetFullName(), includeDirs, excludeDirs)) {
 					if (itemFound) m_prjTree->Delete(subItem);
 					return;
 				}
@@ -1543,10 +1483,10 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 			wxArrayString includeFiles;
 			wxArrayString excludeFiles;
 			const wxFileName parentPath(path);
-			GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
+			m_infoHandler.GetFilters(parentPath.GetPath(), includeDirs, excludeDirs, includeFiles, excludeFiles);
 
 			if (wxDir::Exists(path)) {
-				if (!MatchFilter(fileName, includeDirs, excludeDirs)) return;
+				if (!m_infoHandler.MatchFilter(fileName, includeDirs, excludeDirs)) return;
 				wxTreeItemId id = FindSubItem(item, fileName);
 				if (!id.IsOk()) {
 					// The dir may have been deleted/renamed again
@@ -1562,7 +1502,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 					excludeDirs.Empty();
 					includeFiles.Empty();
 					excludeFiles.Empty();
-					GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
+					m_infoHandler.GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
 
 					if (!projectpane_is_dir_empty(path))	{
 						m_prjTree->SetItemHasChildren(id);
@@ -1579,7 +1519,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				}
 			}
 			else {
-				if (!MatchFilter(fileName, includeFiles, excludeFiles)) return;
+				if (!m_infoHandler.MatchFilter(fileName, includeFiles, excludeFiles)) return;
 
 				wxTreeItemId id = FindSubItem(item, fileName);
 				if (!id.IsOk()) {
@@ -1759,7 +1699,7 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 	cxProjectInfo pInfo;
 	if (!currentInfo.hasFilters && path != m_prjPath) {
 		path.RemoveLastDir();
-		GetFilters(path.GetPath(), pInfo.includeDirs, pInfo.excludeDirs, pInfo.includeFiles, pInfo.excludeFiles);
+		m_infoHandler.GetFilters(path.GetPath(), pInfo.includeDirs, pInfo.excludeDirs, pInfo.includeFiles, pInfo.excludeFiles);
 	}
 
 	// Show dialog
@@ -2034,6 +1974,139 @@ WXLRESULT ProjectPane::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lPar
 	return wxPanel::MSWWindowProc(nMsg, wParam, lParam);
 }
 #endif //__WXMSW__
+
+// ---- ProjectInfoHandler ----------------------------------------------------
+
+void ProjectInfoHandler::SetRoot(const wxFileName& path) {
+	m_prjPath = path;
+	m_projectInfo.Clear();
+
+	const wxString rootPath = path.GetPath() + wxFILE_SEP_PATH;
+	m_projectInfo.Load(rootPath, rootPath, false);
+	//LoadProjectInfo(rootPath, false, m_projectInfo);
+}
+
+void ProjectInfoHandler::SaveRootInfo() const {
+	m_projectInfo.Save(m_prjPath.GetPath());
+	//SaveProjectInfo(m_projectInfo);
+}
+
+bool ProjectInfoHandler::GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const {
+	wxASSERT(!path.empty());
+
+	// Open directory
+	wxDir d;
+	d.Open(path);
+	if (!d.IsOpened()) return false;
+
+	// Check for project settings
+	wxArrayString includeDirs;
+	wxArrayString excludeDirs;
+	wxArrayString includeFiles;
+	wxArrayString excludeFiles;
+	GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
+
+	// Get all subdirs
+	wxString eachFilename;
+ 	int style = wxDIR_DIRS;
+    if (d.GetFirst(&eachFilename, wxEmptyString, style))
+    {
+        do
+        {
+            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
+            {
+                if (MatchFilter(eachFilename, includeDirs, excludeDirs)) {
+					dirs.Add(eachFilename);
+				}
+            }
+        }
+        while (d.GetNext(&eachFilename));
+    }
+	dirs.Sort(wxStringSortAscendingNoCase);
+
+	// Get all files
+	style = wxDIR_FILES;
+	if (d.GetFirst(&eachFilename, wxEmptyString, style))
+    {
+        do
+        {
+            if ((eachFilename != wxT(".")) && (eachFilename != wxT("..")))
+            {
+                if (MatchFilter(eachFilename, includeFiles, excludeFiles)) {
+					files.Add(eachFilename);
+				}
+            }
+        }
+        while (d.GetNext(&eachFilename));
+    }
+	files.Sort(wxStringSortAscendingNoCase);
+
+	return true;
+}
+
+void ProjectInfoHandler::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
+	wxFileName dirPath(path, wxEmptyString);
+
+	//wxLogDebug(wxT("ProjectPane::GetFilters(\"%s\")"), path.c_str());
+
+	while(1) {
+	if (m_prjPath == dirPath) {
+		// Return root filters
+		incDirs = m_projectInfo.includeDirs;
+		excDirs = m_projectInfo.excludeDirs;
+		incFiles = m_projectInfo.includeFiles;
+		excFiles = m_projectInfo.excludeFiles;
+		return;
+	}
+
+	cxProjectInfo info;
+	
+	if (info.Load(m_prjPath, dirPath.GetPath(), true) /*LoadProjectInfo(dirPath.GetPath(), true, info)*/) {
+		incDirs = info.includeDirs;
+		excDirs = info.excludeDirs;
+		incFiles = info.includeFiles;
+		excFiles = info.excludeFiles;
+		return;
+	}
+
+	// See if we can inherit filters from parent
+	dirPath.RemoveLastDir();
+//	GetFilters(dirPath.GetPath(), incDirs, excDirs, incFiles, excFiles);
+	}
+}
+
+
+void ProjectInfoHandler::SetTrigger(const wxString& trigger, const wxString& path) {
+	m_projectInfo.triggers[trigger] = path;
+	SaveRootInfo();
+}
+
+void ProjectInfoHandler::ClearTrigger(const wxString& trigger) {
+	m_projectInfo.triggers.erase(trigger);
+}
+
+bool ProjectInfoHandler::MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter) { // static
+	if (!incFilter.IsEmpty()) {
+		bool doInclude = false;
+		for (unsigned int i = 0; i < incFilter.GetCount(); ++i) {
+			if (wxMatchWild(incFilter[i], name, false)) {
+				doInclude = true;
+				break;
+			}
+		}
+
+		if (!doInclude) return false;
+	}
+
+	for (unsigned int i = 0; i < excFilter.GetCount(); ++i) {
+		if (wxMatchWild(excFilter[i], name, false)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 //-----------------------------------------------------------------------------
 // DirItemData

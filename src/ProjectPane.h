@@ -46,10 +46,35 @@ class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
 
-class ProjectPane : 
-	public wxPanel, public wxThreadHelper,
-	public IProjectManager
-{
+class ProjectInfoHandler {
+public:
+	void SetRoot(const wxFileName& path);
+	const wxFileName& GetRoot() const {return m_prjPath;};
+	bool HasProject() const {return m_prjPath.IsOk();};
+
+	// Root info
+	const cxProjectInfo& GetRootInfo() const {return m_projectInfo;};
+	void SaveRootInfo() const;
+
+	bool GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const;
+
+	// Filters
+	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
+	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
+
+	// GotoFile triggers
+	const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
+	void SetTrigger(const wxString& trigger, const wxString& path);
+	void ClearTrigger(const wxString& trigger);
+
+private:
+
+	// Member variables
+	wxFileName m_prjPath;
+	cxProjectInfo m_projectInfo;
+};
+
+class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
 	ProjectPane(IFrameProjectService& parent, wxWindowID id = wxID_ANY);
 	~ProjectPane();
@@ -67,19 +92,17 @@ public:
 	virtual const wxFileName& GetRootPath() const {return m_prjPath;};
 	wxString GetProjectString() const {if (IsRemote()) return m_prjUrl; else return m_prjPath.GetFullPath();};
 	wxArrayString GetSelections() const;
-	const map<wxString,wxString>& GetEnv() const {return m_projectInfo.env;};
-	bool GetDirAndFileLists(const wxString& path, wxArrayString& dirs, wxArrayString& files) const;
+	const map<wxString,wxString>& GetEnv() const {return m_infoHandler.GetRootInfo().env;};
 
 	void RenameItem();
 	void DeleteItems(bool allowUndo);
 	void RefreshDirs();
 	void Upload(const wxString& url, const wxString& path);
 
-	// GotoFile triggers
-	virtual const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
-	virtual void SetTrigger(const wxString& trigger, const wxString& path);
-	virtual void ClearTrigger(const wxString& trigger);
-
+	// ProjectInfo
+	ProjectInfoHandler& GetInfoHandler() {return m_infoHandler;};
+	void SaveCurrentProjectInfo() const {m_infoHandler.SaveRootInfo();};
+	
 #ifdef __WXMSW__
 	WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);
 #endif
@@ -128,6 +151,7 @@ private:
 
 	void ExpandAndSelect(wxTreeItemId item, wxArrayString& expandedDirs, wxArrayString& selections);
 	void GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs);
+	bool IsDirEmpty(const wxString& path) const;
 
 	// Filters
 	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
@@ -188,6 +212,7 @@ private:
 
 	// Member variables
 	IFrameProjectService& m_parentFrame;
+	ProjectInfoHandler m_infoHandler;
 	wxImageList m_imageList;
 	void* m_dirWatchHandle;
 	bool m_isRemote;
@@ -199,7 +224,6 @@ private:
 
 	const RemoteProfile* m_remoteProfile;
 	wxString m_prjUrl;
-	cxProjectInfo m_projectInfo;
 	vector<unsigned int> m_freeImages;
 	wxString m_newFolder; // for OnDirChanged
 	wxString m_newFile;	  // for OnDirChanged

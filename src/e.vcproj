@@ -1681,6 +1681,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Document.h"
+			>
+		</File>
+		<File
 			RelativePath="document.ico"
 			>
 		</File>
@@ -1718,6 +1722,72 @@
 					AdditionalIncludeDirectories=""
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="e.rc"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCResourceCompilerTool"
+					PreprocessorDefinitions=""
+					AdditionalIncludeDirectories=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug2|Win32"
+				>
+				<Tool
+					Name="VCResourceCompilerTool"
+					PreprocessorDefinitions=""
+					AdditionalIncludeDirectories=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCResourceCompilerTool"
+					PreprocessorDefinitions=""
+					AdditionalIncludeDirectories=""
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="eAbout.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug2|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="eAbout.h"
+			>
 		</File>
 		<File
 			RelativePath="eApp.cpp"
@@ -1877,6 +1947,41 @@
 		</File>
 		<File
 			RelativePath="EditorPrintout.h"
+			>
+		</File>
+		<File
+			RelativePath="eDockArt.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug2|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="eDockArt.h"
 			>
 		</File>
 		<File
@@ -2079,7 +2184,50 @@
 			>
 		</File>
 		<File
+			RelativePath="FindCmdDlg.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug2|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalIncludeDirectories=""
+					PreprocessorDefinitions=""
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="FindCmdDlg.h"
+			>
+		</File>
+		<File
 			RelativePath=".\FindFlags.h"
+			>
+		</File>
+		<File
+			RelativePath=".\FindInProjectDlg.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\FindInProjectDlg.h"
 			>
 		</File>
 		<File

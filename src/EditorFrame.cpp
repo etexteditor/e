@@ -55,6 +55,7 @@
 #include "SearchPanel.h"
 #include "StatusBar.h"
 #include "DirWatcher.h"
+#include "FindInProjectDlg.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows.
@@ -112,6 +113,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(wxID_COPY, EditorFrame::OnMenuCopy)
 	EVT_MENU(wxID_PASTE, EditorFrame::OnMenuPaste)
 	EVT_MENU(wxID_FIND, EditorFrame::OnMenuFind)
+	EVT_MENU(MENU_FIND_IN_PROJECT, EditorFrame::OnMenuFindInProject)
 	EVT_MENU(MENU_FIND_IN_SEL, EditorFrame::OnMenuFindInSel)
 	EVT_MENU(MENU_FIND_NEXT, EditorFrame::OnMenuFindNext)
 	EVT_MENU(MENU_FIND_PREVIOUS, EditorFrame::OnMenuFindPrevious)
@@ -230,7 +232,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
 	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL),
-	m_symbolList(NULL), m_pStatBar(NULL),
+	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
 	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm), m_pToolBar(NULL)
@@ -417,7 +419,6 @@ EditorFrame::~EditorFrame() {
 
 	if (undoHistory) undoHistory->Destroy();
 	if (m_changeCheckerThread) m_changeCheckerThread->Kill(); // may be locked on network drive
-	//if (m_dirWatcher) m_dirWatcher->Delete(); // may take forever
 }
 
 
@@ -2051,6 +2052,10 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 		spItem->Check(showingProjectPane);
 	}
 
+	// Find in Projext
+	wxMenuItem* fpItem = GetMenuBar()->FindItem(MENU_FIND_IN_PROJECT);
+	if (fpItem) fpItem->Enable(m_projectPane->HasProject());
+
 	// "Show Symbol List"
 	wxMenuItem* slItem = GetMenuBar()->FindItem(MENU_SHOWSYMBOLS);
 	if (slItem) slItem->Check(m_symbolList != NULL);
@@ -2450,6 +2455,11 @@ void EditorFrame::OnMenuFind(wxCommandEvent& WXUNUSED(event)) {
 	ShowSearch();
 }
 
+void EditorFrame::OnMenuFindInProject(wxCommandEvent& WXUNUSED(event)) {
+	if (!m_findInProjectDlg) m_findInProjectDlg = new FindInProjectDlg(*this, *m_projectPane);
+	m_findInProjectDlg->Show();
+}
+
 void EditorFrame::OnMenuFindInSel(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->SetSearchRange();
 	ShowSearch();
@@ -2755,11 +2765,9 @@ void EditorFrame::OnMenuGotoLine(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuGotoFile(wxCommandEvent& WXUNUSED(event)) {
-	wxASSERT(editorCtrl);
-
 	if (!m_projectPane->HasProject()) return;
 
-	GotoFileDlg dlg(this, *m_projectPane);
+	GotoFileDlg dlg(this, m_projectPane->GetInfoHandler());
 	if (dlg.ShowModal() == wxID_OK) OpenFile(dlg.GetSelection());
 }
 
@@ -3270,8 +3278,12 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 
 	Show(false);
 
-	// Close any open PreviewDlg
+	// Close any open dialogs
 	if (m_previewDlg) m_previewDlg->Destroy();
+	if (m_findInProjectDlg) {
+		m_findInProjectDlg->Hide();
+		m_findInProjectDlg->Destroy();
+	}
 
 	// Close all open documents
 	for (int i = m_tabBar->GetPageCount()-1; i >= 0; --i) {

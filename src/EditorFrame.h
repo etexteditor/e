@@ -56,6 +56,7 @@ class SearchPanel;
 class TmSyntaxHandler;
 class StatusBar;
 class DirWatcher;
+class FindInProjectDlg;
 
 // Menu id's
 enum {
@@ -69,6 +70,7 @@ enum {
 	MENU_IMPORT,
 	MENU_CLOSE,
 	MENU_REVSEL,
+	MENU_FIND_IN_PROJECT,
 	MENU_FIND_IN_SEL,
 	MENU_FIND_NEXT,
 	MENU_FIND_PREVIOUS,
@@ -380,6 +382,7 @@ private:
 	void OnMenuCopy(wxCommandEvent& event);
 	void OnMenuPaste(wxCommandEvent& event);
 	void OnMenuFind(wxCommandEvent& event);
+	void OnMenuFindInProject(wxCommandEvent& event);
 	void OnMenuFindInSel(wxCommandEvent& event);
 	void OnMenuFindNext(wxCommandEvent& event);
 	void OnMenuFindPrevious(wxCommandEvent& event);
@@ -532,6 +535,7 @@ private:
 	ProjectPane* m_projectPane;
 	BundlePane* m_bundlePane;
 	SymbolList* m_symbolList;
+	FindInProjectDlg* m_findInProjectDlg;
 
 	// Toolbar and Statusbar
 	StatusBar* m_pStatBar;

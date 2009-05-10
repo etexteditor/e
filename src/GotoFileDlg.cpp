@@ -13,7 +13,7 @@
 
 #include "GotoFileDlg.h"
 #include <algorithm>
-#include "IProjectManager.h"
+#include "ProjectPane.h"
 
 // Ctrl id's
 enum {
@@ -30,7 +30,7 @@ BEGIN_EVENT_TABLE(GotoFileDlg, wxDialog)
 	EVT_IDLE(GotoFileDlg::OnIdle)
 END_EVENT_TABLE()
 
-GotoFileDlg::GotoFileDlg(wxWindow *parent, IProjectManager& project)
+GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project)
 :  wxDialog (parent, -1, _("Go to File"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
    m_project(project), m_isDone(false), m_filesLoaded(false)
 {
@@ -70,7 +70,7 @@ void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 	if (!m_project.HasProject()) return; // No project, so no files to load.
 
 	if (m_dirStack.empty()) {
-		const wxString path = m_project.GetRootPath().GetPath();
+		const wxString path = m_project.GetRoot().GetPath();
 		m_files.reserve(100);
 
 		BuildFileList(path);
@@ -127,7 +127,7 @@ void GotoFileDlg::BuildFileList(const wxString& path) {
 
 	// Load filters for this dir
 	dirState->info = new cxProjectInfo;
-	if (dirState->info->Load(m_project.GetRootPath(), path, true)) {
+	if (dirState->info->Load(m_project.GetRoot(), path, true)) {
 		m_filters.push_back(dirState->info);
 	}
 	else {

@@ -33,12 +33,12 @@ using namespace std;
 #include <wx/dir.h>
 #include "SearchListBox.h"
 
-class IProjectManager;
+class ProjectInfoHandler;
 class cxProjectInfo;
 
 class GotoFileDlg : public wxDialog {
 public:
-	GotoFileDlg(wxWindow *parent, IProjectManager& project);
+	GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project);
 	~GotoFileDlg();
 
 	const wxString& GetSelection() const {return m_cmdList->GetSelectedAction()->path;};
@@ -121,7 +121,7 @@ private:
 	};
 
 	// Member variables
-	IProjectManager& m_project;
+	ProjectInfoHandler& m_project;
 	vector<FileEntry*> m_files;
 	bool m_isDone;
 

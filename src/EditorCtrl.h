@@ -153,7 +153,6 @@ public:
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
 	bool CheckBundleItemModified() const;
 	bool LoadBundleItem(const wxString& uuid);
-	bool SaveBundleItem(bool duplicate=false);
 	void SetBundlePanel(IUpdatePanel* bundlePanel) {m_bundlePanel = bundlePanel;};
 
 	// Undo / Redo

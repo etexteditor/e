@@ -367,10 +367,6 @@
 				RelativePath=".\IPrintableDocument.h"
 				>
 			</File>
-			<File
-				RelativePath=".\IProjectManager.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Controls"

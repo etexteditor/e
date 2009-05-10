@@ -17,8 +17,7 @@
 #include "BundleItemType.h"
 #include "key_hook.h"
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/panel.h>
 	#include <wx/choice.h>

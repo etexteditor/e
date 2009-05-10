@@ -21,7 +21,6 @@
 #ifndef WX_PRECOMP
 	#include <wx/panel.h>
 	#include <wx/choice.h>
-	#include <wx/stattext.h>
 	#include <wx/sizer.h>
 #endif
 
@@ -33,6 +32,7 @@ class BundleItemEditorCtrl;
 class CatalystWrapper;
 class DocumentWrapper;
 class ShortcutCtrl;
+class wxStaticText;
 
 class EditorBundlePanel : public wxPanel {
 public:

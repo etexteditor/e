@@ -39,7 +39,9 @@ public:
 	cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters);
 
 	void Clear();
+
 	void ClearFilters();
+	void SetFilters(const wxArrayString& ind, const wxArrayString& exd, const wxArrayString& inf, const wxArrayString& exf);
 
 	bool Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters);
 	void Save(const wxString& rootPath) const;

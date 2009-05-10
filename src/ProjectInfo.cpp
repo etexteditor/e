@@ -36,6 +36,17 @@ void cxProjectInfo::ClearFilters() {
 	hasFilters = false;
 }
 
+void cxProjectInfo::SetFilters(const wxArrayString& ind, const wxArrayString& exd, const wxArrayString& inf, const wxArrayString& exf) {
+	ClearFilters();
+
+	includeDirs = ind;
+	excludeDirs = exd;
+	includeFiles = inf;
+	excludeFiles = exf;
+
+	hasFilters = true;
+}
+
 cxProjectInfo::cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters) {
 	this->Load(rootPath, path, onlyFilters);
 }

@@ -179,28 +179,11 @@ void ProjectSettings::GetSettings(cxProjectInfo& project) const {
 	project.ClearFilters();
 
 	if (!m_inheritCheck->GetValue()) {
-		project.hasFilters = true;
-
-		wxStringTokenizer tokens(m_includeDirs->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.includeDirs.Add(token);
-		}
-		tokens.SetString(m_excludeDirs->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.excludeDirs.Add(token);
-		}
-		tokens.SetString(m_includeFiles->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.includeFiles.Add(token);
-		}
-		tokens.SetString(m_excludeFiles->GetValue(), wxT("\n"));
-		while (tokens.HasMoreTokens()) {
-			const wxString token = tokens.GetNextToken();
-			if (!token.empty()) project.excludeFiles.Add(token);
-		}
+		const wxArrayString ind = wxSplit(m_includeDirs->GetValue(), wxT('\n'), NULL);
+		const wxArrayString exd = wxSplit(m_excludeDirs->GetValue(), wxT('\n'), NULL);
+		const wxArrayString inf = wxSplit(m_includeFiles->GetValue(), wxT('\n'), NULL);
+		const wxArrayString exf = wxSplit(m_excludeFiles->GetValue(), wxT('\n'), NULL);
+		project.SetFilters(ind, exd, inf, exf);
 	}
 
 	if (m_projectInfo.IsRoot()) {

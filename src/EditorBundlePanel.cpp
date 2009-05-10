@@ -51,12 +51,12 @@ BEGIN_EVENT_TABLE(EditorBundlePanel, wxPanel)
 END_EVENT_TABLE()
 
 EditorBundlePanel::EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap)
-: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_editorCtrl(new EditorCtrl(cw, bitmap, this, parentFrame)), m_currentType(BUNDLE_NONE) {
+: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_editorCtrl(new BundleItemEditorCtrl(cw, bitmap, this, parentFrame)), m_currentType(BUNDLE_NONE) {
 	Init();
 }
 
 EditorBundlePanel::EditorBundlePanel(int page_id, wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap)
-: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_editorCtrl(new EditorCtrl(page_id, cw, bitmap, this, parentFrame)), m_currentType(BUNDLE_NONE) {
+: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_editorCtrl(new BundleItemEditorCtrl(page_id, cw, bitmap, this, parentFrame)), m_currentType(BUNDLE_NONE) {
 	Init();
 	UpdatePanel();
 }

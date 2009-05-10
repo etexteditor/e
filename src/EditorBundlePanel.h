@@ -30,6 +30,7 @@
 class wxStaticLine;
 class EditorFrame;
 class EditorCtrl;
+class BundleItemEditorCtrl;
 class CatalystWrapper;
 class DocumentWrapper;
 class ShortcutCtrl;
@@ -40,7 +41,7 @@ public:
 	EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 	EditorBundlePanel(int page_id, wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 
-	EditorCtrl* GetEditor() {return m_editorCtrl;};
+	EditorCtrl* GetEditor() {return (EditorCtrl*)m_editorCtrl;}; // Downcast.
 	
 	void UpdatePanel();
 
@@ -78,7 +79,7 @@ private:
 	DECLARE_EVENT_TABLE()
 
 	// Member ctrl's
-	EditorCtrl* m_editorCtrl;
+	BundleItemEditorCtrl* m_editorCtrl;
 	wxChoice* m_envChoice;
 	wxChoice* m_saveChoice;
 	wxChoice* m_inputChoice;

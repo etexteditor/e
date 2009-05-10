@@ -32,7 +32,14 @@ class CatalystWrapper;
 class DocumentWrapper;
 class ShortcutCtrl;
 
-class EditorBundlePanel : public wxPanel {
+// This simple interface allows an EditorCtrl to tell the
+// panel that it is embedded in to update.
+class IUpdatePanel {
+public:
+	virtual void UpdatePanel() = 0;
+};
+
+class EditorBundlePanel : public wxPanel, public IUpdatePanel {
 public:
 	EditorBundlePanel() {}; // default const
 	EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
@@ -40,7 +47,7 @@ public:
 
 	EditorCtrl* GetEditor();
 	
-	void UpdatePanel();
+	virtual void UpdatePanel();
 
 	virtual bool Show(bool show=true);
 

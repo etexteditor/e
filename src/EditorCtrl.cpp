@@ -2499,31 +2499,6 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	return result;
 }
 
-//
-// Returns true if the bundle item was modified, else false.
-//
-// NOTE: No callers found for this method.
-//
-bool EditorCtrl::CheckBundleItemModified() const {
-	wxASSERT(IsBundleItem());
-
-	// Get information about bundle item
-	BundleItemType bundleType;
-	unsigned int bundleId;
-	unsigned int itemId;
-	const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
-	if (!plistHandler.GetBundleItemFromUri(m_remotePath, bundleType, bundleId, itemId)) return false;
-	const PListDict itemDict = plistHandler.Get(bundleType, bundleId, itemId);
-
-	// Get mirror
-	doc_id di;
-	wxDateTime modDate;
-	cxLOCK_READ(m_catalyst)
-		if (!catalyst.GetFileMirror(m_remotePath, di, modDate)) return false;
-	cxENDLOCK
-
-	return modDate != itemDict.GetModDate();
-}
 
 bool EditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 	// Get information about bundle item

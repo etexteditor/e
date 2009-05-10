@@ -104,7 +104,6 @@ private:
 	static bool GetDefaultIcon(wxIcon &icon);
 	void WatchTree(const wxString &path);
 #endif
-	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
 
 	void Init();
 
@@ -126,9 +125,6 @@ private:
 	void ExpandAndSelect(wxTreeItemId item, wxArrayString& expandedDirs, wxArrayString& selections);
 	void GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs);
 	bool IsDirEmpty(const wxString& path) const;
-
-	// Filters
-	void GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const;
 
 	// Icon retrieval thread
 	void* Entry();

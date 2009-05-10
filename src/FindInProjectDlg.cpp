@@ -16,6 +16,12 @@
 #include "EditorFrame.h"
 #include "ProjectInfoHandler.h"
 
+#ifdef __WXMSW__
+    #include "IEHtmlWin.h"
+#elif defined __WXGTK__
+    #include "WebKitHtmlWnd.h"
+#endif
+
 // Ctrl id's
 enum {
 	CTRL_SEARCH,

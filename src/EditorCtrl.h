@@ -138,7 +138,7 @@ public:
 	cxFileResult LoadText(const wxFileName& newpath);
 	cxFileResult LoadText(const wxString& newpath, const RemoteProfile* rp=NULL);
 	cxFileResult LoadText(const wxString& newpath, wxFontEncoding enc, const RemoteProfile* rp=NULL);
-	bool SaveText(bool askforpath=false);
+	virtual bool SaveText(bool askforpath=false);
 	bool IsModified() const;
 	DocumentWrapper& GetDocument() {return m_doc;};
 	virtual const DocumentWrapper& GetDocument() const {return m_doc;};
@@ -702,6 +702,7 @@ public:
 	virtual ~BundleItemEditorCtrl();
 
 	virtual const char** RecommendedIcon();
+	virtual bool SaveText(bool askforpath=false);
 
 	BundleItemType GetBundleType() const {return m_bundleType;};
 };

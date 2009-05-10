@@ -9523,3 +9523,6 @@ const char** BundleItemEditorCtrl::RecommendedIcon() {
 	return document_xpm;
 }
 
+bool BundleItemEditorCtrl::SaveText(bool askforpath) {
+	return SaveBundleItem(askforpath);
+}

@@ -1,12 +1,14 @@
 #!/bin/bash
 
 if [ x"$1" == x"release" ] ; then
+    echo "Building release binaries"
     output=`pwd`/out.release
     cfg_switches=--disable-debug
     tinyxml_switches="DEBUG=YES"
     CPPFLAGS="-O2"
     LDFLAGS="-g"
 elif [ x"$1" == x"debug" ] ; then
+    echo "Building debug binaries"
     output=`pwd`/out.debug
     tinyxml_switches=
     cfg_switches=--enable-debug
@@ -14,6 +16,18 @@ elif [ x"$1" == x"debug" ] ; then
     LDFLAGS="-g"
 else
     echo "Usage: $0 [release|debug]\n";
+    exit 1
+fi
+
+LBITS=`getconf LONG_BIT`
+if [ x$LBITS == x"64" ] ; then
+    echo "Building 64-bit binaries"
+    WXWIDGETS_EXTRA_CFLAGS=
+elif [ x$LBITS == x"32" ] ; then
+    echo "Building 32-bit binaries"
+    WXWIDGETS_EXTRA_CFLAGS="-D_FILE_OFFSET_BITS=32"
+else
+    echo "Cannot determine target architecture"
     exit 1
 fi
 
@@ -74,7 +88,7 @@ popd
 pushd wxwidgets
 ./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile \
                      --without-libtiff --enable-graphics_ctx $cfg_switches \
-                     --disable-largefile CPPFLAGS="$CPPCFLAGS -D_FILE_OFFSET_BITS=32" &&
+                     --disable-largefile CPPFLAGS="$CPPCFLAGS $WXWIDGETS_EXTRA_CFLAGS" &&
     make clean &&
     make &&
     make install ||

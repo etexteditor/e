@@ -13,8 +13,8 @@ _download()
   wget -nc http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
   wget -nc ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.6.tar.gz
   wget -nc http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
-  wget -nc http://biolpc22.york.ac.uk/pub/2.8.9/wxWidgets-2.8.9.tar.bz2
-  wget -nc http://builds.nightly.webkit.org/files/trunk/src/WebKit-r42260.tar.bz2
+  wget -nc http://biolpc22.york.ac.uk/pub/2.8.10/wxWidgets-2.8.10.tar.bz2
+  wget -nc http://builds.nightly.webkit.org/files/trunk/src/WebKit-r43163.tar.bz2
   popd
 }
 
@@ -60,8 +60,11 @@ _extract_and_patch()
   patch -d pcre < patches/pcre.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
-  patch -Np0 -d webkit < patches/webkit/remove-targets.patch
-  patch -Np0 -d webkit < patches/webkit/fully-static.patch
+  patch -Np1 -d webkit < patches/webkit/remove-targets.patch
+  patch -Np1 -d webkit < patches/webkit/fully-static.patch
+  patch -Np0 -d webkit < patches/webkit/vis_hidden.patch
+  patch -Np1 -d webkit < patches/webkit/cancelledError.patch
+  patch -Np1 -d webkit < patches/webkit/local_sec.patch
   patch wxwidgets/src/aui/auibook.cpp < patches/wxwidgets/auibook.cpp.patch
   patch wxwidgets/include/wx/aui/auibook.h < patches/wxwidgets/auibook.h.patch
 }

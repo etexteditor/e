@@ -28,6 +28,10 @@ void cxProjectInfo::Clear() {
 	env.clear();
 }
 
+cxProjectInfo::cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters) {
+	this->Load(rootPath, path, onlyFilters);
+}
+
 bool cxProjectInfo::IsEmpty() const {
 	return !hasFilters && env.empty() && triggers.empty();
 }

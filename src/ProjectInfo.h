@@ -36,6 +36,7 @@ class cxProjectInfo {
 public:
 	cxProjectInfo();
 	cxProjectInfo(const cxProjectInfo& info);
+	cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters);
 
 	void Clear();
 

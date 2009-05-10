@@ -1,7 +1,5 @@
 #include "ShortcutCtrl.h"
-
-// For tmKey:
-#include "tm_syntaxhandler.h"
+#include "tmKey.h"
 
 ShortcutCtrl::ShortcutCtrl(wxWindow* parent, wxWindowID id) {
 	Create(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY|wxTE_CENTRE);

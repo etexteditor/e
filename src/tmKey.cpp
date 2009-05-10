@@ -1,9 +1,18 @@
 #include "tmKey.h"
 
-map<wxChar, wxKeyCode> tmKey::s_keyMap;
-map<wxChar, wxKeyCode> tmKey::s_numMap;
-map<int, wxString> tmKey::s_keyText;
-map<int, wxChar> tmKey::s_keyBind;
+// STL can't compile with Level 4
+#ifdef __WXMSW__
+    #pragma warning(push, 1)
+#endif
+#include <map>
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
+
+static std::map<wxChar, wxKeyCode> tmKey_s_keyMap;
+static std::map<wxChar, wxKeyCode> tmKey_s_numMap;
+static std::map<int, wxString> tmKey_s_keyText;
+static std::map<int, wxChar> tmKey_s_keyBind;
 
 // an instance of this class will be created at startup time, and initializer will take care of maps
 static class tmKeyInitializer : private tmKey {
@@ -14,189 +23,189 @@ public:
 } __key_maps_initializer;
 
 void tmKey::BuildMaps() { // static
-	s_keyMap[wxT('\x0003')] = WXK_CANCEL;
-	s_keyMap[wxT('\x0009')] = WXK_TAB;
-	s_keyMap[wxT('\x000A')] = WXK_RETURN;
-	s_keyMap[wxT('\x000D')] = WXK_NUMPAD_ENTER;
-	s_keyMap[wxT('\x001B')] = WXK_ESCAPE;
-	s_keyMap[wxT('\x0020')] = WXK_SPACE;
-	s_keyMap[wxT('\x007F')] = WXK_BACK;
-	s_keyMap[wxT('\xF700')] = WXK_UP;
-	s_keyMap[wxT('\xF701')] = WXK_DOWN;
-	s_keyMap[wxT('\xF702')] = WXK_LEFT;
-	s_keyMap[wxT('\xF703')] = WXK_RIGHT;
-	s_keyMap[wxT('\xF704')] = WXK_F1;
-	s_keyMap[wxT('\xF705')] = WXK_F2;
-	s_keyMap[wxT('\xF706')] = WXK_F3;
-	s_keyMap[wxT('\xF707')] = WXK_F4;
-	s_keyMap[wxT('\xF708')] = WXK_F5;
-	s_keyMap[wxT('\xF709')] = WXK_F6;
-	s_keyMap[wxT('\xF70A')] = WXK_F7;
-	s_keyMap[wxT('\xF70B')] = WXK_F8;
-	s_keyMap[wxT('\xF70C')] = WXK_F9;
-	s_keyMap[wxT('\xF70D')] = WXK_F10;
-	s_keyMap[wxT('\xF70E')] = WXK_F11;
-	s_keyMap[wxT('\xF70F')] = WXK_F12;
-	s_keyMap[wxT('\xF710')] = WXK_F13;
-	s_keyMap[wxT('\xF711')] = WXK_F14;
-	s_keyMap[wxT('\xF712')] = WXK_F15;
-	s_keyMap[wxT('\xF713')] = WXK_F16;
-	s_keyMap[wxT('\xF714')] = WXK_F17;
-	s_keyMap[wxT('\xF715')] = WXK_F18;
-	s_keyMap[wxT('\xF716')] = WXK_F19;
-	s_keyMap[wxT('\xF717')] = WXK_F20;
-	s_keyMap[wxT('\xF718')] = WXK_F21;
-	s_keyMap[wxT('\xF719')] = WXK_F22;
-	s_keyMap[wxT('\xF71A')] = WXK_F23;
-	s_keyMap[wxT('\xF71B')] = WXK_F24;
-	s_keyMap[wxT('\xF727')] = WXK_INSERT;
-	s_keyMap[wxT('\xF728')] = WXK_DELETE;
-	s_keyMap[wxT('\xF729')] = WXK_HOME;
-	s_keyMap[wxT('\xF72B')] = WXK_END;
-	s_keyMap[wxT('\xF72C')] = WXK_PRIOR;    // Page up
-	s_keyMap[wxT('\xF72D')] = WXK_NEXT;     // Page down
-	s_keyMap[wxT('\xF72E')] = WXK_SNAPSHOT; // Print Screen
-	s_keyMap[wxT('\xF72F')] = WXK_SCROLL;   // Scroll Lock
-	s_keyMap[wxT('\xF730')] = WXK_PAUSE;
-	s_keyMap[wxT('\xF746')] = WXK_HELP;
-	s_keyMap[wxT('\xF735')] = WXK_MENU;
-	s_keyMap[wxT('\xF739')] = WXK_CLEAR;
-	s_keyMap[wxT('\xF732')] = WXK_CANCEL;   // Break
+	tmKey_s_keyMap[wxT('\x0003')] = WXK_CANCEL;
+	tmKey_s_keyMap[wxT('\x0009')] = WXK_TAB;
+	tmKey_s_keyMap[wxT('\x000A')] = WXK_RETURN;
+	tmKey_s_keyMap[wxT('\x000D')] = WXK_NUMPAD_ENTER;
+	tmKey_s_keyMap[wxT('\x001B')] = WXK_ESCAPE;
+	tmKey_s_keyMap[wxT('\x0020')] = WXK_SPACE;
+	tmKey_s_keyMap[wxT('\x007F')] = WXK_BACK;
+	tmKey_s_keyMap[wxT('\xF700')] = WXK_UP;
+	tmKey_s_keyMap[wxT('\xF701')] = WXK_DOWN;
+	tmKey_s_keyMap[wxT('\xF702')] = WXK_LEFT;
+	tmKey_s_keyMap[wxT('\xF703')] = WXK_RIGHT;
+	tmKey_s_keyMap[wxT('\xF704')] = WXK_F1;
+	tmKey_s_keyMap[wxT('\xF705')] = WXK_F2;
+	tmKey_s_keyMap[wxT('\xF706')] = WXK_F3;
+	tmKey_s_keyMap[wxT('\xF707')] = WXK_F4;
+	tmKey_s_keyMap[wxT('\xF708')] = WXK_F5;
+	tmKey_s_keyMap[wxT('\xF709')] = WXK_F6;
+	tmKey_s_keyMap[wxT('\xF70A')] = WXK_F7;
+	tmKey_s_keyMap[wxT('\xF70B')] = WXK_F8;
+	tmKey_s_keyMap[wxT('\xF70C')] = WXK_F9;
+	tmKey_s_keyMap[wxT('\xF70D')] = WXK_F10;
+	tmKey_s_keyMap[wxT('\xF70E')] = WXK_F11;
+	tmKey_s_keyMap[wxT('\xF70F')] = WXK_F12;
+	tmKey_s_keyMap[wxT('\xF710')] = WXK_F13;
+	tmKey_s_keyMap[wxT('\xF711')] = WXK_F14;
+	tmKey_s_keyMap[wxT('\xF712')] = WXK_F15;
+	tmKey_s_keyMap[wxT('\xF713')] = WXK_F16;
+	tmKey_s_keyMap[wxT('\xF714')] = WXK_F17;
+	tmKey_s_keyMap[wxT('\xF715')] = WXK_F18;
+	tmKey_s_keyMap[wxT('\xF716')] = WXK_F19;
+	tmKey_s_keyMap[wxT('\xF717')] = WXK_F20;
+	tmKey_s_keyMap[wxT('\xF718')] = WXK_F21;
+	tmKey_s_keyMap[wxT('\xF719')] = WXK_F22;
+	tmKey_s_keyMap[wxT('\xF71A')] = WXK_F23;
+	tmKey_s_keyMap[wxT('\xF71B')] = WXK_F24;
+	tmKey_s_keyMap[wxT('\xF727')] = WXK_INSERT;
+	tmKey_s_keyMap[wxT('\xF728')] = WXK_DELETE;
+	tmKey_s_keyMap[wxT('\xF729')] = WXK_HOME;
+	tmKey_s_keyMap[wxT('\xF72B')] = WXK_END;
+	tmKey_s_keyMap[wxT('\xF72C')] = WXK_PRIOR;    // Page up
+	tmKey_s_keyMap[wxT('\xF72D')] = WXK_NEXT;     // Page down
+	tmKey_s_keyMap[wxT('\xF72E')] = WXK_SNAPSHOT; // Print Screen
+	tmKey_s_keyMap[wxT('\xF72F')] = WXK_SCROLL;   // Scroll Lock
+	tmKey_s_keyMap[wxT('\xF730')] = WXK_PAUSE;
+	tmKey_s_keyMap[wxT('\xF746')] = WXK_HELP;
+	tmKey_s_keyMap[wxT('\xF735')] = WXK_MENU;
+	tmKey_s_keyMap[wxT('\xF739')] = WXK_CLEAR;
+	tmKey_s_keyMap[wxT('\xF732')] = WXK_CANCEL;   // Break
 
-	s_numMap[wxT('0')] = WXK_NUMPAD0;
-	s_numMap[wxT('1')] = WXK_NUMPAD1;
-	s_numMap[wxT('2')] = WXK_NUMPAD2;
-	s_numMap[wxT('3')] = WXK_NUMPAD3;
-	s_numMap[wxT('4')] = WXK_NUMPAD4;
-	s_numMap[wxT('5')] = WXK_NUMPAD5;
-	s_numMap[wxT('6')] = WXK_NUMPAD6;
-	s_numMap[wxT('7')] = WXK_NUMPAD7;
-	s_numMap[wxT('8')] = WXK_NUMPAD8;
-	s_numMap[wxT('9')] = WXK_NUMPAD9;
-	s_numMap[wxT(' ')] = WXK_NUMPAD_SPACE;
-	s_numMap[wxT('\x0009')] = WXK_NUMPAD_TAB;
-	s_numMap[wxT('\x000A')] = WXK_NUMPAD_ENTER;
-	s_numMap[wxT('\x000D')] = WXK_NUMPAD_ENTER;
-	s_numMap[wxT('\xF704')] = WXK_NUMPAD_F1;
-	s_numMap[wxT('\xF705')] = WXK_NUMPAD_F2;
-	s_numMap[wxT('\xF706')] = WXK_NUMPAD_F3;
-	s_numMap[wxT('\xF707')] = WXK_NUMPAD_F4;
-	s_numMap[wxT('\xF729')] = WXK_NUMPAD_HOME;
-	s_numMap[wxT('\xF702')] = WXK_NUMPAD_LEFT;
-	s_numMap[wxT('\xF700')] = WXK_NUMPAD_UP;
-	s_numMap[wxT('\xF703')] = WXK_NUMPAD_RIGHT;
-	s_numMap[wxT('\xF701')] = WXK_NUMPAD_DOWN;
-	s_numMap[wxT('\xF72C')] = WXK_NUMPAD_PRIOR;
-	s_numMap[wxT('\xF72C')] = WXK_NUMPAD_PAGEUP;
-	s_numMap[wxT('\xF72D')] = WXK_NUMPAD_NEXT;
-	s_numMap[wxT('\xF72D')] = WXK_NUMPAD_PAGEDOWN;
-	s_numMap[wxT('\xF72B')] = WXK_NUMPAD_END;
-	s_numMap[wxT('\xF72A')] = WXK_NUMPAD_BEGIN;
-	s_numMap[wxT('\xF727')] = WXK_NUMPAD_INSERT;
-	s_numMap[wxT('\xF728')] = WXK_NUMPAD_DELETE;
-	s_numMap[wxT('=')] = WXK_NUMPAD_EQUAL;
-	s_numMap[wxT('*')] = WXK_NUMPAD_MULTIPLY;
-	s_numMap[wxT('+')] = WXK_NUMPAD_ADD;
-	s_numMap[wxT(',')] = WXK_NUMPAD_SEPARATOR;
-	s_numMap[wxT('-')] = WXK_NUMPAD_SUBTRACT;
-	s_numMap[wxT('.')] = WXK_NUMPAD_DECIMAL;
-	s_numMap[wxT('/')] = WXK_NUMPAD_DIVIDE;
+	tmKey_s_numMap[wxT('0')] = WXK_NUMPAD0;
+	tmKey_s_numMap[wxT('1')] = WXK_NUMPAD1;
+	tmKey_s_numMap[wxT('2')] = WXK_NUMPAD2;
+	tmKey_s_numMap[wxT('3')] = WXK_NUMPAD3;
+	tmKey_s_numMap[wxT('4')] = WXK_NUMPAD4;
+	tmKey_s_numMap[wxT('5')] = WXK_NUMPAD5;
+	tmKey_s_numMap[wxT('6')] = WXK_NUMPAD6;
+	tmKey_s_numMap[wxT('7')] = WXK_NUMPAD7;
+	tmKey_s_numMap[wxT('8')] = WXK_NUMPAD8;
+	tmKey_s_numMap[wxT('9')] = WXK_NUMPAD9;
+	tmKey_s_numMap[wxT(' ')] = WXK_NUMPAD_SPACE;
+	tmKey_s_numMap[wxT('\x0009')] = WXK_NUMPAD_TAB;
+	tmKey_s_numMap[wxT('\x000A')] = WXK_NUMPAD_ENTER;
+	tmKey_s_numMap[wxT('\x000D')] = WXK_NUMPAD_ENTER;
+	tmKey_s_numMap[wxT('\xF704')] = WXK_NUMPAD_F1;
+	tmKey_s_numMap[wxT('\xF705')] = WXK_NUMPAD_F2;
+	tmKey_s_numMap[wxT('\xF706')] = WXK_NUMPAD_F3;
+	tmKey_s_numMap[wxT('\xF707')] = WXK_NUMPAD_F4;
+	tmKey_s_numMap[wxT('\xF729')] = WXK_NUMPAD_HOME;
+	tmKey_s_numMap[wxT('\xF702')] = WXK_NUMPAD_LEFT;
+	tmKey_s_numMap[wxT('\xF700')] = WXK_NUMPAD_UP;
+	tmKey_s_numMap[wxT('\xF703')] = WXK_NUMPAD_RIGHT;
+	tmKey_s_numMap[wxT('\xF701')] = WXK_NUMPAD_DOWN;
+	tmKey_s_numMap[wxT('\xF72C')] = WXK_NUMPAD_PRIOR;
+	tmKey_s_numMap[wxT('\xF72C')] = WXK_NUMPAD_PAGEUP;
+	tmKey_s_numMap[wxT('\xF72D')] = WXK_NUMPAD_NEXT;
+	tmKey_s_numMap[wxT('\xF72D')] = WXK_NUMPAD_PAGEDOWN;
+	tmKey_s_numMap[wxT('\xF72B')] = WXK_NUMPAD_END;
+	tmKey_s_numMap[wxT('\xF72A')] = WXK_NUMPAD_BEGIN;
+	tmKey_s_numMap[wxT('\xF727')] = WXK_NUMPAD_INSERT;
+	tmKey_s_numMap[wxT('\xF728')] = WXK_NUMPAD_DELETE;
+	tmKey_s_numMap[wxT('=')] = WXK_NUMPAD_EQUAL;
+	tmKey_s_numMap[wxT('*')] = WXK_NUMPAD_MULTIPLY;
+	tmKey_s_numMap[wxT('+')] = WXK_NUMPAD_ADD;
+	tmKey_s_numMap[wxT(',')] = WXK_NUMPAD_SEPARATOR;
+	tmKey_s_numMap[wxT('-')] = WXK_NUMPAD_SUBTRACT;
+	tmKey_s_numMap[wxT('.')] = WXK_NUMPAD_DECIMAL;
+	tmKey_s_numMap[wxT('/')] = WXK_NUMPAD_DIVIDE;
 
-	s_keyBind[WXK_SPACE] = wxT('\x0020');
-	s_keyBind[WXK_TAB] = wxT('\x0009');
-	s_keyBind[WXK_RETURN] = wxT('\x000A');
-	s_keyBind[WXK_NUMPAD_ENTER] = wxT('\x000D');
-	s_keyBind[WXK_ESCAPE] = wxT('\x001B');
-	s_keyBind[WXK_BACK] = wxT('\x007F');
-	s_keyBind[WXK_UP] = wxT('\xF700');
-	s_keyBind[WXK_DOWN] = wxT('\xF701');
-	s_keyBind[WXK_LEFT] = wxT('\xF702');
-	s_keyBind[WXK_RIGHT] = wxT('\xF703');
-	s_keyBind[WXK_F1] = wxT('\xF704');
-	s_keyBind[WXK_F2] = wxT('\xF705');
-	s_keyBind[WXK_F3] = wxT('\xF706');
-	s_keyBind[WXK_F4] = wxT('\xF707');
-	s_keyBind[WXK_F5] = wxT('\xF708');
-	s_keyBind[WXK_F6] = wxT('\xF709');
-	s_keyBind[WXK_F7] = wxT('\xF70A');
-	s_keyBind[WXK_F8] = wxT('\xF70B');
-	s_keyBind[WXK_F9] = wxT('\xF70C');
-	s_keyBind[WXK_F10] = wxT('\xF70D');
-	s_keyBind[WXK_F11] = wxT('\xF70E');
-	s_keyBind[WXK_F12] = wxT('\xF70F');
-	s_keyBind[WXK_F13] = wxT('\xF710');
-	s_keyBind[WXK_F14] = wxT('\xF711');
-	s_keyBind[WXK_F15] = wxT('\xF712');
-	s_keyBind[WXK_F16] = wxT('\xF713');
-	s_keyBind[WXK_F17] = wxT('\xF714');
-	s_keyBind[WXK_F18] = wxT('\xF715');
-	s_keyBind[WXK_F19] = wxT('\xF716');
-	s_keyBind[WXK_F20] = wxT('\xF717');
-	s_keyBind[WXK_F21] = wxT('\xF718');
-	s_keyBind[WXK_F22] = wxT('\xF719');
-	s_keyBind[WXK_F23] = wxT('\xF71A');
-	s_keyBind[WXK_F24] = wxT('\xF71B');
-	s_keyBind[WXK_INSERT] = wxT('\xF727');
-	s_keyBind[WXK_DELETE] = wxT('\xF728');
-	s_keyBind[WXK_HOME] = wxT('\xF729');
-	s_keyBind[WXK_END] = wxT('\xF72B');
-	s_keyBind[WXK_PRIOR] = wxT('\xF72C');
-	s_keyBind[WXK_NEXT] = wxT('\xF72D');
-	s_keyBind[WXK_SNAPSHOT] = wxT('\xF72E');
-	s_keyBind[WXK_SCROLL] = wxT('\xF72F');
-	s_keyBind[WXK_PAUSE] = wxT('\xF730');
-	s_keyBind[WXK_HELP] = wxT('\xF746');
-	s_keyBind[WXK_MENU] = wxT('\xF735');
-	s_keyBind[WXK_CLEAR] = wxT('\xF739');
-	s_keyBind[WXK_CANCEL] = wxT('\xF732'); // break
+	tmKey_s_keyBind[WXK_SPACE] = wxT('\x0020');
+	tmKey_s_keyBind[WXK_TAB] = wxT('\x0009');
+	tmKey_s_keyBind[WXK_RETURN] = wxT('\x000A');
+	tmKey_s_keyBind[WXK_NUMPAD_ENTER] = wxT('\x000D');
+	tmKey_s_keyBind[WXK_ESCAPE] = wxT('\x001B');
+	tmKey_s_keyBind[WXK_BACK] = wxT('\x007F');
+	tmKey_s_keyBind[WXK_UP] = wxT('\xF700');
+	tmKey_s_keyBind[WXK_DOWN] = wxT('\xF701');
+	tmKey_s_keyBind[WXK_LEFT] = wxT('\xF702');
+	tmKey_s_keyBind[WXK_RIGHT] = wxT('\xF703');
+	tmKey_s_keyBind[WXK_F1] = wxT('\xF704');
+	tmKey_s_keyBind[WXK_F2] = wxT('\xF705');
+	tmKey_s_keyBind[WXK_F3] = wxT('\xF706');
+	tmKey_s_keyBind[WXK_F4] = wxT('\xF707');
+	tmKey_s_keyBind[WXK_F5] = wxT('\xF708');
+	tmKey_s_keyBind[WXK_F6] = wxT('\xF709');
+	tmKey_s_keyBind[WXK_F7] = wxT('\xF70A');
+	tmKey_s_keyBind[WXK_F8] = wxT('\xF70B');
+	tmKey_s_keyBind[WXK_F9] = wxT('\xF70C');
+	tmKey_s_keyBind[WXK_F10] = wxT('\xF70D');
+	tmKey_s_keyBind[WXK_F11] = wxT('\xF70E');
+	tmKey_s_keyBind[WXK_F12] = wxT('\xF70F');
+	tmKey_s_keyBind[WXK_F13] = wxT('\xF710');
+	tmKey_s_keyBind[WXK_F14] = wxT('\xF711');
+	tmKey_s_keyBind[WXK_F15] = wxT('\xF712');
+	tmKey_s_keyBind[WXK_F16] = wxT('\xF713');
+	tmKey_s_keyBind[WXK_F17] = wxT('\xF714');
+	tmKey_s_keyBind[WXK_F18] = wxT('\xF715');
+	tmKey_s_keyBind[WXK_F19] = wxT('\xF716');
+	tmKey_s_keyBind[WXK_F20] = wxT('\xF717');
+	tmKey_s_keyBind[WXK_F21] = wxT('\xF718');
+	tmKey_s_keyBind[WXK_F22] = wxT('\xF719');
+	tmKey_s_keyBind[WXK_F23] = wxT('\xF71A');
+	tmKey_s_keyBind[WXK_F24] = wxT('\xF71B');
+	tmKey_s_keyBind[WXK_INSERT] = wxT('\xF727');
+	tmKey_s_keyBind[WXK_DELETE] = wxT('\xF728');
+	tmKey_s_keyBind[WXK_HOME] = wxT('\xF729');
+	tmKey_s_keyBind[WXK_END] = wxT('\xF72B');
+	tmKey_s_keyBind[WXK_PRIOR] = wxT('\xF72C');
+	tmKey_s_keyBind[WXK_NEXT] = wxT('\xF72D');
+	tmKey_s_keyBind[WXK_SNAPSHOT] = wxT('\xF72E');
+	tmKey_s_keyBind[WXK_SCROLL] = wxT('\xF72F');
+	tmKey_s_keyBind[WXK_PAUSE] = wxT('\xF730');
+	tmKey_s_keyBind[WXK_HELP] = wxT('\xF746');
+	tmKey_s_keyBind[WXK_MENU] = wxT('\xF735');
+	tmKey_s_keyBind[WXK_CLEAR] = wxT('\xF739');
+	tmKey_s_keyBind[WXK_CANCEL] = wxT('\xF732'); // break
 
-	s_keyText[WXK_SPACE] = _("Space");
-	s_keyText[WXK_TAB] = _("Tab");
-	s_keyText[WXK_RETURN] = _("Return");
-	s_keyText[WXK_NUMPAD_ENTER] = _("Enter");
-	s_keyText[WXK_ESCAPE] = _("Escape");
-	s_keyText[WXK_BACK] = _("Back");
-	s_keyText[WXK_UP] = _("Up");
-	s_keyText[WXK_DOWN] = _("Down");
-	s_keyText[WXK_LEFT] = _("Left");
-	s_keyText[WXK_RIGHT] = _("Right");
-	s_keyText[WXK_F1] = _("F1");
-	s_keyText[WXK_F2] = _("F2");
-	s_keyText[WXK_F3] = _("F3");
-	s_keyText[WXK_F4] = _("F4");
-	s_keyText[WXK_F5] = _("F5");
-	s_keyText[WXK_F6] = _("F6");
-	s_keyText[WXK_F7] = _("F7");
-	s_keyText[WXK_F8] = _("F8");
-	s_keyText[WXK_F9] = _("F9");
-	s_keyText[WXK_F10] = _("F10");
-	s_keyText[WXK_F11] = _("F11");
-	s_keyText[WXK_F12] = _("F12");
-	s_keyText[WXK_F13] = _("F13");
-	s_keyText[WXK_F14] = _("F14");
-	s_keyText[WXK_F15] = _("F15");
-	s_keyText[WXK_F16] = _("F16");
-	s_keyText[WXK_F17] = _("F17");
-	s_keyText[WXK_F18] = _("F18");
-	s_keyText[WXK_F19] = _("F19");
-	s_keyText[WXK_F20] = _("F20");
-	s_keyText[WXK_F21] = _("F21");
-	s_keyText[WXK_F22] = _("F22");
-	s_keyText[WXK_F23] = _("F23");
-	s_keyText[WXK_F24] = _("F24");
-	s_keyText[WXK_INSERT] = _("Insert");
-	s_keyText[WXK_DELETE] = _("Delete");
-	s_keyText[WXK_HOME] = _("Home");
-	s_keyText[WXK_END] = _("End");
-	s_keyText[WXK_PRIOR] = _("PageUp");
-	s_keyText[WXK_NEXT] = _("PageDown");
-	s_keyText[WXK_SNAPSHOT] = _("PrintScn");
-	s_keyText[WXK_SCROLL] = _("ScrollLock");
-	s_keyText[WXK_PAUSE] = _("Pause");
-	s_keyText[WXK_HELP] = _("Help");
-	s_keyText[WXK_MENU] = _("Menu");
-	s_keyText[WXK_CLEAR] = _("Clear");
-	s_keyText[WXK_CANCEL] = _("Cancel");
+	tmKey_s_keyText[WXK_SPACE] = _("Space");
+	tmKey_s_keyText[WXK_TAB] = _("Tab");
+	tmKey_s_keyText[WXK_RETURN] = _("Return");
+	tmKey_s_keyText[WXK_NUMPAD_ENTER] = _("Enter");
+	tmKey_s_keyText[WXK_ESCAPE] = _("Escape");
+	tmKey_s_keyText[WXK_BACK] = _("Back");
+	tmKey_s_keyText[WXK_UP] = _("Up");
+	tmKey_s_keyText[WXK_DOWN] = _("Down");
+	tmKey_s_keyText[WXK_LEFT] = _("Left");
+	tmKey_s_keyText[WXK_RIGHT] = _("Right");
+	tmKey_s_keyText[WXK_F1] = _("F1");
+	tmKey_s_keyText[WXK_F2] = _("F2");
+	tmKey_s_keyText[WXK_F3] = _("F3");
+	tmKey_s_keyText[WXK_F4] = _("F4");
+	tmKey_s_keyText[WXK_F5] = _("F5");
+	tmKey_s_keyText[WXK_F6] = _("F6");
+	tmKey_s_keyText[WXK_F7] = _("F7");
+	tmKey_s_keyText[WXK_F8] = _("F8");
+	tmKey_s_keyText[WXK_F9] = _("F9");
+	tmKey_s_keyText[WXK_F10] = _("F10");
+	tmKey_s_keyText[WXK_F11] = _("F11");
+	tmKey_s_keyText[WXK_F12] = _("F12");
+	tmKey_s_keyText[WXK_F13] = _("F13");
+	tmKey_s_keyText[WXK_F14] = _("F14");
+	tmKey_s_keyText[WXK_F15] = _("F15");
+	tmKey_s_keyText[WXK_F16] = _("F16");
+	tmKey_s_keyText[WXK_F17] = _("F17");
+	tmKey_s_keyText[WXK_F18] = _("F18");
+	tmKey_s_keyText[WXK_F19] = _("F19");
+	tmKey_s_keyText[WXK_F20] = _("F20");
+	tmKey_s_keyText[WXK_F21] = _("F21");
+	tmKey_s_keyText[WXK_F22] = _("F22");
+	tmKey_s_keyText[WXK_F23] = _("F23");
+	tmKey_s_keyText[WXK_F24] = _("F24");
+	tmKey_s_keyText[WXK_INSERT] = _("Insert");
+	tmKey_s_keyText[WXK_DELETE] = _("Delete");
+	tmKey_s_keyText[WXK_HOME] = _("Home");
+	tmKey_s_keyText[WXK_END] = _("End");
+	tmKey_s_keyText[WXK_PRIOR] = _("PageUp");
+	tmKey_s_keyText[WXK_NEXT] = _("PageDown");
+	tmKey_s_keyText[WXK_SNAPSHOT] = _("PrintScn");
+	tmKey_s_keyText[WXK_SCROLL] = _("ScrollLock");
+	tmKey_s_keyText[WXK_PAUSE] = _("Pause");
+	tmKey_s_keyText[WXK_HELP] = _("Help");
+	tmKey_s_keyText[WXK_MENU] = _("Menu");
+	tmKey_s_keyText[WXK_CLEAR] = _("Clear");
+	tmKey_s_keyText[WXK_CANCEL] = _("Cancel");
 }
 
 
@@ -233,8 +242,8 @@ tmKey::tmKey(const wxString& binding) : modifiers(0), keyCode(0) {
 					c = binding[i];
 
 					// Numpadded keycode
-					map<wxChar, wxKeyCode>::const_iterator p = s_numMap.find(c);
-					if (p != s_numMap.end()) {
+					std::map<wxChar, wxKeyCode>::const_iterator p = tmKey_s_numMap.find(c);
+					if (p != tmKey_s_numMap.end()) {
 						keyCode = p->second;
 					}
 					else goto error;
@@ -248,8 +257,8 @@ tmKey::tmKey(const wxString& binding) : modifiers(0), keyCode(0) {
 		}
 		else {
 			// check keymap
-			map<wxChar, wxKeyCode>::const_iterator p = s_keyMap.find(c);
-			if (p != s_keyMap.end()) {
+			std::map<wxChar, wxKeyCode>::const_iterator p = tmKey_s_keyMap.find(c);
+			if (p != tmKey_s_keyMap.end()) {
 				keyCode= p->second;
 			}
 			else {
@@ -286,8 +295,8 @@ void tmKey::UpdateShortcut() {
 	//if (numpad) key.shortcut += _("Numpad-");
 
 	if (keyCode) {
-		map<int, wxString>::const_iterator k = s_keyText.find(keyCode);
-		if (k != s_keyText.end()) {
+		std::map<int, wxString>::const_iterator k = tmKey_s_keyText.find(keyCode);
+		if (k != tmKey_s_keyText.end()) {
 			if (keyCode == WXK_NUMPAD_ENTER) shortcut += _("Numpad-");
 			shortcut += k->second;
 		}
@@ -316,8 +325,8 @@ wxString tmKey::getBinding() {
 	if (modifiers & 0x0008) binding += _("~"); // Win
 
 	if (keyCode) {
-		map<int, wxChar>::const_iterator k = s_keyBind.find(keyCode);
-		if (k != s_keyBind.end()) binding += k->second;
+		std::map<int, wxChar>::const_iterator k = tmKey_s_keyBind.find(keyCode);
+		if (k != tmKey_s_keyBind.end()) binding += k->second;
 		else {
 			wxChar uniKey;
 			if (!tmKey::wxkToUni(keyCode, false, uniKey)) return wxEmptyString;

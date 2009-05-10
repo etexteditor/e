@@ -6,16 +6,6 @@
 	#include <wx/string.h>
 #endif
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
-#include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
-
 class tmKey {
 public:
 	tmKey()
@@ -39,13 +29,6 @@ protected:
 private:
 	static wxChar CharToUpper(wxChar c);
 	void UpdateShortcut();
-
-	static map<wxChar, wxKeyCode> s_keyMap;
-	static map<wxChar, wxKeyCode> s_numMap;
-	static map<int, wxString> s_keyText;
-	static map<int, wxChar> s_keyBind;
 };
-
-
 
 #endif // __TMKEY_H__

@@ -9501,7 +9501,7 @@ BundleItemEditorCtrl::BundleItemEditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap
 BundleItemEditorCtrl::~BundleItemEditorCtrl(){}
 
 const char** BundleItemEditorCtrl::RecommendedIcon() {
-	switch (GetBundleType()) {
+	switch (m_bundleType) {
 		case BUNDLE_COMMAND:
 			return tmcommand_xpm;
 

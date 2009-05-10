@@ -147,10 +147,10 @@ public:
 	virtual wxString GetName() const;
 	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
-	// Bundle Editing
 	virtual const char** RecommendedIcon();
+
+	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
-	BundleItemType GetBundleType() const {return m_bundleType;};
 	bool CheckBundleItemModified() const;
 	bool LoadBundleItem(const wxString& uuid);
 	bool SaveBundleItem(bool duplicate=false);
@@ -702,6 +702,8 @@ public:
 	virtual ~BundleItemEditorCtrl();
 
 	virtual const char** RecommendedIcon();
+
+	BundleItemType GetBundleType() const {return m_bundleType;};
 };
 
 #endif // __EDITORCTRL_H__

@@ -30,7 +30,7 @@
 #include "RedoDlg.h"
 #include "CompletionPopup.h"
 #include "MultilineDataObject.h"
-#include "EditorBundlePanel.h"
+#include "IUpdatePanel.h"
 #include <wx/tokenzr.h>
 #include "jsonreader.h"
 #include "eDocumentPath.h"

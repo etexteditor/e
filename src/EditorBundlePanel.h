@@ -16,6 +16,7 @@
 
 #include "BundleItemType.h"
 #include "key_hook.h"
+#include "IUpdatePanel.h"
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
@@ -31,13 +32,6 @@ class BundleItemEditorCtrl;
 class CatalystWrapper;
 class DocumentWrapper;
 class ShortcutCtrl;
-
-// This simple interface allows an EditorCtrl to tell the
-// panel that it is embedded in to update.
-class IUpdatePanel {
-public:
-	virtual void UpdatePanel() = 0;
-};
 
 class EditorBundlePanel : public wxPanel, public IUpdatePanel {
 public:

@@ -367,6 +367,10 @@
 				RelativePath=".\IPrintableDocument.h"
 				>
 			</File>
+			<File
+				RelativePath=".\IUpdatePanel.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Controls"

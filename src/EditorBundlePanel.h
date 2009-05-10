@@ -60,8 +60,12 @@ private:
 	void OnChildFocus(wxChildFocusEvent& event);
 	DECLARE_EVENT_TABLE()
 
-	// Member ctrl's
+	// Member data
 	BundleItemEditorCtrl* m_editorCtrl;
+	BundleItemType m_currentType;
+
+	// --- ^ Initializer List ^ ---
+
 	wxChoice* m_envChoice;
 	wxChoice* m_saveChoice;
 	wxChoice* m_inputChoice;
@@ -88,9 +92,6 @@ private:
 	wxBoxSizer* m_envSizer;
 	wxBoxSizer* m_inputSizer;
 	wxBoxSizer* m_triggerSizer;
-
-	// Member variables
-	BundleItemType m_currentType;
 
 	DECLARE_DYNAMIC_CLASS_NO_COPY(EditorBundlePanel)
 };

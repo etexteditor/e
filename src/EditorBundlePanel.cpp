@@ -50,13 +50,19 @@ BEGIN_EVENT_TABLE(EditorBundlePanel, wxPanel)
 	EVT_CHILD_FOCUS(EditorBundlePanel::OnChildFocus)
 END_EVENT_TABLE()
 
-EditorBundlePanel::EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap)
-: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_editorCtrl(new BundleItemEditorCtrl(cw, bitmap, this, parentFrame)), m_currentType(BUNDLE_NONE) {
+EditorBundlePanel::EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap): 
+	wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), 
+	m_editorCtrl(new BundleItemEditorCtrl(cw, bitmap, this, parentFrame)), 
+	m_currentType(BUNDLE_NONE) 
+{
 	Init();
 }
 
-EditorBundlePanel::EditorBundlePanel(int page_id, wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap)
-: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_editorCtrl(new BundleItemEditorCtrl(page_id, cw, bitmap, this, parentFrame)), m_currentType(BUNDLE_NONE) {
+EditorBundlePanel::EditorBundlePanel(int page_id, wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap): 
+	wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), 
+	m_editorCtrl(new BundleItemEditorCtrl(page_id, cw, bitmap, this, parentFrame)), 
+	m_currentType(BUNDLE_NONE) 
+{
 	Init();
 	UpdatePanel();
 }

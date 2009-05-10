@@ -2047,28 +2047,28 @@ bool ProjectInfoHandler::GetDirAndFileLists(const wxString& path, wxArrayString&
 void ProjectInfoHandler::GetFilters(const wxString& path, wxArrayString& incDirs, wxArrayString& excDirs, wxArrayString& incFiles, wxArrayString& excFiles) const {
 	wxFileName dirPath(path, wxEmptyString);
 
-	while(1) {
-	if (m_prjPath == dirPath) {
-		// Return root filters
-		incDirs = m_projectInfo.includeDirs;
-		excDirs = m_projectInfo.excludeDirs;
-		incFiles = m_projectInfo.includeFiles;
-		excFiles = m_projectInfo.excludeFiles;
-		return;
-	}
+	while(1) { // Eventually we will walk back to the project root, so the first if condition will return.
+		if (m_prjPath == dirPath) {
+			// Return root filters
+			incDirs = m_projectInfo.includeDirs;
+			excDirs = m_projectInfo.excludeDirs;
+			incFiles = m_projectInfo.includeFiles;
+			excFiles = m_projectInfo.excludeFiles;
+			return;
+		}
 
-	cxProjectInfo info;
-	
-	if (info.Load(m_prjPath, dirPath.GetPath(), true)) {
-		incDirs = info.includeDirs;
-		excDirs = info.excludeDirs;
-		incFiles = info.includeFiles;
-		excFiles = info.excludeFiles;
-		return;
-	}
+		cxProjectInfo info;
+		
+		if (info.Load(m_prjPath, dirPath.GetPath(), true)) {
+			incDirs = info.includeDirs;
+			excDirs = info.excludeDirs;
+			incFiles = info.includeFiles;
+			excFiles = info.excludeFiles;
+			return;
+		}
 
-	// See if we can inherit filters from parent
-	dirPath.RemoveLastDir();
+		// See if we can inherit filters from parent
+		dirPath.RemoveLastDir();
 	}
 }
 

@@ -48,7 +48,8 @@ public:
 	bool IsFileIncluded(const wxString& file_name) const;
 	bool IsDirectoryIncluded(const wxString& dir_name) const;
 
-	bool isRoot;
+	bool IsRoot() const { return isRoot; }
+
 	wxString path;
 	bool hasFilters;
 	wxArrayString includeDirs;
@@ -57,6 +58,9 @@ public:
 	wxArrayString excludeFiles;
 	map<wxString, wxString> env;
 	map<wxString, wxString> triggers;
+
+private:
+	bool isRoot;
 };
 
 #endif // __PROJECTINFO_H__

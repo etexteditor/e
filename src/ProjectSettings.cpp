@@ -52,7 +52,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 			// Layout
 			wxBoxSizer* pageSizer = new wxBoxSizer(wxVERTICAL);
 				pageSizer->Add(m_inheritCheck, 0, wxALL, 5);
-				if (project.isRoot) pageSizer->Hide(m_inheritCheck);
+				if (project.IsRoot()) pageSizer->Hide(m_inheritCheck);
 
 				wxFlexGridSizer* filterSizer = new wxFlexGridSizer(4, 2, 0, 0);
 				filterSizer->AddGrowableCol(0);
@@ -73,7 +73,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 			notebook->AddPage(filterPage, _("Filters"), true);
 		}
 
-		if (project.isRoot) {
+		if (project.IsRoot()) {
 			// Create the environment variable page
 			wxPanel* envPage = new wxPanel(notebook, wxID_ANY);
 			{
@@ -116,7 +116,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 
 	// Load filters
-	if (project.hasFilters || project.isRoot) {
+	if (project.hasFilters || project.IsRoot()) {
 		unsigned int i = 0;
 		for (i = 0; i < project.includeDirs.GetCount(); ++i) {
 			if (i) m_includeDirs->AppendText(wxT("\n"));
@@ -162,7 +162,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 	}
 
 	// Load env variables
-	if (project.isRoot) {
+	if (project.IsRoot()) {
 		for (map<wxString,wxString>::const_iterator p = project.env.begin(); p != project.env.end(); ++p) {
 			const unsigned int rowId = m_envList->GetNumberRows();
 			m_envList->InsertRows(rowId);
@@ -185,7 +185,7 @@ bool ProjectSettings::IsModified() const {
 	if (m_includeFiles->IsModified()) return true;
 	if (m_excludeFiles->IsModified()) return true;
 
-	if (m_projectInfo.isRoot && m_envModified) return true;
+	if (m_projectInfo.IsRoot() && m_envModified) return true;
 
 	return false;
 }
@@ -224,7 +224,7 @@ void ProjectSettings::GetSettings(cxProjectInfo& project) const {
 		}
 	}
 
-	if (m_projectInfo.isRoot) {
+	if (m_projectInfo.IsRoot()) {
 		project.env.clear();
 
 		for (int i = 0; i < m_envList->GetNumberRows(); ++i) {

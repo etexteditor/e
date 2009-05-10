@@ -22,7 +22,9 @@
 #include <wx/filename.h>
 #include <wx/dir.h>
 #include "plistHandler.h"
+
 #include "tmTheme.h"
+#include "tmKey.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -52,36 +54,6 @@ class Dispatcher;
 
 struct style;
 class TmSyntaxHandler;
-
-class tmKey {
-public:
-	tmKey()
-		: modifiers(0), keyCode(0) {};
-	tmKey(int key, int mod)
-		: modifiers(mod), keyCode(key) {UpdateShortcut();};
-	tmKey(const wxString& binding);
-
-	wxString getBinding();
-
-	static bool wxkToUni(int wxk, bool shifted, wxChar& uniCode);
-	static bool uniToWxk(wxChar uniCode, int& wxk, int& mod);
-
-	int modifiers;
-	int keyCode;
-	wxString shortcut;
-
-protected:
-	static void BuildMaps();
-
-private:
-	static wxChar CharToUpper(wxChar c);
-	void UpdateShortcut();
-
-	static map<wxChar, wxKeyCode> s_keyMap;
-	static map<wxChar, wxKeyCode> s_numMap;
-	static map<int, wxString> s_keyText;
-	static map<int, wxChar> s_keyBind;
-};
 
 struct tmBundle {
 	unsigned int bundleRef;

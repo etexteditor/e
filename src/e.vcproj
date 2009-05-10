@@ -3170,6 +3170,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tmKey.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\tmKey.h"
+			>
+		</File>
+		<File
 			RelativePath=".\tmTheme.h"
 			>
 		</File>

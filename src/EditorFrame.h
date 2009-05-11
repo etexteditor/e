@@ -176,10 +176,17 @@ public:
 	virtual DirWatcher& GetDirWatcher() = 0;
 };
 
+class IFrameGetEditorSearch {
+public:
+	virtual IEditorSearch* GetSearch() = 0;
+};
+
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService,
-	public IFrameUndoPane {
+	public IFrameUndoPane,
+	public IFrameGetEditorSearch
+{
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
 	~EditorFrame();
@@ -197,7 +204,7 @@ public:
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
 	EditorCtrl* GetEditorCtrl();
-	IEditorSearch* GetSearch();
+	virtual IEditorSearch* GetSearch();
 
 	// Editor Service methods.
 	virtual wxControl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);

@@ -596,9 +596,6 @@ private:
 	wxDateTime m_modSkipDate;
 	wxString m_mate;
 
-	// Bundle item info
-	BundleItemType m_bundleType;
-
 	// Callback data
 	void* m_modCallbackData;
 	void* m_scrollCallbackData;

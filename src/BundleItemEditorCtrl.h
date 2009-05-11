@@ -30,6 +30,7 @@ private:
 	bool SaveBundleItem();
 
 	IUpdatePanel* m_parentPanel;
+	BundleItemType m_bundleType;
 };
 
 #endif // __BUNDLEITEMEDITORCTRL_H__

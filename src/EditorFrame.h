@@ -100,7 +100,6 @@ enum {
 	MENU_SYMBOLS,
 	MENU_SHIFT_PROJECT_FOCUS,
 	MENU_PREVIEW,
-	MENU_TOOLBAR,
 	MENU_STATUSBAR,
 	MENU_NEXTTAB,
 	MENU_NEXTTAB_OR_LAST,
@@ -300,7 +299,6 @@ private:
 	wxMenu* GetBundleMenu();
 	void ResetBundleMenu();
 	void ResetSyntaxMenu();
-	//void CreateAndSetToolbar();
 	void CreateAndSetStatusbar();
 	void UpdateTabMenu();
 	void UpdateRecentFiles();
@@ -436,7 +434,6 @@ private:
 	void OnMenuIndentGuide(wxCommandEvent& event);
 	void OnMenuWordWrap(wxCommandEvent& event);
 	void OnMenuPreview(wxCommandEvent& event);
-	//void OnMenuToolbar(wxCommandEvent& event);
 	void OnMenuStatusbar(wxCommandEvent& event);
 	void OnMenuHelp(wxCommandEvent& event);
 	void OnMenuGotoForum(wxCommandEvent& event);
@@ -538,9 +535,8 @@ private:
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
 
-	// Toolbar and Statusbar
+	// Statusbar
 	StatusBar* m_pStatBar;
-	//wxToolBar* m_pToolBar;
 	//wxToolBarToolBase* m_pIncommingTool;
 	//const wxBitmap m_incommingBmp;
 	//const wxBitmap m_incommingFullBmp;

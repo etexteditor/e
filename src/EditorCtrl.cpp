@@ -149,8 +149,6 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	else {
 		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
 		if (isBundleItem) {
-			const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
-			m_bundleType = plistHandler.GetBundleTypeFromUri(mirrorPath);
 			m_remotePath = mirrorPath;
 		}
 		else m_path = mirrorPath;

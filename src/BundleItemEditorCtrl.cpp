@@ -20,7 +20,8 @@
 BundleItemEditorCtrl::BundleItemEditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
 	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size)	
 {
-
+	const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
+	m_bundleType = plistHandler.GetBundleTypeFromUri(m_remotePath);
 }
 
 /// Create a new empty document

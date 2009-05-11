@@ -55,7 +55,7 @@ void BundleItemEditorCtrl::SetPath(const wxString& WXUNUSED(newpath)) {
 	// Bundles items can't have their path set.
 }
 
-cxFileResult BundleItemEditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding WXUNUSED(enc), const RemoteProfile* WXUNUSED(rp), wxString& WXUNUSED(localPath)) {
+cxFileResult BundleItemEditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding WXUNUSED(enc), const RemoteProfile* WXUNUSED(rp), wxFileName& WXUNUSED(localPath)) {
 	// Don't need to set localPath, since we don't use it in SetPath above.
 	return LoadBundleItem(whence_to_load) ? cxFILE_OK : cxFILE_OPEN_ERROR;
 }

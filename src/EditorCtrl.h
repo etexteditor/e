@@ -334,7 +334,7 @@ public:
 protected:
 	// Let the editor class load lines into the document, however it needs to 
 	// for the kind of thing being loaded.
-	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxString& localPath);
+	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath);
 
 private:
 	// Classes

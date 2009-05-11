@@ -2449,35 +2449,8 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, const RemoteProfile* 
 }
 
 cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, const RemoteProfile* rp) {
-	cxFileResult result = cxFILE_OK;
 	wxFileName filepath;
-
-	if (eDocumentPath::IsBundlePath(newpath)) {
-		if (!LoadBundleItem(newpath)) return cxFILE_OPEN_ERROR;
-	}
-	else {
-		// First clean up old remote info (and delete evt. buffer file);
-		ClearRemoteInfo();
-
-		// If the path points to a remote file, we have to download it first.
-		if (eDocumentPath::IsRemotePath(newpath)) {
-			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(newpath, false);
-			const wxString buffPath = m_parentFrame.DownloadFile(newpath, m_remoteProfile);
-			if (buffPath.empty()) return cxFILE_DOWNLOAD_ERROR; // download failed
-
-			filepath = buffPath;
-			m_remotePath = newpath;
-		}
-		else {
-			filepath = newpath;
-		}
-
-		// Invalidate all stylers
-		StylersInvalidate();
-
-		result = m_lines.LoadText(filepath, enc, m_remotePath);
-	}
-
+	cxFileResult result = LoadLinesIntoDocument(newpath, enc, rp, filepath);
 	if (result != cxFILE_OK) return result;
 
 	scrollPos = 0;
@@ -2496,7 +2469,7 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	return cxFILE_OK;
 }
 
-cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxString& localPath) {
+cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath) {
 		// First clean up old remote info (and delete evt. buffer file);
 		ClearRemoteInfo();
 

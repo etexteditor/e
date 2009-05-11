@@ -416,9 +416,8 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 		default: wxASSERT(false);
 	}
 
-	// Update Bundle panels (shows properties)
-	if (m_bundlePanel) m_bundlePanel->UpdatePanel();
-	else wxASSERT(false);
+	// Update the panel we're embedded in.
+	m_bundlePanel->UpdatePanel();
 
 	return true;
 }

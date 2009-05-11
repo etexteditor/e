@@ -20,6 +20,7 @@ public:
 
 protected:
 	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath);
+	virtual void UpdateParentPanels();
 
 private:
 	bool LoadBundleItem(const wxString& uuid);

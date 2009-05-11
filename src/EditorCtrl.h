@@ -335,6 +335,9 @@ protected:
 	// for the kind of thing being loaded.
 	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath);
 
+	// Allow derived classes to notify their parent panels to update.
+	virtual void UpdateParentPanels();
+
 private:
 	// Classes
 	class RepParseState {

@@ -60,6 +60,10 @@ cxFileResult BundleItemEditorCtrl::LoadLinesIntoDocument(const wxString& whence_
 	return LoadBundleItem(whence_to_load) ? cxFILE_OK : cxFILE_OPEN_ERROR;
 }
 
+void BundleItemEditorCtrl::UpdateParentPanels() {
+	m_bundlePanel->UpdatePanel();
+}
+
 bool BundleItemEditorCtrl::SaveBundleItem() {
 	wxASSERT(IsBundleItem());
 

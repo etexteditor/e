@@ -2763,13 +2763,17 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	m_parentFrame.UpdateWindowTitle();
 
 	// If this is a bundle item we also have to update the panel
-	if (m_bundlePanel) m_bundlePanel->UpdatePanel();
+	UpdateParentPanels();
 
 	// Notify that we have changed document
 	const doc_id docId = di; // AdamV: Does this exist just to be on the stack in bug reports?
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), this, GetId());
 
 	return true;
+}
+
+void EditorCtrl::UpdateParentPanels() {
+	// Only derived controls are embedded in a parent panel.
 }
 
 void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {

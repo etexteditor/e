@@ -218,8 +218,10 @@ public:
 	void ClearSearchRange(bool reset=false);
 
 
-	// Visibility
+	// Caret and Selection Visibility
+private:
 	bool IsCaretVisible();
+public:
 	bool MakeCaretVisible();
 	void MakeCaretVisibleCenter();
 	void MakeSelectionVisible(unsigned int sel_id = 0);

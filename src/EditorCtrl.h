@@ -261,14 +261,14 @@ public:
 	void DoActionFromDlg();
 	void ShowScopeTip();
 	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
+	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 	void FilterThroughCommand();
 
-	// DragCommands
+	// Drag-and-drop operations
 	void OnDragOver(wxCoord x, wxCoord y);
 	void OnDragDrop(const wxArrayString& filenames);
 	void OnDragDropText(const wxString& text, wxDragResult dragType);
 	void OnDragDropColumn(const wxArrayString& text, wxDragResult dragType);
-	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 
 	// Shell
 	void SetEnv(cxEnv& env, bool isUnix=true, const tmBundle* bundle=NULL);

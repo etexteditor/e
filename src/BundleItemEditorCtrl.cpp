@@ -394,6 +394,7 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 
 	m_remotePath = bundleUri;
 
+	// AdamV: Can we fold these items up to the above switch?
 	// Set initial syntax
 	switch (m_bundleType) {
 		case BUNDLE_SNIPPET:
@@ -419,4 +420,3 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 
 	return true;
 }
-

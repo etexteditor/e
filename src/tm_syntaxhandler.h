@@ -18,8 +18,12 @@
 #ifndef __TM_SYNTAXHANDLER_H__
 #define __TM_SYNTAXHANDLER_H__
 
-#include "plistHandler.h"
+#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
 
+#include "plistHandler.h"
 #include "tmTheme.h"
 #include "tmKey.h"
 
@@ -34,11 +38,7 @@
     #pragma warning(pop)
 #endif
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/dir.h>
-#ifndef WX_PRECOMP
-	#include <wx/wx.h>
-#endif
 
 using namespace std;
 

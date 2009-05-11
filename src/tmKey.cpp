@@ -270,7 +270,7 @@ tmKey::tmKey(const wxString& binding) : modifiers(0), keyCode(0) {
 	UpdateShortcut();
 
 #ifdef __WXDEBUG__
-	wxLogDebug(wxT("ParseKey('%s' to '%s')"), binding.c_str(), shortcut.c_str());
+	//wxLogDebug(wxT("ParseKey('%s' to '%s')"), binding.c_str(), shortcut.c_str());
 
 	if (!(keyCode != 0 || modifiers == 0)) {
 		const wxString msg = wxString::Format(wxT("Invalid keycode in bundle: '%s' (%d,%d)"), binding.c_str(), keyCode, modifiers);
@@ -312,9 +312,7 @@ void tmKey::UpdateShortcut() {
 		}
 	}
 
-#ifdef __WXDEBUG__
-	wxLogDebug(wxT("UpdateShortcut(%d - %c,%d) to '%s'"), keyCode, keyCode>32 ? keyCode : ' ', modifiers, shortcut.c_str());
-#endif //__WXDEBUG__
+	//wxLogDebug(wxT("UpdateShortcut(%d - %c,%d) to '%s'"), keyCode, keyCode>32 ? keyCode : ' ', modifiers, shortcut.c_str());
 }
 
 wxString tmKey::getBinding() {
@@ -344,9 +342,7 @@ wxString tmKey::getBinding() {
 		}
 	}
 
-#ifdef __WXDEBUG__
-	wxLogDebug(wxT("getBinding(%d - %c,%d) to '%s'"), keyCode, keyCode, modifiers, binding.c_str());
-#endif //__WXDEBUG__
+	//wxLogDebug(wxT("getBinding(%d - %c,%d) to '%s'"), keyCode, keyCode, modifiers, binding.c_str());
 
 	return binding;
 }

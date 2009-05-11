@@ -6660,17 +6660,13 @@ bool EditorCtrl::IsCaretVisible() {
 
 	// Check vertically
 	if (cpos.y + caretsize.y < scrollPos) return false;
-	else {
-		if (cpos.y >= scrollPos + clientsize.y) return false;
-	}
+	if (cpos.y >= scrollPos + clientsize.y) return false;
 
 	// Check horizontally
 	if (cpos.x + caretsize.x < m_scrollPosX) return false;
-	else {
-		const int sizeX = ClientWidthToEditor(clientsize.x);
 
-		if (cpos.x >= m_scrollPosX + sizeX) return false;
-	}
+	const int sizeX = ClientWidthToEditor(clientsize.x);
+	if (cpos.x >= m_scrollPosX + sizeX) return false;
 
 	return true;
 }
@@ -6684,12 +6680,11 @@ bool EditorCtrl::MakeCaretVisible() {
 		scrollPos = cpos.y;
 		return true;
 	}
-	else {
-		const int lineheight = m_lines.GetLineHeight();
-		if (cpos.y + lineheight > scrollPos + clientsize.y) {
-			scrollPos = (cpos.y + lineheight) - clientsize.y;
-			return true;
-		}
+
+	const int lineheight = m_lines.GetLineHeight();
+	if (cpos.y + lineheight > scrollPos + clientsize.y) {
+		scrollPos = (cpos.y + lineheight) - clientsize.y;
+		return true;
 	}
 
 	// Check if the caret have moved outside visible display horizontally
@@ -6697,16 +6692,14 @@ bool EditorCtrl::MakeCaretVisible() {
 		m_scrollPosX = wxMax(cpos.x - 50, 0);
 		return true;
 	}
-	else {
-		const int sizeX = ClientWidthToEditor(clientsize.x);
 
-		if (cpos.x >= m_scrollPosX + sizeX) {
-			const int textWidth = m_lines.GetWidth();
-			const int maxScrollPos = (textWidth < sizeX) ? 0 : textWidth + m_caretWidth - sizeX; // room for caret at end
-			m_scrollPosX = (cpos.x + 50) - sizeX;
-			if (m_scrollPosX > maxScrollPos) m_scrollPosX = maxScrollPos;
-			return true;
-		}
+	const int sizeX = ClientWidthToEditor(clientsize.x);
+	if (cpos.x >= m_scrollPosX + sizeX) {
+		const int textWidth = m_lines.GetWidth();
+		const int maxScrollPos = (textWidth < sizeX) ? 0 : textWidth + m_caretWidth - sizeX; // room for caret at end
+		m_scrollPosX = (cpos.x + 50) - sizeX;
+		if (m_scrollPosX > maxScrollPos) m_scrollPosX = maxScrollPos;
+		return true;
 	}
 
 	return false; // no movement

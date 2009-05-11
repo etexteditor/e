@@ -38,7 +38,7 @@
 
 #include "IHtmlWnd.h"
 
-// pre-declearations
+// Forward declarations
 class eApp;
 class EditorCtrl;
 struct EditorChangeState;

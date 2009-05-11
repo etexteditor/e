@@ -14,15 +14,16 @@
 #ifndef __EDITORFRAME_H__
 #define __EDITORFRAME_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable: 4786)
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
 #include <wx/dnd.h>
 #include <wx/aui/aui.h>
 #include <wx/imaglist.h>
+
+#include "Catalyst.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
 

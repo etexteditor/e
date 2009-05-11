@@ -59,6 +59,8 @@ class FindInProjectDlg;
 class wxIEHtmlWin;
 #endif
 
+class IEditorSearch;
+
 // Menu id's
 enum {
 	MENU_OPENPROJECT,
@@ -195,6 +197,7 @@ public:
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
 	EditorCtrl* GetEditorCtrl();
+	IEditorSearch* GetSearch();
 
 	// Editor Service methods.
 	virtual wxControl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);

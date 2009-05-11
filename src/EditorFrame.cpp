@@ -1239,6 +1239,11 @@ EditorCtrl* EditorFrame::GetEditorCtrl() {
 	return editorCtrl;
 }
 
+IEditorSearch* EditorFrame::GetSearch() {
+	// May be NULL, always check in reciever. Downcast.
+	return editorCtrl;
+}
+
 // This method returns true if the active editor is different from the one
 // passed in, or if the active editor is the same but there has been an edit.
 wxControl* EditorFrame::GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus) {

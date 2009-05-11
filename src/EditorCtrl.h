@@ -73,7 +73,6 @@ public:
 
 	bool IsRemote() const {return m_remoteProfile != NULL;};
 	const RemoteProfile* GetRemoteProfile() const {return m_remoteProfile;};
-	Lines& GetLines() {return m_lines;};
 
 	void SetMate(const wxString& mate) {m_mate = mate;};
 	const wxString& GetMate() const {return m_mate;};

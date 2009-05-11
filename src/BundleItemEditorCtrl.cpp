@@ -1,4 +1,5 @@
 #include "BundleItemEditorCtrl.h"
+#include "IUpdatePanel.h"
 #include "jsonreader.h"
 #include "tm_syntaxhandler.h"
 #include <wx/tokenzr.h>
@@ -239,3 +240,183 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 
 	return true;
 }
+
+bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
+	// Get information about bundle item
+	unsigned int bundleId;
+	unsigned int itemId;
+	const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
+	if (!plistHandler.GetBundleItemFromUri(bundleUri, m_bundleType, bundleId, itemId)) return false;
+	const PListDict itemDict = plistHandler.Get(m_bundleType, bundleId, itemId);
+
+	// Invalidate all stylers
+	StylersInvalidate();
+
+	// Check if we already have a mirror
+	bool doReload = true;
+	doc_id di;
+	wxDateTime modDate;
+	bool hasMirror;
+	cxLOCK_READ(m_catalyst)
+		hasMirror = catalyst.GetFileMirror(bundleUri, di, modDate);
+	cxENDLOCK
+	if (hasMirror) {
+		if (modDate == itemDict.GetModDate()) { // item unchanged since mirror?
+			if (di == GetDocID()) return true; // already loaded
+			doReload = false;
+		}
+		SetDocument(di, bundleUri);
+	}
+
+	if (doReload) {
+		// Set item name and encoding
+		cxLOCKDOC_WRITE(m_doc)
+			if (doc.IsEmpty()) doc.Clear(true); // make this initial rev
+			doc.DeleteAll();
+			doc.SetPropertyName(itemDict.wxGetString("name"));
+			doc.SetPropertyEncoding(wxFONTENCODING_UTF8); // bundle contents is always utf8
+			doc.SetPropertyEOL(wxTextFileType_Unix);
+			doc.SetProperty(wxT("bundle:uuid"), itemDict.wxGetString("uuid"));
+		cxENDLOCK
+
+		// Load the item contents
+		switch (m_bundleType) {
+			case BUNDLE_SNIPPET:
+				{
+					const char* co = itemDict.GetString("content");
+					cxLOCKDOC_WRITE(m_doc)
+						if (co) doc.Insert(0, co);
+
+						// Set properties
+						doc.SetProperty(wxT("bundle:keyEquivalent"), itemDict.wxGetString("keyEquivalent"));
+						doc.SetProperty(wxT("bundle:tabTrigger"), itemDict.wxGetString("tabTrigger"));
+						doc.SetProperty(wxT("bundle:scope"), itemDict.wxGetString("scope"));
+					cxENDLOCK
+					m_lines.ReLoadText();
+				}
+				break;
+
+			case BUNDLE_COMMAND:
+			case BUNDLE_DRAGCMD:
+				{
+					bool winCommand = true;
+					const char* co = itemDict.GetString("winCommand");
+					if (!co) {
+						co = itemDict.GetString("command");
+						winCommand = false;
+					}
+					if (co) {
+						cxLOCKDOC_WRITE(m_doc)
+							doc.Insert(0, co);
+
+							// Set properties (for historical reasons runEnvironment is a bit cumbersome)
+							const wxString runEnvironment = itemDict.wxGetString("runEnvironment");
+							if (!runEnvironment.empty()) doc.SetProperty(wxT("bundle:runEnvironment"), runEnvironment);
+							else if (winCommand) doc.SetProperty(wxT("bundle:runEnvironment"), wxT("cygwin"));
+
+							if (m_bundleType == BUNDLE_COMMAND) {
+								doc.SetProperty(wxT("bundle:beforeRunningCommand"), itemDict.wxGetString("beforeRunningCommand"));
+								doc.SetProperty(wxT("bundle:input"), itemDict.wxGetString("input"));
+								doc.SetProperty(wxT("bundle:fallbackInput"), itemDict.wxGetString("fallbackInput"));
+								doc.SetProperty(wxT("bundle:output"), itemDict.wxGetString("output"));
+
+								doc.SetProperty(wxT("bundle:keyEquivalent"), itemDict.wxGetString("keyEquivalent"));
+								doc.SetProperty(wxT("bundle:tabTrigger"), itemDict.wxGetString("tabTrigger"));
+							}
+							else { // m_bundleType == BUNDLE_DRAGCMD
+								// Get file extensions
+								PListArray extArray;
+								if (itemDict.GetArray("draggedFileExtensions", extArray)) {
+									wxString fileTypes;
+									for (unsigned int i = 0; i < extArray.GetSize(); ++i) {
+										if (i) fileTypes += wxT(", ");
+										fileTypes += extArray.wxGetString(i);
+									}
+									doc.SetProperty(wxT("bundle:draggedFileExtensions"), fileTypes);
+								}
+								else doc.DeleteProperty(wxT("bundle:draggedFileExtensions"));
+							}
+
+							doc.SetProperty(wxT("bundle:scope"), itemDict.wxGetString("scope"));
+						cxENDLOCK
+						m_lines.ReLoadText();
+					}
+				}
+				break;
+
+			case BUNDLE_LANGUAGE:
+				{
+					const wxString jsonSettings = itemDict.GetJSON(true /*strip*/);
+					cxLOCKDOC_WRITE(m_doc)
+						doc.Insert(0, jsonSettings);
+
+						// Set properties
+						doc.SetProperty(wxT("bundle:keyEquivalent"), itemDict.wxGetString("keyEquivalent"));
+					cxENDLOCK
+					m_lines.ReLoadText();
+
+					m_syntaxstyler.SetSyntax(wxT("JSON"));
+				}
+				break;
+
+			case BUNDLE_PREF:
+				{
+					wxString jsonSettings = wxT("{ }"); // default
+					PListDict settingsDict;
+					if (itemDict.GetDict("settings", settingsDict)) {
+						jsonSettings = settingsDict.GetJSON();
+					}
+					
+					cxLOCKDOC_WRITE(m_doc)
+						doc.Insert(0, jsonSettings);
+
+						// Set properties
+						doc.SetProperty(wxT("bundle:scope"), itemDict.wxGetString("scope"));
+					cxENDLOCK
+					m_lines.ReLoadText();
+
+					m_syntaxstyler.SetSyntax(wxT("JSON"));
+				}
+				break;
+
+			default:
+				wxASSERT(false);
+		}
+		Freeze();
+
+		// Set mirror
+		modDate = itemDict.GetModDate();
+		di = GetDocID();
+		cxLOCK_WRITE(m_catalyst)
+			catalyst.SetFileMirror(bundleUri, di, modDate);
+		cxENDLOCK
+	}
+
+	m_remotePath = bundleUri;
+
+	// Set initial syntax
+	switch (m_bundleType) {
+		case BUNDLE_SNIPPET:
+			m_syntaxstyler.SetSyntax(wxT("Snippet"));
+			break;
+		case BUNDLE_COMMAND:
+		case BUNDLE_DRAGCMD:
+			if (!m_syntaxstyler.UpdateSyntax()) {
+				if (itemDict.HasKey("winCommand")) m_syntaxstyler.SetSyntax(wxT("MSDOS batch file")); // default syntax for windows native
+				else m_syntaxstyler.SetSyntax(wxT("Shell Script (Bash)")); // default syntax
+			}
+			break;
+		case BUNDLE_LANGUAGE:
+		case BUNDLE_PREF:
+			m_syntaxstyler.SetSyntax(wxT("JSON"));
+			break;
+		default: wxASSERT(false);
+	}
+
+	// Update Bundle panels (shows properties)
+	if (m_bundlePanel) m_bundlePanel->UpdatePanel();
+	else wxASSERT(false);
+
+	return true;
+}
+

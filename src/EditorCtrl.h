@@ -151,7 +151,7 @@ public:
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
-	bool LoadBundleItem(const wxString& uuid);
+	virtual bool LoadBundleItem(const wxString& uuid);
 	void SetBundlePanel(IUpdatePanel* bundlePanel) {m_bundlePanel = bundlePanel;};
 
 	// Undo / Redo

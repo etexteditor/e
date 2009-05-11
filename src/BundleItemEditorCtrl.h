@@ -12,6 +12,7 @@ public:
 	virtual ~BundleItemEditorCtrl();
 
 	virtual const char** RecommendedIcon();
+	virtual bool LoadBundleItem(const wxString& uuid);
 	virtual bool SaveText(bool askforpath=false);
 	virtual void SetPath(const wxString& newpath);
 

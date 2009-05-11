@@ -17,7 +17,7 @@
 #include "images/tmLanguage.xpm"
 
 BundleItemEditorCtrl::BundleItemEditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
-	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size){}
+	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size)	{}
 
 BundleItemEditorCtrl::BundleItemEditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
 	EditorCtrl(cw, bitmap, parent, parentFrame, pos, size){}
@@ -61,7 +61,7 @@ cxFileResult BundleItemEditorCtrl::LoadLinesIntoDocument(const wxString& whence_
 }
 
 void BundleItemEditorCtrl::UpdateParentPanels() {
-	m_bundlePanel->UpdatePanel();
+	m_parentPanel->UpdatePanel();
 }
 
 bool BundleItemEditorCtrl::SaveBundleItem() {
@@ -427,7 +427,7 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 	}
 
 	// Update the panel we're embedded in.
-	m_bundlePanel->UpdatePanel();
+	m_parentPanel->UpdatePanel();
 
 	return true;
 }

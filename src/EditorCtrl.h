@@ -43,7 +43,6 @@ class EditorFrame;
 class PreviewDlg;
 class cxRemoteAction;
 class MultilineDataObject;
-class IUpdatePanel;
 
 struct thTheme;
 class tmAction;
@@ -151,7 +150,6 @@ public:
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
-	void SetBundlePanel(IUpdatePanel* bundlePanel) {m_bundlePanel = bundlePanel;};
 
 	// Undo / Redo
 	void DoUndo();
@@ -583,7 +581,6 @@ private:
 	bool commandMode;
 	unsigned int m_changeToken;
 	bool m_savedForPreview;
-	IUpdatePanel* m_bundlePanel;
 	unsigned int lastpos;
 	int m_doubleClickedLine; // Used for triple-click detection
 	int m_currentSel;

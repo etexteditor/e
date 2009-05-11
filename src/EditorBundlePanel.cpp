@@ -162,11 +162,11 @@ void EditorBundlePanel::Init() {
 	m_scopeText->Connect(wxID_ANY, wxEVT_KILL_FOCUS, wxFocusEventHandler(EditorBundlePanel::OnKillTextFocus), NULL, this);
 
 	// Notify editorCtrl that it is embedded in a bundle panel
-	m_editorCtrl->SetBundlePanel(this);
+	m_editorCtrl->SetParentPanel(this);
 }
 
 EditorCtrl* EditorBundlePanel::GetEditor() {
-	return m_editorCtrl; // Downcast
+	return m_editorCtrl;
 }
 
 bool EditorBundlePanel::Show(bool show) {

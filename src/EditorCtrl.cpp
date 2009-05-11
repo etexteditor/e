@@ -28,7 +28,6 @@
 #include "RedoDlg.h"
 #include "CompletionPopup.h"
 #include "MultilineDataObject.h"
-#include "IUpdatePanel.h"
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
 #include "Env.h"
@@ -118,7 +117,6 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	commandMode(false),
 	m_changeToken(0), 
 	m_savedForPreview(false), 
-	m_bundlePanel(NULL),
 	lastpos(0), 
 	m_doubleClickedLine(-1), 
 	m_currentSel(-1), 
@@ -230,7 +228,6 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	commandMode(false), 
 	m_changeToken(0),
 	m_savedForPreview(false),
-	m_bundlePanel(NULL),
 	lastpos(0),
 	m_doubleClickedLine(-1),
 	m_currentSel(-1), 
@@ -290,7 +287,6 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	commandMode(false), 
 	m_changeToken(0), 
 	m_savedForPreview(false), 
-	m_bundlePanel(NULL),
 	lastpos(0), 
 	m_doubleClickedLine(-1), 
 	m_currentSel(-1), 

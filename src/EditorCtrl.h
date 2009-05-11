@@ -53,11 +53,22 @@ class tmAction;
 class tmDragCommand;
 class TmSyntaxHandler;
 
+class IEditorSearch {
+public:
+	virtual cxFindResult Find(const wxString& text, int options=0) = 0;
+	virtual cxFindResult FindNext(const wxString& text, int options=0) = 0;
+	virtual bool FindPrevious(const wxString& text, int options=0) = 0;
+	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
+	virtual bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
+	virtual void ClearSearchHighlight() = 0;
+};
+
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
 	public IEditorDoAction,
 	public IPrintableDocument,
-	public IEditorSymbols 
+	public IEditorSymbols,
+	public IEditorSearch
 {
 public:
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -201,16 +212,17 @@ public:
 	void GotoMatchingBracket();
 
 	// Search & Replace
-	cxFindResult Find(const wxString& text, int options=0);
-	cxFindResult FindNext(const wxString& text, int options=0);
-	bool FindPrevious(const wxString& text, int options=0);
-	bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
-	bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual cxFindResult Find(const wxString& text, int options=0);
+	virtual cxFindResult FindNext(const wxString& text, int options=0);
+	virtual bool FindPrevious(const wxString& text, int options=0);
+	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual void ClearSearchHighlight();
+
 	wxString ParseReplaceString(const wxString& replacetext, const map<unsigned int,interval>& captures, const vector<char>* source=NULL) const;
 	search_result RegExFind(const pcre* re, const pcre_extra* study, unsigned int start_pos, map<unsigned int,interval> *captures, unsigned int end_pos, int search_options=0) const;
 	search_result RegExFind(const wxString& searchtext, unsigned int start_pos, bool matchcase, map<unsigned int,interval> *captures=NULL, unsigned int end_pos=0) const;
 	search_result RegExFindBackwards(const wxString& searchtext, unsigned int start_pos, unsigned int end_pos, bool matchcase) const;
-	void ClearSearchHighlight();
 	search_result RawRegexSearch(const char* regex, unsigned int subjectStart, unsigned int subjectEnd, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	bool FindNextChar(wxChar c, unsigned int start_pos, unsigned int end_pos, interval& iv) const;

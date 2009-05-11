@@ -327,8 +327,8 @@ void SearchPanel::OnSearchPopup(wxCommandEvent& WXUNUSED(evt)) {
 }
 
 void SearchPanel::OnSearchText(wxCommandEvent& evt) {
-
 	restart_next_search = false;
+
 	if(evt.GetString().empty()) {
 		nextButton->Disable();
 		prevButton->Disable();

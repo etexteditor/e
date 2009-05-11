@@ -2766,7 +2766,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	if (m_bundlePanel) m_bundlePanel->UpdatePanel();
 
 	// Notify that we have changed document
-	const doc_id docId = di;
+	const doc_id docId = di; // AdamV: Does this exist just to be on the stack in bug reports?
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), this, GetId());
 
 	return true;

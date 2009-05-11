@@ -31,7 +31,7 @@ public:
     virtual bool GetDataHere(void *buf) const;
     virtual bool SetData(size_t len, const void *buf);
 
-	static const wxChar* s_formatId;
+	static const wxChar* FormatId;
 
 private:
 	wxString m_nullSeparatedText;

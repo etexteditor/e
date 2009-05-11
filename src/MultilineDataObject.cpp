@@ -13,10 +13,10 @@
 
 #include "MultilineDataObject.h"
 
-const wxChar* MultilineDataObject::s_formatId = wxT("eMultiLineText");
+const wxChar* MultilineDataObject::FormatId = wxT("eMultiLineText");
 
 MultilineDataObject::MultilineDataObject() {
-	SetFormat(s_formatId);
+	SetFormat(FormatId);
 }
 
 void MultilineDataObject::AddText(const wxString& text) {
@@ -53,4 +53,3 @@ bool MultilineDataObject::SetData(size_t len, const void *buf) {
 	m_nullSeparatedText = wxString((const wxChar*)buf, charlen);
 	return true;
 }
-

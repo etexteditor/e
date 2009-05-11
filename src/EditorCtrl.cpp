@@ -4263,7 +4263,7 @@ void EditorCtrl::InsertColumn(const wxArrayString& text, bool select) {
 void EditorCtrl::OnPaste() {
 	if (!wxTheClipboard->Open()) return;
 	
-	if (wxTheClipboard->IsSupported( MultilineDataObject::s_formatId )) {
+	if (wxTheClipboard->IsSupported( MultilineDataObject::FormatId )) {
 		MultilineDataObject data;
 		if (wxTheClipboard->GetData(data)) {
 			// Get the text from clipboard
@@ -8987,7 +8987,7 @@ wxDragResult EditorCtrl::DragDropTarget::OnData(wxCoord WXUNUSED(x), wxCoord WXU
     else if (df == wxDF_FILENAME) {
 		m_parent.OnDragDrop(m_fileObject->GetFilenames());
 	}
-	else if (df == wxDataFormat(MultilineDataObject::s_formatId)) {
+	else if (df == wxDataFormat(MultilineDataObject::FormatId)) {
 		wxArrayString text;
 		m_columnObject->GetText(text);
 		m_parent.OnDragDropColumn(text, def);

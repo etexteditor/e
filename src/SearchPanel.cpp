@@ -12,8 +12,8 @@
  ******************************************************************************/
 
 #include "SearchPanel.h"
-#include "EditorFrame.h"
-#include "EditorCtrl.h"
+#include "IFrameSearchSErvice.h"
+#include "IEditorSearch.h"
 #include "images/search_png.h"
 #include "images/search_re_png.h"
 #include <wx/mstream.h>
@@ -58,9 +58,9 @@ BEGIN_EVENT_TABLE(SearchPanel, wxPanel)
 	EVT_KILL_FOCUS(SearchPanel::OnKillFocus)
 END_EVENT_TABLE()
 
-SearchPanel::SearchPanel(EditorFrame& editorFrame, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
+SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 : wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE),
-	m_editorFrame(editorFrame),
+	m_searchService(searchService),
   m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false),
   m_settings(eGetSettings()) {
 
@@ -223,9 +223,8 @@ void SearchPanel::SetState(cxFindResult result) {
 }
 
 void SearchPanel::Find() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
-	wxASSERT(editorCtrl);
+	IEditorSearch* editorSearch = m_searchService.GetSearch();
+	wxASSERT(editorSearch);
 
 	const wxString searchtext = searchbox->GetValue();
 	if (searchtext.empty()) {
@@ -238,28 +237,26 @@ void SearchPanel::Find() {
 	if (m_use_regex) options |= FIND_USE_REGEX;
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
-	const cxFindResult result = editorCtrl->Find(searchtext, options);
+	const cxFindResult result = editorSearch->Find(searchtext, options);
 	SetState(result);
 }
 
 void SearchPanel::FindNext() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
-	wxASSERT(editorCtrl);
+	IEditorSearch* editorSearch = m_searchService.GetSearch();
+	wxASSERT(editorSearch);
 
 	int options = 0;
 	if (m_match_case) options |= FIND_MATCHCASE;
 	if (m_use_regex) options |= FIND_USE_REGEX;
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
-	const cxFindResult result = editorCtrl->FindNext(searchbox->GetValue(), options);
+	const cxFindResult result = editorSearch->FindNext(searchbox->GetValue(), options);
 	SetState(result);
 }
 
 void SearchPanel::FindPrevious() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = ((EditorFrame*)GetGrandParent())->GetEditorCtrl();
-	wxASSERT(editorCtrl);
+	IEditorSearch* editorSearch = m_searchService.GetSearch();
+	wxASSERT(editorSearch);
 
 	int options = 0;
 	if (m_match_case) options |= FIND_MATCHCASE;
@@ -267,14 +264,13 @@ void SearchPanel::FindPrevious() {
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
 
-	bool result = editorCtrl->FindPrevious(searchbox->GetValue(), options);
+	bool result = editorSearch->FindPrevious(searchbox->GetValue(), options);
 	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::Replace() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
-	wxASSERT(editorCtrl);
+	IEditorSearch* editorSearch = m_searchService.GetSearch();
+	wxASSERT(editorSearch);
 
 	int options = 0;
 	if (m_match_case) options |= FIND_MATCHCASE;
@@ -282,25 +278,24 @@ void SearchPanel::Replace() {
 	if (m_highlight) options |= FIND_HIGHLIGHT;
 	if (restart_next_search) options |= FIND_RESTART;
 
-	bool result = editorCtrl->Replace(searchbox->GetValue(), replaceBox->GetValue(), options);
+	bool result = editorSearch->Replace(searchbox->GetValue(), replaceBox->GetValue(), options);
 	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::ReplaceAll() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
-	wxASSERT(editorCtrl);
+	IEditorSearch* editorSearch = m_searchService.GetSearch();
+	wxASSERT(editorSearch);
 
 	int options = 0;
 	if (m_match_case) options |= FIND_MATCHCASE;
 	if (m_use_regex) options |= FIND_USE_REGEX;
 
-	bool result = editorCtrl->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
+	bool result = editorSearch->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
 	SetState(result ? cxFOUND : cxNOT_FOUND);
 }
 
 void SearchPanel::HidePanel() {
-	((EditorFrame*)GetGrandParent())->ShowSearch(false);
+	m_searchService.ShowSearch(false);
 }
 
 void SearchPanel::OnCloseButton(wxCommandEvent& WXUNUSED(evt)) {
@@ -327,17 +322,17 @@ void SearchPanel::OnSearchPopup(wxCommandEvent& WXUNUSED(evt)) {
 }
 
 void SearchPanel::OnSearchText(wxCommandEvent& evt) {
-
 	restart_next_search = false;
+
 	if(evt.GetString().empty()) {
 		nextButton->Disable();
 		prevButton->Disable();
 		replaceButton->Disable();
 		allButton->Disable();
 
-		EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
-		wxASSERT(editorCtrl);
-		editorCtrl->ClearSearchHighlight();
+		IEditorSearch* editorSearch = m_searchService.GetSearch();
+		wxASSERT(editorSearch);
+		editorSearch->ClearSearchHighlight();
 	}
 	else {
 		nextButton->Enable();

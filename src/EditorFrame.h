@@ -14,15 +14,16 @@
 #ifndef __EDITORFRAME_H__
 #define __EDITORFRAME_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable: 4786)
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
 #include <wx/dnd.h>
 #include <wx/aui/aui.h>
 #include <wx/imaglist.h>
+
+#include "Catalyst.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
 
@@ -31,11 +32,13 @@
 #include "IFrameEditorService.h"
 #include "IFrameSymbolService.h"
 #include "IFrameRemoteThread.h"
+#include "IFrameProjectService.h"
 #include "IFrameUndoPane.h"
+#include "IFrameSearchService.h"
 
 #include "IHtmlWnd.h"
 
-// pre-declearations
+// Forward declarations
 class eApp;
 class EditorCtrl;
 struct EditorChangeState;
@@ -58,6 +61,8 @@ class FindInProjectDlg;
 #ifdef __WXMSW__
 class wxIEHtmlWin;
 #endif
+
+class IEditorSearch;
 
 // Menu id's
 enum {
@@ -160,24 +165,12 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
-// EditorFrame services as used by the ProjectPane
-class IFrameProjectService : public IFrameRemoteThread {
-public:
-	// Opening local and remote files.
-	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString) = 0;
-	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL) = 0;
-
-	// Prompting for remote credentials.
-	virtual bool AskRemoteLogin(const RemoteProfile* rp) = 0;
-
-	// Directory monitoring.
-	virtual DirWatcher& GetDirWatcher() = 0;
-};
-
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService,
-	public IFrameUndoPane {
+	public IFrameUndoPane,
+	public IFrameSearchService
+{
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
 	~EditorFrame();
@@ -195,6 +188,7 @@ public:
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
 	EditorCtrl* GetEditorCtrl();
+	virtual IEditorSearch* GetSearch();
 
 	// Editor Service methods.
 	virtual wxControl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
@@ -226,10 +220,8 @@ public:
 	void ShowBundleManager();
 
 	// Search Bar
-	void ShowSearch(bool show=true, bool replace=false);
+	virtual void ShowSearch(bool show=true, bool replace=false);
 	bool IsSearching() const;
-	void FindNext();
-	void FindPrevious();
 
 	// Settings
 	bool GetSetting(const wxString& name) const;

@@ -336,6 +336,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IEditorSearch.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IEditorSymbols.h"
 				>
 			</File>
@@ -352,7 +356,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IFrameProjectService.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IFrameRemoteThread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IFrameSearchService.h"
 				>
 			</File>
 			<File

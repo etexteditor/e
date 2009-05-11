@@ -1848,26 +1848,22 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 }
 
 void EditorCtrl::GotoMatchingBracket() {
-	if (m_hlBracket.start == m_hlBracket.end) return;
+	if (!m_bracketHighlight.HasInterval()) return;
 
 	const unsigned int pos = m_lines.GetPos();
+	if (!m_bracketHighlight.IsEndPoint(pos)) return;
 
-	if (pos == m_hlBracket.start) m_lines.SetPos(m_hlBracket.end);
-	else if (pos == m_hlBracket.end) m_lines.SetPos(m_hlBracket.start);
-	else return; // not on bracket
-
+	m_lines.SetPos(m_bracketHighlight.OtherEndPoint(pos));
 	MakeCaretVisible();
 }
 
 void EditorCtrl::MatchBrackets() {
 	const unsigned int pos = m_lines.GetPos();
 
-	if (m_bracketToken == m_changeToken && m_bracketPos == pos) return;
-	m_bracketToken = m_changeToken;
-	m_bracketPos = pos;
+	// If no change to document or position, then stop.
+	if (!m_bracketHighlight.UpdateIfChanged(m_changeToken, pos)) return;
 
-	// Clear old highlighted bracket
-	m_hlBracket.start = m_hlBracket.end = 0;
+	m_bracketHighlight.Clear();
 
 	const unsigned int len = m_lines.GetLength();
 	if (pos == len) return;
@@ -1917,8 +1913,7 @@ void EditorCtrl::MatchBrackets() {
 			cxENDLOCK
 
 			if (count & 1) {
-				m_hlBracket.start = bracketpos;
-				m_hlBracket.end = pos;
+				m_bracketHighlight.Set(bracketpos, pos);
 			}
 			else {
 				const unsigned int lineend = m_lines.GetLineEndpos(lineid);
@@ -1929,8 +1924,7 @@ void EditorCtrl::MatchBrackets() {
 						else {
 							if (*dbi == '\\') escaped = true;
 							else if (*dbi == start_bracket) {
-								m_hlBracket.start = pos;
-								m_hlBracket.end = dbi.GetIndex();
+								m_bracketHighlight.Set(pos, dbi.GetIndex());
 								break;
 							}
 						}
@@ -1970,8 +1964,7 @@ void EditorCtrl::MatchBrackets() {
 					else if (*dbi == end_bracket) {
 						--count;
 						if (count == 0) {
-							m_hlBracket.start = pos;
-							m_hlBracket.end = dbi.GetIndex();
+							m_bracketHighlight.Set(pos, dbi.GetIndex());
 							return;
 						}
 					}
@@ -1996,8 +1989,7 @@ void EditorCtrl::MatchBrackets() {
 					if (!(esc_count & 1)) {
 						--count;
 						if (count == 0) {
-							m_hlBracket.start = dbi.GetIndex();
-							m_hlBracket.end = pos;
+							m_bracketHighlight.Set(dbi.GetIndex(), pos);
 							return;
 						}
 					}
@@ -4395,8 +4387,8 @@ void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
 
 	// Check if we should select brackets or word
 	interval iv;
-	if (m_hlBracket.start < m_hlBracket.end && (pos == m_hlBracket.start || pos == m_hlBracket.end)) {
-		iv = m_hlBracket;
+	if (m_bracketHighlight.HasOrderedInterval() && m_bracketHighlight.IsEndPoint(pos)) {
+		iv = m_bracketHighlight.GetInterval();
 		iv.end += 1; // include end bracket
 	}
 	else iv = GetWordIv(pos);

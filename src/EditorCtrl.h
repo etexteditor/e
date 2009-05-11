@@ -302,7 +302,7 @@ public:
 	virtual void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
-	virtual const interval& GetHlBracket() const {return m_hlBracket;};
+	virtual const interval& GetHlBracket() const {return m_bracketHighlight.GetInterval();};
 
 	vector<unsigned int> GetFoldedLines() const;
 	virtual const vector<cxFold>& GetFolds() const {return m_folds;};
@@ -677,10 +677,48 @@ private:
 	vector<interval> m_pairStack;
 	bool m_wrapAtMargin;
 
-	// Bracket highlighting
-	interval m_hlBracket;
-	unsigned int m_bracketToken;
-	unsigned int m_bracketPos;
+	class BracketHighlight {
+	public:
+		BracketHighlight(){};
+
+		void Set(unsigned int start, unsigned int end){ m_interval.Set(start, end); };
+		void Clear() { m_interval.start = m_interval.end = 0; };
+
+		bool IsEndPoint(const unsigned int pos) const { return (pos == m_interval.start) || (pos == m_interval.end); };
+
+		const unsigned int OtherEndPoint(const unsigned int pos) const {
+			if (pos == m_interval.start) return m_interval.end;
+			if (pos == m_interval.end) return m_interval.start;
+
+			// Not on an endpoint, but have to return something.
+			return (unsigned int)-1;
+		};
+
+		const interval& GetInterval() const {return m_interval;};
+		bool HasInterval() const {return m_interval.start != m_interval.end; };
+
+		bool HasOrderedInterval() const {
+			return m_interval.start < m_interval.end;
+		};
+
+		bool UpdateIfChanged(unsigned int changeToken, unsigned int pos) {
+			// If no change to document or position, then stop.
+			if (m_lastChangeToken == changeToken && m_lastPos == pos) return false;
+
+			// Set new change token and position.
+			m_lastChangeToken = changeToken;
+			m_lastPos = pos;
+			return true;
+		};
+
+	private:
+		interval m_interval; // Interval for the current bracket pair.
+		unsigned int m_lastChangeToken;
+		unsigned int m_lastPos;
+	};
+
+	BracketHighlight m_bracketHighlight;
+
 
 	int m_lastScopePos;
 

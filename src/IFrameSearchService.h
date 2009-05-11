@@ -1,7 +1,7 @@
 #ifndef __IFRAMESEARCHSERVICE_H__
 #define __IFRAMESEARCHSERVICE_H__
 
-class IEditorSearch;
+#include "IEditorSearch.h"
 
 class IFrameSearchService {
 public:

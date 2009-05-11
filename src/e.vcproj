@@ -336,6 +336,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IEditorSearch.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IEditorSymbols.h"
 				>
 			</File>

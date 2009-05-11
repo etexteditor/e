@@ -36,6 +36,7 @@
 #include "IEditorDoAction.h"
 #include "IPrintableDocument.h"
 #include "IEditorSymbols.h"
+#include "IEditorSearch.h"
 
 // Pre-definitions
 class wxFileName;
@@ -52,16 +53,6 @@ struct thTheme;
 class tmAction;
 class tmDragCommand;
 class TmSyntaxHandler;
-
-class IEditorSearch {
-public:
-	virtual cxFindResult Find(const wxString& text, int options=0) = 0;
-	virtual cxFindResult FindNext(const wxString& text, int options=0) = 0;
-	virtual bool FindPrevious(const wxString& text, int options=0) = 0;
-	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
-	virtual bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
-	virtual void ClearSearchHighlight() = 0;
-};
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,

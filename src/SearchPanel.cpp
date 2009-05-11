@@ -13,7 +13,7 @@
 
 #include "SearchPanel.h"
 #include "IFrameSearchSErvice.h"
-#include "EditorCtrl.h"
+#include "IEditorSearch.h"
 #include "images/search_png.h"
 #include "images/search_re_png.h"
 #include <wx/mstream.h>

@@ -2492,12 +2492,6 @@ cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, w
 		return m_lines.LoadText(localPath, enc, m_remotePath);
 }
 
-bool EditorCtrl::LoadBundleItem(const wxString& WXUNUSED(bundleUri)) {
-	// This should only be called through BundleItemEditorCtrl
-	wxASSERT(FALSE);
-	return false;
-}
-
 bool EditorCtrl::SaveText(bool askforpath) {
 	// We always have to ask for the path if we don't have it
 	if (!m_path.IsOk()) askforpath = true;

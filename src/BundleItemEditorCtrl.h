@@ -12,14 +12,18 @@ public:
 	virtual ~BundleItemEditorCtrl();
 
 	virtual const char** RecommendedIcon();
-	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath);
 
-	virtual bool LoadBundleItem(const wxString& uuid);
 	virtual bool SaveText(bool askforpath=false);
 	virtual void SetPath(const wxString& newpath);
 
-	bool SaveBundleItem();
 	BundleItemType GetBundleType() const {return m_bundleType;};
+
+protected:
+	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath);
+
+private:
+	bool LoadBundleItem(const wxString& uuid);
+	bool SaveBundleItem();
 };
 
 #endif // __BUNDLEITEMEDITORCTRL_H__

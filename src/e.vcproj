@@ -356,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IFrameSearchService.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IFrameSymbolService.h"
 				>
 			</File>

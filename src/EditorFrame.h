@@ -32,6 +32,7 @@
 #include "IFrameSymbolService.h"
 #include "IFrameRemoteThread.h"
 #include "IFrameUndoPane.h"
+#include "IFrameSearchSErvice.h"
 
 #include "IHtmlWnd.h"
 
@@ -174,12 +175,6 @@ public:
 
 	// Directory monitoring.
 	virtual DirWatcher& GetDirWatcher() = 0;
-};
-
-class IFrameSearchService {
-public:
-	virtual IEditorSearch* GetSearch() = 0;
-	virtual void ShowSearch(bool show=true, bool replace=false) = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,

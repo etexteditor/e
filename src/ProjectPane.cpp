@@ -271,7 +271,7 @@ void ProjectPane::Init() {
 		m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(), *this, true);
 #else
 		if (false == isDirWatched) {
-			m_dirWatchHandle = m_parentFrame.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(),
+			m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(),
 				*this, true);
 			WatchTree(m_prjPath.GetPath());
 			isDirWatched = true;

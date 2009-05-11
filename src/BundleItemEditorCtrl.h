@@ -12,7 +12,7 @@ public:
 	virtual ~BundleItemEditorCtrl();
 
 	virtual const char** RecommendedIcon();
-	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load);
+	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxString& localPath);
 
 	virtual bool LoadBundleItem(const wxString& uuid);
 	virtual bool SaveText(bool askforpath=false);

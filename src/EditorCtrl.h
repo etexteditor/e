@@ -331,11 +331,12 @@ public:
 	void Print();
 #endif  //__WXDEBUG__
 
-private:
+protected:
 	// Let the editor class load lines into the document, however it needs to 
 	// for the kind of thing being loaded.
-	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load);
+	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxString& localPath);
 
+private:
 	// Classes
 	class RepParseState {
 	public:

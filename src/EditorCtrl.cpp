@@ -2496,8 +2496,27 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	return cxFILE_OK;
 }
 
-cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load) {
-	return cxFILE_OK;
+cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxString& localPath) {
+		// First clean up old remote info (and delete evt. buffer file);
+		ClearRemoteInfo();
+
+		// If the path points to a remote file, we have to download it first.
+		if (eDocumentPath::IsRemotePath(whence_to_load)) {
+			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(whence_to_load, false);
+			const wxString buffPath = m_parentFrame.DownloadFile(whence_to_load, m_remoteProfile);
+			if (buffPath.empty()) return cxFILE_DOWNLOAD_ERROR; // download failed
+
+			localPath = buffPath;
+			m_remotePath = whence_to_load;
+		}
+		else {
+			localPath = whence_to_load;
+		}
+
+		// Invalidate all stylers
+		StylersInvalidate();
+
+		return m_lines.LoadText(localPath, enc, m_remotePath);
 }
 
 bool EditorCtrl::LoadBundleItem(const wxString& WXUNUSED(bundleUri)) {

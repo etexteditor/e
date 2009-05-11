@@ -42,10 +42,6 @@
 #endif
 
 
-#ifndef SHGFI_ADDOVERLAYS
-	// Not defined in shellapi.h (version 5.0 only)
-	#define SHGFI_ADDOVERLAYS 0x000000020
-#endif //SHGFI_ADDOVERLAYS
 
 // ctrl ids
 enum {

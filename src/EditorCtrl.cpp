@@ -32,6 +32,7 @@
 #include "ShellRunner.h"
 #include "Env.h"
 #include "Fold.h"
+#include "TextTip.h"
 
 #include "eSettings.h"
 #include "IAppPaths.h"
@@ -8894,87 +8895,6 @@ void EditorCtrl::GotoPrevBookmark() {
 
 EditorChangeState EditorCtrl::GetChangeState() const {
 	return EditorChangeState(this->GetId(), this->GetChangeToken());
-}
-
-// ------ TextTip -----------------------------------------
-
-BEGIN_EVENT_TABLE(EditorCtrl::TextTip, wxPopupTransientWindow)
-	EVT_KEY_DOWN(EditorCtrl::TextTip::OnKeyDown)
-	EVT_KEY_UP(EditorCtrl::TextTip::OnKeyDown)
-	EVT_CHAR(EditorCtrl::TextTip::OnKeyDown)
-	EVT_LEFT_DOWN(EditorCtrl::TextTip::OnMouseClick)
-    EVT_RIGHT_DOWN(EditorCtrl::TextTip::OnMouseClick)
-    EVT_MIDDLE_DOWN(EditorCtrl::TextTip::OnMouseClick)
-	EVT_MOUSE_CAPTURE_LOST(EditorCtrl::TextTip::OnCaptureLost)
-END_EVENT_TABLE()
-
-EditorCtrl::TextTip::TextTip(wxWindow *parent, const wxString& text, const wxPoint& pos, const wxSize& size, TextTip** windowPtr) : m_windowPtr(windowPtr) {
-	Create(parent, wxSIMPLE_BORDER);
-
-	wxLogDebug(wxT("TextTip::TextTip %x"), this);
-
-	SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
-
-	wxStaticText* t = new wxStaticText(this, -1, text);
-	t->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOTEXT));
-	t->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_INFOBK));
-
-	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(t, 0, wxALIGN_CENTER_VERTICAL|wxALIGN_CENTER_HORIZONTAL|wxALL, 3);
-
-	SetSizerAndFit(sizer);
-	Layout();
-	Position(pos, size);
-	Popup();
-	SetFocus();
-}
-
-EditorCtrl::TextTip::~TextTip() {
-	if ( m_windowPtr )
-    {
-        *m_windowPtr = NULL;
-    }
-}
-
-void EditorCtrl::TextTip::OnKeyDown(wxKeyEvent& WXUNUSED(event)) {
-	Close();
-	//if ( !wxPendingDelete.Member(this) ) DismissAndNotify();
-
-	// Pass event on to parent so we don't miss a key entry
-	//GetParent()->ProcessEvent(event);
-}
-
-void EditorCtrl::TextTip::OnMouseClick(wxMouseEvent& WXUNUSED(event)) {
-    Close();
-}
-
-void EditorCtrl::TextTip::OnCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event)) {
-	// WORKAROUND: This event is not caught in parent class
-	wxLogDebug(wxT("OnCaptureLost"));
-	//if ( !wxPendingDelete.Member(this) ) DismissAndNotify();
-	Close();
-}
-
-void EditorCtrl::TextTip::OnDismiss() {
-    Close();
-	// We can't destroy the window immediately as we might
-	// be in the middle of handling some other event.
-    //if ( !wxPendingDelete.Member(this) )
-		// delayed destruction: the window will be deleted
-		// during the next idle loop iteration
-        //wxPendingDelete.Append(this);
-}
-
-void EditorCtrl::TextTip::Close() {
-	wxLogDebug(wxT("TextTip::Close() %x"), this);
-	if (HasCapture()) ReleaseMouse();
-	Show(false);
-    Destroy();
-}
-
-bool EditorCtrl::TextTip::OnPreKeyDown(wxKeyEvent& WXUNUSED(event)) {
-	Close();
-	return true;
 }
 
 

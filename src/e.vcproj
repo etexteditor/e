@@ -481,6 +481,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TextTip.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TextTip.h"
+				>
+			</File>
+			<File
 				RelativePath="Timeline.cpp"
 				>
 				<FileConfiguration

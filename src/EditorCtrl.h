@@ -14,7 +14,11 @@
 #ifndef __EDITORCTRL_H__
 #define __EDITORCTRL_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
 #include "Lines.h"
 #include <wx/caret.h>
@@ -27,7 +31,6 @@
 #include "BundleItemType.h"
 
 #include <wx/dnd.h>
-#include "wx/popupwin.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -43,6 +46,7 @@ class EditorFrame;
 class PreviewDlg;
 class cxRemoteAction;
 class MultilineDataObject;
+class TextTip;
 
 struct thTheme;
 class tmAction;
@@ -353,26 +357,6 @@ private:
 		bool lowcase;
 		bool caseChar;
 		bool caseText;
-	};
-
-	class TextTip : public KeyHookable<wxPopupTransientWindow> {
-	public:
-		TextTip(wxWindow *parent, const wxString& text, const wxPoint& pos, const wxSize& size, TextTip** windowPtr);
-		~TextTip();
-
-		void Close();
-
-	private:
-		void OnDismiss();
-
-		void OnKeyDown(wxKeyEvent& event);
-		void OnMouseClick(wxMouseEvent& event);
-		void OnCaptureLost(wxMouseCaptureLostEvent& event);
-		DECLARE_EVENT_TABLE();
-
-		virtual bool OnPreKeyDown(wxKeyEvent& event);
-
-		TextTip** m_windowPtr;
 	};
 
 	// Embedded class: DragDropTarget

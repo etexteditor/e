@@ -403,8 +403,10 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 		case BUNDLE_COMMAND:
 		case BUNDLE_DRAGCMD:
 			if (!m_syntaxstyler.UpdateSyntax()) {
-				if (itemDict.HasKey("winCommand")) m_syntaxstyler.SetSyntax(wxT("MSDOS batch file")); // default syntax for windows native
-				else m_syntaxstyler.SetSyntax(wxT("Shell Script (Bash)")); // default syntax
+				// Use MSDOS batch file for Windows commands, otherwise use Shell Script (Bash)
+				m_syntaxstyler.SetSyntax(itemDict.HasKey("winCommand") 
+					? wxT("MSDOS batch file") 
+					:  wxT("Shell Script (Bash)"));
 			}
 			break;
 		case BUNDLE_LANGUAGE:

@@ -11,7 +11,11 @@
  *
  ******************************************************************************/
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
 #include <vector>
 #include "Cell.h"

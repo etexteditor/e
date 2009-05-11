@@ -924,8 +924,6 @@ wxTreeItemId ProjectPane::FindSubItem(const wxTreeItemId& item, const wxString& 
 	return subItem;
 }
 
-
-
 void ProjectPane::OnExpandItem(wxTreeEvent &event)
 {
     const wxTreeItemId parentId = event.GetItem();
@@ -960,6 +958,13 @@ void ProjectPane::OnBeginEditItem(wxTreeEvent &event) {
 	}
 }
 
+static bool projectpane_illegal_filename(const wxString& filename) {
+	return filename == _(".") || filename == _("..") ||
+        (filename.Find(wxT('/')) != wxNOT_FOUND) ||
+        (filename.Find(wxT('\\')) != wxNOT_FOUND) ||
+        (filename.Find(wxT('|')) != wxNOT_FOUND);
+}
+
 void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 {
 	// No change sometimes give empty label in event
@@ -968,12 +973,7 @@ void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 		return;
 	}
 
-	if ((event.GetLabel() == _(".")) ||
-        (event.GetLabel() == _("..")) ||
-        (event.GetLabel().Find(wxT('/')) != wxNOT_FOUND) ||
-        (event.GetLabel().Find(wxT('\\')) != wxNOT_FOUND) ||
-        (event.GetLabel().Find(wxT('|')) != wxNOT_FOUND))
-    {
+	if (projectpane_illegal_filename(event.GetLabel())) {
         wxMessageDialog dialog(this, _("Illegal directory name."), _("Error"), wxOK | wxICON_ERROR );
         dialog.ShowModal();
         event.Veto();

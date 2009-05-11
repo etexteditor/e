@@ -119,7 +119,6 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_changeToken(0), 
 	m_savedForPreview(false), 
 	lastpos(0), 
-	m_doubleClickedLine(-1), 
 	m_currentSel(-1), 
 	do_freeze(true), 
 	m_options_cache(0), 
@@ -227,7 +226,6 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_changeToken(0),
 	m_savedForPreview(false),
 	lastpos(0),
-	m_doubleClickedLine(-1),
 	m_currentSel(-1), 
 	do_freeze(true),
 	m_options_cache(0),
@@ -286,7 +284,6 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_changeToken(0), 
 	m_savedForPreview(false), 
 	lastpos(0), 
-	m_doubleClickedLine(-1), 
 	m_currentSel(-1), 
 	do_freeze(true), 
 	m_options_cache(0), 
@@ -7037,8 +7034,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	lastaction = ACTION_NONE;
 
 	// Check if it is really a triple click
-	wxLogDebug(wxT("m_doubleClickTimer = %d"), m_doubleClickTimer.Time());
-	if (m_doubleClickedLine == (int)line_id && m_doubleClickTimer.Time() < 250) {
+	if (m_tripleClicks.TripleClickedLine((int)line_id)) {
 		SelectLine(line_id, event.ControlDown());
 	}
 	else {
@@ -7086,9 +7082,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		}
 	}
 
-	// Reset triple-click detection state
-	m_doubleClickedLine = -1;
-	m_doubleClickTimer.Pause();
+	m_tripleClicks.Reset();
 
 	DrawLayout();
 
@@ -7545,9 +7539,8 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 	// Find out what was clicked on
 	const full_pos fp = m_lines.ClickOnLine(mpos.x, mpos.y);
 
-	// Set trible-click detection state
-	m_doubleClickedLine = m_lines.GetLineFromCharPos(fp.pos);
-	m_doubleClickTimer.Start();
+	// Start timing for a triple click.
+	m_tripleClicks.Start(m_lines.GetLineFromCharPos(fp.pos));
 
 	if (event.AltDown()) {
 		SelectScope();

@@ -571,7 +571,6 @@ private:
 	unsigned int m_changeToken;
 	bool m_savedForPreview;
 	unsigned int lastpos;
-	int m_doubleClickedLine; // Used for triple-click detection
 	int m_currentSel;
 	bool do_freeze;
 	mutable int m_options_cache; // for compiled regex
@@ -619,8 +618,29 @@ private:
 	// Drag'n'Drop
 	wxPoint m_dragStartPos;
 
-	// Triple-click detection
-	wxStopWatch m_doubleClickTimer;
+	class DetectTripleClicks {
+	public:
+		DetectTripleClicks(): m_doubleClickedLine(-1) {}
+		void Reset() { 
+			m_doubleClickedLine = -1;
+			m_timer.Pause();
+		};
+
+		void Start(int doubleClickedLine){
+			m_doubleClickedLine = doubleClickedLine;
+			m_timer.Start();
+		};
+
+		bool TripleClickedLine(int line_id){
+			return m_doubleClickedLine == line_id && m_timer.Time() < 250;
+		};
+
+	private:
+		int m_doubleClickedLine;
+		wxStopWatch m_timer;
+	};
+
+	DetectTripleClicks m_tripleClicks;
 
 	enum SelMode {
 		SEL_NORMAL,

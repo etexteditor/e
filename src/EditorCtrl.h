@@ -665,9 +665,10 @@ private:
 	int change_toppos;
 
 	// incremental search trackers
+	vector<interval> m_searchRanges;
+	// start/found are used to track state between Find calls
 	unsigned int m_search_start_pos;
 	unsigned int m_search_found_pos;
-	vector<interval> m_searchRanges;
 
 	wxString m_indent;
 

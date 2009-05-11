@@ -1045,6 +1045,38 @@ static bool projectpane_is_binary_file(const wxString& path) {
 	return false;
 }
 
+// Tries to execute a binary file.
+// Returns true if we decided to execute it, false if the caller should try to open it in the editor anyway.
+static bool projectpane_execute_binary(const wxString& name, const wxString& path) {
+	const wxString ext = name.AfterLast(wxT('.'));
+	if (ext.empty()) return false;
+
+	// TODO: Check if this file ext is forced to open in e
+
+	// .exe files are just run directly
+	if (ext == wxT("exe")) {
+		const wxString cmd = wxT("\"") + path + wxT("\"");
+		wxExecute(cmd);
+		return true;
+	}
+
+	// Check if another app is assigned to this file type
+	wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
+	if (ft) {
+		wxString mime;
+		ft->GetMimeType(&mime);
+		const wxString cmd = ft->GetOpenCommand(path);
+		delete ft;
+
+		if (mime != wxT("text/plain") && !cmd.empty()) {
+			wxExecute(cmd);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
 
@@ -1069,33 +1101,7 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 		}
 
 		bool isBinary = projectpane_is_binary_file(data->m_path);
-		if (isBinary) {
-			// Check if another app is assigned to this file type
-			const wxString ext = data->m_name.AfterLast(wxT('.'));
-			if (!ext.empty()) {
-				// TODO: Check if this file ext is forced to open in e
-
-				// .exe files are just run directly
-				if (ext == wxT("exe")) {
-					const wxString cmd = wxT("\"") + data->m_path + wxT("\"");
-					wxExecute(cmd);
-					continue;
-				}
-
-				wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
-				if (ft) {
-					wxString mime;
-					ft->GetMimeType(&mime);
-					const wxString cmd = ft->GetOpenCommand(data->m_path);
-					delete ft;
-
-					if (mime != wxT("text/plain") && !cmd.empty()) {
-						wxExecute(cmd);
-						continue;
-					}
-				}
-			}
-		}
+		if (isBinary && projectpane_execute_binary(data->m_name, data->m_path)) continue;
 
 		// If we get to here we should just open the file in e
 		m_projectService.OpenFile(data->m_path);

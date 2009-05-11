@@ -142,13 +142,12 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
 	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
 
-	const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
-
 	if (eDocumentPath::IsRemotePath(mirrorPath)) {
 		// If the mirror points to a remote file, we have to download it first.
 		SetDocument(di, mirrorPath);
 	}
 	else {
+		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
 		if (isBundleItem) {
 			const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
 			m_bundleType = plistHandler.GetBundleTypeFromUri(mirrorPath);

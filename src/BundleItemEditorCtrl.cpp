@@ -16,9 +16,14 @@
 #include "images/tmPrefs.xpm"
 #include "images/tmLanguage.xpm"
 
+/// Open a page saved from a previous session
 BundleItemEditorCtrl::BundleItemEditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
-	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size)	{}
+	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size)	
+{
 
+}
+
+/// Create a new empty document
 BundleItemEditorCtrl::BundleItemEditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
 	EditorCtrl(cw, bitmap, parent, parentFrame, pos, size){}
 
@@ -252,11 +257,14 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 }
 
 bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
+	const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
+
 	// Get information about bundle item
 	unsigned int bundleId;
 	unsigned int itemId;
-	const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
-	if (!plistHandler.GetBundleItemFromUri(bundleUri, m_bundleType, bundleId, itemId)) return false;
+	if (!plistHandler.GetBundleItemFromUri(bundleUri, m_bundleType, bundleId, itemId)) 
+		return false;
+
 	const PListDict itemDict = plistHandler.Get(m_bundleType, bundleId, itemId);
 
 	// Invalidate all stylers
@@ -266,10 +274,12 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 	bool doReload = true;
 	doc_id di;
 	wxDateTime modDate;
+
 	bool hasMirror;
 	cxLOCK_READ(m_catalyst)
 		hasMirror = catalyst.GetFileMirror(bundleUri, di, modDate);
 	cxENDLOCK
+
 	if (hasMirror) {
 		if (modDate == itemDict.GetModDate()) { // item unchanged since mirror?
 			if (di == GetDocID()) return true; // already loaded

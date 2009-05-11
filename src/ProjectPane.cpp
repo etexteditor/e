@@ -82,10 +82,12 @@ bool projectpane_is_dir_empty(const wxString& path) {
 	return false;
 }
 
-ProjectPane::ProjectPane(IFrameProjectService& parent, wxWindowID id)
-: wxPanel(dynamic_cast<wxWindow*>(&parent), id), m_parentFrame(parent), m_imageList(16,16), m_dirWatchHandle(NULL),
-  m_isRemote(false), m_isDestroying(false),  m_remoteThread(parent.GetRemoteThread()),
-  m_remoteProfile(NULL), m_busyCount(0), m_newIconsCond(m_iconMutex)
+ProjectPane::ProjectPane(IFrameProjectService& projectServce, wxWindow*parent, wxWindowID id):
+	wxPanel(parent, id), 
+	m_projectService(projectServce), 
+	m_imageList(16,16), m_dirWatchHandle(NULL),
+	m_isRemote(false), m_isDestroying(false),  m_remoteThread(m_projectService.GetRemoteThread()),
+	m_remoteProfile(NULL), m_busyCount(0), m_newIconsCond(m_iconMutex)
 {
 #ifdef __WXMSW__
     m_contextMenu = NULL;
@@ -203,7 +205,7 @@ void ProjectPane::Clear() {
 	m_freeImages.clear();
 	m_newFolder.clear();
 	if (m_dirWatchHandle) {
-		m_parentFrame.GetDirWatcher().UnwatchDirectory(m_dirWatchHandle);
+		m_projectService.GetDirWatcher().UnwatchDirectory(m_dirWatchHandle);
 		m_dirWatchHandle = NULL;
 	}
 	ResetBusy();
@@ -266,7 +268,7 @@ void ProjectPane::Init() {
 	if (!m_isRemote) {
 		wxASSERT(m_dirWatchHandle == NULL);
 #ifdef __WXMSW__
-		m_dirWatchHandle = m_parentFrame.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(), *this, true);
+		m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(), *this, true);
 #else
 		if (false == isDirWatched) {
 			m_dirWatchHandle = m_parentFrame.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(),
@@ -317,7 +319,7 @@ void ProjectPane::OnRemoteListReceived(cxRemoteListEvent& event) {
 
 	// Handle failed login (need item)
 	if (event.GetErrorCode() == CURLE_LOGIN_DENIED) {
-		if (m_parentFrame.AskRemoteLogin(m_remoteProfile)) {
+		if (m_projectService.AskRemoteLogin(m_remoteProfile)) {
 			ExpandDir(item); // Try expanding again
 			return;
 		}
@@ -450,7 +452,7 @@ void ProjectPane::OnRemoteAction(cxRemoteAction& event) {
 
 			// Open in editor
 			if (event.GetActionType() == cxRA_CREATEFILE) {
-				m_parentFrame.OpenRemoteFile(url, m_remoteProfile);
+				m_projectService.OpenRemoteFile(url, m_remoteProfile);
 			}
 		}
 		break;
@@ -1055,13 +1057,13 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 			if (data->m_isDir) continue;
 
 			if (m_isRemote) {
-				m_parentFrame.OpenRemoteFile(data->m_path, m_remoteProfile);
+				m_projectService.OpenRemoteFile(data->m_path, m_remoteProfile);
 				continue;
 			}
 
 			// Always open file in e if shift is held down
 			if (shiftDown) {
-				m_parentFrame.OpenFile(data->m_path);
+				m_projectService.OpenFile(data->m_path);
 				continue;
 			}
 
@@ -1095,7 +1097,7 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 			}
 
 			// If we get to here we should just open the file in e
-			m_parentFrame.OpenFile(data->m_path);
+			m_projectService.OpenFile(data->m_path);
 		}
 	}
 }
@@ -1380,7 +1382,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				wxLogDebug(wxT("ProjectPane::%s() remove directory %s"),
 					 wxString(__FUNCTION__,wxConvUTF8).c_str(), path.c_str());
 				// need to remove dir watcher for this dir and all subdirs
-				m_parentFrame.GetDirWatcher().UnwatchDirByName(path, true);
+				m_projectService.GetDirWatcher().UnwatchDirByName(path, true);
 				// and for all subdirs
 			}
 #endif
@@ -1420,7 +1422,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 #ifdef __WXGTK__
 				if (event.IsDir()) {
 					// need to watch directory
-					m_parentFrame.GetDirWatcher().WatchDirectory(event.GetNewFile(), *this, true);
+					m_projectService.GetDirWatcher().WatchDirectory(event.GetNewFile(), *this, true);
 					wxLogDebug(wxT("ProjectPane::%s() changed directory directory %s"),
 					 	wxString(__FUNCTION__,wxConvUTF8).c_str(), path.c_str());
 					// watch subdirs if exists
@@ -1453,7 +1455,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 #ifdef __WXGTK__
 			if (event.IsDir()) {
 				// need to watch directory
-				m_parentFrame.GetDirWatcher().WatchDirectory(path, *this, true);
+				m_projectService.GetDirWatcher().WatchDirectory(path, *this, true);
 				wxLogDebug(wxT("ProjectPane::%s() new directory %s"),
 					 wxString(__FUNCTION__,wxConvUTF8).c_str(), path.c_str());
 				// watch subdirs if exists
@@ -1658,7 +1660,7 @@ void ProjectPane::OnNewDoc(wxCommandEvent& WXUNUSED(event)) {
 		newfile.Close();
 
 		// Open file in editor
-		m_parentFrame.OpenFile(path);
+		m_projectService.OpenFile(path);
 	}
 }
 
@@ -1862,7 +1864,7 @@ void ProjectPane::WatchTree(const wxString &path) {
 			if (ProjectInfoHandler::MatchFilter(CurrentDir, includeDirs, excludeDirs)) {
 				// watch dir and all subdirs
 				wxString FullPath = path + wxT("/") + CurrentDir;
-				m_parentFrame.GetDirWatcher().WatchDirectory(FullPath, *this, true);
+				m_projectService.GetDirWatcher().WatchDirectory(FullPath, *this, true);
 				WatchTree(FullPath);
 			}
 		} while (d.GetNext(&CurrentDir));

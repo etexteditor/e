@@ -303,7 +303,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
 
 		// Project dock
-		m_projectPane = new ProjectPane(*this);
+		m_projectPane = new ProjectPane(*this, this);
 		m_frameManager.AddPane(m_projectPane, wxAuiPaneInfo().Name(wxT("Project")).Left().Caption(_("Project")).BestSize(wxSize(150,50)));
 
 		// See if we have saved the layout of the panes

@@ -50,7 +50,7 @@ class cxRemoteAction;
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
-	ProjectPane(IFrameProjectService& parent, wxWindowID id = wxID_ANY);
+	ProjectPane(IFrameProjectService& projectServce, wxWindow*parent, wxWindowID id = wxID_ANY);
 	~ProjectPane();
 
 	bool IsFocused() const;
@@ -181,7 +181,7 @@ private:
 	wxButton* m_settingsButton;
 
 	// Member variables
-	IFrameProjectService& m_parentFrame;
+	IFrameProjectService& m_projectService;
 	ProjectInfoHandler m_infoHandler;
 	wxImageList m_imageList;
 	void* m_dirWatchHandle;

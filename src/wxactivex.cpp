@@ -873,7 +873,7 @@ public:
 		if (func.hasOut)
 		{
             int nArg = wxMin(func.params.size(), pDispParams->cArgs);
-    		m_activeX->GetParent()->ProcessEvent(event);
+    		m_activeX->ProcessEvent(event);
             for (int i = 0; i < nArg; i++)
             {
                 VARIANTARG& va = pDispParams->rgvarg[i];
@@ -888,7 +888,7 @@ public:
 			};
 		}
 		else
-    		m_activeX->GetParent()->AddPendingEvent(event);
+    		m_activeX->AddPendingEvent(event);
 
     };
 

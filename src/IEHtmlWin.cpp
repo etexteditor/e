@@ -606,6 +606,7 @@ long hIE;
 
 void wxIEHtmlWin::OnMSHTMLBeforeNavigate2X(wxActiveXEvent& event) {
 	IHtmlWndBeforeLoadEvent anEvent(GetWindow());
+	anEvent.SetId(event.GetId());
 	anEvent.SetURL(event[wxT("Url")]);
 
 	GetWindow()->GetEventHandler()->ProcessEvent(anEvent);

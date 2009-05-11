@@ -32,8 +32,9 @@
 #include "IFrameEditorService.h"
 #include "IFrameSymbolService.h"
 #include "IFrameRemoteThread.h"
+#include "IFrameProjectService.h"
 #include "IFrameUndoPane.h"
-#include "IFrameSearchSErvice.h"
+#include "IFrameSearchService.h"
 
 #include "IHtmlWnd.h"
 
@@ -162,20 +163,6 @@ enum {
 	MENU_BOOKMARK_PREVIOUS,
 	MENU_BOOKMARK_TOGGLE,
 	MENU_BOOKMARK_CLEAR
-};
-
-// EditorFrame services as used by the ProjectPane
-class IFrameProjectService : public IFrameRemoteThread {
-public:
-	// Opening local and remote files.
-	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString) = 0;
-	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL) = 0;
-
-	// Prompting for remote credentials.
-	virtual bool AskRemoteLogin(const RemoteProfile* rp) = 0;
-
-	// Directory monitoring.
-	virtual DirWatcher& GetDirWatcher() = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,

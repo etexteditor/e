@@ -356,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IFrameProjectService.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IFrameRemoteThread.h"
 				>
 			</File>

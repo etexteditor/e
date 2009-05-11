@@ -2477,6 +2477,7 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 
 		result = m_lines.LoadText(filepath, enc, m_remotePath);
 	}
+
 	if (result != cxFILE_OK) return result;
 
 	scrollPos = 0;
@@ -2492,7 +2493,7 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 
 	SetPath(filepath.GetFullPath()); // also updates syntax
 
-	return result;
+	return cxFILE_OK;
 }
 
 cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load) {

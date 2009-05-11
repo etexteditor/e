@@ -239,8 +239,6 @@ public:
 	// Search Bar
 	virtual void ShowSearch(bool show=true, bool replace=false);
 	bool IsSearching() const;
-	void FindNext();
-	void FindPrevious();
 
 	// Settings
 	bool GetSetting(const wxString& name) const;

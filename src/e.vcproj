@@ -1689,10 +1689,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Document.h"
-			>
-		</File>
-		<File
 			RelativePath="document.ico"
 			>
 		</File>

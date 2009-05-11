@@ -9,6 +9,17 @@
     #pragma warning(pop)
 #endif
 
+#ifndef WX_PRECOMP
+	#include <wx/intl.h>
+	#include <wx/log.h>
+	#include <wx/msgdlg.h>
+#endif
+
+#ifdef __WXGTK__
+  #include <gdk/gdk.h>
+#endif
+
+
 static std::map<wxChar, wxKeyCode> tmKey_s_keyMap;
 static std::map<wxChar, wxKeyCode> tmKey_s_numMap;
 static std::map<int, wxString> tmKey_s_keyText;

@@ -324,14 +324,14 @@ public:
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
-	virtual bool OnPreKeyDown(wxKeyEvent& event);
-	virtual bool OnPreKeyUp(wxKeyEvent& event);
-
 #ifdef __WXDEBUG__
 	void Print();
 #endif  //__WXDEBUG__
 
 protected:
+	virtual bool OnPreKeyDown(wxKeyEvent& event);
+	virtual bool OnPreKeyUp(wxKeyEvent& event);
+
 	// Let the editor class load lines into the document, however it needs to 
 	// for the kind of thing being loaded.
 	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath);

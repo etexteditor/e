@@ -332,6 +332,10 @@ public:
 #endif  //__WXDEBUG__
 
 private:
+	// Let the editor class load lines into the document, however it needs to 
+	// for the kind of thing being loaded.
+	virtual cxFileResult LoadLinesIntoDocument(const wxString& whence_to_load);
+
 	// Classes
 	class RepParseState {
 	public:

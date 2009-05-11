@@ -1,4 +1,5 @@
 #include "BundleItemEditorCtrl.h"
+#include "Catalyst.h"
 #include "IUpdatePanel.h"
 #include "jsonreader.h"
 #include "tm_syntaxhandler.h"
@@ -52,6 +53,10 @@ bool BundleItemEditorCtrl::SaveText(bool WXUNUSED(askforpath)) {
 
 void BundleItemEditorCtrl::SetPath(const wxString& WXUNUSED(newpath)) {
 	// Bundles items can't have their path set.
+}
+
+cxFileResult BundleItemEditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load) {
+	return cxFILE_OK;
 }
 
 bool BundleItemEditorCtrl::SaveBundleItem() {

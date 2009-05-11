@@ -2495,6 +2495,10 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	return result;
 }
 
+cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load) {
+	return cxFILE_OK;
+}
+
 bool EditorCtrl::LoadBundleItem(const wxString& WXUNUSED(bundleUri)) {
 	// This should only be called through BundleItemEditorCtrl
 	wxASSERT(FALSE);

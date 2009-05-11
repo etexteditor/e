@@ -12,36 +12,34 @@
  ******************************************************************************/
 
 #include "ProjectPane.h"
-#include "EditorFrame.h"
+
 #include <wx/mimetype.h>
 #include <wx/progdlg.h>
 #include <wx/ffile.h>
 #include <wx/file.h>
 #include <wx/dir.h>
+#include <wx/tokenzr.h>
+#include <wx/artprov.h>
+
+#include "IFrameProjectService.h"
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
 #include "DirWatcher.h"
 #include "RemoteThread.h"
 #include "eDocumentPath.h"
+
 #include "images/NewFolder.xpm"
 #include "images/NewDocument.xpm"
 
-#include <wx/tokenzr.h>
-#include <wx/artprov.h>
-
 #ifdef __WXMSW__
+    #include "ShellContextMenu.h"
+
     #pragma warning(push, 1)
 #endif
 #include "tinyxml.h" // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(pop)
 #endif
-
-#ifdef __WXMSW__
-    #include "ShellContextMenu.h"
-#endif
-
-
 
 // ctrl ids
 enum {

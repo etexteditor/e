@@ -176,16 +176,17 @@ public:
 	virtual DirWatcher& GetDirWatcher() = 0;
 };
 
-class IFrameGetEditorSearch {
+class IFrameSearchService {
 public:
 	virtual IEditorSearch* GetSearch() = 0;
+	virtual void ShowSearch(bool show=true, bool replace=false) = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService,
 	public IFrameUndoPane,
-	public IFrameGetEditorSearch
+	public IFrameSearchService
 {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -236,7 +237,7 @@ public:
 	void ShowBundleManager();
 
 	// Search Bar
-	void ShowSearch(bool show=true, bool replace=false);
+	virtual void ShowSearch(bool show=true, bool replace=false);
 	bool IsSearching() const;
 	void FindNext();
 	void FindPrevious();

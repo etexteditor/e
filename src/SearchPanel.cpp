@@ -58,7 +58,7 @@ BEGIN_EVENT_TABLE(SearchPanel, wxPanel)
 	EVT_KILL_FOCUS(SearchPanel::OnKillFocus)
 END_EVENT_TABLE()
 
-SearchPanel::SearchPanel(EditorFrame& editorFrame, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
+SearchPanel::SearchPanel(IFrameSearchService& editorFrame, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 : wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE),
 	m_editorFrame(editorFrame),
   m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false),
@@ -223,8 +223,7 @@ void SearchPanel::SetState(cxFindResult result) {
 }
 
 void SearchPanel::Find() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
+	IEditorSearch* editorCtrl = m_editorFrame.GetSearch();
 	wxASSERT(editorCtrl);
 
 	const wxString searchtext = searchbox->GetValue();
@@ -243,8 +242,7 @@ void SearchPanel::Find() {
 }
 
 void SearchPanel::FindNext() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
+	IEditorSearch* editorCtrl = m_editorFrame.GetSearch();
 	wxASSERT(editorCtrl);
 
 	int options = 0;
@@ -257,8 +255,7 @@ void SearchPanel::FindNext() {
 }
 
 void SearchPanel::FindPrevious() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
+	IEditorSearch* editorCtrl = m_editorFrame.GetSearch();
 	wxASSERT(editorCtrl);
 
 	int options = 0;
@@ -272,8 +269,7 @@ void SearchPanel::FindPrevious() {
 }
 
 void SearchPanel::Replace() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
+	IEditorSearch* editorCtrl = m_editorFrame.GetSearch();
 	wxASSERT(editorCtrl);
 
 	int options = 0;
@@ -287,8 +283,7 @@ void SearchPanel::Replace() {
 }
 
 void SearchPanel::ReplaceAll() {
-	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
+	IEditorSearch* editorCtrl = m_editorFrame.GetSearch();
 	wxASSERT(editorCtrl);
 
 	int options = 0;
@@ -300,7 +295,7 @@ void SearchPanel::ReplaceAll() {
 }
 
 void SearchPanel::HidePanel() {
-	((EditorFrame*)GetGrandParent())->ShowSearch(false);
+	m_editorFrame.ShowSearch(false);
 }
 
 void SearchPanel::OnCloseButton(wxCommandEvent& WXUNUSED(evt)) {
@@ -335,7 +330,7 @@ void SearchPanel::OnSearchText(wxCommandEvent& evt) {
 		replaceButton->Disable();
 		allButton->Disable();
 
-		EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
+		IEditorSearch* editorCtrl = m_editorFrame.GetSearch();
 		wxASSERT(editorCtrl);
 		editorCtrl->ClearSearchHighlight();
 	}

@@ -1900,8 +1900,7 @@ void* ProjectPane::Entry() {
 
 			if (result == 0) continue;
 
-			icon.SetHICON(shfi.hIcon);
-			//DestroyIcon(shfi.hIcon);  // not needed, destroyed by icon destuctor		
+			icon.SetHICON(shfi.hIcon); // icon destructor calls DestroyIcon for us
 #else
 			if (false == GetIconFromFilePath(path, icon)) {
 				wxLogDebug(wxT("ProjectPane::%s() path=%s"),

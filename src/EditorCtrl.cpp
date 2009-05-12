@@ -5293,8 +5293,6 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 	return sr;
 }
 
-
-
 search_result EditorCtrl::RegExFindBackwards(const wxString& searchtext, unsigned int start_pos, unsigned int end_pos, bool matchcase) const {
 	wxASSERT(end_pos <= start_pos && start_pos <= GetLength());
 	if (end_pos == 0) end_pos = GetLength();

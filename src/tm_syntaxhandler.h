@@ -199,7 +199,7 @@ public:
 			}
 		}
 
-		// match (but there may be no targes here)
+		// match (but there may be no targets here)
 		if (targets) {
 			typename vector<const T*>::const_iterator p = targets->begin();
 			while (p != targets->end()) {

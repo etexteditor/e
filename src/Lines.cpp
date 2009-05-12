@@ -368,14 +368,14 @@ bool Lines::IsLineEnd(unsigned int line_id, unsigned int pos) {
 	wxASSERT(line_id <= ll->size());
 
 	if (line_id == ll->size()) return (pos == ll->length());
-	else return (pos == ll->end(line_id));
+	return (pos == ll->end(line_id));
 }
 
 bool Lines::IsLineStart(unsigned int line_id, unsigned int pos) {
 	wxASSERT(line_id <= ll->size());
 
 	if (line_id == ll->size()) return (pos == ll->length());
-	else return (pos == ll->offset(line_id));
+	return (pos == ll->offset(line_id));
 }
 
 bool Lines::IsBeforeNewline(unsigned int pos) {
@@ -383,7 +383,6 @@ bool Lines::IsBeforeNewline(unsigned int pos) {
 
 	const unsigned int lineid = GetLineFromCharPos(pos);
 	const unsigned int beforeNewline = GetLineEndpos(lineid, true);
-
 	return (pos == beforeNewline);
 }
 

@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 #include "SearchPanel.h"
-#include "IFrameSearchSErvice.h"
+#include "IFrameSearchService.h"
 #include "IEditorSearch.h"
 #include "images/search_png.h"
 #include "images/search_re_png.h"

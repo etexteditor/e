@@ -3926,6 +3926,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\urlencode.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\urlencode.h"
 			>
 		</File>

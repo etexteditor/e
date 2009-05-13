@@ -857,10 +857,3 @@ wxJSONWriter::WriteError( const wxString& err )
   s.append( err );
   return WriteString( s );
 }
-
-
-/*
-{
-}
-*/
-

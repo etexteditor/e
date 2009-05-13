@@ -115,8 +115,4 @@ private:
   wxMBConv*  m_conv; 
 };
 
-
 #endif			// not defined _WX_JSONWRITER_H
-
-
-

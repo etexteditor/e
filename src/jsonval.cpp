@@ -2706,12 +2706,3 @@ wxJSONValue::AsUInt32( wxUint32* ui ) const
 }
 
 #endif  // defined( wxJSON_64BIT_INT )
-
-
-
-
-/*
-{
-}
-*/
-

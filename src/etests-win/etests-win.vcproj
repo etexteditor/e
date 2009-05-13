@@ -247,44 +247,24 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
+			Name="Tests"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\eApp_fake_main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\etests-win.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\tests\adamv\etest\sample1.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\tests\adamv\etest\sample1.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\tests\adamv\etest\sample1_tests.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\test_eDocumentPath.cpp"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
+			Name="_system"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\stdafx.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\stdafx.h"
 				>
@@ -294,6 +274,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\eApp_fake_main.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

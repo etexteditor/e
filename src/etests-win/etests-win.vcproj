@@ -255,6 +255,10 @@
 				RelativePath=".\test_eDocumentPath.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\test_urlencode.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="_system"

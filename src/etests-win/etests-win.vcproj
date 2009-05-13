@@ -275,7 +275,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\eApp_fake_main.cpp"
+			RelativePath=".\declare_eApp.cpp"
 			>
 		</File>
 	</Files>

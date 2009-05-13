@@ -1645,6 +1645,30 @@
 				</FileConfiguration>
 			</File>
 		</Filter>
+		<Filter
+			Name="Catalyst"
+			>
+			<File
+				RelativePath="..\ecore\_readme.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\ecore\Catalyst.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ecore\DataList.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ecore\DataText.h"
+				>
+			</File>
+			<File
+				RelativePath="..\ecore\doc_byte_iter.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\application.ico"
 			>
@@ -1759,10 +1783,6 @@
 		</File>
 		<File
 			RelativePath=".\BundlePane.h"
-			>
-		</File>
-		<File
-			RelativePath="..\ecore\Catalyst.h"
 			>
 		</File>
 		<File
@@ -1902,14 +1922,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\ecore\DataList.h"
-			>
-		</File>
-		<File
-			RelativePath="..\ecore\DataText.h"
-			>
-		</File>
-		<File
 			RelativePath="DirWatcher.cpp"
 			>
 			<FileConfiguration
@@ -1995,10 +2007,6 @@
 		</File>
 		<File
 			RelativePath="Dispatcher.h"
-			>
-		</File>
-		<File
-			RelativePath="..\ecore\doc_byte_iter.h"
 			>
 		</File>
 		<File

@@ -21,6 +21,8 @@
 
 #include "wx/uri.h"
 
+// These static functions must inherit from wxURI because they
+// make use of protected member functions.
 class UrlEncode : public wxURI {
 public:
 	static wxString Encode(const wxString& url);

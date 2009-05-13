@@ -5,8 +5,5 @@
 
 TEST(urlencodeTest, encodeFilename) {
 	wxString encoded = UrlEncode::EncodeFilename(wxT("this is a file / name"));
-	EXPECT_STREQ(
-		wxT("this is a file %2f name"),
-		encoded
-	);
+	EXPECT_STREQ( wxT("this is a file %2f name"), encoded );
 }

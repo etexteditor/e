@@ -12,10 +12,12 @@
  ******************************************************************************/
 
 #include "StatusBar.h"
-#include "EditorFrame.h"
-#include "BundleMenu.h"
+
 #include <wx/fontmap.h>
+
+#include "EditorFrame.h"
 #include "EditorCtrl.h"
+#include "BundleMenu.h"
 #include "tm_syntaxhandler.h"
 
 // Menu id's
@@ -40,7 +42,7 @@ BEGIN_EVENT_TABLE(StatusBar, wxStatusBar)
 	EVT_MENU_RANGE(5000, 6000, StatusBar::OnMenuGotoSymbol)
 END_EVENT_TABLE()
 
-StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, TmSyntaxHandler& syntax_handler):
+StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, ITmGetSyntaxes& syntax_handler):
 	wxStatusBar(&parent, id), 
 	m_parentFrame(parent),
 	m_syntax_handler(syntax_handler),

@@ -14,16 +14,15 @@
 #ifndef __STATUSBAR_H__
 #define __STATUSBAR_H__
 
-#include "EditorChangeState.h"
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
         #include <wx/statusbr.h>
         #include <wx/dialog.h>
 #endif
 
 #include "SymbolRef.h"
+#include "EditorChangeState.h"
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -38,11 +37,11 @@ using namespace std;
 // Pre-definitions
 class EditorFrame;
 class EditorCtrl;
-class TmSyntaxHandler;
+class ITmGetSyntaxes;
 
 class StatusBar : public wxStatusBar {
 public:
-	StatusBar(EditorFrame& parent, wxWindowID id, TmSyntaxHandler& syntax_handler);
+	StatusBar(EditorFrame& parent, wxWindowID id, ITmGetSyntaxes& syntax_handler);
 
 private:
 	void UpdateBarFromActiveEditor();
@@ -74,7 +73,7 @@ private:
 
 	// Member variables
 	EditorFrame& m_parentFrame;
-	TmSyntaxHandler& m_syntax_handler;
+	ITmGetSyntaxes& m_syntax_handler;
 
 	unsigned int m_line;
 	unsigned int m_column;

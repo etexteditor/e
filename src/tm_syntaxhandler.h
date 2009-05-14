@@ -225,8 +225,14 @@ private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
 };
 
+class ITmGetSyntaxes {
+public:
+	virtual const vector<cxSyntaxInfo*>& GetSyntaxes() const = 0;
+};
+
 class TmSyntaxHandler:
-	public ITmThemeHandler
+	public ITmThemeHandler,
+	public ITmGetSyntaxes
 {
 public:
 	TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler);
@@ -321,7 +327,7 @@ public:
 	virtual void SetFont(const wxFont& font);
 
 	// Syntax
-	const vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};
+	virtual const vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};
 	void GetSyntaxes(wxArrayString& nameArray) const;
 	const cxSyntaxInfo* GetSyntax(const wxString& syntaxName, const wxString& ext=wxEmptyString);
 	const cxSyntaxInfo* GetSyntax(const DocumentWrapper& document);

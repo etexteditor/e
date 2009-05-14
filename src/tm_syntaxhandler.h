@@ -41,12 +41,14 @@ using namespace std;
 #include "tmBundle.h"
 #include "tmAction.h"
 #include "tmCommand.h"
+#include "SyntaxInfo.h"
 
 #include "tmTheme.h"
 #include "tmKey.h"
 
 #include "IGetPListHandlerRef.h"
 #include "ITmThemeHandler.h"
+#include "ITmGetSyntaxes.h"
 
 // Pre-definitions
 class PListHandler;
@@ -74,11 +76,6 @@ public:
 };
 
 
-class tmActionCmp : public binary_function<tmAction*, tmAction*, bool> {
-public:
-	bool operator()(const tmAction* x, const tmAction* y) const {return x->name.CmpNoCase(y->name) < 0;};
-};
-
 class tmDragCommand : public tmCommand {
 public:
     virtual ~tmDragCommand() {};
@@ -87,23 +84,6 @@ public:
 
 	wxArrayString extArray;
 };
-
-class cxSyntaxInfo : public tmAction {
-public:
-	cxSyntaxInfo(unsigned int bundleid, unsigned int syntaxid)
-		: bundleId(bundleid), syntaxId(syntaxid), topmatcher(NULL) {};
-    virtual ~cxSyntaxInfo() {};
-
-	bool IsOk() const {return !name.empty();};
-	bool IsSyntax() const {return true;};
-
-	wxArrayString filewild;
-	wxString firstline;
-	unsigned int bundleId;
-	unsigned int syntaxId;
-	matcher* topmatcher;
-};
-
 
 struct tmPrefs {
 	wxString increaseIndentPattern;
@@ -225,10 +205,6 @@ private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
 };
 
-class ITmGetSyntaxes {
-public:
-	virtual const vector<cxSyntaxInfo*>& GetSyntaxes() const = 0;
-};
 
 class TmSyntaxHandler:
 	public ITmThemeHandler,

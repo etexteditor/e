@@ -11,6 +11,7 @@
     #pragma warning(push, 1)
 #endif
 #include <vector>
+#include <functional>
 #ifdef __WXMSW__
     #pragma warning(pop)
 #endif
@@ -52,5 +53,9 @@ private:
 	mutable vector<char> cmdContent;
 };
 
+class tmActionCmp : public binary_function<tmAction*, tmAction*, bool> {
+public:
+	bool operator()(const tmAction* x, const tmAction* y) const {return x->name.CmpNoCase(y->name) < 0;};
+};
 
 #endif // __TMACTION_H__

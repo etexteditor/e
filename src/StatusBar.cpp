@@ -18,7 +18,7 @@
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include "BundleMenu.h"
-#include "tm_syntaxhandler.h"
+#include "ITmGetSyntaxes.h"
 
 // Menu id's
 enum {

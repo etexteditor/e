@@ -405,6 +405,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ITmGetSyntaxes.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ITmThemeHandler.h"
 				>
 			</File>
@@ -3839,6 +3843,10 @@
 		</File>
 		<File
 			RelativePath=".\SymbolRef.h"
+			>
+		</File>
+		<File
+			RelativePath=".\SyntaxInfo.h"
 			>
 		</File>
 		<File

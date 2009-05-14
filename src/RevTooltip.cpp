@@ -13,9 +13,13 @@
 
 #include "RevTooltip.h"
 #include <wx/statline.h>
+#include "Catalyst.h"
 
-RevTooltip::RevTooltip(wxWindow *parent, const CatalystWrapper catalyst)
-: m_catalyst(catalyst)
+RevTooltip::RevTooltip(const CatalystWrapper& catalyst): 
+	m_catalyst(catalyst) {}
+
+RevTooltip::RevTooltip(wxWindow *parent, const CatalystWrapper& catalyst):
+	m_catalyst(catalyst)
 {
 	Create(parent);
 }
@@ -94,7 +98,7 @@ void RevTooltip::SetDocument(const doc_id& di, wxPoint pos) {
 	cxLOCK_READ(m_catalyst)
 		wxASSERT(catalyst.IsOk(di));
 
-		m_docId = di;
+		doc_id m_docId = di;
 
 		// Set the user info
 		const unsigned int userId = catalyst.GetDocAuthor(m_docId);

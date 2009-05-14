@@ -21,12 +21,13 @@
 
 #include "wx/popupwin.h"
 
-#include "Catalyst.h"
+class CatalystWrapper;
+class doc_id;
 
 class RevTooltip : public wxPopupWindow {
 public:
-	RevTooltip(const CatalystWrapper catalyst) : m_catalyst(catalyst) {};
-	RevTooltip(wxWindow *parent, const CatalystWrapper catalyst);
+	RevTooltip(const CatalystWrapper& catalyst);
+	RevTooltip(wxWindow *parent, const CatalystWrapper& catalyst);
 	void Create(wxWindow *parent);
 
 	void SetDocument(const doc_id& di, wxPoint pos);
@@ -37,8 +38,7 @@ private:
 		ColorBox(wxWindow* parent, wxWindowID id);
 	};
 
-	const CatalystWrapper m_catalyst;
-	doc_id m_docId;
+	const CatalystWrapper& m_catalyst;
 
 	wxPanel* m_mainPanel;
 	wxBoxSizer* m_mainSizer;

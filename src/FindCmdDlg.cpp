@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "FindCmdDlg.h"
+#include "tmBundle.h"
 #include <algorithm>
 
 // Ctrl id's

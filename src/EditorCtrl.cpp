@@ -21,6 +21,8 @@
 #include <algorithm>
 
 #include "doc_byte_iter.h"
+#include "tm_syntaxhandler.h"
+
 #include "EditorFrame.h"
 #include "StyleRun.h"
 #include "FindCmdDlg.h"

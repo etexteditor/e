@@ -16,7 +16,7 @@
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "SearchListBox.h"
-#include "tm_syntaxhandler.h"
+#include "tmAction.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__

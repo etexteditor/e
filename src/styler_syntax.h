@@ -127,6 +127,7 @@ private:
 	unsigned int Search(submatch& submatches, SearchInfo& si, unsigned int scopeStart, unsigned int scopeEnd, stxmatch* scope);
 
 	// Private methods
+	bool HaveActiveSyntax() const { return m_topMatches.subMatcher != NULL; };
 	void DoStyle(StyleRun& sr, unsigned int offset, const auto_vector<stxmatch>& matches);
 	void DoSearch(unsigned int start, unsigned int end, unsigned int limit);
 	unsigned int SubSearch(unsigned int offset, unsigned int start, unsigned int end, submatch& submatches, stxmatch* parent, bool doAdjust, bool& done);

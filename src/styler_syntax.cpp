@@ -153,7 +153,7 @@ void Styler_Syntax::GetSubScope(unsigned int pos, const submatch& sm, deque<cons
 
 const deque<interval> Styler_Syntax::GetScopeIntervals(unsigned int pos) const {
 	wxASSERT(pos <= m_doc.GetLength());
-	if(!m_topMatches.subMatcher) return deque<interval>(); // no active syntax
+	if(!HaveActiveSyntax()) return deque<interval>();
 
 	deque<interval> scopes;
 	const wxString& topScope = m_topMatches.subMatcher->GetName();
@@ -305,7 +305,7 @@ void Styler_Syntax::XmlText(unsigned int offset, const submatch& sm, unsigned in
 }
 
 void Styler_Syntax::GetSymbols(vector<SymbolRef>& symbols) const {
-	if(!m_topMatches.subMatcher) return; // no active syntax
+	if(!HaveActiveSyntax()) return;
 
 	deque<const wxString*> scopes;
 
@@ -359,7 +359,7 @@ void Styler_Syntax::GetSubSymbols(unsigned int offset, const submatch& sm, deque
 }
 
 void Styler_Syntax::Style(StyleRun& sr) {
-	if (!m_topMatches.subMatcher) return;
+	if (!HaveActiveSyntax()) return;
 
 	unsigned int sr_end = sr.GetRunEnd();
 
@@ -437,13 +437,13 @@ void Styler_Syntax::DoStyle(StyleRun& sr, unsigned int offset, const auto_vector
 }
 
 void Styler_Syntax::DoSearch(unsigned int start, unsigned int end, unsigned int limit) {
-	wxASSERT(start >= 0 && start < m_doc.GetLength());
-	wxASSERT(end > start && end <= m_doc.GetLength());
+	wxASSERT(0 <= start && start < m_doc.GetLength());
+	wxASSERT(start < end && end <= m_doc.GetLength());
 	wxASSERT(limit <= m_doc.GetLength());
-	wxASSERT(m_topMatches.subMatcher);
+	wxASSERT(HaveActiveSyntax());
 	
 	// Don't try to parse if there is no valid parser
-	if (!m_topMatches.subMatcher) {
+	if (!HaveActiveSyntax()) {
 		m_syntax_end = m_lines.GetLength();
 		return;
 	}
@@ -1207,7 +1207,7 @@ void Styler_Syntax::ParseTo(unsigned int pos) {
 }
 
 bool Styler_Syntax::OnIdle() {
-	if (!m_topMatches.subMatcher) return false;
+	if (!HaveActiveSyntax()) return false;
 
 	// Extend syntax a bit longer
 	if (m_syntax_end < m_doc.GetLength()) {

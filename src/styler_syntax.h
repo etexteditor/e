@@ -17,7 +17,6 @@
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "Catalyst.h"
 #include "styler.h"
-#include "pcre.h"
 #include "SymbolRef.h"
 
 // STL can't compile with Level 4

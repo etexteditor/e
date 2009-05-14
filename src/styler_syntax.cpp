@@ -21,6 +21,7 @@
 #include "tmStyle.h"
 #include "Lines.h"
 #include "matchers.h"
+#include "pcre.h"
 
 const unsigned int Styler_Syntax::EXTSIZE = 1000;
 

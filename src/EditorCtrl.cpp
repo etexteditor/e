@@ -12,16 +12,19 @@
  ******************************************************************************/
 
 #include "EditorCtrl.h"
+
 #include <wx/clipbrd.h>
 #include <wx/filename.h>
-#include <algorithm>
-#include "EditorFrame.h"
-#include "StyleRun.h"
 #include <wx/tipwin.h>
 #include <wx/file.h>
+
+#include <algorithm>
+
+#include "doc_byte_iter.h"
+#include "EditorFrame.h"
+#include "StyleRun.h"
 #include "FindCmdDlg.h"
 #include "RunCmdDlg.h"
-#include "doc_byte_iter.h"
 #include "BundleMenu.h"
 #include "GutterCtrl.h"
 #include "PreviewDlg.h"
@@ -36,6 +39,8 @@
 
 #include "eSettings.h"
 #include "IAppPaths.h"
+
+#include "pcre.h"
 
 // Document Icons
 #include "document.xpm"

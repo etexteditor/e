@@ -13,7 +13,7 @@
 
 #include "GutterCtrl.h"
 #include "Fold.h"
-#include "tm_syntaxhandler.h"
+#include "tmTheme.h"
 #include "EditorCtrl.h"
 
 unsigned int _gutter_digits_in_number(unsigned int number) {

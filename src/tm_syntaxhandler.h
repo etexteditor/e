@@ -41,6 +41,8 @@ using namespace std;
 #include "tmTheme.h"
 #include "tmKey.h"
 
+#include "IGetPListHandlerRef.h"
+#include "ITmThemeHandler.h"
 
 // Pre-definitions
 class PListHandler;
@@ -273,23 +275,6 @@ public:
 
 private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
-};
-
-class IGetPListHandlerRef {
-public:
-	virtual PListHandler& GetPListHandler() = 0;
-};
-
-class ITmThemeHandler:
-	public virtual IGetPListHandlerRef
-{
-public:
-	virtual bool SetTheme(const char* uuid) = 0;
-	virtual void SetDefaultTheme() = 0;
-	virtual const tmTheme& GetTheme() const = 0;
-	virtual const wxString& GetCurrentThemeName() const = 0;
-	virtual const wxFont& GetFont() const = 0;
-	virtual void SetFont(const wxFont& font) = 0;
 };
 
 class TmSyntaxHandler:

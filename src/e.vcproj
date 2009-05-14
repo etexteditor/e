@@ -397,7 +397,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IGetPListHandlerRef.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IPrintableDocument.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ITmThemeHandler.h"
 				>
 			</File>
 			<File

@@ -41,7 +41,7 @@ class span_matcher;
 
 class Styler_Syntax : public Styler {
 public:
-	Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler& syntaxHandler);
+	Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler* syntaxHandler);
 	virtual ~Styler_Syntax() {Clear();};
 
 	const wxString& GetName() const {return m_syntaxName;};
@@ -149,7 +149,7 @@ private:
 
 	// Member variables
 	const DocumentWrapper& m_doc;
-	TmSyntaxHandler& m_syntaxHandler;
+	TmSyntaxHandler* m_syntaxHandler;
 	Lines& m_lines;
 	unsigned int m_syntax_end;
 	static const unsigned int EXTSIZE;

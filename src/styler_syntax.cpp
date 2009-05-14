@@ -25,7 +25,7 @@
 
 const unsigned int Styler_Syntax::EXTSIZE = 1000;
 
-Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler& syntaxHandler)
+Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler* syntaxHandler)
 : m_doc(dw), m_syntaxHandler(syntaxHandler), m_lines(lines), m_syntax_end(0), m_updateLineHeight(false) {
 	m_topMatches.subMatcher = NULL;
 	m_topStyle = NULL;
@@ -80,7 +80,7 @@ void Styler_Syntax::ReStyleSub(const submatch& sm) {
 }
 
 bool Styler_Syntax::UpdateSyntax() {
-	const cxSyntaxInfo* si = m_syntaxHandler.GetSyntax(m_doc);
+	const cxSyntaxInfo* si = m_syntaxHandler->GetSyntax(m_doc);
 	if (!si) return false; // No new syntax found
 
 	if (si->topmatcher != m_topMatches.subMatcher) {
@@ -93,7 +93,7 @@ bool Styler_Syntax::UpdateSyntax() {
 }
 
 void Styler_Syntax::SetSyntax(const wxString& syntaxName, const wxString& ext) {
-	const cxSyntaxInfo* si = m_syntaxHandler.GetSyntax(syntaxName, ext);
+	const cxSyntaxInfo* si = m_syntaxHandler->GetSyntax(syntaxName, ext);
 	if (!si) {
 		wxASSERT(false);
 		Clear(); // No syntax found
@@ -202,7 +202,7 @@ const style* Styler_Syntax::GetStyle(stxmatch& m) const {
 		scopes.push_front(&topScope);
 	}
 
-	const style* st = m_syntaxHandler.GetStyle(scopes);
+	const style* st = m_syntaxHandler->GetStyle(scopes);
 	return st;
 }
 
@@ -317,7 +317,7 @@ void Styler_Syntax::GetSymbols(vector<SymbolRef>& symbols) const {
 
 	// Check for matching symbol
 	const wxString* transform;
-	if (m_syntaxHandler.ShowSymbol(scopes, transform)) {
+	if (m_syntaxHandler->ShowSymbol(scopes, transform)) {
 		const SymbolRef sr = {0, m_doc.GetLength(), transform};
 		symbols.push_back(sr);
 	}
@@ -337,7 +337,7 @@ void Styler_Syntax::GetSubSymbols(unsigned int offset, const submatch& sm, deque
 
 			// Check for matching symbol
 			const wxString* transform;
-			if (m_syntaxHandler.ShowSymbol(scopes, transform)) {
+			if (m_syntaxHandler->ShowSymbol(scopes, transform)) {
 				const SymbolRef sr = {offset+m.start, offset+m.end, transform};
 				symbols.push_back(sr);
 

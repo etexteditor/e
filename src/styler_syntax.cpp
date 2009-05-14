@@ -1293,28 +1293,27 @@ void Styler_Syntax::Verify() const {
 }
 
 void Styler_Syntax::VerifyMatch(const stxmatch* m) const {
-	if (m->subMatch.get()) {
-		const auto_vector<stxmatch>& matches = m->subMatch->matches;
+	if (!m->subMatch.get()) return;
+	const auto_vector<stxmatch>& matches = m->subMatch->matches;
 
-		// Check that matches are in sequence
-		for (unsigned int i = 1; i < matches.size(); ++i) {
-			const stxmatch& m1 = *matches[i-1];
-			const stxmatch& m2 = *matches[i];
+	// Check that matches are in sequence
+	for (unsigned int i = 1; i < matches.size(); ++i) {
+		const stxmatch& m1 = *matches[i-1];
+		const stxmatch& m2 = *matches[i];
 
-			wxASSERT(m1.start <= m1.end);
-			wxASSERT(m1.end <= m2.start);
-			wxASSERT(m2.start <= m2.end);
-		}
+		wxASSERT(m1.start <= m1.end);
+		wxASSERT(m1.end <= m2.start);
+		wxASSERT(m2.start <= m2.end);
+	}
 
-		// Check that last match is within bonds
-		if (!matches.empty()) {
-			wxASSERT(matches.back()->end <= (m->end - m->start));
-		}
+	// Check that last match is within bonds
+	if (!matches.empty()) {
+		wxASSERT(matches.back()->end <= (m->end - m->start));
+	}
 
-		// Check all subMatches
-		for (unsigned int i2 = 0; i2 < matches.size(); ++i2) {
-			VerifyMatch(matches[i2]);
-		}
+	// Check all subMatches
+	for (unsigned int i2 = 0; i2 < matches.size(); ++i2) {
+		VerifyMatch(matches[i2]);
 	}
 }
 

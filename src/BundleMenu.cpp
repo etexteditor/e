@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 #include "BundleMenu.h"
-#include "tm_syntaxhandler.h"
+#include "tmAction.h"
 
 #ifdef __WXGTK__
 #include <gtk/gtk.h>
@@ -55,8 +55,10 @@ void BundleMenuItem::AfterInsert(void) {
 }
 #endif
 
-BundleMenuItem::BundleMenuItem(wxMenu* parentMenu, int id, const tmAction& action, wxItemKind kind)
-: wxMenuItem(parentMenu, id, action.name, action.name, kind), m_action(action) {
+BundleMenuItem::BundleMenuItem(wxMenu* parentMenu, int id, const tmAction& action, wxItemKind kind):
+	wxMenuItem(parentMenu, id, action.name, action.name, kind), 
+	m_action(action) 
+{
 #ifdef __WXMSW__
 	SetOwnerDrawn(true);
 

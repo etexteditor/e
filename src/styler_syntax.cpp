@@ -739,61 +739,61 @@ void Styler_Syntax::AddCaptures(matcher& m, stxmatch& sm, unsigned int offset, c
 	wxASSERT(offset + sm.start >= si.lineStart && offset + sm.start < si.lineEnd);
 
 	// Handle captures inside eachother
-	if (rc > 0) {
-		vector<unsigned int> offsets;
-		vector<interval> ivs;
-		vector<stxmatch*> mts;
+	if (rc <= 0) return;
 
-		// All intervals are in absolute numbers
-		const interval iv(offset + sm.start, offset + sm.end);
-		wxASSERT(iv.start == si.lineStart + ovector[0] && iv.end == si.lineStart + ovector[1]);
+	vector<unsigned int> offsets;
+	vector<interval> ivs;
+	vector<stxmatch*> mts;
 
-		ivs.push_back(iv);
-		mts.push_back(&sm);
+	// All intervals are in absolute numbers
+	const interval iv(offset + sm.start, offset + sm.end);
+	wxASSERT(iv.start == si.lineStart + ovector[0] && iv.end == si.lineStart + ovector[1]);
 
-		for (unsigned int i = 1; (int)i < rc; ++i) {
-			if (ovector[2*i] == -1) continue;
+	ivs.push_back(iv);
+	mts.push_back(&sm);
 
-			const wxString& name = m.GetCaptureName(i);
-			if (name.empty()) continue;
+	for (unsigned int i = 1; (int)i < rc; ++i) {
+		if (ovector[2*i] == -1) continue;
 
-			const interval capiv(si.lineStart + ovector[2*i], si.lineStart + ovector[2*i+1]);
+		const wxString& name = m.GetCaptureName(i);
+		if (name.empty()) continue;
 
-			// Get the right parent match
-			while(ivs.size() > 1 && capiv.end > ivs.back().end) {
-				ivs.pop_back();
-				mts.pop_back();
-			}
-			stxmatch& parent = *mts.back();
+		const interval capiv(si.lineStart + ovector[2*i], si.lineStart + ovector[2*i+1]);
 
-			// We have to adjust the interval against the parent offset (which is absolute)
-			const int cap_start = capiv.start - ivs.back().start;
-			const int cap_end = capiv.end - ivs.back().start;
-
-			// Captures outside match (like in a non-capturing part)
-			// are not currently supported
-			const int parentLen = ivs.back().end - ivs.back().start;
-			if (cap_start < 0 || cap_end > parentLen) {
-				continue;
-			}
-
-			// Create submatch list if not there
-			if (!parent.subMatch.get()) {
-				parent.subMatch = auto_ptr<submatch>(new submatch);
-				parent.subMatch->subMatcher = NULL; // matches with captures distinguishes from spans by not having subMatcher
-			}
-
-			// Create the new match
-			auto_ptr<stxmatch> cap(new stxmatch(name, &m, cap_start, cap_end, NULL, NULL, &parent));
-
-			wxASSERT(capiv.end <= offset + sm.end);
-
-			ivs.push_back(capiv);
-			mts.push_back(cap.get());
-
-			cap->st = GetStyle(*cap); // style the match
-			parent.subMatch->matches.push_back(cap);
+		// Get the right parent match
+		while(ivs.size() > 1 && capiv.end > ivs.back().end) {
+			ivs.pop_back();
+			mts.pop_back();
 		}
+		stxmatch& parent = *mts.back();
+
+		// We have to adjust the interval against the parent offset (which is absolute)
+		const int cap_start = capiv.start - ivs.back().start;
+		const int cap_end = capiv.end - ivs.back().start;
+
+		// Captures outside match (like in a non-capturing part)
+		// are not currently supported
+		const int parentLen = ivs.back().end - ivs.back().start;
+		if (cap_start < 0 || cap_end > parentLen) {
+			continue;
+		}
+
+		// Create submatch list if not there
+		if (!parent.subMatch.get()) {
+			parent.subMatch = auto_ptr<submatch>(new submatch);
+			parent.subMatch->subMatcher = NULL; // matches with captures distinguishes from spans by not having subMatcher
+		}
+
+		// Create the new match
+		auto_ptr<stxmatch> cap(new stxmatch(name, &m, cap_start, cap_end, NULL, NULL, &parent));
+
+		wxASSERT(capiv.end <= offset + sm.end);
+
+		ivs.push_back(capiv);
+		mts.push_back(cap.get());
+
+		cap->st = GetStyle(*cap); // style the match
+		parent.subMatch->matches.push_back(cap);
 	}
 }
 

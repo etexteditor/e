@@ -12,17 +12,19 @@
  ******************************************************************************/
 
 #include "tm_syntaxhandler.h"
-#include "IAppPaths.h"
+
+#include <wx/ffile.h>
+#include "pcre.h"
+
+#include "Document.h"
 #include "eSettings.h"
 #include "matchers.h"
 #include "Dispatcher.h"
 #include "BundleMenu.h"
-#include "pcre.h"
 
-#include "Document.h"
+#include "IAppPaths.h"
 #include "IEditorDoAction.h"
 
-#include <wx/ffile.h> // Not included in wx/wx.h
 
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__

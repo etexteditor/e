@@ -18,14 +18,12 @@
 #ifndef __TM_SYNTAXHANDLER_H__
 #define __TM_SYNTAXHANDLER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/wx.h>
 #endif
 
-#include "plistHandler.h"
-#include "tmTheme.h"
-#include "tmKey.h"
+#include <wx/dir.h>
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -38,9 +36,12 @@
     #pragma warning(pop)
 #endif
 
-#include <wx/dir.h>
-
 using namespace std;
+
+#include "plistHandler.h"
+#include "tmTheme.h"
+#include "tmKey.h"
+
 
 // Pre-definitions
 class IEditorDoAction;
@@ -57,7 +58,7 @@ class DocumentWrapper;
 class Dispatcher;
 
 struct style;
-class TmSyntaxHandler;
+//class TmSyntaxHandler;
 
 struct tmBundle {
 	unsigned int bundleRef;
@@ -372,7 +373,6 @@ public:
 	const cxSyntaxInfo* GetSyntax(const DocumentWrapper& document);
 
 	// Style
-	//style* GetStyle(const wxString& WXUNUSED(name)) const {return NULL;};
 	const style* GetStyle(const deque<const wxString*>& scopes) const;
 
 	// Actions

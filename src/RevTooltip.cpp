@@ -176,4 +176,3 @@ RevTooltip::ColorBox::ColorBox(wxWindow* parent, wxWindowID id)
 	const wxSize size = GetSize();
 	SetSizeHints(size, size);
 }
-

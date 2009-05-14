@@ -23,8 +23,8 @@ const unsigned int Styler_SearchHL::EXTSIZE = 1000;
 Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
 : m_doc(rev), m_lines(lines), m_searchRanges(ranges),
   m_theme(theme), m_hlcolor(m_theme.searchHighlightColor),
-  m_rangeColor(m_theme.shadowColor) {
-
+  m_rangeColor(m_theme.shadowColor) 
+{
 	Clear(); // Make sure all variables are empty
 }
 
@@ -80,7 +80,7 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 	//wxLogDebug("Style %u %u", rstart, rend);
 	//wxLogDebug(" %u %u - %u %u", sr_start, sr_end, m_search_start, m_search_end);
 	// Check if we need to do a new search
-	if (sr_start < m_search_start || sr_end > m_search_end) {
+	if (sr_start < m_search_start || m_search_end < sr_end) {
 		// Check if there is overlap so we can just extend the search area
 		if (sr_end > m_search_start && sr_start < m_search_end) {
 			sr_start = wxMin(sr_start, m_search_start);
@@ -136,8 +136,8 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 }
 
 void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_last) {
-	wxASSERT(start >= 0 && start < m_doc.GetLength());
-	wxASSERT(end > start && end <= m_doc.GetLength());
+	wxASSERT(0 <= start && start < m_doc.GetLength());
+	wxASSERT(start < end && end <= m_doc.GetLength());
 
 	bool matchcase = m_options & FIND_MATCHCASE;
 
@@ -187,8 +187,8 @@ void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_l
 }
 
 void Styler_SearchHL::Insert(unsigned int pos, unsigned int length) {
-	wxASSERT(pos >= 0 && pos < m_doc.GetLength());
-	wxASSERT(length >= 0 && pos+length <= m_doc.GetLength());
+	wxASSERT(0 <= pos && pos < m_doc.GetLength());
+	wxASSERT(0 <= length && pos+length <= m_doc.GetLength());
 	if (m_text.empty()) return;
 
 	// Adjust start & end
@@ -237,7 +237,7 @@ void Styler_SearchHL::Insert(unsigned int pos, unsigned int length) {
 }
 
 void Styler_SearchHL::Delete(unsigned int start_pos, unsigned int end_pos) {
-	wxASSERT(start_pos >= 0 && start_pos <= m_doc.GetLength());
+	wxASSERT(0 <= start_pos && start_pos <= m_doc.GetLength());
 	if (m_text.empty()) return;
 
 	if (start_pos == end_pos) return;

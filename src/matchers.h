@@ -31,15 +31,6 @@ struct pcre_extra;
 class match_matcher;
 
 
-// Definitions
-struct style {
-	wxString name;
-	wxString scope;
-	wxColour foregroundcolor;
-	wxColour backgroundcolor;
-	int fontflags;
-};
-
 class matcher {
 public:
 	matcher()

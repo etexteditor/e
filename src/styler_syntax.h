@@ -34,10 +34,10 @@ using namespace std;
 class TmSyntaxHandler;
 class StyleRun;
 class Lines;
+struct style;
 
 class matcher;
 class span_matcher;
-struct style;
 
 class Styler_Syntax : public Styler {
 public:

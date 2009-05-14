@@ -3930,6 +3930,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tmStyle.h"
+			>
+		</File>
+		<File
 			RelativePath=".\tmTheme.h"
 			>
 		</File>

@@ -54,11 +54,9 @@ class group_matcher;
 class TiXmlElement;
 
 class DocumentWrapper;
-
 class Dispatcher;
 
 struct style;
-//class TmSyntaxHandler;
 
 struct tmBundle {
 	unsigned int bundleRef;

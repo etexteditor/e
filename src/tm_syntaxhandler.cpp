@@ -21,6 +21,7 @@
 #include "matchers.h"
 #include "Dispatcher.h"
 #include "BundleMenu.h"
+#include "tmStyle.h"
 
 #include "IAppPaths.h"
 #include "IEditorDoAction.h"

@@ -12,10 +12,13 @@
  ******************************************************************************/
 
 #include "styler_syntax.h"
+
+#include <algorithm>
+
 #include "StyleRun.h"
 #include "tm_syntaxhandler.h"
+#include "tmStyle.h"
 #include "Lines.h"
-#include <algorithm>
 #include "matchers.h"
 
 const unsigned int Styler_Syntax::EXTSIZE = 1000;

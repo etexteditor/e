@@ -12,17 +12,20 @@
  ******************************************************************************/
 
 #include "BundleManager.h"
-#include "IFrameRemoteThread.h"
-#include "tm_syntaxhandler.h"
-#include "urlencode.h"
-#include "IAppPaths.h"
-#include "Catalyst.h"
 
+#include <wx/listctrl.h>
 #include <wx/filename.h>
 #include <wx/imaglist.h>
 #include <wx/progdlg.h>
 #include <wx/stdpaths.h>
 #include <wx/ffile.h>
+
+#include "Catalyst.h"
+#include "tm_syntaxhandler.h"
+#include "urlencode.h"
+
+#include "IFrameRemoteThread.h"
+#include "IAppPaths.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"

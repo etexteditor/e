@@ -40,6 +40,7 @@ using namespace std;
 
 #include "tmBundle.h"
 #include "tmAction.h"
+#include "tmCommand.h"
 
 #include "tmTheme.h"
 #include "tmKey.h"
@@ -72,24 +73,6 @@ public:
 	virtual ~tmSnippet() {};
 };
 
-class tmCommand : public tmAction {
-public:
-	tmCommand()
-	: save(csNONE), input(ciNONE), inputXml(false), fallbackInput(ciNONE), output(coNONE) {};
-	virtual ~tmCommand() {};
-
-	bool IsCommand() const {return true;};
-
-	enum CmdSave {csNONE, csDOC, csALL};
-	enum CmdInput {ciNONE, ciSEL, ciDOC, ciLINE, ciWORD, ciCHAR, ciSCOPE};
-	enum CmdOutput {coNONE, coSEL, coDOC, coINSERT, coSNIPPET, coTOOLTIP, coHTML, coNEWDOC, coREPLACEDOC};
-
-	CmdSave save;
-	CmdInput input;
-	bool inputXml;
-	CmdInput fallbackInput;
-	CmdOutput output;
-};
 
 class tmActionCmp : public binary_function<tmAction*, tmAction*, bool> {
 public:

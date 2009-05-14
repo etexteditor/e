@@ -3938,6 +3938,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tmCommand.h"
+			>
+		</File>
+		<File
 			RelativePath=".\tmKey.cpp"
 			>
 		</File>

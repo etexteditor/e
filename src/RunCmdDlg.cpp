@@ -13,7 +13,7 @@
 
 #include "RunCmdDlg.h"
 #include <wx/gbsizer.h>
-#include "tm_syntaxhandler.h"
+#include "tmCommand.h"
 
 RunCmdDlg::RunCmdDlg(wxWindow *parent)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {

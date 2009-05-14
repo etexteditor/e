@@ -865,58 +865,58 @@ void Styler_Syntax::CreateSpan(unsigned int starterStart, unsigned int starterEn
 }
 
 void Styler_Syntax::ReInitSpan(span_matcher& sm, unsigned int start, const SearchInfo& si, int rc, int* ovector) {
-	if (sm.HasEndCaptures()) {
-		match_matcher& spanstarter = *sm.GetStartMatcher();
+	if (!sm.HasEndCaptures()) return;
 
-		unsigned int lineStart;
-		unsigned int lineEnd;
-		unsigned int lineLen;
-		vector<char> line; // TODO: make member variable
-		const char* ptrLine = NULL;
-		bool usingSi;
+	match_matcher& spanstarter = *sm.GetStartMatcher();
 
-		// Check if we can reuse current line info
-		if (start >= si.lineStart && start < si.lineEnd) {
-			usingSi = true;
-			lineStart = si.lineStart;
-			lineEnd = si.lineEnd;
-			lineLen = si.lineLen;
-			ptrLine = &*si.line.begin();
-		}
-		else {
-			usingSi = false;
-			lineStart = start; // TODO: set to start-of-line
-			cxLOCKDOC_READ(m_doc)
-				lineEnd = doc.GetLine(lineStart, line);
-			cxENDLOCK
-			lineLen = lineEnd - lineStart;
-			ptrLine = &*line.begin();
-		}
+	unsigned int lineStart;
+	unsigned int lineEnd;
+	unsigned int lineLen;
+	vector<char> line; // TODO: make member variable
+	const char* ptrLine = NULL;
+	bool usingSi;
 
-		if (!ovector) {
-			// Re-search for the starter to get captures
-			// (only needed if we are not in a current search)
-			pcre* subRe = spanstarter.GetMatchPattern();
-			const int OVECCOUNT = 30;
-			int ov[OVECCOUNT];
-			ovector = ov;
-			const int search_options = PCRE_NO_UTF8_CHECK;
-			rc = pcre_exec(
-				subRe,                // the compiled pattern
-				NULL,                 // extra data - if we study the pattern
-				ptrLine,              // the subject string
-				lineLen,              // the length of the subject
-				start - lineStart,    // start at offset in the subject
-				search_options,       // options
-				ovector,              // output vector for substring information
-				OVECCOUNT);           // number of elements in the output vector
-		}
+	// Check if we can reuse current line info
+	if (start >= si.lineStart && start < si.lineEnd) {
+		usingSi = true;
+		lineStart = si.lineStart;
+		lineEnd = si.lineEnd;
+		lineLen = si.lineLen;
+		ptrLine = &*si.line.begin();
+	}
+	else {
+		usingSi = false;
+		lineStart = start; // TODO: set to start-of-line
+		cxLOCKDOC_READ(m_doc)
+			lineEnd = doc.GetLine(lineStart, line);
+		cxENDLOCK
+		lineLen = lineEnd - lineStart;
+		ptrLine = &*line.begin();
+	}
 
-		// ReInit span_matcher to get an updated ender
-		if (rc > 0) {
-			const vector<char>& lineref = (usingSi ? si.line : line);
-			sm.ReInit(lineref, ovector, rc);
-		}
+	if (!ovector) {
+		// Re-search for the starter to get captures
+		// (only needed if we are not in a current search)
+		pcre* subRe = spanstarter.GetMatchPattern();
+		const int OVECCOUNT = 30;
+		int ov[OVECCOUNT];
+		ovector = ov;
+		const int search_options = PCRE_NO_UTF8_CHECK;
+		rc = pcre_exec(
+			subRe,                // the compiled pattern
+			NULL,                 // extra data - if we study the pattern
+			ptrLine,              // the subject string
+			lineLen,              // the length of the subject
+			start - lineStart,    // start at offset in the subject
+			search_options,       // options
+			ovector,              // output vector for substring information
+			OVECCOUNT);           // number of elements in the output vector
+	}
+
+	// ReInit span_matcher to get an updated ender
+	if (rc > 0) {
+		const vector<char>& lineref = (usingSi ? si.line : line);
+		sm.ReInit(lineref, ovector, rc);
 	}
 }
 

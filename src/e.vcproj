@@ -3930,6 +3930,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tmAction.h"
+			>
+		</File>
+		<File
+			RelativePath=".\tmBundle.h"
+			>
+		</File>
+		<File
 			RelativePath=".\tmKey.cpp"
 			>
 		</File>

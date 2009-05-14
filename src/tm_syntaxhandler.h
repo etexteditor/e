@@ -38,6 +38,9 @@
 
 using namespace std;
 
+#include "tmBundle.h"
+#include "tmAction.h"
+
 #include "tmTheme.h"
 #include "tmKey.h"
 
@@ -62,44 +65,6 @@ class DocumentWrapper;
 class Dispatcher;
 
 struct style;
-
-struct tmBundle {
-	unsigned int bundleRef;
-	wxString name;
-	wxString uuid;
-	wxFileName path;
-};
-
-class tmAction {
-public:
-	tmAction() :  isUnix(true), bundle(NULL), contentLoaded(false) {};
-	virtual ~tmAction() {};
-
-	virtual bool IsSnippet() const {return false;};
-	virtual bool IsCommand() const {return false;};
-	virtual bool IsDrag() const {return false;};
-	virtual bool IsSyntax() const {return false;};
-	void SwapContent(vector<char>& c) {
-		cmdContent.swap(c);
-		contentLoaded = true;
-	};
-
-	// Member variables
-	bool isUnix;
-	wxString name;
-	wxString uuid;
-	wxString scope;
-	wxString trigger;
-	tmKey key;
-	const tmBundle* bundle;
-
-private:
-	friend class TmSyntaxHandler;
-
-	unsigned int plistRef;
-	mutable bool contentLoaded;
-	mutable vector<char> cmdContent;
-};
 
 class tmSnippet : public tmAction {
 public:

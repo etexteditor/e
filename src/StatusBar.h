@@ -41,7 +41,7 @@ class ITmGetSyntaxes;
 
 class StatusBar : public wxStatusBar {
 public:
-	StatusBar(EditorFrame& parent, wxWindowID id, ITmGetSyntaxes& syntax_handler);
+	StatusBar(EditorFrame& parent, wxWindowID id, ITmGetSyntaxes* syntax_handler);
 
 private:
 	void UpdateBarFromActiveEditor();
@@ -73,7 +73,7 @@ private:
 
 	// Member variables
 	EditorFrame& m_parentFrame;
-	ITmGetSyntaxes& m_syntax_handler;
+	ITmGetSyntaxes* m_syntax_handler;
 
 	unsigned int m_line;
 	unsigned int m_column;

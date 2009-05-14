@@ -42,7 +42,7 @@ BEGIN_EVENT_TABLE(StatusBar, wxStatusBar)
 	EVT_MENU_RANGE(5000, 6000, StatusBar::OnMenuGotoSymbol)
 END_EVENT_TABLE()
 
-StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, ITmGetSyntaxes& syntax_handler):
+StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, ITmGetSyntaxes* syntax_handler):
 	wxStatusBar(&parent, id), 
 	m_parentFrame(parent),
 	m_syntax_handler(syntax_handler),
@@ -164,7 +164,7 @@ void StatusBar::PopupSyntaxMenu(wxRect& menuPos) {
 		const wxString& current = m_editorCtrl->GetSyntaxName();
 
 		// Get syntaxes and sort
-		vector<cxSyntaxInfo*> syntaxes = m_syntax_handler.GetSyntaxes();
+		vector<cxSyntaxInfo*> syntaxes = m_syntax_handler->GetSyntaxes();
 		sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
 
 		// Syntax submenu

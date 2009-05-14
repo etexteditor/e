@@ -834,7 +834,7 @@ void EditorFrame::UpdateEncodingMenu(wxMenu& menu) const {
 }
 
 void EditorFrame::CreateAndSetStatusbar() {
-	m_pStatBar = new StatusBar(*this, wxID_ANY, this->m_syntax_handler);
+	m_pStatBar = new StatusBar(*this, wxID_ANY, &m_syntax_handler);
 
 	SetStatusBar(m_pStatBar);
 	SetStatusBarPane(-1); // disable help display

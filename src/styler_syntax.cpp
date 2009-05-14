@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "StyleRun.h"
+#include "Document.h"
 #include "tm_syntaxhandler.h"
 #include "tmStyle.h"
 #include "Lines.h"
@@ -31,6 +32,10 @@ Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHa
 #ifdef __WXDEBUG__
 	m_verifyEnabled = true;
 #endif
+}
+
+bool Styler_Syntax::IsParsed() const {
+	return !IsOk() || m_syntax_end == m_doc.GetLength();
 }
 
 void Styler_Syntax::Clear() {
@@ -198,7 +203,6 @@ const style* Styler_Syntax::GetStyle(stxmatch& m) const {
 	}
 
 	const style* st = m_syntaxHandler.GetStyle(scopes);
-
 	return st;
 }
 

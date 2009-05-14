@@ -15,7 +15,7 @@
 #define __STYLER_SYNTAX_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Document.h"
+#include "Catalyst.h"
 #include "styler.h"
 #include "pcre.h"
 #include "SymbolRef.h"
@@ -31,6 +31,7 @@
 #endif
 using namespace std;
 
+class DocumentWrapper;
 class TmSyntaxHandler;
 class StyleRun;
 class Lines;
@@ -47,7 +48,7 @@ public:
 	const wxString& GetName() const {return m_syntaxName;};
 
 	bool IsOk() const {return m_topMatches.subMatcher != NULL;};
-	bool IsParsed() const {return !IsOk() || m_syntax_end == m_doc.GetLength();};
+	bool IsParsed() const;
 	unsigned int GetLastParsedPos() const {return m_syntax_end;};
 
 	bool UpdateSyntax();

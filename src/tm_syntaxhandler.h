@@ -23,8 +23,6 @@
 	#include <wx/wx.h>
 #endif
 
-#include <wx/dir.h>
-
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -460,23 +458,6 @@ private:
 	public:
 		bool operator()(const char* x, const char* y) const {return strcmp(x,y) < 0;};
 	};
-
-	class DirTraverserSimple : public wxDirTraverser
-    {
-    public:
-        DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) { }
-        virtual wxDirTraverseResult OnFile(const wxString& WXUNUSED(filename))
-        {
-            return wxDIR_IGNORE;
-        }
-        virtual wxDirTraverseResult OnDir(const wxString& dirname)
-        {
-            m_dirs.Add(dirname);
-			return wxDIR_IGNORE;
-        }
-    private:
-        wxArrayString& m_dirs;
-    };
 
 	// Member variables
 	PListHandler m_plistHandler;

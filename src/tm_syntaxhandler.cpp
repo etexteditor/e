@@ -14,6 +14,8 @@
 #include "tm_syntaxhandler.h"
 
 #include <wx/ffile.h>
+#include <wx/dir.h>
+
 #include "pcre.h"
 
 #include "Document.h"
@@ -26,7 +28,6 @@
 #include "IAppPaths.h"
 #include "IEditorDoAction.h"
 
-
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -35,6 +36,24 @@
 #ifdef __WXMSW__
     #pragma warning(pop)
 #endif
+
+class DirTraverserSimple : public wxDirTraverser
+{
+public:
+    DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) { }
+    virtual wxDirTraverseResult OnFile(const wxString& WXUNUSED(filename))
+    {
+        return wxDIR_IGNORE;
+    }
+    virtual wxDirTraverseResult OnDir(const wxString& dirname)
+    {
+        m_dirs.Add(dirname);
+		return wxDIR_IGNORE;
+    }
+private:
+    wxArrayString& m_dirs;
+};
+
 
 // Initialize static variables
 const wxString TmSyntaxHandler::s_emptyString;

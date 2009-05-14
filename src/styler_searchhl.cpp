@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "styler_searchhl.h"
+
 #include "StyleRun.h"
 #include "Lines.h"
 #include "Document.h"

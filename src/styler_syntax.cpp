@@ -118,7 +118,7 @@ void Styler_Syntax::SetSyntax(const wxString& syntaxName, const wxString& ext) {
 
 const deque<const wxString*> Styler_Syntax::GetScope(unsigned int pos) {
 	wxASSERT(pos <= m_doc.GetLength());
-	if(!HaveActiveSyntax()) return deque<const wxString*>(); // no active syntax
+	if(!HaveActiveSyntax()) return deque<const wxString*>();
 
 	// Make sure the syntax is valid
 	ParseTo(pos);
@@ -130,7 +130,6 @@ const deque<const wxString*> Styler_Syntax::GetScope(unsigned int pos) {
 	}
 
 	GetSubScope(pos, m_topMatches, scopes);
-
 	return scopes;
 }
 

@@ -676,9 +676,9 @@ const vector<const tmAction*> TmSyntaxHandler::GetActions(const wxString& trigge
 		p->second->Print();
 		const vector<const tmAction*>* s = (const vector<const tmAction*>*)p->second->GetMatch(scopes);
 		if (s) return *s;
-		else return vector<const tmAction*>();
 	}
-	else return vector<const tmAction*>();
+
+	return vector<const tmAction*>();
 }
 
 const vector<char>& TmSyntaxHandler::GetActionContent(const tmAction& action) const {

@@ -35,6 +35,7 @@
 
 // pre-declearations
 class TmSyntaxHandler;
+class PListHandler;
 class EditorFrame;
 
 // Constants
@@ -118,6 +119,7 @@ private:
 	Catalyst* m_pCatalyst;
 	CatalystWrapper* m_catalyst;
 	TmSyntaxHandler* m_pSyntaxHandler;
+	PListHandler* m_pListHandler;
 	wxString m_appPath;
 	wxString m_appDataPath;
 	wxArrayString m_openStack;

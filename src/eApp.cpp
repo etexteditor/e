@@ -33,6 +33,8 @@
 #include <wx/image.h>
 #include <wx/stdpaths.h>
 
+#include "Dispatcher.h"
+#include "plistHandler.h"
 #include "tm_syntaxhandler.h"
 #include "RemoteThread.h"
 #include "EditorFrame.h"
@@ -178,16 +180,17 @@ bool eApp::OnInit() {
 
 	// Parse syntax files
 	wxLogDebug(wxT("Loading bundles"));
-	m_pSyntaxHandler = new TmSyntaxHandler(m_pCatalyst->GetDispatcher(), clearBundleCache);
+	m_pListHandler = new PListHandler(GetAppPath(), GetAppDataPath(), clearBundleCache);
+	m_pSyntaxHandler = new TmSyntaxHandler(m_pCatalyst->GetDispatcher(), *m_pListHandler);
 
     // Create the main window
 	wxLogDebug(wxT("Creating main frame"));
 	frame = new EditorFrame( *m_catalyst, -1, wxT("e"), DetermineFrameSize(), *m_pSyntaxHandler);
 	SetTopWindow(frame);
 
-	// Show the main window
+	// Show the main window, bringing it to the top.
 	frame->Show(true);
-	frame->Raise(); // bring to front
+	frame->Raise();
 	frame->Update();
 
 	// Open files from saved state
@@ -591,6 +594,7 @@ int eApp::OnExit() {
 	if (m_pCatalyst) delete m_pCatalyst;
 	if (m_checker) delete m_checker;
 	if (m_pSyntaxHandler) delete m_pSyntaxHandler;
+	if (m_pListHandler) delete m_pListHandler;
 
 #ifdef __WXDEBUG__
 	if (blackboxLib.IsLoaded()) blackboxLib.Unload();

@@ -23,6 +23,8 @@
 	#include <wx/wx.h>
 #endif
 
+#include <wx/filename.h>
+
 // STL can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -36,12 +38,15 @@
 
 using namespace std;
 
-#include "plistHandler.h"
 #include "tmTheme.h"
 #include "tmKey.h"
 
 
 // Pre-definitions
+class PListHandler;
+class PListDict;
+class PListArray;
+
 class IEditorDoAction;
 
 class matcher;
@@ -272,7 +277,7 @@ private:
 
 class TmSyntaxHandler {
 public:
-	TmSyntaxHandler(Dispatcher& disp, bool clearCache);
+	TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler);
 	~TmSyntaxHandler();
 
 	enum cxBundleLoad {
@@ -460,7 +465,7 @@ private:
 	};
 
 	// Member variables
-	PListHandler m_plistHandler;
+	PListHandler& m_plistHandler;
 	Dispatcher& m_dispatcher;
 	tmTheme m_defaultTheme;
 	tmTheme m_currentTheme;

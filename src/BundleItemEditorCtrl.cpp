@@ -1,12 +1,16 @@
 #include "BundleItemEditorCtrl.h"
+
+#include <wx/regex.h>
+#include <wx/tokenzr.h>
+
 #include "Catalyst.h"
-#include "IUpdatePanel.h"
+#include "plistHandler.h"
 #include "jsonreader.h"
 #include "tm_syntaxhandler.h"
-#include <wx/tokenzr.h>
-#include <wx/regex.h>
-
 #include "EditorFrame.h" // For ShowOutput() method; refator after other bundle-specific editing is pulled up to this class.
+
+#include "IUpdatePanel.h"
+
 
 // Document Icons
 #include "document.xpm"

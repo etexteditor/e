@@ -14,7 +14,7 @@
 #ifndef __FINDCMDDLG_H__
 #define __FINDCMDDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
     #include <wx/dialog.h>
     #include <wx/textctrl.h>

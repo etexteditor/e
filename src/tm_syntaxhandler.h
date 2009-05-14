@@ -275,7 +275,26 @@ private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
 };
 
-class TmSyntaxHandler {
+class IGetPListHandlerRef {
+public:
+	virtual PListHandler& GetPListHandler() = 0;
+};
+
+class ITmThemeHandler:
+	public virtual IGetPListHandlerRef
+{
+public:
+	virtual bool SetTheme(const char* uuid) = 0;
+	virtual void SetDefaultTheme() = 0;
+	virtual const tmTheme& GetTheme() const = 0;
+	virtual const wxString& GetCurrentThemeName() const = 0;
+	virtual const wxFont& GetFont() const = 0;
+	virtual void SetFont(const wxFont& font) = 0;
+};
+
+class TmSyntaxHandler:
+	public ITmThemeHandler
+{
 public:
 	TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler);
 	~TmSyntaxHandler();
@@ -341,8 +360,9 @@ public:
 		const PrefType m_target;
 	};
 
+	
 	// Plists
-	PListHandler& GetPListHandler() {return m_plistHandler;};
+	virtual PListHandler& GetPListHandler() {return m_plistHandler;};
 	bool DoIdle();
 
 	// Bundle Parsing
@@ -360,12 +380,12 @@ public:
 	wxFileName GetBundleSupportPath(unsigned int bundleId) const;
 
 	// Themes
-	bool SetTheme(const char* uuid);
-	void SetDefaultTheme();
-	const tmTheme& GetTheme() const {return m_currentTheme;};
-	const wxString& GetCurrentThemeName() const {return m_currentTheme.name;};
-	const wxFont& GetFont() const {return m_currentTheme.font;};
-	void SetFont(const wxFont& font);
+	virtual bool SetTheme(const char* uuid);
+	virtual void SetDefaultTheme();
+	virtual const tmTheme& GetTheme() const {return m_currentTheme;};
+	virtual const wxString& GetCurrentThemeName() const {return m_currentTheme.name;};
+	virtual const wxFont& GetFont() const {return m_currentTheme.font;};
+	virtual void SetFont(const wxFont& font);
 
 	// Syntax
 	const vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};

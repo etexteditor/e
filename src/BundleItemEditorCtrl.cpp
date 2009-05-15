@@ -254,7 +254,7 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 	wxBusyCursor wait; // Show user that we are reloading
 	if (m_bundleType == BUNDLE_PREF || m_bundleType == BUNDLE_LANGUAGE) {
 		// we have to call LoadBundles since all syntaxes will have to be reloaded
-		m_syntaxHandler.LoadBundles(TmSyntaxHandler::cxRELOAD);
+		m_syntaxHandler.LoadBundles(cxRELOAD);
 	}
 	else m_syntaxHandler.ReParseBundles();
 

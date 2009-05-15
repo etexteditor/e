@@ -218,7 +218,7 @@ void BundleManager::OnClose(wxCloseEvent& WXUNUSED(event)) {
 	wxBusyCursor wait;
 
 	if (m_needBundleReload) {
-		m_syntaxHandler.LoadBundles(TmSyntaxHandler::cxUPDATE);
+		m_syntaxHandler.LoadBundles(cxUPDATE);
 	}
 }
 

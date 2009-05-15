@@ -953,7 +953,7 @@ void BundlePane::DeleteItem() {
 	if (needFullReload) {
 		// if bundles are deleted or prefs or languages changed,
 		// we have to call LoadBundles since all syntaxes will have to be reloaded
-		m_syntaxHandler.LoadBundles(TmSyntaxHandler::cxRELOAD);
+		m_syntaxHandler.LoadBundles(cxRELOAD);
 	}
 	else m_syntaxHandler.ReParseBundles();
 }

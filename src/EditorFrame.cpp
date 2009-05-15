@@ -2045,7 +2045,7 @@ void EditorFrame::OnMenuReloadBundles(wxCommandEvent& WXUNUSED(event)) {
 	wxBusyCursor wait;
 
 	// Reload bundles (will send it's own event to reset bundle menu if needed)
-	m_syntax_handler.LoadBundles(TmSyntaxHandler::cxUPDATE);
+	m_syntax_handler.LoadBundles(cxUPDATE);
 	
 	// If we have an active BundleEditor, it has to reload the new bundles
 	if (m_bundlePane) m_bundlePane->LoadBundles();

@@ -205,6 +205,11 @@ private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
 };
 
+enum cxBundleLoad {
+	cxINIT,
+	cxUPDATE,
+	cxRELOAD
+};
 
 class TmSyntaxHandler:
 	public ITmThemeHandler,
@@ -213,12 +218,6 @@ class TmSyntaxHandler:
 public:
 	TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler);
 	~TmSyntaxHandler();
-
-	enum cxBundleLoad {
-		cxINIT,
-		cxUPDATE,
-		cxRELOAD
-	};
 
 	class ShortcutMatch : public unary_function<const tmAction*, bool> {
 	public:

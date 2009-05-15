@@ -23,6 +23,4 @@ public:
 	virtual DirWatcher& GetDirWatcher() = 0;
 };
 
-
-
 #endif // __IFRAMEPROJECTSERVICE_H__

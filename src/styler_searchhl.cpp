@@ -268,32 +268,31 @@ void Styler_SearchHL::Delete(unsigned int start_pos, unsigned int end_pos) {
 			DoSearch(search_start, m_search_end, true);
 			return;
 		}
-		else {
-			// Find matches touched by deletion and remove those. Update all following
-			bool is_first = true;
-			vector<interval>::iterator p = m_matches.begin();
-			while (p != m_matches.end()) {
-				if (p->end > start_pos) {
-					// Remember first valid match before pos
-					if (is_first) {
-						if (p != m_matches.begin()) search_start = (p-1)->end;
-						is_first = false;
-					}
 
-					if (p->start < end_pos) {
-						// pos inside match. Delete and continue
-						p = m_matches.erase(p);
-						if (p != m_matches.end()) continue; // new iterator
-						else break;
-					}
-					else {
-						// Move match to correct position
-						p->start -= length;
-						p->end -= length;
-					}
+		// Find matches touched by deletion and remove those. Update all following
+		bool is_first = true;
+		vector<interval>::iterator p = m_matches.begin();
+		while (p != m_matches.end()) {
+			if (p->end > start_pos) {
+				// Remember first valid match before pos
+				if (is_first) {
+					if (p != m_matches.begin()) search_start = (p-1)->end;
+					is_first = false;
 				}
-				++p;
+
+				if (p->start < end_pos) {
+					// pos inside match. Delete and continue
+					p = m_matches.erase(p);
+					if (p != m_matches.end()) continue; // new iterator
+					else break;
+				}
+				else {
+					// Move match to correct position
+					p->start -= length;
+					p->end -= length;
+				}
 			}
+			++p;
 		}
 	}
 

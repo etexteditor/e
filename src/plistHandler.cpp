@@ -656,7 +656,7 @@ wxDateTime PListHandler::GetBundleModDate(unsigned int bundleId) const {
 	return path.GetModificationTime();
 }
 
-vector<PListHandler::cxBundleInfo> PListHandler::GetInstalledBundlesInfo() const {
+vector<cxBundleInfo> PListHandler::GetInstalledBundlesInfo() const {
 	vector<cxBundleInfo> bInfo;
 
 	for (unsigned int i = 0; (int)i < m_vBundles.GetSize(); ++i) {

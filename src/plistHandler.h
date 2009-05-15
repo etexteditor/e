@@ -22,6 +22,7 @@
 #include <wx/filename.h>
 
 #include "BundleItemType.h"
+#include "BundleInfo.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -60,17 +61,6 @@ public:
 		cxItemRef(wxString n, unsigned int r) : name(n), ref(r) {};
 		wxString name;
 		unsigned int ref;
-	};
-
-	class cxBundleInfo {
-	public:
-		cxBundleInfo() {};
-		cxBundleInfo(int id, const wxString& name, const wxDateTime& modDate, bool isDisabled=false)
-			: id(id), dirName(name), modDate(modDate), isDisabled(isDisabled) {};
-		int id;
-		wxString dirName;
-		wxDateTime modDate;
-		bool isDisabled;
 	};
 
 	// Theme lists

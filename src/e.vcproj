@@ -1738,6 +1738,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\BundleInfo.h"
+			>
+		</File>
+		<File
 			RelativePath=".\BundleItemEditorCtrl.cpp"
 			>
 		</File>

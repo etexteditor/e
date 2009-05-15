@@ -95,7 +95,7 @@ private:
 	ITmLoadBundles* m_syntaxHandler;
 	PListHandler& m_plistHandler;
 	wxString m_tempFile;
-	vector<PListHandler::cxBundleInfo> m_installedBundles;
+	vector<cxBundleInfo> m_installedBundles;
 	vector<RepoInfo> m_repositories;
 	bool m_allBundlesReceived;
 	bool m_needBundleReload;
@@ -105,7 +105,7 @@ private:
 	long m_currentSel;
 	wxString m_currentRepo;
 	const cxFileInfo* m_currentBundle;
-	PListHandler::cxBundleInfo* m_currentBundleInfo;
+	cxBundleInfo* m_currentBundleInfo;
 	BundleState m_currentBundleState;
 
 	// Member ctrls

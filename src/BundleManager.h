@@ -36,7 +36,7 @@ class wxIEHtmlWin;
 
 class BundleManager : public wxDialog {
 public:
-	BundleManager(IFrameRemoteThread& parent, TmSyntaxHandler& syntaxHandler);
+	BundleManager(IFrameRemoteThread& parent, TmSyntaxHandler* syntaxHandler);
 	~BundleManager();
 
 	bool NeedBundleReload() const {return m_needBundleReload;};
@@ -94,7 +94,7 @@ private:
 	// Member variables
 	IFrameRemoteThread& m_parentFrame;
 	RemoteThread& m_remoteThread;
-	TmSyntaxHandler& m_syntaxHandler;
+	TmSyntaxHandler* m_syntaxHandler;
 	PListHandler& m_plistHandler;
 	wxString m_tempFile;
 	vector<PListHandler::cxBundleInfo> m_installedBundles;

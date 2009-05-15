@@ -2060,7 +2060,7 @@ void EditorFrame::OnMenuManageBundles(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::ShowBundleManager() {
-	BundleManager dlg(*this, m_syntax_handler);
+	BundleManager dlg(*this, &m_syntax_handler);
 	dlg.ShowModal();
 
 	// If we have an active BundleEditor, it has to reload the new bundles

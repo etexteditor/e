@@ -20,8 +20,8 @@
 #include <wx/stdpaths.h>
 #include <wx/ffile.h>
 
-#include "Catalyst.h"
-#include "tm_syntaxhandler.h"
+#include "Catalyst.h" // for Catalyst::GetDateAge
+#include "ITmLoadBundles.h"
 #include "urlencode.h"
 
 #include "IFrameRemoteThread.h"

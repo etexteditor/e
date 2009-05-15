@@ -21,6 +21,7 @@
 #include <wx/ffile.h>
 
 #include "Catalyst.h" // for Catalyst::GetDateAge
+#include "plistHandler.h"
 #include "ITmLoadBundles.h"
 #include "urlencode.h"
 

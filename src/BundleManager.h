@@ -19,12 +19,14 @@
 	#include <wx/wx.h>
 #endif
 
-#include "plistHandler.h"
 #include "RemoteThread.h"
 #include "IHtmlWnd.h"
+#include "BundleInfo.h"
 
 // pre-definitions
 class ITmLoadBundles;
+class PListHandler;
+class wxFileName;
 class wxProgressDialog;
 class wxListCtrl;
 class wxListEvent;

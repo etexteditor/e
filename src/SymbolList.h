@@ -14,8 +14,7 @@
 #ifndef __SYMBOLLIST_H__
 #define __SYMBOLLIST_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
         #include <wx/textctrl.h>
 #endif
@@ -38,7 +37,6 @@ class IFrameSymbolService;
 class SymbolList : public wxPanel {
 public:
 	SymbolList(IFrameSymbolService& services);
-
 	bool Destroy();
 
 private:

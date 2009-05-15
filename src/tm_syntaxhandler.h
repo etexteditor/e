@@ -49,6 +49,7 @@ using namespace std;
 #include "IGetPListHandlerRef.h"
 #include "ITmThemeHandler.h"
 #include "ITmGetSyntaxes.h"
+#include "ITmLoadBundles.h"
 
 // Pre-definitions
 class PListHandler;
@@ -203,17 +204,6 @@ public:
 
 private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
-};
-
-enum cxBundleLoad {
-	cxINIT,
-	cxUPDATE,
-	cxRELOAD
-};
-
-class ITmLoadBundles: public virtual IGetPListHandlerRef {
-public:
-	virtual void LoadBundles(cxBundleLoad mode) = 0;
 };
 
 class TmSyntaxHandler:

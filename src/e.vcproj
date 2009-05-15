@@ -409,6 +409,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ITmLoadBundles.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ITmThemeHandler.h"
 				>
 			</File>

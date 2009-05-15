@@ -211,8 +211,14 @@ enum cxBundleLoad {
 	cxRELOAD
 };
 
+class ITmLoadBundles: public virtual IGetPListHandlerRef {
+public:
+	virtual void LoadBundles(cxBundleLoad mode) = 0;
+};
+
 class TmSyntaxHandler:
 	public ITmThemeHandler,
+	public ITmLoadBundles,
 	public ITmGetSyntaxes
 {
 public:
@@ -280,7 +286,7 @@ public:
 	bool DoIdle();
 
 	// Bundle Parsing
-	void LoadBundles(cxBundleLoad mode);
+	virtual void LoadBundles(cxBundleLoad mode);
 	void ReParseBundles(bool onlyMenu=false);
 	void LoadSyntaxes(const vector<unsigned int>& bundles);
 	void LoadBundle(unsigned int bundeId);

@@ -1506,7 +1506,7 @@ void EditorFrame::ShowBundlePane() {
 
 	if (projectPane.window == m_projectPane) {
 		m_projectPane->Hide();
-		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, m_syntax_handler);
+		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, &m_syntax_handler);
 		projectPane.Window(m_bundlePane);	
 	}
 	else {

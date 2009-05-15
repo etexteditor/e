@@ -13,7 +13,7 @@
 
 #include "BundlePane.h"
 #include "EditorFrame.h"
-#include "tm_syntaxhandler.h"
+#include "ITmLoadBundles.h"
 
 #include "images/tmBundle.xpm"
 #include "images/tmCommand.xpm"
@@ -91,9 +91,9 @@ const char* BundlePane::s_commandsyntax = "# just to remind you of some useful e
 "echo Word: \"$TM_CURRENT_WORD\"\n"
 "echo Selection: \"$TM_SELECTED_TEXT\"";
 
-BundlePane::BundlePane(EditorFrame& parent, TmSyntaxHandler& syntaxHandler)
+BundlePane::BundlePane(EditorFrame& parent, ITmLoadBundles* syntaxHandler)
 : wxPanel(&parent, wxID_ANY, wxPoint(-100,-100)), m_parentFrame(parent), m_imageList(16,16),
-  m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()) {
+  m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler->GetPListHandler()) {
 	// Build Imagelist
 	m_imageList.Add(wxIcon(tmbundle_xpm));
 	m_imageList.Add(wxIcon(tmcommand_xpm));
@@ -390,7 +390,7 @@ void BundlePane::OnTreeEndDrag(wxTreeEvent& event) {
 	m_plistHandler.SaveBundle(bundleId);
 
 	// Update menu in editorFrame
-	m_syntaxHandler.ReParseBundles(true/*onlyMenu*/);
+	m_syntaxHandler->ReParseBundles(true/*onlyMenu*/);
 }
 
 void BundlePane::OnTreeKeyDown(wxTreeEvent& event) {
@@ -598,7 +598,7 @@ void BundlePane::OnMenuNew(wxCommandEvent& event) {
 				m_plistHandler.SaveBundle(data->m_bundleId);
 
 				// Update menu in editorFrame
-				m_syntaxHandler.ReParseBundles(true/*onlyMenu*/);
+				m_syntaxHandler->ReParseBundles(true/*onlyMenu*/);
 			}
 			break;
 		case MENU_NEW_SUBMENU:
@@ -632,7 +632,7 @@ void BundlePane::OnMenuNew(wxCommandEvent& event) {
 				m_plistHandler.SaveBundle(data->m_bundleId);
 
 				// Update menu in editorFrame
-				m_syntaxHandler.ReParseBundles(true/*onlyMenu*/);
+				m_syntaxHandler->ReParseBundles(true/*onlyMenu*/);
 			}
 			break;
 		default: wxASSERT(false);
@@ -903,7 +903,7 @@ void BundlePane::DeleteItem() {
 		m_plistHandler.SaveBundle(bundleId);
 
 		// Update menu in editorFrame
-		m_syntaxHandler.ReParseBundles(true/*onlyMenu*/);
+		m_syntaxHandler->ReParseBundles(true/*onlyMenu*/);
 		return;
 	}
 
@@ -949,13 +949,13 @@ void BundlePane::DeleteItem() {
 
 	m_bundleTree->Delete(selItem);
 
-	wxBusyCursor wait; // Show user that we are reloading
+	wxBusyCursor wait;
 	if (needFullReload) {
 		// if bundles are deleted or prefs or languages changed,
 		// we have to call LoadBundles since all syntaxes will have to be reloaded
-		m_syntaxHandler.LoadBundles(cxRELOAD);
+		m_syntaxHandler->LoadBundles(cxRELOAD);
 	}
-	else m_syntaxHandler.ReParseBundles();
+	else m_syntaxHandler->ReParseBundles();
 }
 
 void BundlePane::NewItem(BundleItemType type) {
@@ -1034,7 +1034,7 @@ void BundlePane::NewItem(BundleItemType type) {
 		m_plistHandler.SaveBundle(bundleId);
 
 		// Update menu in editorFrame
-		m_syntaxHandler.ReParseBundles(true/*onlyMenu*/);
+		m_syntaxHandler->ReParseBundles(true/*onlyMenu*/);
 	}
 
 	// Open in editor

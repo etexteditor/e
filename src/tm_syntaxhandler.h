@@ -277,7 +277,7 @@ public:
 
 	// Bundle Parsing
 	virtual void LoadBundles(cxBundleLoad mode);
-	void ReParseBundles(bool onlyMenu=false);
+	virtual void ReParseBundles(bool onlyMenu=false);
 	void LoadSyntaxes(const vector<unsigned int>& bundles);
 	void LoadBundle(unsigned int bundeId);
 	bool AllBundlesLoaded() const {return m_nextBundle == m_bundleList.size();};

@@ -25,7 +25,6 @@
 
 // pre-definitions
 class ITmLoadBundles;
-class IFrameRemoteThread;
 class wxProgressDialog;
 class wxListCtrl;
 class wxListEvent;
@@ -36,7 +35,7 @@ class wxIEHtmlWin;
 
 class BundleManager : public wxDialog {
 public:
-	BundleManager(IFrameRemoteThread& parent, ITmLoadBundles* syntaxHandler);
+	BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLoadBundles* syntaxHandler);
 	~BundleManager();
 
 	bool NeedBundleReload() const {return m_needBundleReload;};
@@ -92,7 +91,6 @@ private:
 	};
 
 	// Member variables
-	IFrameRemoteThread& m_parentFrame;
 	RemoteThread& m_remoteThread;
 	ITmLoadBundles* m_syntaxHandler;
 	PListHandler& m_plistHandler;

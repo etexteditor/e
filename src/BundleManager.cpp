@@ -24,7 +24,6 @@
 #include "ITmLoadBundles.h"
 #include "urlencode.h"
 
-#include "IFrameRemoteThread.h"
 #include "IAppPaths.h"
 
 #ifdef __WXMSW__
@@ -67,9 +66,9 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
 
-BundleManager::BundleManager(IFrameRemoteThread& parent, ITmLoadBundles* syntaxHandler)
-: wxDialog (dynamic_cast<wxWindow*>(&parent), -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_parentFrame(parent), m_remoteThread(parent.GetRemoteThread()), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler->GetPListHandler()),
+BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLoadBundles* syntaxHandler)
+: wxDialog (parent, -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+  m_remoteThread(remoteThread), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler->GetPListHandler()),
   m_allBundlesReceived(false), m_needBundleReload(false)
 {
 	m_repositories.push_back(RepoInfo(wxT("review mm"), wxT("http://macromates.com/svn/Bundles/trunk/Review/Bundles/")));

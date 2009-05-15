@@ -164,21 +164,20 @@ void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_l
 		cxENDLOCK
 
 		if (result.error_code < 0 || result.start >= end) break;
-		else {
-			// Add new match to list
-			const interval iv(result.start, result.end);
-			if (from_last) m_matches.push_back(iv);
-			else {
-				// Check if we have hit a previous match
-				while (next_match != m_matches.end() && result.end > next_match->start) {
-					// if not equivalent, replace and continue
-					if (next_match->start == result.start && next_match->end == result.end)	break;
-					else next_match = m_matches.erase(next_match);
-				}
 
-				next_match = m_matches.insert(next_match, iv);
-				++next_match;
+		// Add new match to list
+		const interval iv(result.start, result.end);
+		if (from_last) m_matches.push_back(iv);
+		else {
+			// Check if we have hit a previous match
+			while (next_match != m_matches.end() && result.end > next_match->start) {
+				// if not equivalent, replace and continue
+				if (next_match->start == result.start && next_match->end == result.end)	break;
+				next_match = m_matches.erase(next_match);
 			}
+
+			next_match = m_matches.insert(next_match, iv);
+			++next_match;
 		}
 
 		// Avoid never ending loop if zero-length match

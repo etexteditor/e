@@ -570,38 +570,37 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 		// 1. At end of last changed line and still in same scope.
 		// 2. Hit limit
 		if (si.done) return wxMax(scopeEnd, si.pos);
-		else {
-			// The syntax highlighting may have changed the height of
-			// the line, so if we are done with line, update it.
-			/*if (m_updateLineHeight && si.pos == si.lineEnd) {
-				if (m_syntax_end < si.lineEnd) m_syntax_end = si.lineEnd; // avoid search loop
-				m_lines.UpdateParsedLine(si.line_id);
-			}*/
 
-			// Check if we can end this search
-			if (!si.hitLimit && isEndScope && (si.pos == si.changeEnd)) {
-				si.done = true;
-				return wxMax(scopeEnd, si.pos);
-			}
-			else if (si.pos >= si.limit) {
-				// If we hit limit before closing a span we have to keep it open
-				// and remove all following matches
-				si.hitLimit = true;
-				submatches.flags &= ~cxSPAN_IS_CLOSED;
-				if (next_match != matches.end()) matches.erase(next_match, matches.end());
-				return si.limit;
-			}
-			else if (si.pos == si.lineEnd) {
-				// Advance to next line
-				++si.line_id;
-				si.lineStart = si.lineEnd;
-				si.lineEnd = m_lines.GetLineEndpos(si.line_id, false);
-				cxLOCKDOC_READ(m_doc)
-					doc.GetTextPart(si.lineStart, si.lineEnd, si.line);
-				cxENDLOCK
-				si.lineLen = si.lineEnd - si.lineStart;
-				zeromatch = -1;
-			}
+		// The syntax highlighting may have changed the height of
+		// the line, so if we are done with line, update it.
+		/*if (m_updateLineHeight && si.pos == si.lineEnd) {
+			if (m_syntax_end < si.lineEnd) m_syntax_end = si.lineEnd; // avoid search loop
+			m_lines.UpdateParsedLine(si.line_id);
+		}*/
+
+		// Check if we can end this search
+		if (!si.hitLimit && isEndScope && (si.pos == si.changeEnd)) {
+			si.done = true;
+			return wxMax(scopeEnd, si.pos);
+		}
+		else if (si.pos >= si.limit) {
+			// If we hit limit before closing a span we have to keep it open
+			// and remove all following matches
+			si.hitLimit = true;
+			submatches.flags &= ~cxSPAN_IS_CLOSED;
+			if (next_match != matches.end()) matches.erase(next_match, matches.end());
+			return si.limit;
+		}
+		else if (si.pos == si.lineEnd) {
+			// Advance to next line
+			++si.line_id;
+			si.lineStart = si.lineEnd;
+			si.lineEnd = m_lines.GetLineEndpos(si.line_id, false);
+			cxLOCKDOC_READ(m_doc)
+				doc.GetTextPart(si.lineStart, si.lineEnd, si.line);
+			cxENDLOCK
+			si.lineLen = si.lineEnd - si.lineStart;
+			zeromatch = -1;
 		}
 
 		// Do the search

@@ -76,21 +76,10 @@ wxString eDocumentPath::s_cygPath;
 wxString eDocumentPath::s_cygdrivePrefix = wxT("/cygdrive/");
 
 // Reads a value from the Cygwin registry key, trying both HKLM and HKCU.
-wxString read_cygwin_registry_key(const wxString &key_path, const wxString &key, const wxString &default_value = wxEmptyString) {
+wxString read_cygwin15_registry_key(const wxString &key_path, const wxString &key, const wxString &default_value = wxEmptyString) {
 	wxString value;
 
-	// Check in "local machine", the "install for everyone" location.
-	{
-		wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\") + key_path);
-		if( cygKey.Exists() && cygKey.HasValue(key)) {
-			cygKey.QueryValue(key, value);
-		}
-	}
-
-	if (!value.empty())
-		return value;
-
-	// Also check "current user" (might be needed if user did not have admin rights during install)
+	// Check "current user" ('just me').
 	{
 		wxRegKey cygKey(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygnus Solutions\\Cygwin\\") + key_path);
 		if( cygKey.Exists()  && cygKey.HasValue(key)) {
@@ -101,16 +90,27 @@ wxString read_cygwin_registry_key(const wxString &key_path, const wxString &key,
 	if (!value.empty())
 		return value;
 	
+	// Also check in "local machine", the "install for everyone" location.
+	{
+		wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygnus Solutions\\Cygwin\\") + key_path);
+		if( cygKey.Exists() && cygKey.HasValue(key)) {
+			cygKey.QueryValue(key, value);
+		}
+	}
+
+	if (!value.empty())
+		return value;
+
 	return default_value;
 }
 
 wxString eDocumentPath::GetCygwinDir() {
-	return read_cygwin_registry_key(wxT("mounts v2\\/"), wxT("native"));
+	return read_cygwin15_registry_key(wxT("mounts v2\\/"), wxT("native"));
 }
 
 wxString eDocumentPath::GetCygdrivePrefix() { 
 	// Note that the registory value doesn't have '/' on the end, and we want one.
-	return read_cygwin_registry_key(wxT("mounts v2"), wxT("cygdrive prefix"), wxT("/cygdrive")) + wxT("/");
+	return read_cygwin15_registry_key(wxT("mounts v2"), wxT("cygdrive prefix"), wxT("/cygdrive")) + wxT("/");
 }
 
 //

@@ -42,7 +42,7 @@ public:
 	static wxString CygwinPath() { return s_cygPath; }
 
 private:
-	static wxString eDocumentPath::convert_cygdrive_path_to_windows(const wxString& path);
+	static wxString convert_cygdrive_path_to_windows(const wxString& path);
 
 	static bool s_isCygwinInitialized;
 	static wxString s_cygdrivePrefix;

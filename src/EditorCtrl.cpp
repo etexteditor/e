@@ -8218,6 +8218,12 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 
 		int modifiers = event.GetModifiers();
 
+#ifdef __WXMSW__
+		// GetModifiers does not report the windows keys
+		if (::GetKeyState(VK_LWIN) < 0) modifiers |= 0x0008; // wxMOD_META (Left Windows key)
+		if (::GetKeyState(VK_RWIN) < 0) modifiers |= 0x0008; // wxMOD_META (Right Windows key)
+#endif
+
 		// Bundle shortcuts have highest priority
 		if (DoShortcut(id, modifiers)) return true;
 

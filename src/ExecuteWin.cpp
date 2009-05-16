@@ -308,7 +308,9 @@ bool cxExecute::cxExecuteThread::CreateChildProcess()
       &m_pi);  // receives PROCESS_INFORMATION
 
 	if (bFuncRetn == 0) {
-		wxLogDebug(wxT("CreateProcess failed"));
+		DWORD lastError = GetLastError();
+		wxLogDebug(wxT("CreateProcess failed (%d)"), lastError);
+		if (lastError == 2) wxLogDebug(wxT("Command not found."));
 		return false;
 	}
 	else {

@@ -459,12 +459,20 @@ void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {
 		cxEnv env;
 		const vector<char> cmd(command.begin(), command.end());
 		const vector<char> input;
+		long cmd_err;
 		vector<char> output;
 		{
 			wxBusyCursor wait;
-			ShellRunner::RawShell(cmd, input, &output, NULL, env, true);
+			cmd_err = ShellRunner::RawShell(cmd, input, &output, NULL, env);
 		}
-		const wxString cmd_out = wxString(&*output.begin(), wxConvUTF8, output.size());
+		
+		wxString cmd_out;
+		if (!output.empty())
+			cmd_out = wxString(&*output.begin(), wxConvUTF8, output.size());
+		else {
+			cmd_out = wxT("Version information could not be retrieved.");
+		}
+
 		::wxMessageBox(cmd_out, wxT("Cygwin Version"));
 	}
 	else {

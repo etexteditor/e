@@ -1,5 +1,5 @@
 #include "ShellRunner.h"
-#include "eApp.h"
+#include "eSettings.h"
 #include "eDocumentPath.h"
 #include "Env.h"
 #include "Execute.h"

@@ -85,3 +85,27 @@ diff -urp metakit-latest/tests/tbasic2.cpp metakit-latest.new/tests/tbasic2.cpp
  }
  
  d4_inline bool operator> (c4_Cursor a_, c4_Cursor b_)
+--- metakit-latest/src/viewx.cpp	Fri Mar 09 17:58:53 2007
++++ metakit-latest.new/src/viewx.cpp	Sat May 16 10:26:26 2009
+@@ -530,20 +530,13 @@
+     c4_Handler &h = _cursor._seq->NthHandler(colNum);
+     const int n = buf_.Size();
+     const t4_i32 limit = off_ + n; // past changed bytes
+-    const t4_i32 overshoot = limit - h.ItemSize(_cursor._index);
+-
+-    if (diff_ < overshoot)
+-      diff_ = overshoot;
+ 
+     c4_Column *col = h.GetNthMemoCol(_cursor._index, true);
+     if (col != 0) {
+       if (diff_ < 0)
+         col->Shrink(limit,  - diff_);
+       else if (diff_ > 0)
+-      // insert bytes in the highest possible spot
+-      // if a gap is created, it will contain garbage
+-        col->Grow(overshoot > 0 ? col->ColSize(): diff_ > n ? off_ : limit -
+-          diff_, diff_);
++        col->Grow(off_, diff_);
+ 
+       col->StoreBytes(off_, buf_);
+     } else

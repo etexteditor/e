@@ -2698,6 +2698,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	else {
 		// This is a new document, clear up old state
 		ClearRemoteInfo();
+		m_path.Clear();
 
 		// Invalidate all stylers
 		// (has to be done before reloading to avoid stale refs)
@@ -2718,6 +2719,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 				if (res != cxFILE_OK) return false;
 			cxENDLOCK
 		}
+		else if (eDocumentPath::IsBundlePath(path)) m_remotePath = path;
 		else if (!path.empty()) m_path = path;
 
 		scrollPos = 0;
@@ -8205,6 +8207,12 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 #endif
 
 		int modifiers = event.GetModifiers();
+
+#ifdef __WXMSW__
+		// GetModifiers does not report the windows keys
+		if (::GetKeyState(VK_LWIN) < 0) modifiers |= 0x0008; // wxMOD_META (Left Windows key)
+		if (::GetKeyState(VK_RWIN) < 0) modifiers |= 0x0008; // wxMOD_META (Right Windows key)
+#endif
 
 		// Bundle shortcuts have highest priority
 		if (DoShortcut(id, modifiers)) return true;

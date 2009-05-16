@@ -1777,7 +1777,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 
 		// If we don't have to reload file, just set the doc
 		// TODO: if we have mirror, set doc before reload to update
-		if (!isCurrent) { // && !doReload) {
+		if (!isCurrent && !isBundleItem) { // bundle items cannot reuse plain editorCtrl
 			if (editorCtrl->IsEmpty()) {
 				const bool res = ec->SetDocument(di, filepath, rp); // Reuse the current editorCtrl
 				if (!res) return false;

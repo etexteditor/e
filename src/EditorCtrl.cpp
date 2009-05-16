@@ -2702,6 +2702,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	else {
 		// This is a new document, clear up old state
 		ClearRemoteInfo();
+		m_path.Clear();
 
 		// Invalidate all stylers
 		// (has to be done before reloading to avoid stale refs)
@@ -2722,6 +2723,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 				if (res != cxFILE_OK) return false;
 			cxENDLOCK
 		}
+		else if (eDocumentPath::IsBundlePath(path)) m_remotePath = path;
 		else if (!path.empty()) m_path = path;
 
 		scrollPos = 0;

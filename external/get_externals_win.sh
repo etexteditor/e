@@ -14,13 +14,13 @@ _download()
   mv *.gz $tempdir
   mv *.bz2 $tempdir
 
-  wget http://curl.haxx.se/download/curl-7.18.2.tar.gz
-  wget http://libtomcrypt.com/files/crypt-1.11.tar.bz2
-  wget http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2
-  wget http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
-  wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.6.tar.gz
-  wget http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
-  wget http://biolpc22.york.ac.uk/pub/2.8.10/wxWidgets-2.8.10.tar.bz2
+  curl -O http://curl.haxx.se/download/curl-7.18.2.tar.gz
+  curl -O http://libtomcrypt.com/files/crypt-1.11.tar.bz2
+  curl -O http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2
+  curl -O http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
+  curl -O ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.6.tar.gz
+  curl -O http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
+  curl -O http://biolpc22.york.ac.uk/pub/2.8.10/wxWidgets-2.8.10.tar.bz2
 
   popd
 }

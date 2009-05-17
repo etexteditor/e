@@ -136,10 +136,12 @@ bool eApp::OnInit() {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	// Get the application paths
-	const wxStandardPathsBase& paths = wxStandardPaths::Get();
-	m_appPath = paths.GetExecutablePath().BeforeLast(wxFILE_SEP_PATH) + wxFILE_SEP_PATH;
-	m_appDataPath = paths.GetUserDataDir() + wxFILE_SEP_PATH;
-	if (!wxDirExists(m_appDataPath)) wxMkdir(m_appDataPath);
+	{
+		const wxStandardPathsBase& paths = wxStandardPaths::Get();
+		m_appPath = paths.GetExecutablePath().BeforeLast(wxFILE_SEP_PATH) + wxFILE_SEP_PATH;
+		m_appDataPath = paths.GetUserDataDir() + wxFILE_SEP_PATH;
+		if (!wxDirExists(m_appDataPath)) wxMkdir(m_appDataPath);
+	}
 
 #ifdef __WXDEBUG__
 	// Open a file for logging
@@ -190,17 +192,8 @@ bool eApp::OnInit() {
 	}
 
 	// Open files from command-line options
-	if (argc > 1) {
-		EditorFrame* frame = GetTopFrame();
-		for (unsigned int i = 0; i < m_files.Count(); ++i) {
-			const wxString& arg = m_files[i];
-			frame->Open(arg, mate);
-
-			if (i == 0) {
-				if (m_lineNum || m_columnNum) frame->GotoPos(m_lineNum, m_columnNum);
-			}
-		}
-	}
+	EditorFrame* frame = GetTopFrame();
+	frame->ReopenFiles(m_files, m_lineNum, m_columnNum, mate);
 
 	// Set up ipc server
 #ifdef __WXMSW__

@@ -1572,6 +1572,17 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 	return true;
 }
 
+void EditorFrame::ReopenFiles(wxArrayString& files, unsigned long firstLine, unsigned long firstColumn, wxString& mate) {
+	for (unsigned int i = 0; i < files.GetCount(); ++i) {
+		const wxString& arg = files[i];
+		Open(arg, mate);
+
+		if (i == 0) { // The line/column position apply to the first file only.
+			if (firstLine || firstColumn) GotoPos(firstLine, firstColumn);
+		}
+	}
+}
+
 bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 	// Handle paths in txmt format
 	if (path.StartsWith(wxT("txmt:")) ) {

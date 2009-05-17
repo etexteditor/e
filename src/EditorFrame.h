@@ -115,6 +115,9 @@ public:
 	wxString GetSaveDir() const;
 	
 
+	// Reopen files on startup from previous session.
+	void ReopenFiles(wxArrayString& files, unsigned long firstLine, unsigned long firstColumn, wxString& mate);
+
 	// RemoteFile support functions
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);
 	wxString DownloadFile(const wxString& url, const RemoteProfile* rp);

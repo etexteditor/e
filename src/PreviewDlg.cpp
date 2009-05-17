@@ -62,7 +62,6 @@ private:
 	const cxEnv m_env;
 };
 
-
 // control id's
 enum
 {
@@ -664,16 +663,12 @@ void PreviewDlg::OnMSHTMLStateChanged(wxActiveXEvent& event) {
 	if (!m_browser || !m_browser->IsShown()) return;
 
 	long cmd = event[wxT("Command")];
-	bool state = event[wxT("Enable")];
 	if (cmd == -1) return;
 
-	if (cmd & CSC_NAVIGATEBACK) {
-		m_backButton->Enable(state);
-	}
+	bool state = event[wxT("Enable")];
 
-	if (cmd & CSC_NAVIGATEFORWARD) {
-		m_forwardButton->Enable(state);
-	}
+	if (cmd & CSC_NAVIGATEBACK) m_backButton->Enable(state);
+	if (cmd & CSC_NAVIGATEFORWARD) m_forwardButton->Enable(state);
 }
 
 void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
@@ -686,10 +681,16 @@ void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
 
 // ------ CommandThread -----------------------------------------------------
 
-Preview_CommandThread::Preview_CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env)
-: m_isTerminated(false), m_command(command), m_parent(parent), m_outputPath(outputPath),
-  m_truePath(truePath), m_env(env) {
-	m_input.swap(input); // copy as calling function can go out of scope
+Preview_CommandThread::Preview_CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env):
+	m_isTerminated(false), 
+	m_command(command), 
+	m_parent(parent), 
+	m_outputPath(outputPath),
+	m_truePath(truePath), 
+	m_env(env) 
+{
+	// Copy the input, since the caller may go out of scope.
+	m_input.swap(input);
 
 	// Start the thread
 	Create();
@@ -702,7 +703,7 @@ void* Preview_CommandThread::Entry() {
 
 	int resultCode = exec.Execute(m_command, m_input);
 
-	// Write the output	to file
+	// Write the output to file
 	if (!m_isTerminated && resultCode != -1) {
 		wxFile tempFile(m_outputPath, wxFile::write);
 
@@ -717,11 +718,11 @@ void* Preview_CommandThread::Entry() {
 		}
 	}
 
-	if (m_isTerminated) return NULL;
-
-	// Notify parent that the command is done
-	wxProcessEvent event(99, 0, resultCode);
-	m_parent.AddPendingEvent(event);
+	// Notify parent that the command is done, if we weren't terminated
+	if (!m_isTerminated) {
+		wxProcessEvent event(99, 0, resultCode);
+		m_parent.AddPendingEvent(event);
+	}
 
 	return NULL;
 }

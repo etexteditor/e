@@ -1664,12 +1664,10 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 		vector<char> errout;
 		int pid;
 		{
-			// Set a busy cursor
-			// will be reset when leaving scope
-			wxBusyCursor wait;
-
+			wxBusyCursor wait; // Show busy cursor while running command.
 			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, action.isUnix, cwd);
 		}
+
 		if (pid != 0) wxLogDebug(wxT("shell returned pid = %d"), pid);
 
 		tmCommand::CmdOutput outputMode = cmd->output;

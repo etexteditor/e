@@ -1,4 +1,8 @@
+= Overview =
+
 This directory needs to contain the external libraries used by e.
+
+= Installation =
 
 The easiest way to do this is to run the included shell script
 (needs cygwin installed). It will download, patch and add msvc
@@ -37,7 +41,8 @@ directories of the individual projects.
 A few libaries need to be patched to be used in e. The patches can be
 found in the "patches" subdirectory.
 
-When building the libraries you need to build the following solution files (make sure to select Debug or Release configuration):
+When building the libraries you need to build the following solution files 
+(make sure to select Debug or Release configuration):
 
 curl\lib\curllib.sln (curllib)
 libtomcrypt\libtomcrypt.sln (libtomcrypt)
@@ -45,3 +50,13 @@ libtommath\libtommath.sln (libtommath)
 metakit\win\msvc90\mksrc.sln (mklib)
 pcre\pcre.sln (pcre)
 tinyxml\tinyxml.sln (tinyxml)
+
+= OS notes =
+
+On 64-bit versions of Windows, the folders created by cygwin can have 
+incorrect permissions. `get_externals_win.sh` may also be run from a
+msysgit bash prompt, but you need to first manually install the `mktemp`
+utility into git's bin folder.
+
+mktemp:
+http://downloads.sourceforge.net/mingw/mktemp-1.5-MSYS.tar.bz2

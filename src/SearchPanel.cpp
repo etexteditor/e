@@ -258,7 +258,7 @@ void SearchPanel::FindNext() {
 
 void SearchPanel::FindPrevious() {
 	// Get a pointer to the active editorctrl
-	EditorCtrl* editorCtrl = ((EditorFrame*)GetGrandParent())->GetEditorCtrl();
+	EditorCtrl* editorCtrl = m_editorFrame.GetEditorCtrl();
 	wxASSERT(editorCtrl);
 
 	int options = 0;

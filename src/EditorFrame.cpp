@@ -207,7 +207,6 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_IDLE(EditorFrame::OnIdle)
 	EVT_KEY_UP(EditorFrame::OnKeyUp)
 	EVT_FILESCHANGED(EditorFrame::OnFilesChanged)
-	//EVT_MENU(MENU_TOOLBAR, EditorFrame::OnMenuToolbar)
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
 	//EVT_MENU(MENU_REVTOOLTIP, EditorFrame::OnMenuRevTooltip)
@@ -227,7 +226,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
-	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm), m_pToolBar(NULL)
+	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm)
 {
 	Create(NULL, id, title, rect.GetPosition(), rect.GetSize(), wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS, wxT("eMainFrame"));
 
@@ -240,11 +239,6 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	m_frameManager.SetManagedWindow(this);
 	m_frameManager.SetFlags(m_frameManager.GetFlags() | wxAUI_MGR_TRANSPARENT_DRAG | wxAUI_MGR_ALLOW_ACTIVE_PANE);
 	m_frameManager.SetArtProvider(new ModernDockArt(this));
-
-	// Create toolbar (has to be done after framemanager)
-	/*bool showToolbar = false; // default setting
-	m_settings.GetSettingBool(wxT("toolbar"), showToolbar);
-	if (showToolbar) CreateAndSetToolbar(); */
 
 	// Create statusbar
 	InitStatusbar();
@@ -262,24 +256,6 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		box = new wxBoxSizer(wxVERTICAL);
 		panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 			wxTAB_TRAVERSAL | wxCLIP_CHILDREN | wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE);
-
-
-		// create a image list with a few icons
-		/*wxSize imageSize(16, 16);
-		imageList.Create( imageSize.GetWidth(), imageSize.GetHeight() );
-		imageList.Add(wxIcon(document_xpm));
-		//imageList.Add(wxArtProvider::GetIcon(wxART_NORMAL_FILE, wxART_OTHER, imageSize));*/
-
-		// Create the tab bar
-		/*tabBar = new TabBar(panel, 1);
-		tabBar->SetImageList(&imageList);
-		box->Add(tabBar, 0, wxEXPAND);
-		box->Show(tabBar, false);
-
-		// Create a sizer to hold the main text controls
-		editorbox = new wxBoxSizer(wxHORIZONTAL);
-		box->Add(editorbox, 1, wxEXPAND);
-		*/
 
 		// set up default notebook style
 		const int notebook_style = wxAUI_NB_TOP
@@ -567,7 +543,6 @@ void EditorFrame::InitMenus() {
 	viewMenu->AppendSeparator();
 	//viewMenu->Append(MENU_HL_USERS, _("&Highlight Authors"), _("Highlight authors"), wxITEM_CHECK);
 	//viewMenu->AppendSeparator();
-	//viewMenu->Append(MENU_TOOLBAR, _("Show &Toolbar"), _("Show Toolbar"), wxITEM_CHECK);
 	viewMenu->Append(MENU_STATUSBAR, _("Show &Statusbar"), _("Show Statusbar"), wxITEM_CHECK);
 	viewMenu->AppendSeparator();
 	viewMenu->Append(MENU_FOLDTOGGLE, _("&Toggle Fold\tF1"), _("Toggle Fold"));
@@ -863,39 +838,6 @@ void EditorFrame::UpdateEncodingMenu(wxMenu& menu) const {
 	bomItem->Check(editorCtrl->GetBOM());
 }
 
-/*
-void EditorFrame::CreateAndSetToolbar() {
-	wxSystemOptions::SetOption(wxT("msw.remap"), 0);
-	m_pToolBar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL|wxTB_FLAT|wxTB_TEXT);
-	m_pToolBar->SetToolBitmapSize(wxSize(32,32));
-	const wxBitmap bmpOpen(open_xpm);
-	const wxBitmap bmpNew(new_xpm);
-	const wxBitmap bmpSave(save_xpm);
-	const wxBitmap bmpRetrieve(retrieve_xpm);
-	const wxBitmap bmpCommit(commit_xpm);
-	const wxBitmap bmpShare(share_xpm);
-	bool hasIncomming;
-	cxLOCK_READ(m_catalyst)
-		hasIncomming = catalyst.HasIncomming();
-	cxENDLOCK
-	const wxBitmap& bmpIncomming = hasIncomming ? m_incommingFullBmp : m_incommingBmp;
-	m_pToolBar->AddTool(wxID_OPEN, _("Open"), bmpOpen, _("Open file from disk"));
-	m_pToolBar->AddTool(wxID_NEW, _("New"), bmpNew, _("Create a new document"));
-	m_pToolBar->AddTool(wxID_SAVE, _("Save"), bmpSave, _("Save file to Disk"));
-	m_pToolBar->AddSeparator();
-	//m_pToolBar->AddTool(MENU_DOC_OPEN, _("Documents"), bmpRetrieve, _("Retrieve Document"));
-	m_pToolBar->AddTool(MENU_COMMIT, _("Milestone"), bmpCommit, _("Commit Milestone of current revision"));
-	m_pToolBar->AddTool(MENU_DOC_SHARE, _("Share"), bmpShare, _("Share Document"));
-	m_pToolBar->AddSeparator();
-	m_pIncommingTool = m_pToolBar->AddTool(MENU_INCOMMING_TOOLBAR, _("Incoming"), bmpIncomming, _("Show Incoming documents"));
-	m_pToolBar->SetToolClientData(MENU_INCOMMING_TOOLBAR, (wxObject*)hasIncomming);
-	m_pToolBar->Realize();
-
-	SetToolBar(m_pToolBar);
-
-	m_frameManager.Update();
-}
-*/
 void EditorFrame::CreateAndSetStatusbar() {
 	m_pStatBar = new StatusBar(*this, wxID_ANY, this->m_syntax_handler);
 
@@ -2052,10 +1994,6 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	wxMenuItem* hlItem = GetMenuBar()->FindItem(MENU_HL_USERS);
 	if (hlItem) hlItem->Check(m_userHighlight);
 
-	// Show Toolbar
-	//wxMenuItem* tbItem = GetMenuBar()->FindItem(MENU_TOOLBAR);
-	//if (tbItem) tbItem->Check(m_pToolBar != NULL);
-
 	// Show Statusbar
 	wxMenuItem* sbItem = GetMenuBar()->FindItem(MENU_STATUSBAR);
 	if (sbItem) sbItem->Check(m_pStatBar != NULL);
@@ -3100,31 +3038,6 @@ void EditorFrame::OnPaneClose(wxAuiManagerEvent& event) {
 		event.Veto();
 	}
 }
-
-/*
-void EditorFrame::OnMenuToolbar(wxCommandEvent& event) {
-	if (event.IsChecked()) {
-		if (!m_pToolBar) {
-			CreateAndSetToolbar();
-
-			cxLOCK_WRITE(m_catalyst)
-				catalyst.SetSettingBool(wxT("toolbar"), true);
-			cxENDLOCK
-		}
-	}
-	else {
-		if (m_pToolBar) {
-			delete m_pToolBar;
-			m_pToolBar = NULL;
-			SetToolBar(NULL);
-
-			cxLOCK_WRITE(m_catalyst)
-				catalyst.SetSettingBool(wxT("toolbar"), false);
-			cxENDLOCK
-		}
-	}
-}
-*/
 
 void EditorFrame::OnMenuStatusbar(wxCommandEvent& event) {
 	const bool showStatusbar = event.IsChecked();

@@ -400,7 +400,10 @@ bool tmKey::uniToWxk(wxChar uniCode, int& wxk, int& mod) // static
     wxk = wxCharCodeMSWToWX(vk, 0);
     if (wxk == 0) {
         // Normal ascii char
-        wxk = uniCode;
+        // Note that this is set to the virtual keycode (which does not necessarily
+        // correspond to the ascii value). This is needed because keydown events
+        // report it in this format.
+        wxk = vk;
     }
     return true;
 #elif defined(__WXGTK__)

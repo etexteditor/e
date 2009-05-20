@@ -687,11 +687,16 @@ void EditorFrame::RestoreState() {
 	// Open documents from last session
 	// CheckForModifiedFiles() is called from eApp::OnInit()
 	for (unsigned int i = 0; i < pagecount; ++i) {
-		const wxString mirrorPath = m_settings.GetPagePath(i);
+		wxString mirrorPath = m_settings.GetPagePath(i);
 		const doc_id mirrorDoc = m_settings.GetPageDoc(i);
-		cxLOCK_READ(m_catalyst)
-			if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
-		cxENDLOCK
+		
+		// Check that the path is still mirrored (not needed for unsaved)
+		if (!mirrorPath.empty()) {
+			cxLOCK_READ(m_catalyst)
+				if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
+			cxENDLOCK
+		}
+		else mirrorPath = _("Untitled");
 
 		// Update progress dialog
 		if (dlg) dlg->Update(i, msg + wxT("\n") + mirrorPath);

@@ -1,3 +1,41 @@
+20-may-2009 - 1.0.34
+  o Added support for Regular Expressions in Find in Project.
+  
+  o Added keyboard shortcut for Find in Project (Ctrl-Alt-F).
+  
+  o Fixed some keyboard shortcuts in menu.
+  
+  o Fixed problem that prevented some bundle shortcuts from
+    being detected.
+    
+  o Fixed restoration of unsaved files #358.
+  
+  o Fixed double-click on project pane folders #357.
+
+16-may-2009 - 1.0.33
+  o Added simple (but fast) Find in Project dialog.
+  
+  o Search and Replace now has pop-up history.
+  
+  o Settings dialog now have page with info about cygwin setup [adamv].
+  
+  o Settings are now saved in JSON format.
+  
+  o Repeatedly pressing home key will now toogle between beginning
+    of a line and the beginning of the indented text #354 [adamv]
+    
+  o Improved multi-monitor handling #356 [adamv]
+  
+  o Fixed shortcuts using windows keys was broken.
+  
+  o Fixed re-opening previously edited bundle items.
+  
+  o Fixed problem with unicode paths in projects #342 [tea]
+  
+  o Fixed inf. loop after deleting bundle item #309 [tea]
+  
+  o Lots of minor improvements and bugfixes.
+
 13-feb-2009 - 1.0.32
   o Added experimental support for selective undo.
   

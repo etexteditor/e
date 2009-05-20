@@ -39,7 +39,7 @@ END_EVENT_TABLE()
 
 FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHandler& projectPane)
 : wxDialog (&parentFrame, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_parentFrame(parentFrame), m_projectPane(projectPane), m_searchThread(NULL)
+  m_parentFrame(parentFrame), m_projectPane(projectPane), m_searchThread(NULL), m_inSearch(false)
 {
 	SetTitle (_("Find In Project"));
 
@@ -51,6 +51,8 @@ FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHa
 	m_searchButton = new wxButton(this, CTRL_SEARCHBUTTON, _("Search"));
 	m_caseCheck = new wxCheckBox(this, wxID_ANY, wxT("Match case"));
 	m_caseCheck->SetValue(true); // default is to match case
+	m_regexCheck = new wxCheckBox(this, wxID_ANY, wxT("Regular Expressions"));
+	m_regexCheck->SetValue(false); // default is no regex matching
 	m_pathStatic = new wxStaticText(this, wxID_ANY, wxT(""));
 
 #if defined (__WXMSW__)
@@ -65,7 +67,10 @@ FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHa
 			searchSizer->Add(m_searchCtrl, 1, wxEXPAND|wxRIGHT, 5);
 			searchSizer->Add(m_searchButton, 0);
 			mainSizer->Add(searchSizer, 0, wxEXPAND|wxALL, 5);
-		mainSizer->Add(m_caseCheck, 0, wxLEFT, 5);
+		wxBoxSizer *optionSizer = new wxBoxSizer(wxHORIZONTAL);
+			optionSizer->Add(m_caseCheck, 0, wxLEFT, 5);
+			optionSizer->Add(m_regexCheck, 0, wxLEFT, 5);
+			mainSizer->Add(optionSizer, 0);
 		mainSizer->Add(m_pathStatic, 0, wxEXPAND|wxALL, 5);
 		mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND);
 		
@@ -104,16 +109,24 @@ void FindInProjectDlg::OnSearch(wxCommandEvent& WXUNUSED(event)) {
 
 	wxLogDebug(wxT("Searching:"));
 	const wxString path = projectDir.GetPath() + wxFILE_SEP_PATH;
-	m_searchThread->StartSearch(path, searchtext, m_caseCheck->GetValue());
+	m_searchThread->StartSearch(path, searchtext, m_caseCheck->GetValue(), m_regexCheck->GetValue());
 
+	m_inSearch = true;
 	m_searchButton->SetLabel(_("Cancel"));
 }
 
 void FindInProjectDlg::OnIdle(wxIdleEvent& event) {
 	if (!m_searchThread->IsSearching()) {
-		if (!m_pathStatic->GetLabel().empty()){
-			m_pathStatic->SetLabel(wxT(""));
+		if (m_inSearch) {
+			if (m_searchThread->LastError()) {
+				wxString errorMsg;
+				m_searchThread->GetCurrentPath(errorMsg);
+				m_pathStatic->SetLabel(errorMsg);
+			}
+			else if (!m_pathStatic->GetLabel().empty()) m_pathStatic->SetLabel(wxT(""));
+
 			m_searchButton->SetLabel(_("Search"));
+			m_inSearch = false;
 		}
 		return;
 	}
@@ -125,7 +138,7 @@ void FindInProjectDlg::OnIdle(wxIdleEvent& event) {
 		m_browser->LoadString(m_output);
 	}
 
-	event.RequestMore(); // we don't want the seach to look slow :-)
+	event.RequestMore(); // we don't want the search to look slow :-)
 }
 
 void FindInProjectDlg::OnClose(wxCloseEvent& event) {
@@ -149,7 +162,7 @@ void FindInProjectDlg::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 // ---- SearchThread ---------------------------------------------------------------------------------------
 
 FindInProjectDlg::SearchThread::SearchThread()
-: m_isSearching(false), m_isWaiting(false), m_stopSearch(false), m_startSearchCond(m_condMutex) {
+: m_isSearching(false), m_isWaiting(false), m_stopSearch(false), m_lastError(false), m_startSearchCond(m_condMutex) {
 	// Create and run the thread
 	Create();
 	Run();
@@ -170,10 +183,10 @@ void* FindInProjectDlg::SearchThread::Entry() {
 			}
 		}
 
-		m_isSearching = true;
-
 		SearchInfo si;
-		PrepareSearchInfo(si, m_pattern, m_matchCase);
+		if (!PrepareSearchInfo(si, m_pattern, m_matchCase, m_regex)) continue;
+
+		m_isSearching = true;
 		
 		ProjectInfoHandler infoHandler;
 		infoHandler.SetRoot(m_path);
@@ -185,6 +198,9 @@ void* FindInProjectDlg::SearchThread::Entry() {
 
 		SearchDir(m_path, si, infoHandler);
 		m_isSearching = false;
+
+		// Clean up
+		if (si.regex) free(si.regex);
 	}
 
 	return NULL;
@@ -200,10 +216,12 @@ void FindInProjectDlg::SearchThread::DeleteThread() {
 	m_startSearchCond.Signal();
 }
 
-void FindInProjectDlg::SearchThread::StartSearch(const wxString& path, const wxString& pattern, bool matchCase) {
+void FindInProjectDlg::SearchThread::StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex) {
 	m_path = path;
 	m_pattern = pattern.c_str(); // wxString is not threadsafe, so we have to force copy
 	m_matchCase = matchCase;
+	m_regex = regex;
+	m_lastError = false;
 
 	// Signal thread that we should start search
 	wxMutexLocker lock(m_condMutex);
@@ -239,12 +257,12 @@ bool FindInProjectDlg::SearchThread::UpdateOutput(wxString& output) {
 	return false;
 }
 
-void FindInProjectDlg::SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase) const {
+bool FindInProjectDlg::SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex) {
 	si.pattern = pattern;
 	si.matchCase = matchCase;
 
 	// We need both upper- & lowercase versions for caseless search
-	if (!matchCase) {
+	if (!regex && !matchCase) {
 		si.pattern.MakeLower();
 		si.patternUpper = pattern;
 		si.patternUpper.MakeUpper();
@@ -255,22 +273,53 @@ void FindInProjectDlg::SearchThread::PrepareSearchInfo(SearchInfo& si, const wxS
 	// In the future we might want to detect encoding of each file
 	// before searching it, but it will cost us some speed.
 	si.UTF8buffer = wxConvUTF8.cWC2MB(si.pattern);
-	si.byte_len = strlen(si.UTF8buffer);
-	if (!matchCase) {
-		si.UTF8bufferUpper = wxConvUTF8.cWC2MB(si.patternUpper);
 
-		// This algorithm assumes that UTF8 upper- & lowercase chars have same byte width
-		wxASSERT(si.byte_len == strlen(si.UTF8bufferUpper));
-	}
+	if (regex) {
+		const char *error;
+		int erroffset;
 
-	// Build a dictionary of char-to-last distances in the search string
-	// since this is a char, distances in the searchstring can not be longer than 256
-	memset(si.charmap, si.byte_len, 256);
-	const size_t last_char_pos = si.byte_len-1;
-	for (size_t i = 0; i < last_char_pos; ++i) {
-		si.charmap[si.UTF8buffer[i]] = last_char_pos-i;
-		if (!matchCase) si.charmap[si.UTF8bufferUpper[i]] = last_char_pos-i;
+		// While the pattern is utf-8, we treat it as ascii here.
+		// Otherwise we would have to check all the files if they
+		// were valid utf-8 before searching.
+		int options = PCRE_MULTILINE;
+		if (!matchCase) options |= PCRE_CASELESS;
+
+		// Compile the pattern
+		si.regex = pcre_compile(
+				si.UTF8buffer.data(), // the pattern
+				options,              // options
+				&error,               // for error message
+				&erroffset,           // for error offset
+				NULL);                // use default character tables
+
+		// Handle errors
+		if (!si.regex) {
+			m_outputCrit.Enter();
+				m_currentPath = wxT("Invalid pattern: ") + wxString(error, wxConvUTF8);
+			m_outputCrit.Leave();
+			m_lastError = true;
+			return false;
+		};
 	}
+	else {
+		si.byte_len = strlen(si.UTF8buffer);
+		if (!matchCase) {
+			si.UTF8bufferUpper = wxConvUTF8.cWC2MB(si.patternUpper);
+
+			// This algorithm assumes that UTF8 upper- & lowercase chars have same byte width
+			wxASSERT(si.byte_len == strlen(si.UTF8bufferUpper));
+		}
+
+		// Build a dictionary of char-to-last distances in the search string
+		// since this is a char, distances in the searchstring can not be longer than 256
+		memset(si.charmap, si.byte_len, 256);
+		const size_t last_char_pos = si.byte_len-1;
+		for (size_t i = 0; i < last_char_pos; ++i) {
+			si.charmap[si.UTF8buffer[i]] = last_char_pos-i;
+			if (!matchCase) si.charmap[si.UTF8bufferUpper[i]] = last_char_pos-i;
+		}
+	}
+	return true;
 }
 
 void FindInProjectDlg::SearchThread::SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler) {
@@ -321,43 +370,68 @@ void FindInProjectDlg::SearchThread::DoSearch(const MMapBuffer& buf, const Searc
 		if (*subject == '\0') return;
 	}
 
-	// Prepare vars to avoid lookups in loop
-	const size_t last_char_pos = si.byte_len-1;
-	const char lastChar = si.UTF8buffer[last_char_pos];
-	const char lastCharUpper = si.matchCase ? '\0' : si.UTF8bufferUpper[last_char_pos];
+	if (si.regex) {
+		const int OVECCOUNT = 30;
+		int ovector[OVECCOUNT];
+		int pos = 0;
+		int rc = 0;
 
-	subject = buf.data() + last_char_pos;
-	end_pos = buf.data() + len;
+		while(1) {
+			rc = pcre_exec(
+				si.regex,             // the compiled pattern
+				NULL,                 // extra data - if we study the pattern
+				buf.data(),           // the subject string
+				len,                  // the length of the subject
+				pos,                  // start at offset in the subject
+				PCRE_NOTEMPTY,        // options
+				ovector,              // output vector for substring information
+				OVECCOUNT);           // number of elements in the output vector
+			if (rc <= 0) break;
 
-	while (subject < end_pos) {
-		const char c = *subject; // Get candidate for last char
-
-		if (c == lastChar || (!si.matchCase && c == lastCharUpper)) {
-			// Match indiviual chars
-			const char* byte_ptr = subject-1;
-			const char* const first_byte_pos = subject - last_char_pos;
-			unsigned int char_pos = last_char_pos-1;
-			while (byte_ptr >= first_byte_pos) {
-				const char c2 = *byte_ptr;
-				if (c2 != si.UTF8buffer[char_pos]) {
-					if (si.matchCase || c2 != si.UTF8bufferUpper[char_pos]) break;
-				}
-				--byte_ptr; --char_pos;
-			}
-
-			if (byte_ptr < first_byte_pos) {
-				// We got a match
-				const wxFileOffset matchStart = first_byte_pos - buf.data();
-				const FileMatch m = {0, 0, matchStart, matchStart + si.byte_len};
-				matches.push_back(m);
-
-				subject += si.byte_len;
-				continue;
-			}
+			const FileMatch m = {0, 0, ovector[0], ovector[1]};
+			matches.push_back(m);
+			pos = ovector[1];
 		}
+	}
+	else {
+		// Prepare vars to avoid lookups in loop
+		const size_t last_char_pos = si.byte_len-1;
+		const char lastChar = si.UTF8buffer[last_char_pos];
+		const char lastCharUpper = si.matchCase ? '\0' : si.UTF8bufferUpper[last_char_pos];
 
-		// If we don't have a match, see how far we can move char_pos
-		subject += si.charmap[(unsigned char)c];
+		subject = buf.data() + last_char_pos;
+		end_pos = buf.data() + len;
+
+		while (subject < end_pos) {
+			const char c = *subject; // Get candidate for last char
+
+			if (c == lastChar || (!si.matchCase && c == lastCharUpper)) {
+				// Match indiviual chars
+				const char* byte_ptr = subject-1;
+				const char* const first_byte_pos = subject - last_char_pos;
+				unsigned int char_pos = last_char_pos-1;
+				while (byte_ptr >= first_byte_pos) {
+					const char c2 = *byte_ptr;
+					if (c2 != si.UTF8buffer[char_pos]) {
+						if (si.matchCase || c2 != si.UTF8bufferUpper[char_pos]) break;
+					}
+					--byte_ptr; --char_pos;
+				}
+
+				if (byte_ptr < first_byte_pos) {
+					// We got a match
+					const wxFileOffset matchStart = first_byte_pos - buf.data();
+					const FileMatch m = {0, 0, matchStart, matchStart + si.byte_len};
+					matches.push_back(m);
+
+					subject += si.byte_len;
+					continue;
+				}
+			}
+
+			// If we don't have a match, see how far we can move char_pos
+			subject += si.charmap[(unsigned char)c];
+		}
 	}
 }
 

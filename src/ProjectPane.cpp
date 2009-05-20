@@ -1056,9 +1056,14 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 	wxArrayTreeItemIds items;
 	if (m_prjTree->GetSelections(items)) {
 		for (unsigned int i = 0; i < items.GetCount(); ++i) {
-			const DirItemData *data = (DirItemData*)m_prjTree->GetItemData( items[i] );
+			const wxTreeItemId item = items[i];
+			const DirItemData *data = (DirItemData*)m_prjTree->GetItemData(item);
 
-			if (data->m_isDir) continue;
+			if (data->m_isDir) {
+				ExpandDir(item);
+				m_prjTree->Expand(item);
+				continue;
+			}
 
 			if (m_isRemote) {
 				m_parentFrame.OpenRemoteFile(data->m_path, m_remoteProfile);

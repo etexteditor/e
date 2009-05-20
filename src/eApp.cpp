@@ -104,8 +104,8 @@ bool eApp::OnInit() {
 
 	// App info
 	const wxString appId = wxString::Format(wxT("eApp-%s"), wxGetUserId().c_str());
-	m_version_id = 194;  // <-------------- INTERNAL VERSION NUMBER
-	m_version_name =  wxT("1.0.33"); // <-- VERSION NAME
+	m_version_id = 195;  // <-------------- INTERNAL VERSION NUMBER
+	m_version_name =  wxT("1.0.34"); // <-- VERSION NAME
 
 	// Option vars
 	m_lineNum = 0;

@@ -500,7 +500,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(wxID_FIND, _("&Find\tCtrl+F"), _("Find"));
 	editMenu->Append(MENU_FIND_IN_SEL, _("Find &in Selection\tCtrl+Shift+F"), _("Find in Selection"));
-	editMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project"), _("Find in Project"));
+	editMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project\tCtrl-Alt-F"), _("Find in Project"));
 	editMenu->Append(wxID_REPLACE, _("&Replace\tCtrl+R"), _("Replace"));
 	editMenu->AppendSeparator();
 	wxMenu* selectMenu = new wxMenu;
@@ -548,7 +548,7 @@ void EditorFrame::InitMenus() {
 	viewMenu->Append(MENU_FOLDTOGGLE, _("&Toggle Fold\tF1"), _("Toggle Fold"));
 	viewMenu->Append(MENU_FOLDALL, _("Fold &All\tCtrl-F1"), _("Fold All"));
 	viewMenu->Append(MENU_FOLDOTHERS, _("Fold &Others\tAlt-F1"), _("Fold Others"));
-	viewMenu->Append(MENU_UNFOLDALL, _("&Unfold All\tAlt-Ctrl-F1"), _("Unfold &All"));
+	viewMenu->Append(MENU_UNFOLDALL, _("&Unfold All\tCtrl-Alt-F1"), _("Unfold &All"));
 	viewMenu->AppendSeparator();
 	viewMenu->Append(MENU_PREVIEW, _("Web &Preview\tCtrl+Alt+P"), _("Show Web Preview"), wxITEM_CHECK);
 	menuBar->Append(viewMenu, _("&View"));
@@ -662,11 +662,16 @@ void EditorFrame::RestoreState() {
 	// Open documents from last session
 	// CheckForModifiedFiles() is called from eApp::OnInit()
 	for (unsigned int i = 0; i < pagecount; ++i) {
-		const wxString mirrorPath = m_settings.GetPagePath(i);
+		wxString mirrorPath = m_settings.GetPagePath(i);
 		const doc_id mirrorDoc = m_settings.GetPageDoc(i);
-		cxLOCK_READ(m_catalyst)
-			if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
-		cxENDLOCK
+		
+		// Check that the path is still mirrored (not needed for unsaved)
+		if (!mirrorPath.empty()) {
+			cxLOCK_READ(m_catalyst)
+				if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
+			cxENDLOCK
+		}
+		else mirrorPath = _("Untitled");
 
 		// Update progress dialog
 		if (dlg) dlg->Update(i, msg + wxT("\n") + mirrorPath);
@@ -719,7 +724,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	m_settings.GetSettingBool(wxT("bundleDebug"), enableDebug);
 
 	wxMenu *funcMenu = new wxMenu;
-	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCTRL-SHIFT-B"), _("Show Bundle Editor"));
+	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"));
 	funcMenu->Append(MENU_MANAGE_BUNDLES, _("&Manage Bundles"), _("Show Bundle Manager"));
 	funcMenu->AppendSeparator();
 	funcMenu->Append(MENU_DEBUG_BUNDLES, _("Enable Debug Mode"), _("Enable Debug Mode"), wxITEM_CHECK);
@@ -729,7 +734,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_BUNDLE_FUNCTIONS, _("&Edit Bundles"), funcMenu,  _("Edit Bundles"));
 	bundleMenu->PrependSeparator();
-	bundleMenu->Prepend(MENU_FINDCMD, _("&Select Bundle Item...\tCTRL-ALT-T"), _("Select Bundle Item..."));
+	bundleMenu->Prepend(MENU_FINDCMD, _("&Select Bundle Item...\tCtrl-Alt-T"), _("Select Bundle Item..."));
 
 	return bundleMenu;
 }

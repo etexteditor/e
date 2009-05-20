@@ -1728,6 +1728,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 	bool doReload = true;
 	bool isCurrent = false;
 	const bool isBundleItem = eDocumentPath::IsBundlePath(filepath);
+	const bool isRemoteItem = eDocumentPath::IsRemotePath(filepath);
 
 	if (!editorCtrl) {
 		// This should never happen, but there have been
@@ -1767,7 +1768,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 		// Check if the file on disk has been changed since last save
 		if (modifiedDate.IsValid()) {
 			if (isBundleItem) {} // EditorCtrl does its own check for changes
-			else if (eDocumentPath::IsRemotePath(filepath)) {
+			else if (isRemoteItem) {
 				if (!rp) rp = GetRemoteProfile(filepath, false);
 				const wxDateTime fileDate = GetRemoteThread().GetModDate(filepath, *rp);
 				if (modifiedDate == fileDate) doReload = false; // No need to reload unchanged file
@@ -1800,7 +1801,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 
 #ifdef __WXMSW__
 		// Filename may have changed case
-		if (isCurrent) {
+		if (isCurrent && !isBundleItem && !isRemoteItem) {
 			filepath = wxFileName(filepath).GetLongPath(); // gets path with correct case
 
 			// Filename gets corrected during reload, but otherwise we have to correct it manually

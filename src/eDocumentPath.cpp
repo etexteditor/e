@@ -123,7 +123,7 @@ wxString eDocumentPath::convert_cygdrive_path_to_windows(const wxString& path) {
 	const size_t n = eDocumentPath::s_cygdrivePrefix.Len(); // Cygdrive prefix length
 
 	// Get drive letter
-	const wxChar drive = wxToupper(path[n] + 1);
+	const wxChar drive = wxToupper(path[n]);
 	if (drive < wxT('A') || wxT('Z') < drive) {
 		// Invalid drive letter; can't do anything with this.
 		wxASSERT(false);

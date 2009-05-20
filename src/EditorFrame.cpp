@@ -524,7 +524,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(wxID_FIND, _("&Find\tCtrl+F"), _("Find"));
 	editMenu->Append(MENU_FIND_IN_SEL, _("Find &in Selection\tCtrl+Shift+F"), _("Find in Selection"));
-	editMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project"), _("Find in Project"));
+	editMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project\tCtrl-Alt-F"), _("Find in Project"));
 	editMenu->Append(wxID_REPLACE, _("&Replace\tCtrl+R"), _("Replace"));
 	editMenu->AppendSeparator();
 	wxMenu* selectMenu = new wxMenu;

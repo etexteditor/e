@@ -23,6 +23,7 @@
 #include "IEHtmlWin.h"
 #endif
 #include "IHtmlWnd.h"
+#include "pcre.h"
 
 #include <map>
 #include <vector>
@@ -48,9 +49,10 @@ private:
 		virtual void* Entry();
 		void DeleteThread();
 
-		void StartSearch(const wxString& path, const wxString& pattern, bool matchCase);
+		void StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex);
 		void CancelSearch();
 		bool IsSearching() const {return m_isSearching;};
+		bool LastError() const {return m_lastError;};
 
 		bool GetCurrentPath(wxString& currentPath);
 		bool UpdateOutput(wxString& output);
@@ -72,13 +74,14 @@ private:
 			char charmap[256];
 			char lastChar;
 			bool matchCase;
+			pcre* regex;
 			wxString output;
 		};
 
 		void SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler);
 		void DoSearch(const MMapBuffer& buf, const SearchInfo& si, vector<FileMatch>& matches) const;
 		void WriteResult(const MMapBuffer& buf, const wxFileName& filepath, vector<FileMatch>& matches);
-		void PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase) const;
+		bool PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex);
 
 		// Member variables
 		bool m_isSearching;
@@ -87,6 +90,8 @@ private:
 		wxString m_path;
 		wxString m_pattern;
 		bool m_matchCase;
+		bool m_regex;
+		bool m_lastError;
 		wxString m_currentPath;
 		wxString m_output;
 		wxCriticalSection m_outputCrit;
@@ -106,6 +111,7 @@ private:
 	wxTextCtrl* m_searchCtrl;
 	wxButton* m_searchButton;
 	wxCheckBox* m_caseCheck;
+	wxCheckBox* m_regexCheck;
 	wxStaticText* m_pathStatic;
 #ifdef __WXMSW__
 	wxIEHtmlWin* m_browser;
@@ -118,6 +124,7 @@ private:
 	const ProjectInfoHandler& m_projectPane;
 	SearchThread* m_searchThread;
 	wxString m_output;
+	bool m_inSearch;
 };
 
 #endif /* _FINDINPROJECTDLG_H_ */

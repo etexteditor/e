@@ -1,3 +1,17 @@
+20-may-2009 - 1.0.34
+  o Added support for Regular Expressions in Find in Project.
+  
+  o Added keyboard shortcut for Find in Project (Ctrl-Alt-F).
+  
+  o Fixed some keyboard shortcuts in menu.
+  
+  o Fixed problem that prevented some bundle shortcuts from
+    being detected.
+    
+  o Fixed restoration of unsaved files #358.
+  
+  o Fixed double-click on project pane folders #357.
+
 16-may-2009 - 1.0.33
   o Added simple (but fast) Find in Project dialog.
   

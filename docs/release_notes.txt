@@ -1,3 +1,10 @@
+20-may-2009 - 1.0.34a
+  o Fixed problem when re-opening remote file.
+  
+  o Fixed cygwin path off-by-one error [adamv].
+  
+  o Double-clicking projectpane folder now toogles.
+
 20-may-2009 - 1.0.34
   o Added support for Regular Expressions in Find in Project.
   

@@ -1060,8 +1060,11 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 			const DirItemData *data = (DirItemData*)m_prjTree->GetItemData(item);
 
 			if (data->m_isDir) {
-				ExpandDir(item);
-				m_prjTree->Expand(item);
+				if (data->m_isExpanded) CollapseDir(item);
+				else {
+					ExpandDir(item);
+					m_prjTree->Expand(item);
+				}
 				continue;
 			}
 

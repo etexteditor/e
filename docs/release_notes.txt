@@ -1,3 +1,11 @@
+21-may-2009 - 1.0.34b
+  o Fixed plain search in 'Find in Files'.
+  
+  o Removed old 'Find in Files' bundle command
+    (it had conflicting shortcut).
+    
+  o Fixed adding slash to drive in cygwin path [adamv].
+
 20-may-2009 - 1.0.34a
   o Fixed problem when re-opening remote file.
   

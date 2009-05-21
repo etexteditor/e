@@ -260,6 +260,7 @@ bool FindInProjectDlg::SearchThread::UpdateOutput(wxString& output) {
 bool FindInProjectDlg::SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex) {
 	si.pattern = pattern;
 	si.matchCase = matchCase;
+	si.regex = NULL;
 
 	// We need both upper- & lowercase versions for caseless search
 	if (!regex && !matchCase) {

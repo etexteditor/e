@@ -132,10 +132,10 @@ wxString eDocumentPath::convert_cygdrive_path_to_windows(const wxString& path) {
 
 	wxString newpath;
 	newpath += drive;
-	newpath += wxT(':');
+	newpath += wxT(":\\");
 
 	// Add stuff after the cygdrive+drive letter to the new path, else just add a slash.
-	if (path.size() > n+2) 	newpath += path.substr(n+2);
+	if (path.size() > n+2) newpath += path.substr(n+2);
 	else newpath += wxT('\\');
 
 	newpath.Replace(wxT("/"), wxT("\\"));

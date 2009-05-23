@@ -249,11 +249,11 @@ FindCmdDlg::ActionList::aItem::aItem(const tmAction* a, const vector<unsigned in
 : action(a), hlChars(hl) {
 	// Calculate rank (total distance between chars)
 	rank = 0;
-	if (hlChars.size() > 1) {
-		unsigned int prev = hlChars[0]+1;
-		for (vector<unsigned int>::const_iterator p = hlChars.begin()+1; p != hlChars.end(); ++p) {
-			rank += *p - prev;
-			prev = *p+1;
-		}
+	if (hlChars.size() <= 1) return;
+
+	unsigned int prev = hlChars[0]+1;
+	for (vector<unsigned int>::const_iterator p = hlChars.begin()+1; p != hlChars.end(); ++p) {
+		rank += *p - prev;
+		prev = *p+1;
 	}
 }

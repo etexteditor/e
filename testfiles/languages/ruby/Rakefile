@@ -1,0 +1,20 @@
+# Partial Rakefile, to show that e will not identify extension-less files
+# http://www.e-texteditor.com/bugtracker/index.php?do=details&task_id=193
+
+require "rake/testtask"
+require "rake/clean"
+require "rcov/rcovtask"
+
+begin
+  require "metric_fu"
+rescue LoadError
+end
+
+module Integrity
+  def self.version
+    YAML.load_file("VERSION.yml").values.join(".")
+  end
+end
+
+desc "Default: run all tests"
+task :default => :test

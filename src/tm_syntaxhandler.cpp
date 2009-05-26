@@ -1558,6 +1558,12 @@ bool TmSyntaxHandler::ParseDragCommand(const tmBundle& bundle, unsigned int comm
 	cmd->scope = dragDict.wxGetString("scope");
 	// The actual command content does not get added before GetActionContent() get called
 
+	// Run Environment
+	const char* runEnv = dragDict.GetString("runEnvironment");
+	if (runEnv && strcmp(runEnv, "windows") == 0) {
+		cmd->isUnix = false;
+	}
+
 	// DragCommands always output to snippet
 	cmd->output = tmCommand::coSNIPPET;
 

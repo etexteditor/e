@@ -7845,23 +7845,33 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 }
 
 void EditorCtrl::DoDragCommand(const tmDragCommand &cmd, const wxString& path) {
+	// Note: the 'path' parameter is the path of the dropped file; might want to rename parameter
+
 	map<wxString, wxString> env;
 	wxLogDebug(wxT("DoDragCommand pos:%d len:%d"), GetPos(), GetLength());
-	// TODO: Handle native mode
+
+	// Full path
+	const wxString fullPath = cmd.isUnix ? eDocumentPath::WinPathToCygwin(path) : path;
+	env[wxT("TM_DROPPED_FILEPATH")] = fullPath;
 
 	// Make path relative to document dir
 	const wxFileName& docPath = GetFilePath();
 	if (docPath.IsOk()) {
-		wxFileName unixDocPath(eDocumentPath::WinPathToCygwin(docPath), wxPATH_UNIX);
-		wxFileName filePath(eDocumentPath::WinPathToCygwin(path), wxPATH_UNIX);
-		filePath.MakeRelativeTo(unixDocPath.GetPath(0, wxPATH_UNIX), wxPATH_UNIX);
+		if (cmd.isUnix) {
+			wxFileName unixDocPath(eDocumentPath::WinPathToCygwin(docPath), wxPATH_UNIX);
+			wxFileName filePath(eDocumentPath::WinPathToCygwin(path), wxPATH_UNIX);
+			filePath.MakeRelativeTo(unixDocPath.GetPath(0, wxPATH_UNIX), wxPATH_UNIX);
 
-		env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath(wxPATH_UNIX);
+			env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath(wxPATH_UNIX);
+		}
+		else {
+			wxFileName filePath(path);
+			filePath.MakeRelativeTo(docPath.GetFullPath());
+			env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath();
+		}
 	}
-	else env[wxT("TM_DROPPED_FILE")] = eDocumentPath::WinPathToCygwin(path);
+	else env[wxT("TM_DROPPED_FILE")] = fullPath;
 
-	// Full path
-	env[wxT("TM_DROPPED_FILEPATH")] = eDocumentPath::WinPathToCygwin(path);
 
 	// Modifiers
 	wxString modifiers;

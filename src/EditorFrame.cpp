@@ -2288,13 +2288,12 @@ void EditorFrame::OnMenuSaveAll(wxCommandEvent& WXUNUSED(event)) {
 	// Save all files that are modified
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
+		if (!page->IsModified()) continue;
 
-		if (page->IsModified()) {
-			wxString path = page->GetPath();
-			if (path.empty()) continue;
+		wxString path = page->GetPath();
+		if (path.empty()) continue;
 
-			page->SaveText();
-		}
+		page->SaveText();
 	}
 
 	// Update tabs and title

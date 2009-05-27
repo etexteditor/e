@@ -1096,6 +1096,7 @@ const cxSyntaxInfo* TmSyntaxHandler::GetSyntax(const DocumentWrapper& document) 
 		// (Allow for extensions containing dots)
 		cxSyntaxInfo& si = *(*p);
 		ext = filename.AfterFirst(wxT('.'));
+
 		while (!ext.empty()) {
 			for (unsigned int i = 0; i < si.filewild.GetCount(); ++i) {
 				const wxString& filewild = si.filewild[i];

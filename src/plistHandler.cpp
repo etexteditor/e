@@ -229,9 +229,7 @@ PListHandler::~PListHandler() {
 
 wxString PListHandler::GetSyntaxAssoc(const wxString& ext) const {
 	const int index = m_vSyntaxAssocs.Find(pExt[ext.mb_str(wxConvUTF8)]);
-
-	if (index != -1) return wxString(pSynId(m_vSyntaxAssocs[index]), wxConvUTF8);
-	return wxEmptyString;
+	return index == -1 ? wxEmptyString : wxString(pSynId(m_vSyntaxAssocs[index]), wxConvUTF8);
 }
 
 void PListHandler::SetSyntaxAssoc(const wxString& ext, const wxString& syntaxId) {

@@ -1176,15 +1176,14 @@ void EditorFrame::UpdateWindowTitle() {
 
 	// Move the 'suggest tab title' code into editorCtrl
 	// w/ modified bug handling
-	
 
-	const wxString path = editorCtrl->GetPath();
-	wxString name = editorCtrl->GetName();
+	const wxString name = editorCtrl->GetName();
 
 	wxString filename;
 	if (!name.empty()) filename = name;
 	else filename = _("Untitled");
 
+	const wxString path = editorCtrl->GetPath();
 	wxString title = path.empty() ? filename : path;
 
 	if (editorCtrl->IsModified()) {

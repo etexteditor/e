@@ -459,8 +459,11 @@ void FindInProjectDlg::SearchThread::WriteResult(const MMapBuffer& buf, const wx
 	// Count lines
 	while (subject < end) {
 		if (subject == matchstart) {
+			const size_t column = 1 + (matchstart - linestart); // column ndx starts from 1
+			const size_t sel_len = m->end - m->start;
+
 			// Write linenumber with link
-			wxString line = wxString::Format(wxT("<tr><td bgcolor=#f6f6ef align=\"right\"><a href=\"txmt://open&url=file://%s&line=%d\">%d</a></td><td> "), path.c_str(), linecount, linecount);
+			wxString line = wxString::Format(wxT("<tr><td bgcolor=#f6f6ef align=\"right\"><a href=\"txmt://open/?url=file://%s&line=%d&column=%d&sel=%d\">%d</a></td><td> "), path.c_str(), linecount, column, sel_len, linecount);
 			
 			// Start of line
 			line += wxString(linestart, wxConvUTF8, matchstart-linestart);

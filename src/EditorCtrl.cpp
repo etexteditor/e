@@ -4326,7 +4326,14 @@ void EditorCtrl::RemoveAllSelections() {
 }
 
 void EditorCtrl::Select(unsigned int start, unsigned int end) {
-	wxASSERT(start <= end && end <= m_lines.GetLength());
+	// The positions may come from unverified input
+	// So we have to make sure they are valid
+	cxLOCKDOC_READ(m_doc)
+		start = doc.GetValidCharPos(start);
+		if (end > doc.GetLength()) end = doc.GetLength();
+		else if (end != doc.GetLength()) end = doc.GetValidCharPos(end);
+	cxENDLOCK
+	if (start >= end) return;
 
 	m_lines.RemoveAllSelections();
 	m_lines.AddSelection(start, end);

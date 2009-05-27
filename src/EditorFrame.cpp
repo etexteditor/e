@@ -1354,10 +1354,12 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 	static wxRegEx bundleRx(wxT("[&?]url=(bundle://[^&]+)"));
 	static wxRegEx lineRx(wxT("[&?]line=([[:digit:]]+)"));
 	static wxRegEx columnRx(wxT("[&?]column=([[:digit:]]+)"));
+	static wxRegEx selRx(wxT("[&?]sel=([[:digit:]]+)"));
 
 	wxString file;
 	int line = -1;
 	int column = -1;
+	int sel = 0;
 	bool isBundleItem = false;
 
 	if (fileRx.Matches(url)) file = fileRx.GetMatch(url, 1);
@@ -1372,6 +1374,10 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 	if (columnRx.Matches(url)) {
 		long ref;
 		if (columnRx.GetMatch(url, 1).ToLong(&ref)) column = ref;
+	}
+	if (selRx.Matches(url)) {
+		long ref;
+		if (selRx.GetMatch(url, 1).ToLong(&ref)) sel = ref;
 	}
 
 	if (!file.empty()) {
@@ -1395,11 +1401,17 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 			path.MakeAbsolute();
 			if (!OpenFile(path)) return false;
 		}
-
-		// Goto position
-		if (line != -1 || column != -1) GotoPos(line, column);
 	}
-	else if (line != -1 || column != -1) GotoPos(line, column);
+
+	// Goto position
+	if (line != -1 || column != -1) GotoPos(line, column);
+	
+	// Select the number of chars specified in sel
+	if (sel > 0) {
+		const unsigned int pos = editorCtrl->GetPos();
+		editorCtrl->Select(pos, pos+sel);
+		editorCtrl->ReDraw(); // show selection
+	}
 
 	return true;
 }

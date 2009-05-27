@@ -1185,8 +1185,7 @@ void EditorFrame::UpdateWindowTitle() {
 	if (!name.empty()) filename = name;
 	else filename = _("Untitled");
 
-	if (!path.empty()) title = path;
-	else title = filename;
+	title = path.empty() ? filename : path;
 
 	if (editorCtrl->IsModified()) {
 #ifdef __WXMSW__

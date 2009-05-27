@@ -1171,6 +1171,13 @@ void EditorFrame::AddTab(wxWindow* page) {
 void EditorFrame::UpdateWindowTitle() {
 	if (!editorCtrl) return; // Can be called before editorCtrl is set
 
+	// Split out tab & window title setting, so the tab setting can be done
+	// in OnMenuSaveAll
+
+	// Move the 'suggest tab title' code into editorCtrl
+	// w/ modified bug handling
+	
+
 	const wxString path = editorCtrl->GetPath();
 	wxString name = editorCtrl->GetName();
 	wxString filename, title;
@@ -1198,9 +1205,6 @@ void EditorFrame::UpdateWindowTitle() {
 
 	title += wxT( " - ");
 	title += ((eApp*)wxTheApp)->GetAppTitle();
-#ifdef __WXDEBUG__
-	title += wxT(" [DEBUG]");
-#endif
 
 	SetTitle(title);
 

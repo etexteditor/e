@@ -607,12 +607,21 @@ int eApp::OnExit() {
 }
 
 wxString eApp::GetAppTitle() {
-	if (this->IsRegistered()) return _("e");
+	wxString title;
+	if (this->IsRegistered()) title = _("e");
+	else {
+		int daysleft = this->DaysLeftOfTrial();
 
-	int daysleft = this->DaysLeftOfTrial();
-	if (daysleft == 1) return _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
-	if (daysleft > 1) return wxString::Format(wxT("e  [UNREGISTERED - %d DAYS LEFT OF TRIAL]"), daysleft);
-	return _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
+		if (daysleft == 1) title = _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
+		else if (daysleft > 1) title = wxString::Format(wxT("e  [UNREGISTERED - %d DAYS LEFT OF TRIAL]"), daysleft);
+		else title = _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
+	}
+
+#ifdef __WXDEBUG__
+	title += wxT(" [DEBUG]");
+#endif
+
+	return title;
 }
 
 void eApp::CheckForUpdates() {

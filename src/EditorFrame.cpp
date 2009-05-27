@@ -1180,12 +1180,12 @@ void EditorFrame::UpdateWindowTitle() {
 
 	const wxString path = editorCtrl->GetPath();
 	wxString name = editorCtrl->GetName();
-	wxString filename, title;
 
+	wxString filename;
 	if (!name.empty()) filename = name;
 	else filename = _("Untitled");
 
-	title = path.empty() ? filename : path;
+	wxString title = path.empty() ? filename : path;
 
 	if (editorCtrl->IsModified()) {
 #ifdef __WXMSW__

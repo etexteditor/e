@@ -2384,6 +2384,11 @@ void EditorFrame::OnMenuFind(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuFindInProject(wxCommandEvent& WXUNUSED(event)) {
 	if (!m_findInProjectDlg) m_findInProjectDlg = new FindInProjectDlg(*this, m_projectPane->GetInfoHandler());
 	m_findInProjectDlg->Show();
+	m_findInProjectDlg->SetFocus();
+
+	if (editorCtrl->IsSelected()) {
+		m_findInProjectDlg->SetPattern(editorCtrl->GetSelFirstLine());
+	}
 }
 
 void EditorFrame::OnMenuFindInSel(wxCommandEvent& WXUNUSED(event)) {

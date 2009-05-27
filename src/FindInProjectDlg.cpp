@@ -84,6 +84,10 @@ FindInProjectDlg::~FindInProjectDlg() {
 	m_searchThread->DeleteThread();
 }
 	
+void FindInProjectDlg::SetPattern(const wxString& pattern) {
+	m_searchCtrl->SetValue(pattern);
+	m_searchCtrl->SetSelection(-1, -1);
+}
 
 void FindInProjectDlg::OnSearch(wxCommandEvent& WXUNUSED(event)) {
 	if (!m_parentFrame.HasProject()) return;

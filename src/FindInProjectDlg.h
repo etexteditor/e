@@ -40,6 +40,8 @@ class FindInProjectDlg : public wxDialog {
 public:
 	FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHandler& projectPane);
 	~FindInProjectDlg();
+
+	void SetPattern(const wxString& pattern);
  
 private:
 

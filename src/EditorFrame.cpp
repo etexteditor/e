@@ -1171,12 +1171,6 @@ void EditorFrame::AddTab(wxWindow* page) {
 void EditorFrame::UpdateWindowTitle() {
 	if (!editorCtrl) return; // Can be called before editorCtrl is set
 
-	// Split out tab & window title setting, so the tab setting can be done
-	// in OnMenuSaveAll
-
-	// Move the 'suggest tab title' code into editorCtrl
-	// w/ modified bug handling
-
 	const wxString name = editorCtrl->GetName();
 
 	wxString filename;
@@ -1885,13 +1879,11 @@ void EditorFrame::SaveAllFilesInProject() {
 			wxString path = page->GetPath();
 			if (path.empty()) continue;
 
-			if (path.StartsWith(projectPath)) {
-				page->SaveText();
-			}
+			if (!path.StartsWith(projectPath)) continue;
+			page->SaveText();
 		}
 	}
 
-	// Update labels on tabs with new modified status
 	UpdateTabs();
 }
 
@@ -2295,8 +2287,8 @@ void EditorFrame::OnMenuSaveAll(wxCommandEvent& WXUNUSED(event)) {
 		page->SaveText();
 	}
 
-	// Update tabs and title
 	UpdateWindowTitle();
+	UpdateTabs();
 }
 
 void EditorFrame::OnMenuPageSetup(wxCommandEvent& WXUNUSED(event)) {

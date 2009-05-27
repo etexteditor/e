@@ -480,6 +480,7 @@ void EditorFrame::InitMenus() {
 	fileMenu->AppendSeparator();
 	fileMenu->Append(MENU_CLOSE, _("&Close File\tCtrl+W"), _("Close File"));
 	fileMenu->Append(MENU_TABS_CLOSE_ALL, _("Close all &Tabs"), _("Close all Tabs"));
+	fileMenu->Append(MENU_TABS_CLOSE_OTHER, _("Clos&e other Tabs"), _("Close other Tabs"));
 	fileMenu->Append(wxID_EXIT, _("E&xit"), _("Exit"));
 	menuBar->Append(fileMenu, _("&File"));
 

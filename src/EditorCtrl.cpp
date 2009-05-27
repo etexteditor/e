@@ -2641,10 +2641,9 @@ bool EditorCtrl::IsModified() const {
 			hasMirror = catalyst.GetFileMirror(mirror, di, modifiedDate);
 		cxENDLOCK
 
-		if(hasMirror) {
-			if (!modifiedDate.IsValid()) return true;
-			else if (m_doc == di) return false;
-			else return true;
+		if (hasMirror) {
+			if (modifiedDate.IsValid() && (m_doc == di)) return false;
+			return true;
 		}
 		else {
 			wxASSERT(false); // cannot have a path and not be mirrored

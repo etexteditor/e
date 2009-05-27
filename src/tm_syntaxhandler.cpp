@@ -1093,9 +1093,9 @@ const cxSyntaxInfo* TmSyntaxHandler::GetSyntax(const DocumentWrapper& document) 
 
 	for (vector<cxSyntaxInfo*>::iterator p = m_syntaxes.begin(); p != m_syntaxes.end(); ++p) {
 		// First check if filename matches wildcards
-		// (Allow for extensions containing dots)
+		// (Allow for extensions containing dots and extensions that cover entire filename)
 		cxSyntaxInfo& si = *(*p);
-		ext = filename.AfterFirst(wxT('.'));
+		ext = filename;
 
 		while (!ext.empty()) {
 			for (unsigned int i = 0; i < si.filewild.GetCount(); ++i) {

@@ -15,9 +15,11 @@
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
 #include "tm_syntaxhandler.h"
+#include "Strings.h"
 
 enum {
 	CTRL_FONTSELECT,
+	CTRL_FONTQUALITY,
 	CTRL_THEMELIST,
 	CTRL_FGBUTTON,
 	CTRL_BGBUTTON,
@@ -56,6 +58,7 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_GRID_SELECT_CELL(ThemeEditor::OnGridSelect)
 	EVT_GRID_CELL_LEFT_DCLICK(ThemeEditor::OnGridLeftDClick)
 	EVT_GRID_CELL_CHANGE(ThemeEditor::OnGridCellChange)
+	EVT_COMBOBOX(CTRL_FONTQUALITY, ThemeEditor::OnFontQuality)
 END_EVENT_TABLE()
 
 ThemeEditor::ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler)
@@ -143,11 +146,28 @@ ThemeEditor::ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler)
 	wxStaticText* fontLabel = new wxStaticText(this, wxID_ANY, _("Font:"));
 	m_fontDesc = new wxTextCtrl(this, wxID_ANY, wxT("font"), wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
 	wxButton *fontSelect = new wxButton(this, CTRL_FONTSELECT, _("Select..."));
+#ifdef __WXMSW__
+	const wxString choices[] = {_("Default"), _("Not Antialiased"), _("Antialiased"), _("Cleartype")};
+	m_qualityCombo = new wxComboBox(this, CTRL_FONTQUALITY, wxT(""), wxDefaultPosition, wxDefaultSize, 4, choices, wxCB_READONLY);
+#endif
 
 	// Set the font description
 	const wxFont& font = m_syntaxHandler.GetFont();
 	const wxString desc = wxString::Format(wxT("%s, %dpt"), font.GetFaceName().c_str(), font.GetPointSize());
 	m_fontDesc->SetValue(desc);
+
+#ifdef __WXMSW__
+	// We have to extract font quality info out of the native description
+	const wxArrayString tokens = wxSplit(font.GetNativeFontInfoDesc(), _T(';'));
+	long l = 0;
+	if (tokens.size() > 12) tokens[12].ToLong(&l);
+	switch (l) {
+		case NONANTIALIASED_QUALITY: m_qualityCombo->SetSelection(1); break;
+		case ANTIALIASED_QUALITY: m_qualityCombo->SetSelection(2); break;
+		case CLEARTYPE_QUALITY: m_qualityCombo->SetSelection(3); break;
+		default: m_qualityCombo->SetSelection(0);
+	}
+#endif
 
 	// Create the layout
 	wxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -214,7 +234,10 @@ ThemeEditor::ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler)
 			mainSizer->Add(themeSizer, 1, wxEXPAND);
 		wxSizer* fontSizer = new wxBoxSizer(wxHORIZONTAL);
 			fontSizer->Add(fontLabel, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-			fontSizer->Add(m_fontDesc, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+			fontSizer->Add(m_fontDesc, 1, wxALIGN_CENTER_VERTICAL);
+#ifdef __WXMSW__
+			fontSizer->Add(m_qualityCombo, 0, wxALIGN_CENTER_VERTICAL);
+#endif
 			fontSizer->Add(fontSelect, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 			mainSizer->Add(fontSizer, 0, wxEXPAND);
 
@@ -432,21 +455,38 @@ void ThemeEditor::OnFontSelect(wxCommandEvent& WXUNUSED(event)) {
 		const wxFontData& fd = dlg.GetFontData();
 		wxFont font  = fd.GetChosenFont();
 
-		//if (font.IsFixedWidth()) {
-			const wxString desc = wxString::Format(wxT("%s, %dpt"), font.GetFaceName().c_str(), font.GetPointSize());
-			m_fontDesc->SetValue(desc);
+		const wxString desc = wxString::Format(wxT("%s, %dpt"), font.GetFaceName().c_str(), font.GetPointSize());
+		m_fontDesc->SetValue(desc);
 
-			// Strip styles
-			font.SetWeight(wxFONTWEIGHT_NORMAL);
-			font.SetStyle(wxFONTSTYLE_NORMAL);
-			font.SetUnderlined(false);
+		// Strip styles
+		font.SetWeight(wxFONTWEIGHT_NORMAL);
+		font.SetStyle(wxFONTSTYLE_NORMAL);
+		font.SetUnderlined(false);
 
-			m_syntaxHandler.SetFont(font);
-		/*}
-		else {
-			wxMessageBox(_("You have to select a fixed width (monospace) font"), _("Font error"), wxICON_EXCLAMATION|wxOK);
-		}*/
+		m_syntaxHandler.SetFont(font);
 	}
+}
+
+void ThemeEditor::OnFontQuality(wxCommandEvent& event) {
+#ifdef __WXMSW__
+	int quality = DEFAULT_QUALITY;
+	switch(event.GetSelection()) {
+		case 1: quality = NONANTIALIASED_QUALITY; break;
+		case 2: quality = ANTIALIASED_QUALITY; break;
+		case 3: quality = CLEARTYPE_QUALITY; break;
+		default: quality = DEFAULT_QUALITY;
+	}
+
+	// There is no command to set quality, so we have to manually insert
+	// it into the font description
+	wxFont font = m_syntaxHandler.GetFont();
+	wxArrayString tokens = wxSplit(font.GetNativeFontInfoDesc(), _T(';'));
+	tokens[12] = wxString::Format(wxT("%d"), quality);
+	const wxString desc = wxJoin(tokens, wxT(';'));
+	font.SetNativeFontInfo(desc);
+
+	m_syntaxHandler.SetFont(font);
+#endif
 }
 
 void ThemeEditor::OnThemeSelected(wxCommandEvent& event) {

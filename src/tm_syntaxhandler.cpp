@@ -469,15 +469,11 @@ void TmSyntaxHandler::SetDefaultTheme() {
 }
 
 void TmSyntaxHandler::SetFont(const wxFont& font) {
-	//wxASSERT(font.IsFixedWidth());
+	eGetSettings().SetSettingString(wxT("font"), font.GetNativeFontInfoDesc());
 
-	if (font != m_currentTheme.font) {
-		eGetSettings().SetSettingString(wxT("font"), font.GetNativeFontInfoDesc());
-
-		m_defaultTheme.font = font;
-		m_currentTheme.font = font;
-		m_dispatcher.Notify(wxT("THEME_CHANGED"), NULL, 0);
-	}
+	m_defaultTheme.font = font;
+	m_currentTheme.font = font;
+	m_dispatcher.Notify(wxT("THEME_CHANGED"), NULL, 0);
 }
 
 const style* TmSyntaxHandler::GetStyle(const deque<const wxString*>& scopes) const {

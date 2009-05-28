@@ -61,6 +61,7 @@ private:
 
 	// Event handlers
 	void OnFontSelect(wxCommandEvent& event);
+	void OnFontQuality(wxCommandEvent& event);
 	void OnThemeSelected(wxCommandEvent& event);
 	void OnNewTheme(wxCommandEvent& event);
 	void OnDelTheme(wxCommandEvent& event);
@@ -151,6 +152,7 @@ private:
 	wxButton* m_gridMinus;
 	wxButton* m_themePlus;
 	wxButton* m_themeMinus;
+	wxComboBox* m_qualityCombo;
 };
 
 #endif // __THEMEEDITOR_H__

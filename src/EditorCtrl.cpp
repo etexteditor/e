@@ -7584,26 +7584,26 @@ void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
 			newEvent.SetEventObject(this);
 			newEvent.SetEventType(rotation>0 ? wxEVT_SCROLLWIN_PAGEUP : wxEVT_SCROLLWIN_PAGEDOWN);
             ProcessEvent(newEvent);
+			return;
 		}
-		else {
-			if (rotation == 0) return;
 
-			const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
+		if (rotation == 0) return;
 
-			pos = pos - (pos % m_lines.GetLineHeight());
-			if (rotation > 0) { // up
-				pos = pos - m_lines.GetLineHeight()*linescount;
-				pos = max(pos, 0);
-			}
-			else if (rotation < 0) { // down
-				pos = pos + m_lines.GetLineHeight()*linescount;
-				pos = min(pos, m_lines.GetHeight() - size.y);
-			}
+		const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
 
-			if (pos != scrollPos) {
-				scrollPos = pos;
-				DrawLayout();
-			}
+		pos = pos - (pos % m_lines.GetLineHeight());
+		if (rotation > 0) { // up
+			pos = pos - m_lines.GetLineHeight()*linescount;
+			pos = max(pos, 0);
+		}
+		else if (rotation < 0) { // down
+			pos = pos + m_lines.GetLineHeight()*linescount;
+			pos = min(pos, m_lines.GetHeight() - size.y);
+		}
+
+		if (pos != scrollPos) {
+			scrollPos = pos;
+			DrawLayout();
 		}
 	}
 }

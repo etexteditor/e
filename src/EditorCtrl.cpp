@@ -7590,13 +7590,14 @@ void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
 
 			const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
 
+			pos = pos - (pos % m_lines.GetLineHeight());
 			if (rotation > 0) { // up
-				pos = pos - (pos % m_lines.GetLineHeight()) - m_lines.GetLineHeight()*linescount;
-				if (pos < 0) pos = 0;
+				pos = pos - m_lines.GetLineHeight()*linescount;
+				pos = max(pos, 0);
 			}
 			else if (rotation < 0) { // down
-				pos = pos - (pos % m_lines.GetLineHeight()) + m_lines.GetLineHeight()*linescount;
-				if (pos > m_lines.GetHeight() - size.y) pos = m_lines.GetHeight() - size.y;
+				pos = pos + m_lines.GetLineHeight()*linescount;
+				pos = min(pos, m_lines.GetHeight() - size.y);
 			}
 
 			if (pos != scrollPos) {

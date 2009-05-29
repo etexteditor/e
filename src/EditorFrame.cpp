@@ -303,7 +303,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
 
 		// Project dock
-		m_projectPane = new ProjectPane(*this);
+		m_projectPane = new ProjectPane(*this, this);
 		m_frameManager.AddPane(m_projectPane, wxAuiPaneInfo().Name(wxT("Project")).Left().Caption(_("Project")).BestSize(wxSize(150,50)));
 
 		// See if we have saved the layout of the panes
@@ -480,6 +480,7 @@ void EditorFrame::InitMenus() {
 	fileMenu->AppendSeparator();
 	fileMenu->Append(MENU_CLOSE, _("&Close File\tCtrl+W"), _("Close File"));
 	fileMenu->Append(MENU_TABS_CLOSE_ALL, _("Close all &Tabs"), _("Close all Tabs"));
+	fileMenu->Append(MENU_TABS_CLOSE_OTHER, _("Clos&e other Tabs"), _("Close other Tabs"));
 	fileMenu->Append(wxID_EXIT, _("E&xit"), _("Exit"));
 	menuBar->Append(fileMenu, _("&File"));
 
@@ -839,7 +840,7 @@ void EditorFrame::UpdateEncodingMenu(wxMenu& menu) const {
 }
 
 void EditorFrame::CreateAndSetStatusbar() {
-	m_pStatBar = new StatusBar(*this, wxID_ANY, this->m_syntax_handler);
+	m_pStatBar = new StatusBar(*this, wxID_ANY, &m_syntax_handler);
 
 	SetStatusBar(m_pStatBar);
 	SetStatusBarPane(-1); // disable help display
@@ -1176,18 +1177,14 @@ void EditorFrame::AddTab(wxWindow* page) {
 void EditorFrame::UpdateWindowTitle() {
 	if (!editorCtrl) return; // Can be called before editorCtrl is set
 
-	const wxString path = editorCtrl->GetPath();
-	wxString name = editorCtrl->GetName();
-	wxString filename, title;
+	const wxString name = editorCtrl->GetName();
 
+	wxString filename;
 	if (!name.empty()) filename = name;
 	else filename = _("Untitled");
 
-	if (!path.empty()) title = path;
-	else {
-		if (name.empty()) title = _("Untitled");
-		else title = name;
-	}
+	const wxString path = editorCtrl->GetPath();
+	wxString title = path.empty() ? filename : path;
 
 	if (editorCtrl->IsModified()) {
 #ifdef __WXMSW__
@@ -1203,9 +1200,6 @@ void EditorFrame::UpdateWindowTitle() {
 
 	title += wxT( " - ");
 	title += ((eApp*)wxTheApp)->GetAppTitle();
-#ifdef __WXDEBUG__
-	title += wxT(" [DEBUG]");
-#endif
 
 	SetTitle(title);
 
@@ -1241,6 +1235,11 @@ void EditorFrame::UpdateTabs() {
 
 EditorCtrl* EditorFrame::GetEditorCtrl() {
 	// May be NULL, always check in reciever
+	return editorCtrl;
+}
+
+IEditorSearch* EditorFrame::GetSearch() {
+	// May be NULL, always check in reciever. Downcast.
 	return editorCtrl;
 }
 
@@ -1518,7 +1517,7 @@ void EditorFrame::ShowBundlePane() {
 
 	if (projectPane.window == m_projectPane) {
 		m_projectPane->Hide();
-		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, m_syntax_handler);
+		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, &m_syntax_handler);
 		projectPane.Window(m_bundlePane);	
 	}
 	else {
@@ -1899,13 +1898,11 @@ void EditorFrame::SaveAllFilesInProject() {
 			wxString path = page->GetPath();
 			if (path.empty()) continue;
 
-			if (path.StartsWith(projectPath)) {
-				page->SaveText();
-			}
+			if (!path.StartsWith(projectPath)) continue;
+			page->SaveText();
 		}
 	}
 
-	// Update labels on tabs with new modified status
 	UpdateTabs();
 }
 
@@ -2058,7 +2055,7 @@ void EditorFrame::OnMenuReloadBundles(wxCommandEvent& WXUNUSED(event)) {
 	wxBusyCursor wait;
 
 	// Reload bundles (will send it's own event to reset bundle menu if needed)
-	m_syntax_handler.LoadBundles(TmSyntaxHandler::cxUPDATE);
+	m_syntax_handler.LoadBundles(cxUPDATE);
 	
 	// If we have an active BundleEditor, it has to reload the new bundles
 	if (m_bundlePane) m_bundlePane->LoadBundles();
@@ -2073,7 +2070,7 @@ void EditorFrame::OnMenuManageBundles(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::ShowBundleManager() {
-	BundleManager dlg(*this, m_syntax_handler);
+	BundleManager dlg(this, this->GetRemoteThread(), &m_syntax_handler);
 	dlg.ShowModal();
 
 	// If we have an active BundleEditor, it has to reload the new bundles
@@ -2301,17 +2298,16 @@ void EditorFrame::OnMenuSaveAll(wxCommandEvent& WXUNUSED(event)) {
 	// Save all files that are modified
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
+		if (!page->IsModified()) continue;
 
-		if (page->IsModified()) {
-			wxString path = page->GetPath();
-			if (path.empty()) continue;
+		wxString path = page->GetPath();
+		if (path.empty()) continue;
 
-			page->SaveText();
-		}
+		page->SaveText();
 	}
 
-	// Update tabs and title
 	UpdateWindowTitle();
+	UpdateTabs();
 }
 
 void EditorFrame::OnMenuPageSetup(wxCommandEvent& WXUNUSED(event)) {

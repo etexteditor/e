@@ -13,7 +13,7 @@
 
 #include "EditorPrintout.h"
 #include "IPrintableDocument.h"
-#include "tm_syntaxhandler.h"
+#include "tmTheme.h"
 #include "FixedLine.h"
 #include "LineListWrap.h"
 #include "Catalyst.h"

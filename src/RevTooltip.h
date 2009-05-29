@@ -14,14 +14,20 @@
 #ifndef __REVTOOLTIP_H__
 #define __REVTOOLTIP_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "wx/popupwin.h"
+
+class CatalystWrapper;
+class doc_id;
 
 class RevTooltip : public wxPopupWindow {
 public:
-	RevTooltip(const CatalystWrapper catalyst) : m_catalyst(catalyst) {};
-	RevTooltip(wxWindow *parent, const CatalystWrapper catalyst);
+	RevTooltip(const CatalystWrapper& catalyst);
+	RevTooltip(wxWindow *parent, const CatalystWrapper& catalyst);
 	void Create(wxWindow *parent);
 
 	void SetDocument(const doc_id& di, wxPoint pos);
@@ -32,8 +38,7 @@ private:
 		ColorBox(wxWindow* parent, wxWindowID id);
 	};
 
-	const CatalystWrapper m_catalyst;
-	doc_id m_docId;
+	const CatalystWrapper& m_catalyst;
 
 	wxPanel* m_mainPanel;
 	wxBoxSizer* m_mainSizer;

@@ -12,16 +12,21 @@
  ******************************************************************************/
 
 #include "EditorCtrl.h"
+
 #include <wx/clipbrd.h>
 #include <wx/filename.h>
-#include <algorithm>
-#include "EditorFrame.h"
-#include "StyleRun.h"
 #include <wx/tipwin.h>
 #include <wx/file.h>
+
+#include <algorithm>
+
+#include "doc_byte_iter.h"
+#include "tm_syntaxhandler.h"
+
+#include "EditorFrame.h"
+#include "StyleRun.h"
 #include "FindCmdDlg.h"
 #include "RunCmdDlg.h"
-#include "doc_byte_iter.h"
 #include "BundleMenu.h"
 #include "GutterCtrl.h"
 #include "PreviewDlg.h"
@@ -36,6 +41,8 @@
 
 #include "eSettings.h"
 #include "IAppPaths.h"
+
+#include "pcre.h"
 
 // Document Icons
 #include "document.xpm"
@@ -102,7 +109,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_lines(mdc, m_doc, *this, m_theme),
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_syntaxstyler(m_doc, m_lines, m_syntaxHandler),
+	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -119,7 +126,6 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_changeToken(0), 
 	m_savedForPreview(false), 
 	lastpos(0), 
-	m_doubleClickedLine(-1), 
 	m_currentSel(-1), 
 	do_freeze(true), 
 	m_options_cache(0), 
@@ -210,7 +216,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_lines(mdc, m_doc, *this, m_theme),
 	
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_syntaxstyler(m_doc, m_lines, m_syntaxHandler),
+	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -227,7 +233,6 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_changeToken(0),
 	m_savedForPreview(false),
 	lastpos(0),
-	m_doubleClickedLine(-1),
 	m_currentSel(-1), 
 	do_freeze(true),
 	m_options_cache(0),
@@ -269,7 +274,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_lines(mdc, m_doc, *this, m_theme), 
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_syntaxstyler(m_doc, m_lines, m_syntaxHandler),
+	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
 	m_activeTooltip(NULL),
@@ -286,7 +291,6 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_changeToken(0), 
 	m_savedForPreview(false), 
 	lastpos(0), 
-	m_doubleClickedLine(-1), 
 	m_currentSel(-1), 
 	do_freeze(true), 
 	m_options_cache(0), 
@@ -1851,26 +1855,22 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 }
 
 void EditorCtrl::GotoMatchingBracket() {
-	if (m_hlBracket.start == m_hlBracket.end) return;
+	if (!m_bracketHighlight.HasInterval()) return;
 
 	const unsigned int pos = m_lines.GetPos();
+	if (!m_bracketHighlight.IsEndPoint(pos)) return;
 
-	if (pos == m_hlBracket.start) m_lines.SetPos(m_hlBracket.end);
-	else if (pos == m_hlBracket.end) m_lines.SetPos(m_hlBracket.start);
-	else return; // not on bracket
-
+	m_lines.SetPos(m_bracketHighlight.OtherEndPoint(pos));
 	MakeCaretVisible();
 }
 
 void EditorCtrl::MatchBrackets() {
 	const unsigned int pos = m_lines.GetPos();
 
-	if (m_bracketToken == m_changeToken && m_bracketPos == pos) return;
-	m_bracketToken = m_changeToken;
-	m_bracketPos = pos;
+	// If no change to document or position, then stop.
+	if (!m_bracketHighlight.UpdateIfChanged(m_changeToken, pos)) return;
 
-	// Clear old highlighted bracket
-	m_hlBracket.start = m_hlBracket.end = 0;
+	m_bracketHighlight.Clear();
 
 	const unsigned int len = m_lines.GetLength();
 	if (pos == len) return;
@@ -1920,8 +1920,7 @@ void EditorCtrl::MatchBrackets() {
 			cxENDLOCK
 
 			if (count & 1) {
-				m_hlBracket.start = bracketpos;
-				m_hlBracket.end = pos;
+				m_bracketHighlight.Set(bracketpos, pos);
 			}
 			else {
 				const unsigned int lineend = m_lines.GetLineEndpos(lineid);
@@ -1932,8 +1931,7 @@ void EditorCtrl::MatchBrackets() {
 						else {
 							if (*dbi == '\\') escaped = true;
 							else if (*dbi == start_bracket) {
-								m_hlBracket.start = pos;
-								m_hlBracket.end = dbi.GetIndex();
+								m_bracketHighlight.Set(pos, dbi.GetIndex());
 								break;
 							}
 						}
@@ -1973,8 +1971,7 @@ void EditorCtrl::MatchBrackets() {
 					else if (*dbi == end_bracket) {
 						--count;
 						if (count == 0) {
-							m_hlBracket.start = pos;
-							m_hlBracket.end = dbi.GetIndex();
+							m_bracketHighlight.Set(pos, dbi.GetIndex());
 							return;
 						}
 					}
@@ -1999,8 +1996,7 @@ void EditorCtrl::MatchBrackets() {
 					if (!(esc_count & 1)) {
 						--count;
 						if (count == 0) {
-							m_hlBracket.start = dbi.GetIndex();
-							m_hlBracket.end = pos;
+							m_bracketHighlight.Set(dbi.GetIndex(), pos);
 							return;
 						}
 					}
@@ -2645,10 +2641,9 @@ bool EditorCtrl::IsModified() const {
 			hasMirror = catalyst.GetFileMirror(mirror, di, modifiedDate);
 		cxENDLOCK
 
-		if(hasMirror) {
-			if (!modifiedDate.IsValid()) return true;
-			else if (m_doc == di) return false;
-			else return true;
+		if (hasMirror) {
+			if (modifiedDate.IsValid() && (m_doc == di)) return false;
+			return true;
 		}
 		else {
 			wxASSERT(false); // cannot have a path and not be mirrored
@@ -4407,8 +4402,8 @@ void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
 
 	// Check if we should select brackets or word
 	interval iv;
-	if (m_hlBracket.start < m_hlBracket.end && (pos == m_hlBracket.start || pos == m_hlBracket.end)) {
-		iv = m_hlBracket;
+	if (m_bracketHighlight.HasOrderedInterval() && m_bracketHighlight.IsEndPoint(pos)) {
+		iv = m_bracketHighlight.GetInterval();
 		iv.end += 1; // include end bracket
 	}
 	else iv = GetWordIv(pos);
@@ -5312,8 +5307,6 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 
 	return sr;
 }
-
-
 
 search_result EditorCtrl::RegExFindBackwards(const wxString& searchtext, unsigned int start_pos, unsigned int end_pos, bool matchcase) const {
 	wxASSERT(end_pos <= start_pos && start_pos <= GetLength());
@@ -7046,8 +7039,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	lastaction = ACTION_NONE;
 
 	// Check if it is really a triple click
-	wxLogDebug(wxT("m_doubleClickTimer = %d"), m_doubleClickTimer.Time());
-	if (m_doubleClickedLine == (int)line_id && m_doubleClickTimer.Time() < 250) {
+	if (m_tripleClicks.TripleClickedLine((int)line_id)) {
 		SelectLine(line_id, event.ControlDown());
 	}
 	else {
@@ -7095,9 +7087,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		}
 	}
 
-	// Reset triple-click detection state
-	m_doubleClickedLine = -1;
-	m_doubleClickTimer.Pause();
+	m_tripleClicks.Reset();
 
 	DrawLayout();
 
@@ -7554,9 +7544,8 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 	// Find out what was clicked on
 	const full_pos fp = m_lines.ClickOnLine(mpos.x, mpos.y);
 
-	// Set trible-click detection state
-	m_doubleClickedLine = m_lines.GetLineFromCharPos(fp.pos);
-	m_doubleClickTimer.Start();
+	// Start timing for a triple click.
+	m_tripleClicks.Start(m_lines.GetLineFromCharPos(fp.pos));
 
 	if (event.AltDown()) {
 		SelectScope();
@@ -7862,23 +7851,33 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 }
 
 void EditorCtrl::DoDragCommand(const tmDragCommand &cmd, const wxString& path) {
+	// Note: the 'path' parameter is the path of the dropped file; might want to rename parameter
+
 	map<wxString, wxString> env;
 	wxLogDebug(wxT("DoDragCommand pos:%d len:%d"), GetPos(), GetLength());
-	// TODO: Handle native mode
+
+	// Full path
+	const wxString fullPath = cmd.isUnix ? eDocumentPath::WinPathToCygwin(path) : path;
+	env[wxT("TM_DROPPED_FILEPATH")] = fullPath;
 
 	// Make path relative to document dir
 	const wxFileName& docPath = GetFilePath();
 	if (docPath.IsOk()) {
-		wxFileName unixDocPath(eDocumentPath::WinPathToCygwin(docPath), wxPATH_UNIX);
-		wxFileName filePath(eDocumentPath::WinPathToCygwin(path), wxPATH_UNIX);
-		filePath.MakeRelativeTo(unixDocPath.GetPath(0, wxPATH_UNIX), wxPATH_UNIX);
+		if (cmd.isUnix) {
+			wxFileName unixDocPath(eDocumentPath::WinPathToCygwin(docPath), wxPATH_UNIX);
+			wxFileName filePath(eDocumentPath::WinPathToCygwin(path), wxPATH_UNIX);
+			filePath.MakeRelativeTo(unixDocPath.GetPath(0, wxPATH_UNIX), wxPATH_UNIX);
 
-		env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath(wxPATH_UNIX);
+			env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath(wxPATH_UNIX);
+		}
+		else {
+			wxFileName filePath(path);
+			filePath.MakeRelativeTo(docPath.GetFullPath());
+			env[wxT("TM_DROPPED_FILE")] = filePath.GetFullPath();
+		}
 	}
-	else env[wxT("TM_DROPPED_FILE")] = eDocumentPath::WinPathToCygwin(path);
+	else env[wxT("TM_DROPPED_FILE")] = fullPath;
 
-	// Full path
-	env[wxT("TM_DROPPED_FILEPATH")] = eDocumentPath::WinPathToCygwin(path);
 
 	// Modifiers
 	wxString modifiers;

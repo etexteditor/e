@@ -12,17 +12,22 @@
  ******************************************************************************/
 
 #include "tm_syntaxhandler.h"
-#include "IAppPaths.h"
+
+#include <wx/ffile.h>
+#include <wx/dir.h>
+
+#include "pcre.h"
+
+#include "plistHandler.h"
+#include "Document.h"
 #include "eSettings.h"
 #include "matchers.h"
 #include "Dispatcher.h"
 #include "BundleMenu.h"
-#include "pcre.h"
+#include "tmStyle.h"
 
-#include "Document.h"
+#include "IAppPaths.h"
 #include "IEditorDoAction.h"
-
-#include <wx/ffile.h> // Not included in wx/wx.h
 
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
@@ -33,11 +38,29 @@
     #pragma warning(pop)
 #endif
 
+class DirTraverserSimple : public wxDirTraverser
+{
+public:
+    DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) { }
+    virtual wxDirTraverseResult OnFile(const wxString& WXUNUSED(filename))
+    {
+        return wxDIR_IGNORE;
+    }
+    virtual wxDirTraverseResult OnDir(const wxString& dirname)
+    {
+        m_dirs.Add(dirname);
+		return wxDIR_IGNORE;
+    }
+private:
+    wxArrayString& m_dirs;
+};
+
+
 // Initialize static variables
 const wxString TmSyntaxHandler::s_emptyString;
 
-TmSyntaxHandler::TmSyntaxHandler(Dispatcher& disp, bool clearCache)
-: m_plistHandler(dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath(), dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath(), clearCache),
+TmSyntaxHandler::TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler)
+: m_plistHandler(plistHandler),
   m_dispatcher(disp), m_styleNode(NULL), m_bundleMenu(NULL), m_nextMenuID(9000), m_nextFoldID(0), m_doUpdateBundles(true),
   m_nextBundle(0), m_currentSyntax(NULL), m_currentMatchers(NULL), m_currentParsedReps(NULL), m_repsInParsing(NULL) {
 	// Initialize TinyXml
@@ -649,9 +672,9 @@ const vector<const tmAction*> TmSyntaxHandler::GetActions(const wxString& trigge
 		p->second->Print();
 		const vector<const tmAction*>* s = (const vector<const tmAction*>*)p->second->GetMatch(scopes);
 		if (s) return *s;
-		else return vector<const tmAction*>();
 	}
-	else return vector<const tmAction*>();
+
+	return vector<const tmAction*>();
 }
 
 const vector<char>& TmSyntaxHandler::GetActionContent(const tmAction& action) const {
@@ -1066,9 +1089,10 @@ const cxSyntaxInfo* TmSyntaxHandler::GetSyntax(const DocumentWrapper& document) 
 
 	for (vector<cxSyntaxInfo*>::iterator p = m_syntaxes.begin(); p != m_syntaxes.end(); ++p) {
 		// First check if filename matches wildcards
-		// (Allow for extensions containing dots)
+		// (Allow for extensions containing dots and extensions that cover entire filename)
 		cxSyntaxInfo& si = *(*p);
-		ext = filename.AfterFirst(wxT('.'));
+		ext = filename;
+
 		while (!ext.empty()) {
 			for (unsigned int i = 0; i < si.filewild.GetCount(); ++i) {
 				const wxString& filewild = si.filewild[i];
@@ -1530,6 +1554,12 @@ bool TmSyntaxHandler::ParseDragCommand(const tmBundle& bundle, unsigned int comm
 	cmd->uuid = wxString(uuid, wxConvUTF8);
 	cmd->scope = dragDict.wxGetString("scope");
 	// The actual command content does not get added before GetActionContent() get called
+
+	// Run Environment
+	const char* runEnv = dragDict.GetString("runEnvironment");
+	if (runEnv && strcmp(runEnv, "windows") == 0) {
+		cmd->isUnix = false;
+	}
 
 	// DragCommands always output to snippet
 	cmd->output = tmCommand::coSNIPPET;

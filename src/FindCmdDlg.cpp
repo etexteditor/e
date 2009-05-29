@@ -12,7 +12,13 @@
  ******************************************************************************/
 
 #include "FindCmdDlg.h"
+#include "tmBundle.h"
 #include <algorithm>
+
+#ifndef WX_PRECOMP
+    #include <wx/sizer.h>
+    #include <wx/dc.h>
+#endif
 
 // Ctrl id's
 enum {

@@ -36,6 +36,7 @@
 #include "IEditorDoAction.h"
 #include "IPrintableDocument.h"
 #include "IEditorSymbols.h"
+#include "IEditorSearch.h"
 
 // Pre-definitions
 class wxFileName;
@@ -57,7 +58,8 @@ class EditorCtrl : public KeyHookable<wxControl>,
 	public IFoldingEditor,
 	public IEditorDoAction,
 	public IPrintableDocument,
-	public IEditorSymbols 
+	public IEditorSymbols,
+	public IEditorSearch
 {
 public:
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -201,16 +203,18 @@ public:
 	void GotoMatchingBracket();
 
 	// Search & Replace
-	cxFindResult Find(const wxString& text, int options=0);
-	cxFindResult FindNext(const wxString& text, int options=0);
-	bool FindPrevious(const wxString& text, int options=0);
-	bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
-	bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual cxFindResult Find(const wxString& text, int options=0);
+	virtual cxFindResult FindNext(const wxString& text, int options=0);
+	virtual bool FindPrevious(const wxString& text, int options=0);
+	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual void ClearSearchHighlight();
+
+	// SnippetHandler and EditorFrame use 3 of the following methods; may need some more refactoring here to capture that
 	wxString ParseReplaceString(const wxString& replacetext, const map<unsigned int,interval>& captures, const vector<char>* source=NULL) const;
 	search_result RegExFind(const pcre* re, const pcre_extra* study, unsigned int start_pos, map<unsigned int,interval> *captures, unsigned int end_pos, int search_options=0) const;
 	search_result RegExFind(const wxString& searchtext, unsigned int start_pos, bool matchcase, map<unsigned int,interval> *captures=NULL, unsigned int end_pos=0) const;
 	search_result RegExFindBackwards(const wxString& searchtext, unsigned int start_pos, unsigned int end_pos, bool matchcase) const;
-	void ClearSearchHighlight();
 	search_result RawRegexSearch(const char* regex, unsigned int subjectStart, unsigned int subjectEnd, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	bool FindNextChar(wxChar c, unsigned int start_pos, unsigned int end_pos, interval& iv) const;
@@ -298,7 +302,7 @@ public:
 	virtual void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
-	virtual const interval& GetHlBracket() const {return m_hlBracket;};
+	virtual const interval& GetHlBracket() const {return m_bracketHighlight.GetInterval();};
 
 	vector<unsigned int> GetFoldedLines() const;
 	virtual const vector<cxFold>& GetFolds() const {return m_folds;};
@@ -567,7 +571,6 @@ private:
 	unsigned int m_changeToken;
 	bool m_savedForPreview;
 	unsigned int lastpos;
-	int m_doubleClickedLine; // Used for triple-click detection
 	int m_currentSel;
 	bool do_freeze;
 	mutable int m_options_cache; // for compiled regex
@@ -615,8 +618,29 @@ private:
 	// Drag'n'Drop
 	wxPoint m_dragStartPos;
 
-	// Triple-click detection
-	wxStopWatch m_doubleClickTimer;
+	class DetectTripleClicks {
+	public:
+		DetectTripleClicks(): m_doubleClickedLine(-1) {}
+		void Reset() { 
+			m_doubleClickedLine = -1;
+			m_timer.Pause();
+		};
+
+		void Start(int doubleClickedLine){
+			m_doubleClickedLine = doubleClickedLine;
+			m_timer.Start();
+		};
+
+		bool TripleClickedLine(int line_id){
+			return m_doubleClickedLine == line_id && m_timer.Time() < 250;
+		};
+
+	private:
+		int m_doubleClickedLine;
+		wxStopWatch m_timer;
+	};
+
+	DetectTripleClicks m_tripleClicks;
 
 	enum SelMode {
 		SEL_NORMAL,
@@ -641,9 +665,10 @@ private:
 	int change_toppos;
 
 	// incremental search trackers
+	vector<interval> m_searchRanges;
+	// start/found are used to track state between Find calls
 	unsigned int m_search_start_pos;
 	unsigned int m_search_found_pos;
-	vector<interval> m_searchRanges;
 
 	wxString m_indent;
 
@@ -653,10 +678,48 @@ private:
 	vector<interval> m_pairStack;
 	bool m_wrapAtMargin;
 
-	// Bracket highlighting
-	interval m_hlBracket;
-	unsigned int m_bracketToken;
-	unsigned int m_bracketPos;
+	class BracketHighlight {
+	public:
+		BracketHighlight(){};
+
+		void Set(unsigned int start, unsigned int end){ m_interval.Set(start, end); };
+		void Clear() { m_interval.start = m_interval.end = 0; };
+
+		bool IsEndPoint(const unsigned int pos) const { return (pos == m_interval.start) || (pos == m_interval.end); };
+
+		const unsigned int OtherEndPoint(const unsigned int pos) const {
+			if (pos == m_interval.start) return m_interval.end;
+			if (pos == m_interval.end) return m_interval.start;
+
+			// Not on an endpoint, but have to return something.
+			return (unsigned int)-1;
+		};
+
+		const interval& GetInterval() const {return m_interval;};
+		bool HasInterval() const {return m_interval.start != m_interval.end; };
+
+		bool HasOrderedInterval() const {
+			return m_interval.start < m_interval.end;
+		};
+
+		bool UpdateIfChanged(unsigned int changeToken, unsigned int pos) {
+			// If no change to document or position, then stop.
+			if (m_lastChangeToken == changeToken && m_lastPos == pos) return false;
+
+			// Set new change token and position.
+			m_lastChangeToken = changeToken;
+			m_lastPos = pos;
+			return true;
+		};
+
+	private:
+		interval m_interval; // Interval for the current bracket pair.
+		unsigned int m_lastChangeToken;
+		unsigned int m_lastPos;
+	};
+
+	BracketHighlight m_bracketHighlight;
+
 
 	int m_lastScopePos;
 

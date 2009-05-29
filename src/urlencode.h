@@ -14,56 +14,20 @@
 #ifndef __URLENCODE_H__
 #define __URLENCODE_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include "wx/string.h"
+#endif
+
 #include "wx/uri.h"
 
+// These static functions must inherit from wxURI because they
+// make use of protected member functions.
 class UrlEncode : public wxURI {
 public:
-	static wxString Encode(const wxString& url) {
-		const wxChar* uri = url.c_str();
-		wxString newUrl;
-
-		while(*uri) {
-			if(IsUnreserved(*uri) || *uri == wxT('/') || *uri == wxT(':'))
-				newUrl += *uri++;
-			else Escape(newUrl, *uri++);
-		}
-
-		return newUrl;
-	};
-
-	static wxString EncodeFilename(const wxString& filename) {
-		const wxChar* uri = filename.c_str();
-		wxString newUrl;
-
-		while(*uri) {
-			if(*uri == wxT('"') || *uri == wxT('/') || *uri == wxT('\\')
-				|| *uri == wxT('*') || *uri == wxT('?') || *uri == wxT('<')
-				|| *uri == wxT('>') || *uri == wxT('|') || *uri == wxT(':'))
-				Escape(newUrl, *uri++);
-			else newUrl += *uri++;
-		}
-
-		return newUrl;
-	};
-
-	static wxString EscapeUrl(const wxString& url) {
-		// The each part of the url has to be escaped separately
-		// so that the separators are preserved.
-		wxString escUrl;
-
-		// Protocol
-		int pos = url.Find(wxT("://"));
-		if (pos == wxNOT_FOUND) return url;
-		pos += 3;
-		escUrl += url.substr(0, pos);
-
-		wxString address = url.substr(pos);
-
-		escUrl += Encode(address);
-
-		return escUrl;
-	};
+	static wxString Encode(const wxString& url);
+	static wxString EncodeFilename(const wxString& filename);
+	static wxString EscapeUrl(const wxString& url);
 };
 
 #endif // __URLENCODE_H__

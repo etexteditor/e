@@ -12,17 +12,20 @@
  ******************************************************************************/
 
 #include "BundleManager.h"
-#include "IFrameRemoteThread.h"
-#include "tm_syntaxhandler.h"
-#include "urlencode.h"
-#include "IAppPaths.h"
-#include "Catalyst.h"
 
+#include <wx/listctrl.h>
 #include <wx/filename.h>
 #include <wx/imaglist.h>
 #include <wx/progdlg.h>
 #include <wx/stdpaths.h>
 #include <wx/ffile.h>
+
+#include "Catalyst.h" // for Catalyst::GetDateAge
+#include "plistHandler.h"
+#include "ITmLoadBundles.h"
+#include "urlencode.h"
+
+#include "IAppPaths.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
@@ -64,9 +67,9 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
 
-BundleManager::BundleManager(IFrameRemoteThread& parent, TmSyntaxHandler& syntaxHandler)
-: wxDialog (dynamic_cast<wxWindow*>(&parent), -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_parentFrame(parent), m_remoteThread(parent.GetRemoteThread()), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
+BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLoadBundles* syntaxHandler)
+: wxDialog (parent, -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+  m_remoteThread(remoteThread), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler->GetPListHandler()),
   m_allBundlesReceived(false), m_needBundleReload(false)
 {
 	m_repositories.push_back(RepoInfo(wxT("review mm"), wxT("http://macromates.com/svn/Bundles/trunk/Review/Bundles/")));
@@ -189,7 +192,7 @@ void BundleManager::AddItems(const wxString& repoName, const vector<cxFileInfo>&
 		m_bundleList->SetItemData(itemId, (long)&p);
 
 		// Check if bundle is installed
-		for (vector<PListHandler::cxBundleInfo>::const_iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
+		for (vector<cxBundleInfo>::const_iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
 			if (b->dirName == p.m_name) {
 				if (!b->isDisabled) {
 					// We can't count on the filesystem preserving milliseconds
@@ -213,10 +216,7 @@ void BundleManager::OnClose(wxCloseEvent& WXUNUSED(event)) {
 
 	// Show user that we are reloading
 	wxBusyCursor wait;
-
-	if (m_needBundleReload) {
-		m_syntaxHandler.LoadBundles(TmSyntaxHandler::cxUPDATE);
-	}
+	if (m_needBundleReload) m_syntaxHandler->LoadBundles(cxUPDATE);
 }
 
 void BundleManager::OnRemoteListReceived(cxRemoteListEvent& event) {
@@ -277,7 +277,7 @@ void BundleManager::SelectItem(long itemId, bool update) {
 	// Check if bundle is installed
 	m_currentBundleState = BDL_NOT_INSTALLED;
 	m_currentBundleInfo = NULL;
-	for (vector<PListHandler::cxBundleInfo>::iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
+	for (vector<cxBundleInfo>::iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
 		if (b->dirName == name) {
 			if (b->isDisabled) m_currentBundleState = BDL_DISABLED;
 			else if (b->modDate == m_currentBundle->m_modDate) m_currentBundleState = BDL_INSTALLED_UPTODATE;
@@ -404,7 +404,7 @@ void BundleManager::OnDeleteButton(wxCommandEvent& WXUNUSED(event)) {
 	if (m_installedBundles.empty()) return;
 
 	// convert pointer to iterator
-	vector<PListHandler::cxBundleInfo>::iterator p = m_installedBundles.begin() + (m_currentBundleInfo - &*m_installedBundles.begin());
+	vector<cxBundleInfo>::iterator p = m_installedBundles.begin() + (m_currentBundleInfo - &*m_installedBundles.begin());
 
 	if (m_currentBundleInfo->id == -1) {
 		// We have just installed it, so just delete dir
@@ -485,7 +485,7 @@ bool BundleManager::InstallBundle() {
 
 	// Update list
 	bool inList = false;
-	for (vector<PListHandler::cxBundleInfo>::iterator p = m_installedBundles.begin(); p != m_installedBundles.end(); ++p) {
+	for (vector<cxBundleInfo>::iterator p = m_installedBundles.begin(); p != m_installedBundles.end(); ++p) {
 		if (p->dirName == m_currentBundle->m_name) {
 			p->modDate = m_currentBundle->m_modDate;
 			inList = true;
@@ -493,7 +493,7 @@ bool BundleManager::InstallBundle() {
 		}
 	}
 	if (!inList) {
-		PListHandler::cxBundleInfo bi(-1, m_currentBundle->m_name, m_currentBundle->m_modDate);
+		cxBundleInfo bi(-1, m_currentBundle->m_name, m_currentBundle->m_modDate);
 		m_installedBundles.push_back(bi);
 	}
 

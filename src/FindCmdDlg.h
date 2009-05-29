@@ -14,9 +14,14 @@
 #ifndef __FINDCMDDLG_H__
 #define __FINDCMDDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+    #include <wx/dialog.h>
+    #include <wx/textctrl.h>
+#endif
+
 #include "SearchListBox.h"
-#include "tm_syntaxhandler.h"
+#include "tmAction.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__

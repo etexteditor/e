@@ -12,40 +12,34 @@
  ******************************************************************************/
 
 #include "ProjectPane.h"
-#include "EditorFrame.h"
+
 #include <wx/mimetype.h>
 #include <wx/progdlg.h>
 #include <wx/ffile.h>
 #include <wx/file.h>
 #include <wx/dir.h>
+#include <wx/tokenzr.h>
+#include <wx/artprov.h>
+
+#include "IFrameProjectService.h"
 #include "ProjectSettings.h"
 #include "FileActionThread.h"
 #include "DirWatcher.h"
 #include "RemoteThread.h"
 #include "eDocumentPath.h"
+
 #include "images/NewFolder.xpm"
 #include "images/NewDocument.xpm"
 
-#include <wx/tokenzr.h>
-#include <wx/artprov.h>
-
 #ifdef __WXMSW__
+    #include "ShellContextMenu.h"
+
     #pragma warning(push, 1)
 #endif
 #include "tinyxml.h" // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(pop)
 #endif
-
-#ifdef __WXMSW__
-    #include "ShellContextMenu.h"
-#endif
-
-
-#ifndef SHGFI_ADDOVERLAYS
-	// Not defined in shellapi.h (version 5.0 only)
-	#define SHGFI_ADDOVERLAYS 0x000000020
-#endif //SHGFI_ADDOVERLAYS
 
 // ctrl ids
 enum {
@@ -88,10 +82,12 @@ bool projectpane_is_dir_empty(const wxString& path) {
 	return false;
 }
 
-ProjectPane::ProjectPane(IFrameProjectService& parent, wxWindowID id)
-: wxPanel(dynamic_cast<wxWindow*>(&parent), id), m_parentFrame(parent), m_imageList(16,16), m_dirWatchHandle(NULL),
-  m_isRemote(false), m_isDestroying(false),  m_remoteThread(parent.GetRemoteThread()),
-  m_remoteProfile(NULL), m_busyCount(0), m_newIconsCond(m_iconMutex)
+ProjectPane::ProjectPane(IFrameProjectService& projectServce, wxWindow*parent, wxWindowID id):
+	wxPanel(parent, id), 
+	m_projectService(projectServce), 
+	m_imageList(16,16), m_dirWatchHandle(NULL),
+	m_isRemote(false), m_isDestroying(false),  m_remoteThread(m_projectService.GetRemoteThread()),
+	m_remoteProfile(NULL), m_busyCount(0), m_newIconsCond(m_iconMutex)
 {
 #ifdef __WXMSW__
     m_contextMenu = NULL;
@@ -209,7 +205,7 @@ void ProjectPane::Clear() {
 	m_freeImages.clear();
 	m_newFolder.clear();
 	if (m_dirWatchHandle) {
-		m_parentFrame.GetDirWatcher().UnwatchDirectory(m_dirWatchHandle);
+		m_projectService.GetDirWatcher().UnwatchDirectory(m_dirWatchHandle);
 		m_dirWatchHandle = NULL;
 	}
 	ResetBusy();
@@ -272,10 +268,10 @@ void ProjectPane::Init() {
 	if (!m_isRemote) {
 		wxASSERT(m_dirWatchHandle == NULL);
 #ifdef __WXMSW__
-		m_dirWatchHandle = m_parentFrame.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(), *this, true);
+		m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(), *this, true);
 #else
 		if (false == isDirWatched) {
-			m_dirWatchHandle = m_parentFrame.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(),
+			m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(),
 				*this, true);
 			WatchTree(m_prjPath.GetPath());
 			isDirWatched = true;
@@ -323,7 +319,7 @@ void ProjectPane::OnRemoteListReceived(cxRemoteListEvent& event) {
 
 	// Handle failed login (need item)
 	if (event.GetErrorCode() == CURLE_LOGIN_DENIED) {
-		if (m_parentFrame.AskRemoteLogin(m_remoteProfile)) {
+		if (m_projectService.AskRemoteLogin(m_remoteProfile)) {
 			ExpandDir(item); // Try expanding again
 			return;
 		}
@@ -456,7 +452,7 @@ void ProjectPane::OnRemoteAction(cxRemoteAction& event) {
 
 			// Open in editor
 			if (event.GetActionType() == cxRA_CREATEFILE) {
-				m_parentFrame.OpenRemoteFile(url, m_remoteProfile);
+				m_projectService.OpenRemoteFile(url, m_remoteProfile);
 			}
 		}
 		break;
@@ -928,8 +924,6 @@ wxTreeItemId ProjectPane::FindSubItem(const wxTreeItemId& item, const wxString& 
 	return subItem;
 }
 
-
-
 void ProjectPane::OnExpandItem(wxTreeEvent &event)
 {
     const wxTreeItemId parentId = event.GetItem();
@@ -964,6 +958,13 @@ void ProjectPane::OnBeginEditItem(wxTreeEvent &event) {
 	}
 }
 
+static bool projectpane_illegal_filename(const wxString& filename) {
+	return filename == _(".") || filename == _("..") ||
+        (filename.Find(wxT('/')) != wxNOT_FOUND) ||
+        (filename.Find(wxT('\\')) != wxNOT_FOUND) ||
+        (filename.Find(wxT('|')) != wxNOT_FOUND);
+}
+
 void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 {
 	// No change sometimes give empty label in event
@@ -972,12 +973,7 @@ void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 		return;
 	}
 
-	if ((event.GetLabel() == _(".")) ||
-        (event.GetLabel() == _("..")) ||
-        (event.GetLabel().Find(wxT('/')) != wxNOT_FOUND) ||
-        (event.GetLabel().Find(wxT('\\')) != wxNOT_FOUND) ||
-        (event.GetLabel().Find(wxT('|')) != wxNOT_FOUND))
-    {
+	if (projectpane_illegal_filename(event.GetLabel())) {
         wxMessageDialog dialog(this, _("Illegal directory name."), _("Error"), wxOK | wxICON_ERROR );
         dialog.ShowModal();
         event.Veto();
@@ -1049,68 +1045,75 @@ static bool projectpane_is_binary_file(const wxString& path) {
 	return false;
 }
 
+// Tries to execute a binary file.
+// Returns true if we decided to execute it, false if the caller should try to open it in the editor anyway.
+static bool projectpane_execute_binary(const wxString& name, const wxString& path) {
+	const wxString ext = name.AfterLast(wxT('.'));
+	if (ext.empty()) return false;
+
+	// TODO: Check if this file ext is forced to open in e
+
+	// .exe files are just run directly
+	if (ext == wxT("exe")) {
+		const wxString cmd = wxT("\"") + path + wxT("\"");
+		wxExecute(cmd);
+		return true;
+	}
+
+	// Check if another app is assigned to this file type
+	wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
+	if (ft) {
+		wxString mime;
+		ft->GetMimeType(&mime);
+		const wxString cmd = ft->GetOpenCommand(path);
+		delete ft;
+
+		if (mime != wxT("text/plain") && !cmd.empty()) {
+			wxExecute(cmd);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
 
 	// Open all selected files
 	wxArrayTreeItemIds items;
-	if (m_prjTree->GetSelections(items)) {
-		for (unsigned int i = 0; i < items.GetCount(); ++i) {
-			const wxTreeItemId item = items[i];
-			const DirItemData *data = (DirItemData*)m_prjTree->GetItemData(item);
+	if (!m_prjTree->GetSelections(items)) return;
+	for (unsigned int i = 0; i < items.GetCount(); ++i) {
+		const wxTreeItemId item = items[i];
+		const DirItemData *data = (DirItemData*)m_prjTree->GetItemData(item);
 
-			if (data->m_isDir) {
-				if (data->m_isExpanded) CollapseDir(item);
-				else {
-					ExpandDir(item);
-					m_prjTree->Expand(item);
-				}
-				continue;
+		if (data->m_isDir) {
+			if (data->m_isExpanded) CollapseDir(item);
+			else {
+				ExpandDir(item);
+				m_prjTree->Expand(item);
 			}
-
-			if (m_isRemote) {
-				m_parentFrame.OpenRemoteFile(data->m_path, m_remoteProfile);
-				continue;
-			}
-
-			// Always open file in e if shift is held down
-			if (shiftDown) {
-				m_parentFrame.OpenFile(data->m_path);
-				continue;
-			}
-
-			bool isBinary = projectpane_is_binary_file(data->m_path);
-			if (isBinary) {
-				// Check if another app is assigned to this file type
-				const wxString ext = data->m_name.AfterLast(wxT('.'));
-				if (!ext.empty()) {
-					// TODO: Check if this file ext is forced to open in e
-
-					// .exe files are just run directly
-					if (ext == wxT("exe")) {
-						const wxString cmd = wxT("\"") + data->m_path + wxT("\"");
-						wxExecute(cmd);
-						continue;
-					}
-
-					wxFileType *ft = wxTheMimeTypesManager->GetFileTypeFromExtension(ext);
-					if (ft) {
-						wxString mime;
-						ft->GetMimeType(&mime);
-						const wxString cmd = ft->GetOpenCommand(data->m_path);
-						delete ft;
-
-						if (mime != wxT("text/plain") && !cmd.empty()) {
-							wxExecute(cmd);
-							continue;
-						}
-					}
-				}
-			}
-
-			// If we get to here we should just open the file in e
-			m_parentFrame.OpenFile(data->m_path);
+			continue;
 		}
+
+		if (data->m_isDir) continue;
+
+		if (m_isRemote) {
+			m_projectService.OpenRemoteFile(data->m_path, m_remoteProfile);
+			continue;
+		}
+
+		// Always open file in e if shift is held down
+		if (shiftDown) {
+			m_projectService.OpenFile(data->m_path);
+			continue;
+		}
+
+		bool isBinary = projectpane_is_binary_file(data->m_path);
+		if (isBinary && projectpane_execute_binary(data->m_name, data->m_path)) continue;
+
+		// If we get to here we should just open the file in e
+		m_projectService.OpenFile(data->m_path);
 	}
 }
 
@@ -1394,7 +1397,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				wxLogDebug(wxT("ProjectPane::%s() remove directory %s"),
 					 wxString(__FUNCTION__,wxConvUTF8).c_str(), path.c_str());
 				// need to remove dir watcher for this dir and all subdirs
-				m_parentFrame.GetDirWatcher().UnwatchDirByName(path, true);
+				m_projectService.GetDirWatcher().UnwatchDirByName(path, true);
 				// and for all subdirs
 			}
 #endif
@@ -1434,7 +1437,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 #ifdef __WXGTK__
 				if (event.IsDir()) {
 					// need to watch directory
-					m_parentFrame.GetDirWatcher().WatchDirectory(event.GetNewFile(), *this, true);
+					m_projectService.GetDirWatcher().WatchDirectory(event.GetNewFile(), *this, true);
 					wxLogDebug(wxT("ProjectPane::%s() changed directory directory %s"),
 					 	wxString(__FUNCTION__,wxConvUTF8).c_str(), path.c_str());
 					// watch subdirs if exists
@@ -1467,7 +1470,7 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 #ifdef __WXGTK__
 			if (event.IsDir()) {
 				// need to watch directory
-				m_parentFrame.GetDirWatcher().WatchDirectory(path, *this, true);
+				m_projectService.GetDirWatcher().WatchDirectory(path, *this, true);
 				wxLogDebug(wxT("ProjectPane::%s() new directory %s"),
 					 wxString(__FUNCTION__,wxConvUTF8).c_str(), path.c_str());
 				// watch subdirs if exists
@@ -1672,7 +1675,7 @@ void ProjectPane::OnNewDoc(wxCommandEvent& WXUNUSED(event)) {
 		newfile.Close();
 
 		// Open file in editor
-		m_parentFrame.OpenFile(path);
+		m_projectService.OpenFile(path);
 	}
 }
 
@@ -1876,7 +1879,7 @@ void ProjectPane::WatchTree(const wxString &path) {
 			if (ProjectInfoHandler::MatchFilter(CurrentDir, includeDirs, excludeDirs)) {
 				// watch dir and all subdirs
 				wxString FullPath = path + wxT("/") + CurrentDir;
-				m_parentFrame.GetDirWatcher().WatchDirectory(FullPath, *this, true);
+				m_projectService.GetDirWatcher().WatchDirectory(FullPath, *this, true);
 				WatchTree(FullPath);
 			}
 		} while (d.GetNext(&CurrentDir));
@@ -1906,8 +1909,7 @@ void* ProjectPane::Entry() {
 
 			if (result == 0) continue;
 
-			icon.SetHICON(shfi.hIcon);
-			//DestroyIcon(shfi.hIcon);  // not needed, destroyed by icon destuctor		
+			icon.SetHICON(shfi.hIcon); // icon destructor calls DestroyIcon for us
 #else
 			if (false == GetIconFromFilePath(path, icon)) {
 				wxLogDebug(wxT("ProjectPane::%s() path=%s"),

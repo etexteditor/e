@@ -1,7 +1,7 @@
 #ifndef __SYMBOLREF_H__
 #define __SYMBOLREF_H__
 
-#include <wx/string.h>
+class wxString;
 
 struct SymbolRef {
 	unsigned int start;

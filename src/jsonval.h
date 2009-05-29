@@ -248,8 +248,6 @@ protected:
 
 ***********************************************************************/
 
-
-
 WX_DECLARE_OBJARRAY( wxJSONValue, wxJSONInternalArray );
 WX_DECLARE_STRING_HASH_MAP( wxJSONValue, wxJSONInternalMap );
 
@@ -275,7 +273,6 @@ struct wxJSONValueHolder  {
     wxJSONInternalArray m_valArray;
     wxJSONInternalMap   m_valMap;
   };
-
 
 
 // class WXDLLIMPEXP_JSON wxJSONRefData : public wxObjectRefData
@@ -339,8 +336,4 @@ protected:
   #endif
 };
 
-
-
 #endif			// not defined _WX_JSONVAL_H
-
-

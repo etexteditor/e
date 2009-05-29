@@ -21,7 +21,9 @@
 #endif
 
 #include "tomcrypt.h" // has to be first to avoid conflict with STL
+
 #include "eApp.h"
+
 #include <wx/filename.h>
 #include <wx/file.h>
 #include <wx/tokenzr.h>
@@ -29,8 +31,11 @@
 #include <wx/protocol/http.h>
 #include <wx/txtstrm.h>
 #include <wx/image.h>
-#include "tm_syntaxhandler.h"
 #include <wx/stdpaths.h>
+
+#include "Dispatcher.h"
+#include "plistHandler.h"
+#include "tm_syntaxhandler.h"
 #include "RemoteThread.h"
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
@@ -38,31 +43,8 @@
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
-#include "ExceptionHandler.h"
 
-// We need our own WinMain to implement crash handling
-extern "C" int WINAPI WinMain(HINSTANCE hInstance,
-							HINSTANCE hPrevInstance,
-							wxCmdLineArgType lpCmdLine,
-							int nCmdShow)
-{
-	int nResult = -1;
-    __try
-    {
-
-		  nResult = wxEntry(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-    }
-    __except(RecordExceptionInfo(GetExceptionInformation(), "WinMain"))
-    {
-        // Do nothing here - RecordExceptionInfo() has already done
-        // everything that is needed. Actually this code won't even
-        // get called unless you return EXCEPTION_EXECUTE_HANDLER from
-        // the __except clause.
-    }
-    return nResult;
-}
-
-IMPLEMENT_APP_NO_MAIN(eApp)
+// Main on Windows is defined in separate e-exe project.
 #else
 IMPLEMENT_APP(eApp)
 #endif
@@ -198,16 +180,17 @@ bool eApp::OnInit() {
 
 	// Parse syntax files
 	wxLogDebug(wxT("Loading bundles"));
-	m_pSyntaxHandler = new TmSyntaxHandler(m_pCatalyst->GetDispatcher(), clearBundleCache);
+	m_pListHandler = new PListHandler(GetAppPath(), GetAppDataPath(), clearBundleCache);
+	m_pSyntaxHandler = new TmSyntaxHandler(m_pCatalyst->GetDispatcher(), *m_pListHandler);
 
     // Create the main window
 	wxLogDebug(wxT("Creating main frame"));
 	frame = new EditorFrame( *m_catalyst, -1, wxT("e"), DetermineFrameSize(), *m_pSyntaxHandler);
 	SetTopWindow(frame);
 
-	// Show the main window
+	// Show the main window, bringing it to the top.
 	frame->Show(true);
-	frame->Raise(); // bring to front
+	frame->Raise();
 	frame->Update();
 
 	// Open files from saved state
@@ -611,6 +594,7 @@ int eApp::OnExit() {
 	if (m_pCatalyst) delete m_pCatalyst;
 	if (m_checker) delete m_checker;
 	if (m_pSyntaxHandler) delete m_pSyntaxHandler;
+	if (m_pListHandler) delete m_pListHandler;
 
 #ifdef __WXDEBUG__
 	if (blackboxLib.IsLoaded()) blackboxLib.Unload();
@@ -623,12 +607,21 @@ int eApp::OnExit() {
 }
 
 wxString eApp::GetAppTitle() {
-	if (this->IsRegistered()) return _("e");
+	wxString title;
+	if (this->IsRegistered()) title = _("e");
+	else {
+		int daysleft = this->DaysLeftOfTrial();
 
-	int daysleft = this->DaysLeftOfTrial();
-	if (daysleft == 1) return _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
-	if (daysleft > 1) return wxString::Format(wxT("e  [UNREGISTERED - %d DAYS LEFT OF TRIAL]"), daysleft);
-	return _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
+		if (daysleft == 1) title = _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
+		else if (daysleft > 1) title = wxString::Format(wxT("e  [UNREGISTERED - %d DAYS LEFT OF TRIAL]"), daysleft);
+		else title = _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
+	}
+
+#ifdef __WXDEBUG__
+	title += wxT(" [DEBUG]");
+#endif
+
+	return title;
 }
 
 void eApp::CheckForUpdates() {

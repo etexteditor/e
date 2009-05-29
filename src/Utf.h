@@ -14,8 +14,10 @@
 #ifndef __UTF_H__
 #define __UTF_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/sstream.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
 
 // UTF-8 Support functions
 

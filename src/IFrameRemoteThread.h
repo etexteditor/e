@@ -1,6 +1,8 @@
 #ifndef __IFRAMEREMOTETHREAD_H__
 #define __IFRAMEREMOTETHREAD_H__
 
+class RemoteThread;
+
 class IFrameRemoteThread {
 public:
 	// For remote file access.

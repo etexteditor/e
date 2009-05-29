@@ -12,15 +12,20 @@
  ******************************************************************************/
 
 #include "styler_syntax.h"
-#include "StyleRun.h"
-#include "tm_syntaxhandler.h"
-#include "Lines.h"
+
 #include <algorithm>
+
+#include "StyleRun.h"
+#include "Document.h"
+#include "tm_syntaxhandler.h"
+#include "tmStyle.h"
+#include "Lines.h"
 #include "matchers.h"
+#include "pcre.h"
 
 const unsigned int Styler_Syntax::EXTSIZE = 1000;
 
-Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler& syntaxHandler)
+Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler* syntaxHandler)
 : m_doc(dw), m_syntaxHandler(syntaxHandler), m_lines(lines), m_syntax_end(0), m_updateLineHeight(false) {
 	m_topMatches.subMatcher = NULL;
 	m_topStyle = NULL;
@@ -28,6 +33,10 @@ Styler_Syntax::Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHa
 #ifdef __WXDEBUG__
 	m_verifyEnabled = true;
 #endif
+}
+
+bool Styler_Syntax::IsParsed() const {
+	return !IsOk() || m_syntax_end == m_doc.GetLength();
 }
 
 void Styler_Syntax::Clear() {
@@ -71,7 +80,7 @@ void Styler_Syntax::ReStyleSub(const submatch& sm) {
 }
 
 bool Styler_Syntax::UpdateSyntax() {
-	const cxSyntaxInfo* si = m_syntaxHandler.GetSyntax(m_doc);
+	const cxSyntaxInfo* si = m_syntaxHandler->GetSyntax(m_doc);
 	if (!si) return false; // No new syntax found
 
 	if (si->topmatcher != m_topMatches.subMatcher) {
@@ -84,7 +93,7 @@ bool Styler_Syntax::UpdateSyntax() {
 }
 
 void Styler_Syntax::SetSyntax(const wxString& syntaxName, const wxString& ext) {
-	const cxSyntaxInfo* si = m_syntaxHandler.GetSyntax(syntaxName, ext);
+	const cxSyntaxInfo* si = m_syntaxHandler->GetSyntax(syntaxName, ext);
 	if (!si) {
 		wxASSERT(false);
 		Clear(); // No syntax found
@@ -109,7 +118,7 @@ void Styler_Syntax::SetSyntax(const wxString& syntaxName, const wxString& ext) {
 
 const deque<const wxString*> Styler_Syntax::GetScope(unsigned int pos) {
 	wxASSERT(pos <= m_doc.GetLength());
-	if(!m_topMatches.subMatcher) return deque<const wxString*>(); // no active syntax
+	if(!HaveActiveSyntax()) return deque<const wxString*>();
 
 	// Make sure the syntax is valid
 	ParseTo(pos);
@@ -121,7 +130,6 @@ const deque<const wxString*> Styler_Syntax::GetScope(unsigned int pos) {
 	}
 
 	GetSubScope(pos, m_topMatches, scopes);
-
 	return scopes;
 }
 
@@ -145,7 +153,7 @@ void Styler_Syntax::GetSubScope(unsigned int pos, const submatch& sm, deque<cons
 
 const deque<interval> Styler_Syntax::GetScopeIntervals(unsigned int pos) const {
 	wxASSERT(pos <= m_doc.GetLength());
-	if(!m_topMatches.subMatcher) return deque<interval>(); // no active syntax
+	if(!HaveActiveSyntax()) return deque<interval>();
 
 	deque<interval> scopes;
 	const wxString& topScope = m_topMatches.subMatcher->GetName();
@@ -194,8 +202,7 @@ const style* Styler_Syntax::GetStyle(stxmatch& m) const {
 		scopes.push_front(&topScope);
 	}
 
-	const style* st = m_syntaxHandler.GetStyle(scopes);
-
+	const style* st = m_syntaxHandler->GetStyle(scopes);
 	return st;
 }
 
@@ -298,7 +305,7 @@ void Styler_Syntax::XmlText(unsigned int offset, const submatch& sm, unsigned in
 }
 
 void Styler_Syntax::GetSymbols(vector<SymbolRef>& symbols) const {
-	if(!m_topMatches.subMatcher) return; // no active syntax
+	if(!HaveActiveSyntax()) return;
 
 	deque<const wxString*> scopes;
 
@@ -310,7 +317,7 @@ void Styler_Syntax::GetSymbols(vector<SymbolRef>& symbols) const {
 
 	// Check for matching symbol
 	const wxString* transform;
-	if (m_syntaxHandler.ShowSymbol(scopes, transform)) {
+	if (m_syntaxHandler->ShowSymbol(scopes, transform)) {
 		const SymbolRef sr = {0, m_doc.GetLength(), transform};
 		symbols.push_back(sr);
 	}
@@ -330,7 +337,7 @@ void Styler_Syntax::GetSubSymbols(unsigned int offset, const submatch& sm, deque
 
 			// Check for matching symbol
 			const wxString* transform;
-			if (m_syntaxHandler.ShowSymbol(scopes, transform)) {
+			if (m_syntaxHandler->ShowSymbol(scopes, transform)) {
 				const SymbolRef sr = {offset+m.start, offset+m.end, transform};
 				symbols.push_back(sr);
 
@@ -352,7 +359,7 @@ void Styler_Syntax::GetSubSymbols(unsigned int offset, const submatch& sm, deque
 }
 
 void Styler_Syntax::Style(StyleRun& sr) {
-	if (!m_topMatches.subMatcher) return;
+	if (!HaveActiveSyntax()) return;
 
 	unsigned int sr_end = sr.GetRunEnd();
 
@@ -430,13 +437,13 @@ void Styler_Syntax::DoStyle(StyleRun& sr, unsigned int offset, const auto_vector
 }
 
 void Styler_Syntax::DoSearch(unsigned int start, unsigned int end, unsigned int limit) {
-	wxASSERT(start >= 0 && start < m_doc.GetLength());
-	wxASSERT(end > start && end <= m_doc.GetLength());
+	wxASSERT(0 <= start && start < m_doc.GetLength());
+	wxASSERT(start < end && end <= m_doc.GetLength());
 	wxASSERT(limit <= m_doc.GetLength());
-	wxASSERT(m_topMatches.subMatcher);
+	wxASSERT(HaveActiveSyntax());
 	
 	// Don't try to parse if there is no valid parser
-	if (!m_topMatches.subMatcher) {
+	if (!HaveActiveSyntax()) {
 		m_syntax_end = m_lines.GetLength();
 		return;
 	}
@@ -563,38 +570,37 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 		// 1. At end of last changed line and still in same scope.
 		// 2. Hit limit
 		if (si.done) return wxMax(scopeEnd, si.pos);
-		else {
-			// The syntax highlighting may have changed the height of
-			// the line, so if we are done with line, update it.
-			/*if (m_updateLineHeight && si.pos == si.lineEnd) {
-				if (m_syntax_end < si.lineEnd) m_syntax_end = si.lineEnd; // avoid search loop
-				m_lines.UpdateParsedLine(si.line_id);
-			}*/
 
-			// Check if we can end this search
-			if (!si.hitLimit && isEndScope && (si.pos == si.changeEnd)) {
-				si.done = true;
-				return wxMax(scopeEnd, si.pos);
-			}
-			else if (si.pos >= si.limit) {
-				// If we hit limit before closing a span we have to keep it open
-				// and remove all following matches
-				si.hitLimit = true;
-				submatches.flags &= ~cxSPAN_IS_CLOSED;
-				if (next_match != matches.end()) matches.erase(next_match, matches.end());
-				return si.limit;
-			}
-			else if (si.pos == si.lineEnd) {
-				// Advance to next line
-				++si.line_id;
-				si.lineStart = si.lineEnd;
-				si.lineEnd = m_lines.GetLineEndpos(si.line_id, false);
-				cxLOCKDOC_READ(m_doc)
-					doc.GetTextPart(si.lineStart, si.lineEnd, si.line);
-				cxENDLOCK
-				si.lineLen = si.lineEnd - si.lineStart;
-				zeromatch = -1;
-			}
+		// The syntax highlighting may have changed the height of
+		// the line, so if we are done with line, update it.
+		/*if (m_updateLineHeight && si.pos == si.lineEnd) {
+			if (m_syntax_end < si.lineEnd) m_syntax_end = si.lineEnd; // avoid search loop
+			m_lines.UpdateParsedLine(si.line_id);
+		}*/
+
+		// Check if we can end this search
+		if (!si.hitLimit && isEndScope && (si.pos == si.changeEnd)) {
+			si.done = true;
+			return wxMax(scopeEnd, si.pos);
+		}
+		else if (si.pos >= si.limit) {
+			// If we hit limit before closing a span we have to keep it open
+			// and remove all following matches
+			si.hitLimit = true;
+			submatches.flags &= ~cxSPAN_IS_CLOSED;
+			if (next_match != matches.end()) matches.erase(next_match, matches.end());
+			return si.limit;
+		}
+		else if (si.pos == si.lineEnd) {
+			// Advance to next line
+			++si.line_id;
+			si.lineStart = si.lineEnd;
+			si.lineEnd = m_lines.GetLineEndpos(si.line_id, false);
+			cxLOCKDOC_READ(m_doc)
+				doc.GetTextPart(si.lineStart, si.lineEnd, si.line);
+			cxENDLOCK
+			si.lineLen = si.lineEnd - si.lineStart;
+			zeromatch = -1;
 		}
 
 		// Do the search
@@ -732,61 +738,61 @@ void Styler_Syntax::AddCaptures(matcher& m, stxmatch& sm, unsigned int offset, c
 	wxASSERT(offset + sm.start >= si.lineStart && offset + sm.start < si.lineEnd);
 
 	// Handle captures inside eachother
-	if (rc > 0) {
-		vector<unsigned int> offsets;
-		vector<interval> ivs;
-		vector<stxmatch*> mts;
+	if (rc <= 0) return;
 
-		// All intervals are in absolute numbers
-		const interval iv(offset + sm.start, offset + sm.end);
-		wxASSERT(iv.start == si.lineStart + ovector[0] && iv.end == si.lineStart + ovector[1]);
+	vector<unsigned int> offsets;
+	vector<interval> ivs;
+	vector<stxmatch*> mts;
 
-		ivs.push_back(iv);
-		mts.push_back(&sm);
+	// All intervals are in absolute numbers
+	const interval iv(offset + sm.start, offset + sm.end);
+	wxASSERT(iv.start == si.lineStart + ovector[0] && iv.end == si.lineStart + ovector[1]);
 
-		for (unsigned int i = 1; (int)i < rc; ++i) {
-			if (ovector[2*i] == -1) continue;
+	ivs.push_back(iv);
+	mts.push_back(&sm);
 
-			const wxString& name = m.GetCaptureName(i);
-			if (name.empty()) continue;
+	for (unsigned int i = 1; (int)i < rc; ++i) {
+		if (ovector[2*i] == -1) continue;
 
-			const interval capiv(si.lineStart + ovector[2*i], si.lineStart + ovector[2*i+1]);
+		const wxString& name = m.GetCaptureName(i);
+		if (name.empty()) continue;
 
-			// Get the right parent match
-			while(ivs.size() > 1 && capiv.end > ivs.back().end) {
-				ivs.pop_back();
-				mts.pop_back();
-			}
-			stxmatch& parent = *mts.back();
+		const interval capiv(si.lineStart + ovector[2*i], si.lineStart + ovector[2*i+1]);
 
-			// We have to adjust the interval against the parent offset (which is absolute)
-			const int cap_start = capiv.start - ivs.back().start;
-			const int cap_end = capiv.end - ivs.back().start;
-
-			// Captures outside match (like in a non-capturing part)
-			// are not currently supported
-			const int parentLen = ivs.back().end - ivs.back().start;
-			if (cap_start < 0 || cap_end > parentLen) {
-				continue;
-			}
-
-			// Create submatch list if not there
-			if (!parent.subMatch.get()) {
-				parent.subMatch = auto_ptr<submatch>(new submatch);
-				parent.subMatch->subMatcher = NULL; // matches with captures distinguishes from spans by not having subMatcher
-			}
-
-			// Create the new match
-			auto_ptr<stxmatch> cap(new stxmatch(name, &m, cap_start, cap_end, NULL, NULL, &parent));
-
-			wxASSERT(capiv.end <= offset + sm.end);
-
-			ivs.push_back(capiv);
-			mts.push_back(cap.get());
-
-			cap->st = GetStyle(*cap); // style the match
-			parent.subMatch->matches.push_back(cap);
+		// Get the right parent match
+		while(ivs.size() > 1 && capiv.end > ivs.back().end) {
+			ivs.pop_back();
+			mts.pop_back();
 		}
+		stxmatch& parent = *mts.back();
+
+		// We have to adjust the interval against the parent offset (which is absolute)
+		const int cap_start = capiv.start - ivs.back().start;
+		const int cap_end = capiv.end - ivs.back().start;
+
+		// Captures outside match (like in a non-capturing part)
+		// are not currently supported
+		const int parentLen = ivs.back().end - ivs.back().start;
+		if (cap_start < 0 || cap_end > parentLen) {
+			continue;
+		}
+
+		// Create submatch list if not there
+		if (!parent.subMatch.get()) {
+			parent.subMatch = auto_ptr<submatch>(new submatch);
+			parent.subMatch->subMatcher = NULL; // matches with captures distinguishes from spans by not having subMatcher
+		}
+
+		// Create the new match
+		auto_ptr<stxmatch> cap(new stxmatch(name, &m, cap_start, cap_end, NULL, NULL, &parent));
+
+		wxASSERT(capiv.end <= offset + sm.end);
+
+		ivs.push_back(capiv);
+		mts.push_back(cap.get());
+
+		cap->st = GetStyle(*cap); // style the match
+		parent.subMatch->matches.push_back(cap);
 	}
 }
 
@@ -858,58 +864,58 @@ void Styler_Syntax::CreateSpan(unsigned int starterStart, unsigned int starterEn
 }
 
 void Styler_Syntax::ReInitSpan(span_matcher& sm, unsigned int start, const SearchInfo& si, int rc, int* ovector) {
-	if (sm.HasEndCaptures()) {
-		match_matcher& spanstarter = *sm.GetStartMatcher();
+	if (!sm.HasEndCaptures()) return;
 
-		unsigned int lineStart;
-		unsigned int lineEnd;
-		unsigned int lineLen;
-		vector<char> line; // TODO: make member variable
-		const char* ptrLine = NULL;
-		bool usingSi;
+	match_matcher& spanstarter = *sm.GetStartMatcher();
 
-		// Check if we can reuse current line info
-		if (start >= si.lineStart && start < si.lineEnd) {
-			usingSi = true;
-			lineStart = si.lineStart;
-			lineEnd = si.lineEnd;
-			lineLen = si.lineLen;
-			ptrLine = &*si.line.begin();
-		}
-		else {
-			usingSi = false;
-			lineStart = start; // TODO: set to start-of-line
-			cxLOCKDOC_READ(m_doc)
-				lineEnd = doc.GetLine(lineStart, line);
-			cxENDLOCK
-			lineLen = lineEnd - lineStart;
-			ptrLine = &*line.begin();
-		}
+	unsigned int lineStart;
+	unsigned int lineEnd;
+	unsigned int lineLen;
+	vector<char> line; // TODO: make member variable
+	const char* ptrLine = NULL;
+	bool usingSi;
 
-		if (!ovector) {
-			// Re-search for the starter to get captures
-			// (only needed if we are not in a current search)
-			pcre* subRe = spanstarter.GetMatchPattern();
-			const int OVECCOUNT = 30;
-			int ov[OVECCOUNT];
-			ovector = ov;
-			const int search_options = PCRE_NO_UTF8_CHECK;
-			rc = pcre_exec(
-				subRe,                // the compiled pattern
-				NULL,                 // extra data - if we study the pattern
-				ptrLine,              // the subject string
-				lineLen,              // the length of the subject
-				start - lineStart,    // start at offset in the subject
-				search_options,       // options
-				ovector,              // output vector for substring information
-				OVECCOUNT);           // number of elements in the output vector
-		}
+	// Check if we can reuse current line info
+	if (start >= si.lineStart && start < si.lineEnd) {
+		usingSi = true;
+		lineStart = si.lineStart;
+		lineEnd = si.lineEnd;
+		lineLen = si.lineLen;
+		ptrLine = &*si.line.begin();
+	}
+	else {
+		usingSi = false;
+		lineStart = start; // TODO: set to start-of-line
+		cxLOCKDOC_READ(m_doc)
+			lineEnd = doc.GetLine(lineStart, line);
+		cxENDLOCK
+		lineLen = lineEnd - lineStart;
+		ptrLine = &*line.begin();
+	}
 
-		// ReInit span_matcher to get an updated ender
-		if (rc > 0) {
-			const vector<char>& lineref = (usingSi ? si.line : line);
-			sm.ReInit(lineref, ovector, rc);
-		}
+	if (!ovector) {
+		// Re-search for the starter to get captures
+		// (only needed if we are not in a current search)
+		pcre* subRe = spanstarter.GetMatchPattern();
+		const int OVECCOUNT = 30;
+		int ov[OVECCOUNT];
+		ovector = ov;
+		const int search_options = PCRE_NO_UTF8_CHECK;
+		rc = pcre_exec(
+			subRe,                // the compiled pattern
+			NULL,                 // extra data - if we study the pattern
+			ptrLine,              // the subject string
+			lineLen,              // the length of the subject
+			start - lineStart,    // start at offset in the subject
+			search_options,       // options
+			ovector,              // output vector for substring information
+			OVECCOUNT);           // number of elements in the output vector
+	}
+
+	// ReInit span_matcher to get an updated ender
+	if (rc > 0) {
+		const vector<char>& lineref = (usingSi ? si.line : line);
+		sm.ReInit(lineref, ovector, rc);
 	}
 }
 
@@ -1200,7 +1206,7 @@ void Styler_Syntax::ParseTo(unsigned int pos) {
 }
 
 bool Styler_Syntax::OnIdle() {
-	if (!m_topMatches.subMatcher) return false;
+	if (!HaveActiveSyntax()) return false;
 
 	// Extend syntax a bit longer
 	if (m_syntax_end < m_doc.GetLength()) {
@@ -1286,28 +1292,27 @@ void Styler_Syntax::Verify() const {
 }
 
 void Styler_Syntax::VerifyMatch(const stxmatch* m) const {
-	if (m->subMatch.get()) {
-		const auto_vector<stxmatch>& matches = m->subMatch->matches;
+	if (!m->subMatch.get()) return;
+	const auto_vector<stxmatch>& matches = m->subMatch->matches;
 
-		// Check that matches are in sequence
-		for (unsigned int i = 1; i < matches.size(); ++i) {
-			const stxmatch& m1 = *matches[i-1];
-			const stxmatch& m2 = *matches[i];
+	// Check that matches are in sequence
+	for (unsigned int i = 1; i < matches.size(); ++i) {
+		const stxmatch& m1 = *matches[i-1];
+		const stxmatch& m2 = *matches[i];
 
-			wxASSERT(m1.start <= m1.end);
-			wxASSERT(m1.end <= m2.start);
-			wxASSERT(m2.start <= m2.end);
-		}
+		wxASSERT(m1.start <= m1.end);
+		wxASSERT(m1.end <= m2.start);
+		wxASSERT(m2.start <= m2.end);
+	}
 
-		// Check that last match is within bonds
-		if (!matches.empty()) {
-			wxASSERT(matches.back()->end <= (m->end - m->start));
-		}
+	// Check that last match is within bonds
+	if (!matches.empty()) {
+		wxASSERT(matches.back()->end <= (m->end - m->start));
+	}
 
-		// Check all subMatches
-		for (unsigned int i2 = 0; i2 < matches.size(); ++i2) {
-			VerifyMatch(matches[i2]);
-		}
+	// Check all subMatches
+	for (unsigned int i2 = 0; i2 < matches.size(); ++i2) {
+		VerifyMatch(matches[i2]);
 	}
 }
 

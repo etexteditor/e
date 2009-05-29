@@ -33,11 +33,11 @@
 #endif
 using namespace std;
 
-class TmSyntaxHandler;
+class ITmThemeHandler;
 
 class ThemeEditor : public wxDialog {
 public:
-	ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler);
+	ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler);
 	~ThemeEditor();
 
 	static bool ParseColour(const char* text, wxColour& colour, unsigned int& alpha);
@@ -126,7 +126,7 @@ private:
 	};
 
 	// Member variables
-	TmSyntaxHandler& m_syntaxHandler;
+	ITmThemeHandler& m_syntaxHandler;
 	PListHandler& m_plistHandler;
 	PListDict m_themeDict;
 	vector<PListHandler::cxItemRef> m_themes;

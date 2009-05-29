@@ -1,12 +1,16 @@
 #include "BundleItemEditorCtrl.h"
+
+#include <wx/regex.h>
+#include <wx/tokenzr.h>
+
 #include "Catalyst.h"
-#include "IUpdatePanel.h"
+#include "plistHandler.h"
 #include "jsonreader.h"
 #include "tm_syntaxhandler.h"
-#include <wx/tokenzr.h>
-#include <wx/regex.h>
-
 #include "EditorFrame.h" // For ShowOutput() method; refator after other bundle-specific editing is pulled up to this class.
+
+#include "IUpdatePanel.h"
+
 
 // Document Icons
 #include "document.xpm"
@@ -250,7 +254,7 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 	wxBusyCursor wait; // Show user that we are reloading
 	if (m_bundleType == BUNDLE_PREF || m_bundleType == BUNDLE_LANGUAGE) {
 		// we have to call LoadBundles since all syntaxes will have to be reloaded
-		m_syntaxHandler.LoadBundles(TmSyntaxHandler::cxRELOAD);
+		m_syntaxHandler.LoadBundles(cxRELOAD);
 	}
 	else m_syntaxHandler.ReParseBundles();
 

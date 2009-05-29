@@ -14,8 +14,8 @@
 #include "ThemeEditor.h"
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
-#include "tm_syntaxhandler.h"
 #include "Strings.h"
+#include "ITmThemeHandler.h"
 
 enum {
 	CTRL_FONTSELECT,
@@ -61,7 +61,7 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_COMBOBOX(CTRL_FONTQUALITY, ThemeEditor::OnFontQuality)
 END_EVENT_TABLE()
 
-ThemeEditor::ThemeEditor(wxWindow *parent, TmSyntaxHandler& syntaxHandler)
+ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
    m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
    m_themeNdx(-1), m_currentRow(-1) {

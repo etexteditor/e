@@ -18,14 +18,12 @@
 #ifndef __TM_SYNTAXHANDLER_H__
 #define __TM_SYNTAXHANDLER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/wx.h>
 #endif
 
-#include "plistHandler.h"
-#include "tmTheme.h"
-#include "tmKey.h"
+#include <wx/filename.h>
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -38,11 +36,26 @@
     #pragma warning(pop)
 #endif
 
-#include <wx/dir.h>
-
 using namespace std;
 
+#include "tmBundle.h"
+#include "tmAction.h"
+#include "tmCommand.h"
+#include "SyntaxInfo.h"
+
+#include "tmTheme.h"
+#include "tmKey.h"
+
+#include "IGetPListHandlerRef.h"
+#include "ITmThemeHandler.h"
+#include "ITmGetSyntaxes.h"
+#include "ITmLoadBundles.h"
+
 // Pre-definitions
+class PListHandler;
+class PListDict;
+class PListArray;
+
 class IEditorDoAction;
 
 class matcher;
@@ -53,49 +66,9 @@ class group_matcher;
 class TiXmlElement;
 
 class DocumentWrapper;
-
 class Dispatcher;
 
 struct style;
-class TmSyntaxHandler;
-
-struct tmBundle {
-	unsigned int bundleRef;
-	wxString name;
-	wxString uuid;
-	wxFileName path;
-};
-
-class tmAction {
-public:
-	tmAction() :  isUnix(true), bundle(NULL), contentLoaded(false) {};
-	virtual ~tmAction() {};
-
-	virtual bool IsSnippet() const {return false;};
-	virtual bool IsCommand() const {return false;};
-	virtual bool IsDrag() const {return false;};
-	virtual bool IsSyntax() const {return false;};
-	void SwapContent(vector<char>& c) {
-		cmdContent.swap(c);
-		contentLoaded = true;
-	};
-
-	// Member variables
-	bool isUnix;
-	wxString name;
-	wxString uuid;
-	wxString scope;
-	wxString trigger;
-	tmKey key;
-	const tmBundle* bundle;
-
-private:
-	friend class TmSyntaxHandler;
-
-	unsigned int plistRef;
-	mutable bool contentLoaded;
-	mutable vector<char> cmdContent;
-};
 
 class tmSnippet : public tmAction {
 public:
@@ -103,29 +76,6 @@ public:
 	virtual ~tmSnippet() {};
 };
 
-class tmCommand : public tmAction {
-public:
-	tmCommand()
-	: save(csNONE), input(ciNONE), inputXml(false), fallbackInput(ciNONE), output(coNONE) {};
-	virtual ~tmCommand() {};
-
-	bool IsCommand() const {return true;};
-
-	enum CmdSave {csNONE, csDOC, csALL};
-	enum CmdInput {ciNONE, ciSEL, ciDOC, ciLINE, ciWORD, ciCHAR, ciSCOPE};
-	enum CmdOutput {coNONE, coSEL, coDOC, coINSERT, coSNIPPET, coTOOLTIP, coHTML, coNEWDOC, coREPLACEDOC};
-
-	CmdSave save;
-	CmdInput input;
-	bool inputXml;
-	CmdInput fallbackInput;
-	CmdOutput output;
-};
-
-class tmActionCmp : public binary_function<tmAction*, tmAction*, bool> {
-public:
-	bool operator()(const tmAction* x, const tmAction* y) const {return x->name.CmpNoCase(y->name) < 0;};
-};
 
 class tmDragCommand : public tmCommand {
 public:
@@ -135,23 +85,6 @@ public:
 
 	wxArrayString extArray;
 };
-
-class cxSyntaxInfo : public tmAction {
-public:
-	cxSyntaxInfo(unsigned int bundleid, unsigned int syntaxid)
-		: bundleId(bundleid), syntaxId(syntaxid), topmatcher(NULL) {};
-    virtual ~cxSyntaxInfo() {};
-
-	bool IsOk() const {return !name.empty();};
-	bool IsSyntax() const {return true;};
-
-	wxArrayString filewild;
-	wxString firstline;
-	unsigned int bundleId;
-	unsigned int syntaxId;
-	matcher* topmatcher;
-};
-
 
 struct tmPrefs {
 	wxString increaseIndentPattern;
@@ -199,7 +132,7 @@ public:
 			}
 		}
 
-		// match (but there may be no targes here)
+		// match (but there may be no targets here)
 		if (targets) {
 			typename vector<const T*>::const_iterator p = targets->begin();
 			while (p != targets->end()) {
@@ -273,16 +206,14 @@ private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
 };
 
-class TmSyntaxHandler {
+class TmSyntaxHandler:
+	public ITmThemeHandler,
+	public ITmLoadBundles,
+	public ITmGetSyntaxes
+{
 public:
-	TmSyntaxHandler(Dispatcher& disp, bool clearCache);
+	TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler);
 	~TmSyntaxHandler();
-
-	enum cxBundleLoad {
-		cxINIT,
-		cxUPDATE,
-		cxRELOAD
-	};
 
 	class ShortcutMatch : public unary_function<const tmAction*, bool> {
 	public:
@@ -339,13 +270,14 @@ public:
 		const PrefType m_target;
 	};
 
+	
 	// Plists
-	PListHandler& GetPListHandler() {return m_plistHandler;};
+	virtual PListHandler& GetPListHandler() {return m_plistHandler;};
 	bool DoIdle();
 
 	// Bundle Parsing
-	void LoadBundles(cxBundleLoad mode);
-	void ReParseBundles(bool onlyMenu=false);
+	virtual void LoadBundles(cxBundleLoad mode);
+	virtual void ReParseBundles(bool onlyMenu=false);
 	void LoadSyntaxes(const vector<unsigned int>& bundles);
 	void LoadBundle(unsigned int bundeId);
 	bool AllBundlesLoaded() const {return m_nextBundle == m_bundleList.size();};
@@ -358,21 +290,20 @@ public:
 	wxFileName GetBundleSupportPath(unsigned int bundleId) const;
 
 	// Themes
-	bool SetTheme(const char* uuid);
-	void SetDefaultTheme();
-	const tmTheme& GetTheme() const {return m_currentTheme;};
-	const wxString& GetCurrentThemeName() const {return m_currentTheme.name;};
-	const wxFont& GetFont() const {return m_currentTheme.font;};
-	void SetFont(const wxFont& font);
+	virtual bool SetTheme(const char* uuid);
+	virtual void SetDefaultTheme();
+	virtual const tmTheme& GetTheme() const {return m_currentTheme;};
+	virtual const wxString& GetCurrentThemeName() const {return m_currentTheme.name;};
+	virtual const wxFont& GetFont() const {return m_currentTheme.font;};
+	virtual void SetFont(const wxFont& font);
 
 	// Syntax
-	const vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};
+	virtual const vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};
 	void GetSyntaxes(wxArrayString& nameArray) const;
 	const cxSyntaxInfo* GetSyntax(const wxString& syntaxName, const wxString& ext=wxEmptyString);
 	const cxSyntaxInfo* GetSyntax(const DocumentWrapper& document);
 
 	// Style
-	//style* GetStyle(const wxString& WXUNUSED(name)) const {return NULL;};
 	const style* GetStyle(const deque<const wxString*>& scopes) const;
 
 	// Actions
@@ -463,25 +394,8 @@ private:
 		bool operator()(const char* x, const char* y) const {return strcmp(x,y) < 0;};
 	};
 
-	class DirTraverserSimple : public wxDirTraverser
-    {
-    public:
-        DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) { }
-        virtual wxDirTraverseResult OnFile(const wxString& WXUNUSED(filename))
-        {
-            return wxDIR_IGNORE;
-        }
-        virtual wxDirTraverseResult OnDir(const wxString& dirname)
-        {
-            m_dirs.Add(dirname);
-			return wxDIR_IGNORE;
-        }
-    private:
-        wxArrayString& m_dirs;
-    };
-
 	// Member variables
-	PListHandler m_plistHandler;
+	PListHandler& m_plistHandler;
 	Dispatcher& m_dispatcher;
 	tmTheme m_defaultTheme;
 	tmTheme m_currentTheme;

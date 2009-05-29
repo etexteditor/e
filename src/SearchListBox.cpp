@@ -31,7 +31,7 @@ SearchListBox::SearchListBox(wxWindow* parent, wxWindowID id)
 	wxClientDC dc(this);
 	dc.SetFont(m_font);
 	dc.GetTextExtent(wxT("Xj"), &x, &m_itemHeight);
-	m_itemHeight += 4; // Add a bit of margen
+	m_itemHeight += 4; // Add a bit of margin
 
 	m_topMargen = 1;
 	m_leftMargen = 1;

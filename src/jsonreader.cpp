@@ -19,7 +19,6 @@
 #include <wx/log.h>
 
 
-
 /*! \class wxJSONReader
  \brief The JSON parser
 
@@ -1938,11 +1937,3 @@ wxJSONReader::DoStrto_ll( const wxString& str, wxUint64* ui64, wxChar* sign )
 }
 
 #endif       // defined( wxJSON_64BIT_INT )
-
-/*
-{
-}
-*/
-
-
-

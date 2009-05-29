@@ -14,7 +14,11 @@
 #ifndef __PROJECTPANE_H__
 #define __PROJECTPANE_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include <wx/treectrl.h>
 #include <wx/filename.h>
 #include <wx/dnd.h>
@@ -50,7 +54,7 @@ class cxRemoteAction;
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
-	ProjectPane(IFrameProjectService& parent, wxWindowID id = wxID_ANY);
+	ProjectPane(IFrameProjectService& projectServce, wxWindow*parent, wxWindowID id = wxID_ANY);
 	~ProjectPane();
 
 	bool IsFocused() const;
@@ -181,7 +185,7 @@ private:
 	wxButton* m_settingsButton;
 
 	// Member variables
-	IFrameProjectService& m_parentFrame;
+	IFrameProjectService& m_projectService;
 	ProjectInfoHandler m_infoHandler;
 	wxImageList m_imageList;
 	void* m_dirWatchHandle;

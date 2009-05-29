@@ -1,7 +1,11 @@
 #ifndef __EDOCUMENTPATH_H__
 #define __EDOCUMENTPATH_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/string.h>
+#endif
+
 #include <wx/filename.h>
 
 class eDocumentPath

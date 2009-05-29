@@ -14,23 +14,30 @@
 #ifndef __BUNDLEMANAGER_H__
 #define __BUNDLEMANAGER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/listctrl.h>
-#include "plistHandler.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "RemoteThread.h"
 #include "IHtmlWnd.h"
+#include "BundleInfo.h"
 
 // pre-definitions
-class TmSyntaxHandler;
-class IFrameRemoteThread;
+class ITmLoadBundles;
+class PListHandler;
+class wxFileName;
 class wxProgressDialog;
+class wxListCtrl;
+class wxListEvent;
+
 #ifdef __WXMSW__
 class wxIEHtmlWin;
 #endif
 
 class BundleManager : public wxDialog {
 public:
-	BundleManager(IFrameRemoteThread& parent, TmSyntaxHandler& syntaxHandler);
+	BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLoadBundles* syntaxHandler);
 	~BundleManager();
 
 	bool NeedBundleReload() const {return m_needBundleReload;};
@@ -86,12 +93,11 @@ private:
 	};
 
 	// Member variables
-	IFrameRemoteThread& m_parentFrame;
 	RemoteThread& m_remoteThread;
-	TmSyntaxHandler& m_syntaxHandler;
+	ITmLoadBundles* m_syntaxHandler;
 	PListHandler& m_plistHandler;
 	wxString m_tempFile;
-	vector<PListHandler::cxBundleInfo> m_installedBundles;
+	vector<cxBundleInfo> m_installedBundles;
 	vector<RepoInfo> m_repositories;
 	bool m_allBundlesReceived;
 	bool m_needBundleReload;
@@ -101,7 +107,7 @@ private:
 	long m_currentSel;
 	wxString m_currentRepo;
 	const cxFileInfo* m_currentBundle;
-	PListHandler::cxBundleInfo* m_currentBundleInfo;
+	cxBundleInfo* m_currentBundleInfo;
 	BundleState m_currentBundleState;
 
 	// Member ctrls

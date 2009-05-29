@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include "styler_searchhl.h"
+
 #include "StyleRun.h"
 #include "Lines.h"
 #include "Document.h"
@@ -22,8 +23,8 @@ const unsigned int Styler_SearchHL::EXTSIZE = 1000;
 Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
 : m_doc(rev), m_lines(lines), m_searchRanges(ranges),
   m_theme(theme), m_hlcolor(m_theme.searchHighlightColor),
-  m_rangeColor(m_theme.shadowColor) {
-
+  m_rangeColor(m_theme.shadowColor) 
+{
 	Clear(); // Make sure all variables are empty
 }
 
@@ -79,7 +80,7 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 	//wxLogDebug("Style %u %u", rstart, rend);
 	//wxLogDebug(" %u %u - %u %u", sr_start, sr_end, m_search_start, m_search_end);
 	// Check if we need to do a new search
-	if (sr_start < m_search_start || sr_end > m_search_end) {
+	if (sr_start < m_search_start || m_search_end < sr_end) {
 		// Check if there is overlap so we can just extend the search area
 		if (sr_end > m_search_start && sr_start < m_search_end) {
 			sr_start = wxMin(sr_start, m_search_start);
@@ -135,8 +136,8 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 }
 
 void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_last) {
-	wxASSERT(start >= 0 && start < m_doc.GetLength());
-	wxASSERT(end > start && end <= m_doc.GetLength());
+	wxASSERT(0 <= start && start < m_doc.GetLength());
+	wxASSERT(start < end && end <= m_doc.GetLength());
 
 	bool matchcase = m_options & FIND_MATCHCASE;
 
@@ -163,21 +164,20 @@ void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_l
 		cxENDLOCK
 
 		if (result.error_code < 0 || result.start >= end) break;
-		else {
-			// Add new match to list
-			const interval iv(result.start, result.end);
-			if (from_last) m_matches.push_back(iv);
-			else {
-				// Check if we have hit a previous match
-				while (next_match != m_matches.end() && result.end > next_match->start) {
-					// if not equivalent, replace and continue
-					if (next_match->start == result.start && next_match->end == result.end)	break;
-					else next_match = m_matches.erase(next_match);
-				}
 
-				next_match = m_matches.insert(next_match, iv);
-				++next_match;
+		// Add new match to list
+		const interval iv(result.start, result.end);
+		if (from_last) m_matches.push_back(iv);
+		else {
+			// Check if we have hit a previous match
+			while (next_match != m_matches.end() && result.end > next_match->start) {
+				// if not equivalent, replace and continue
+				if (next_match->start == result.start && next_match->end == result.end)	break;
+				next_match = m_matches.erase(next_match);
 			}
+
+			next_match = m_matches.insert(next_match, iv);
+			++next_match;
 		}
 
 		// Avoid never ending loop if zero-length match
@@ -186,8 +186,8 @@ void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_l
 }
 
 void Styler_SearchHL::Insert(unsigned int pos, unsigned int length) {
-	wxASSERT(pos >= 0 && pos < m_doc.GetLength());
-	wxASSERT(length >= 0 && pos+length <= m_doc.GetLength());
+	wxASSERT(0 <= pos && pos < m_doc.GetLength());
+	wxASSERT(0 <= length && pos+length <= m_doc.GetLength());
 	if (m_text.empty()) return;
 
 	// Adjust start & end
@@ -236,7 +236,7 @@ void Styler_SearchHL::Insert(unsigned int pos, unsigned int length) {
 }
 
 void Styler_SearchHL::Delete(unsigned int start_pos, unsigned int end_pos) {
-	wxASSERT(start_pos >= 0 && start_pos <= m_doc.GetLength());
+	wxASSERT(0 <= start_pos && start_pos <= m_doc.GetLength());
 	if (m_text.empty()) return;
 
 	if (start_pos == end_pos) return;
@@ -268,32 +268,31 @@ void Styler_SearchHL::Delete(unsigned int start_pos, unsigned int end_pos) {
 			DoSearch(search_start, m_search_end, true);
 			return;
 		}
-		else {
-			// Find matches touched by deletion and remove those. Update all following
-			bool is_first = true;
-			vector<interval>::iterator p = m_matches.begin();
-			while (p != m_matches.end()) {
-				if (p->end > start_pos) {
-					// Remember first valid match before pos
-					if (is_first) {
-						if (p != m_matches.begin()) search_start = (p-1)->end;
-						is_first = false;
-					}
 
-					if (p->start < end_pos) {
-						// pos inside match. Delete and continue
-						p = m_matches.erase(p);
-						if (p != m_matches.end()) continue; // new iterator
-						else break;
-					}
-					else {
-						// Move match to correct position
-						p->start -= length;
-						p->end -= length;
-					}
+		// Find matches touched by deletion and remove those. Update all following
+		bool is_first = true;
+		vector<interval>::iterator p = m_matches.begin();
+		while (p != m_matches.end()) {
+			if (p->end > start_pos) {
+				// Remember first valid match before pos
+				if (is_first) {
+					if (p != m_matches.begin()) search_start = (p-1)->end;
+					is_first = false;
 				}
-				++p;
+
+				if (p->start < end_pos) {
+					// pos inside match. Delete and continue
+					p = m_matches.erase(p);
+					if (p != m_matches.end()) continue; // new iterator
+					else break;
+				}
+				else {
+					// Move match to correct position
+					p->start -= length;
+					p->end -= length;
+				}
 			}
+			++p;
 		}
 	}
 

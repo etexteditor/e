@@ -31,12 +31,12 @@
 
 // Pre-definitions
 class EditorFrame;
-class TmSyntaxHandler;
+class ITmLoadBundles;
 class wxDragImage;
 
 class BundlePane : public wxPanel {
 public:
-	BundlePane(EditorFrame& parent, TmSyntaxHandler& syntaxHandler);
+	BundlePane(EditorFrame& parent, ITmLoadBundles* syntaxHandler);
 	void LoadBundles();
 
 private:
@@ -126,7 +126,7 @@ private:
 	// Member variables
 	EditorFrame& m_parentFrame;
 	wxImageList m_imageList;
-	TmSyntaxHandler& m_syntaxHandler;
+	ITmLoadBundles* m_syntaxHandler;
 	PListHandler& m_plistHandler;
 
 	// DnD state

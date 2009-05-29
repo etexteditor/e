@@ -30,7 +30,7 @@
 // pre-definitions
 class CloseButton;
 class eSettings;
-class EditorFrame;
+class IFrameSearchService;
 
 class wxBoxSizer;
 class wxButton;
@@ -38,7 +38,7 @@ class wxBitmapButton;
 
 class SearchPanel : public wxPanel {
 public:
-	SearchPanel(EditorFrame& editorFrame, wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	SearchPanel(IFrameSearchService& searchService, wxWindow* parent, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~SearchPanel();
 
 	// Member functions
@@ -105,7 +105,7 @@ private:
 	void OnKillFocus(wxFocusEvent& event);
 	DECLARE_EVENT_TABLE();
 
-	EditorFrame& m_editorFrame;
+	IFrameSearchService& m_searchService;
 
 	// Member controls
 	SearchEvtHandler* searchbox_evt_handler;

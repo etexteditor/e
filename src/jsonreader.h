@@ -152,7 +152,4 @@ protected:
   wxMBConv*     m_conv;
 };
 
-
 #endif			// not defined _WX_JSONREADER_H
-
-

@@ -14,19 +14,28 @@
 #ifndef __EAPP_H__
 #define __EAPP_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include <wx/snglinst.h>
 #include <wx/dynlib.h>
+
+#ifdef __WXDEBUG__
+	#include <wx/ffile.h>
+#endif
+
+#include "Catalyst.h"
 #include "mk4.h"
 #include "eIpcServer.h"
-#include <wx/ffile.h>
 #include "eSettings.h"
 #include "IAppPaths.h"
 #include "IExecuteAppCommand.h"
 
 // pre-declearations
 class TmSyntaxHandler;
+class PListHandler;
 class EditorFrame;
 
 // Constants
@@ -110,6 +119,7 @@ private:
 	Catalyst* m_pCatalyst;
 	CatalystWrapper* m_catalyst;
 	TmSyntaxHandler* m_pSyntaxHandler;
+	PListHandler* m_pListHandler;
 	wxString m_appPath;
 	wxString m_appDataPath;
 	wxArrayString m_openStack;

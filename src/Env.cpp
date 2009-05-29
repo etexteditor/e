@@ -1,6 +1,9 @@
 #include "Env.h"
+
 #include "eDocumentPath.h"
+
 #include <wx/filename.h>
+#include <wx/file.h>
 #include <wx/utils.h>
 
 void cxEnv::SetEnv(const wxString& key, const wxString& value) {
@@ -69,8 +72,6 @@ bool cxEnv::GetEnv(const wxString& key, wxString& value) {
 	value = p->second;
 	return true;
 }
-
-#include <wx/file.h>
 
 const char* cxEnv::GetEnvBlock() const {
 	// Add all lines together to a single string

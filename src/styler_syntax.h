@@ -15,9 +15,8 @@
 #define __STYLER_SYNTAX_H__
 
 #include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Document.h"
+#include "Catalyst.h"
 #include "styler.h"
-#include "pcre.h"
 #include "SymbolRef.h"
 
 // STL can't compile with Level 4
@@ -31,23 +30,24 @@
 #endif
 using namespace std;
 
+class DocumentWrapper;
 class TmSyntaxHandler;
 class StyleRun;
 class Lines;
+struct style;
 
 class matcher;
 class span_matcher;
-struct style;
 
 class Styler_Syntax : public Styler {
 public:
-	Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler& syntaxHandler);
+	Styler_Syntax(const DocumentWrapper& dw, Lines& lines, TmSyntaxHandler* syntaxHandler);
 	virtual ~Styler_Syntax() {Clear();};
 
 	const wxString& GetName() const {return m_syntaxName;};
 
 	bool IsOk() const {return m_topMatches.subMatcher != NULL;};
-	bool IsParsed() const {return !IsOk() || m_syntax_end == m_doc.GetLength();};
+	bool IsParsed() const;
 	unsigned int GetLastParsedPos() const {return m_syntax_end;};
 
 	bool UpdateSyntax();
@@ -126,6 +126,7 @@ private:
 	unsigned int Search(submatch& submatches, SearchInfo& si, unsigned int scopeStart, unsigned int scopeEnd, stxmatch* scope);
 
 	// Private methods
+	bool HaveActiveSyntax() const { return m_topMatches.subMatcher != NULL; };
 	void DoStyle(StyleRun& sr, unsigned int offset, const auto_vector<stxmatch>& matches);
 	void DoSearch(unsigned int start, unsigned int end, unsigned int limit);
 	unsigned int SubSearch(unsigned int offset, unsigned int start, unsigned int end, submatch& submatches, stxmatch* parent, bool doAdjust, bool& done);
@@ -148,7 +149,7 @@ private:
 
 	// Member variables
 	const DocumentWrapper& m_doc;
-	TmSyntaxHandler& m_syntaxHandler;
+	TmSyntaxHandler* m_syntaxHandler;
 	Lines& m_lines;
 	unsigned int m_syntax_end;
 	static const unsigned int EXTSIZE;

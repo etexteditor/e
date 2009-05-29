@@ -229,9 +229,7 @@ PListHandler::~PListHandler() {
 
 wxString PListHandler::GetSyntaxAssoc(const wxString& ext) const {
 	const int index = m_vSyntaxAssocs.Find(pExt[ext.mb_str(wxConvUTF8)]);
-
-	if (index != -1) return wxString(pSynId(m_vSyntaxAssocs[index]), wxConvUTF8);
-	return wxEmptyString;
+	return index == -1 ? wxEmptyString : wxString(pSynId(m_vSyntaxAssocs[index]), wxConvUTF8);
 }
 
 void PListHandler::SetSyntaxAssoc(const wxString& ext, const wxString& syntaxId) {
@@ -656,7 +654,7 @@ wxDateTime PListHandler::GetBundleModDate(unsigned int bundleId) const {
 	return path.GetModificationTime();
 }
 
-vector<PListHandler::cxBundleInfo> PListHandler::GetInstalledBundlesInfo() const {
+vector<cxBundleInfo> PListHandler::GetInstalledBundlesInfo() const {
 	vector<cxBundleInfo> bInfo;
 
 	for (unsigned int i = 0; (int)i < m_vBundles.GetSize(); ++i) {

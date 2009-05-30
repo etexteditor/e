@@ -17,3 +17,15 @@ TEST(eDocumentPathTest, isRemotepath) {
 
 	EXPECT_FALSE( eDocumentPath::IsRemotePath(wxT("c:\\Program Files\\SomeFile.txt")) );
 }
+
+
+TEST(eDocumentPathTest, convertsUncPathsToWin) {
+	EXPECT_STREQ( L"\\\\server\\share\\path\\to\\file.txt",
+		eDocumentPath::CygwinPathToWin(wxT("//server/share/path/to/file.txt")) );
+}
+
+TEST(eDocumentPathTest, convertsUncPathsToUnix) {
+	wxFileName uncFile( wxT("\\\\server\\share\\path\\to\\file.txt") );
+	EXPECT_STREQ( L"//server/share/path/to/file.txt",
+		eDocumentPath::WinPathToCygwin(uncFile) );
+}

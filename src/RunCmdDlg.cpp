@@ -12,8 +12,11 @@
  ******************************************************************************/
 
 #include "RunCmdDlg.h"
+
 #include <wx/gbsizer.h>
+
 #include "tmCommand.h"
+#include "eSettings.h"
 
 // control ids
 enum
@@ -22,8 +25,29 @@ enum
 };
 
 
-RunCmdDlg::RunCmdDlg(wxWindow *parent)
-:  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {
+class CommandEvtHandler : public wxEvtHandler {
+public:
+	CommandEvtHandler(RunCmdDlg* parent): m_parent(parent) {};
+private:
+	void OnClose(wxCommandEvent& event);
+	DECLARE_EVENT_TABLE();
+
+	RunCmdDlg* m_parent;
+};
+
+BEGIN_EVENT_TABLE(CommandEvtHandler, wxEvtHandler)
+	EVT_BUTTON(wxID_OK, CommandEvtHandler::OnClose)
+END_EVENT_TABLE()
+
+void CommandEvtHandler::OnClose(wxCommandEvent& event){
+	m_parent->UpdateCommandHistory();
+	 event.Skip();
+}
+
+RunCmdDlg::RunCmdDlg(wxWindow *parent, eSettings& settings):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_settings(settings)
+{
 	SetTitle (_("Filter Through Command"));
 
 	wxGridBagSizer* gridBagSizer = new wxGridBagSizer(5,5);
@@ -32,6 +56,8 @@ RunCmdDlg::RunCmdDlg(wxWindow *parent)
 	gridBagSizer->Add(cmdLabel, wxGBPosition(0,0), wxDefaultSpan, wxALIGN_CENTER_VERTICAL);
 
 	m_cmdCtrl = new wxComboBox(this, COMMAND_BOX);
+	RefreshCommandHistory();
+
 	gridBagSizer->Add(m_cmdCtrl, wxGBPosition(0,1), wxGBSpan(1,2), wxGROW);
 
 	wxArrayString inputOptions;
@@ -56,11 +82,14 @@ RunCmdDlg::RunCmdDlg(wxWindow *parent)
 	gridBagSizer->Add(m_outputBox, wxGBPosition(1,2), wxDefaultSpan, wxGROW);
 
 	wxButton* cancelButton = new wxButton(this, wxID_CANCEL);
-	wxButton* executeButton = new wxButton(this, wxID_OK, _("Execute"));
-	executeButton->SetDefault();
+
+	m_executeButton = new wxButton(this, wxID_OK, _("Execute"));
+	m_executeButton->SetDefault();
+	m_executeButton->PushEventHandler(new CommandEvtHandler(this));
+
 	wxStdDialogButtonSizer* buttonSizer = new wxStdDialogButtonSizer;
 	buttonSizer->AddButton(cancelButton);
-	buttonSizer->AddButton(executeButton);
+	buttonSizer->AddButton(m_executeButton);
 	buttonSizer->Realize();
 	gridBagSizer->Add(buttonSizer, wxGBPosition(2,1), wxGBSpan(1,2), wxALIGN_BOTTOM);
 
@@ -70,6 +99,10 @@ RunCmdDlg::RunCmdDlg(wxWindow *parent)
 	SetSizer(gridBagSizer);
 	gridBagSizer->SetSizeHints(this);
 	Centre();
+}
+
+RunCmdDlg::~RunCmdDlg() {
+	m_executeButton->PopEventHandler(true);
 }
 
 tmCommand RunCmdDlg::GetCommand() const {
@@ -123,4 +156,24 @@ tmCommand RunCmdDlg::GetCommand() const {
 	}
 
 	return cmd;
+}
+
+void RunCmdDlg::RefreshCommandHistory() {
+	// Clear() also deletes the text in search box, so we have to cache it
+	const wxString repText = m_cmdCtrl->GetValue();
+	m_cmdCtrl->Clear();
+	m_cmdCtrl->SetValue(repText);
+
+	for (size_t i = 0; i < m_settings.GetFilterCommandHistoryCount(); i++) {
+		const wxString pattern = m_settings.GetFilterCommand(i);
+		m_cmdCtrl->Append(pattern);
+	}
+}
+
+void RunCmdDlg::UpdateCommandHistory() {
+	if (m_cmdCtrl->GetValue().IsEmpty()) return;
+
+	if (m_settings.AddFilterCommand(m_cmdCtrl->GetValue())) {
+		RefreshCommandHistory();
+	}
 }

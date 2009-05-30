@@ -20,14 +20,22 @@
 #endif
 
 class tmCommand;
+class eSettings;
 
 class RunCmdDlg : public wxDialog {
 public:
-	RunCmdDlg(wxWindow *parent);
+	RunCmdDlg(wxWindow *parent, eSettings& settings);
+	virtual ~RunCmdDlg();
 
 	tmCommand GetCommand() const;
 
+	void UpdateCommandHistory();
+	void RefreshCommandHistory();
+
 private:
+	eSettings& m_settings;
+
+	wxButton* m_executeButton;
 	wxComboBox* m_cmdCtrl;
 	wxRadioBox* m_inputBox;
 	wxRadioBox* m_outputBox;

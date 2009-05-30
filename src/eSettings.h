@@ -14,7 +14,11 @@
 #ifndef __ESETTINGS_H__
 #define __ESETTINGS_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/string.h>
+#endif
+
 #include "jsonval.h"
 #include "Catalyst.h"
 #include "auto_vector.h"
@@ -70,9 +74,16 @@ public:
 	size_t GetSearchCount() const;
 	void GetSearch(size_t item, wxString& pattern, bool& isRegex, bool& matchCase) const;
 	bool AddSearch(const wxString& pattern, bool isRegex, bool matchCase);
+
+	// Replace History
 	size_t GetReplaceCount() const;
-	wxString GetReplace(size_t item) const;
+	wxString GetReplace(size_t ndx) const;
 	bool AddReplace(const wxString& pattern);
+
+	// Filter through command History
+	size_t GetFilterCommandHistoryCount() const;
+	wxString GetFilterCommand(size_t ndx) const;
+	bool AddFilterCommand(const wxString& command);
 
 private:
 	// Recent files (support functions)

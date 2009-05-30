@@ -1362,7 +1362,7 @@ bool EditorCtrl::DoTabTrigger(unsigned int wordstart, unsigned int wordend) {
 }
 
 void EditorCtrl::FilterThroughCommand() {
-	RunCmdDlg dlg(this);
+	RunCmdDlg dlg(this, eGetSettings());
 	if (dlg.ShowModal() == wxID_OK) {
 		const tmCommand cmd = dlg.GetCommand();
 		DoAction(cmd, NULL, false);

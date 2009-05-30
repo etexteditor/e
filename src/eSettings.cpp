@@ -603,3 +603,44 @@ bool eSettings::AddReplace(const wxString& pattern) {
 
 	return true;
 }
+
+
+size_t eSettings::GetFilterCommandHistoryCount() const {
+	if (!m_jsonRoot.HasMember(wxT("filterCommandHistory"))) return 0;
+
+	const wxJSONValue values = m_jsonRoot.ItemAt(wxT("filterCommandHistory"));
+	return values.Size();
+}
+
+wxString eSettings::GetFilterCommand(size_t ndx) const {
+	const wxJSONValue values = m_jsonRoot.ItemAt(wxT("filterCommandHistory"));
+	wxASSERT((int)ndx < values.Size());
+
+	return values.ItemAt(ndx).AsString();
+}
+
+bool eSettings::AddFilterCommand(const wxString& command) {
+	wxJSONValue& values = m_jsonRoot[wxT("filterCommandHistory")];
+
+	// Don't add duplicates
+	if (values.Size() > 0) {
+		const wxJSONValue last = values.ItemAt(0);
+		if (last.AsString() == command) return false;
+		
+		// Check if there should be a duplicate lower down
+		for (int i = 0; i < values.Size(); ++i) {
+			if (values[i].AsString() == command) {
+				values.Remove(i);
+				break;
+			}
+		}
+	}
+	
+	// Add the new item
+	values.Insert(0, command);
+
+	// Limit number of items to save
+	if (values.Size() > 20) values.Remove(values.Size()-1);
+
+	return true;
+}

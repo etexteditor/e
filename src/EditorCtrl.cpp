@@ -7586,12 +7586,8 @@ void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
 	const int linescount = (rotation / event.GetWheelDelta()) * event.GetLinesPerAction();
 	pos = pos - (pos % m_lines.GetLineHeight()) - (m_lines.GetLineHeight() * linescount);
 
-	if (rotation > 0) { // up
-		pos = max(pos, 0);
-	}
-	else if (rotation < 0) { // down
-		pos = min(pos, m_lines.GetHeight() - size.y);
-	}
+	if (rotation > 0) pos = max(pos, 0); // up
+	else if (rotation < 0) pos = min(pos, m_lines.GetHeight() - size.y); // down
 
 	if (pos != scrollPos) {
 		scrollPos = pos;
@@ -7599,9 +7595,21 @@ void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
 	}
 }
 
+void EditorCtrl::DoHorizontalWheelScroll(wxMouseEvent& event) {
+}
+
 void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
-	if (GetScrollThumb(wxVERTICAL)) { // Only handle scrollwheel if we have a scrollbar
-		DoVerticalWheelScroll(event);
+	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
+
+	if (shiftDown) {
+		// Only handle scrollwheel if we have a scrollbar
+		if (GetScrollThumb(wxHORIZONTAL))
+			DoHorizontalWheelScroll(event);
+	}
+	else {
+		// Only handle scrollwheel if we have a scrollbar
+		if (GetScrollThumb(wxVERTICAL))
+			DoVerticalWheelScroll(event);
 	}
 }
 
@@ -7614,11 +7622,6 @@ void EditorCtrl::SetScroll(unsigned int ypos) {
 }
 
 void EditorCtrl::OnScroll(wxScrollWinEvent& event) {
-	// Remove tooltips
-	/*if (m_revTooltip.IsShown()) {
-		m_revTooltip.Hide();
-	}*/
-
 	const wxSize size = GetClientSize();
 	int pos = (event.GetOrientation() == wxVERTICAL) ? scrollPos : m_scrollPosX;
 	const int page_size = (event.GetOrientation() == wxVERTICAL) ? size.y : m_lines.GetDisplayWidth();

@@ -423,6 +423,7 @@ private:
 
 	// Called by event handlers to do the bulk of some operation.
 	void DoVerticalWheelScroll(wxMouseEvent& event);
+	void DoHorizontalWheelScroll(wxMouseEvent& event);
 
 
 	// Notification handlers

@@ -421,6 +421,10 @@ private:
 	void OnFocus(wxFocusEvent& event);
 	DECLARE_EVENT_TABLE();
 
+	// Called by event handlers to do the bulk of some operation.
+	void DoVerticalWheelScroll(wxMouseEvent& event);
+
+
 	// Notification handlers
 	static void OnSetDocument(EditorCtrl* self, void* data, int filter);
 	static void OnDocCommited(EditorCtrl* self, void* data, int filter);

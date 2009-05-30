@@ -7567,42 +7567,41 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 	CaptureMouse();
 }
 
+void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
+	const wxSize size = GetClientSize();
+	int pos = scrollPos;
+	const int rotation = event.GetWheelRotation();
+
+	if (event.GetLinesPerAction() == (int)UINT_MAX) { // signifies to scroll a page
+		wxScrollWinEvent newEvent;
+		newEvent.SetOrientation(wxVERTICAL);
+		newEvent.SetEventObject(this);
+		newEvent.SetEventType(rotation>0 ? wxEVT_SCROLLWIN_PAGEUP : wxEVT_SCROLLWIN_PAGEDOWN);
+        ProcessEvent(newEvent);
+		return;
+	}
+
+	if (rotation == 0) return;
+
+	const int linescount = (rotation / event.GetWheelDelta()) * event.GetLinesPerAction();
+	pos = pos - (pos % m_lines.GetLineHeight()) - (m_lines.GetLineHeight() * linescount);
+
+	if (rotation > 0) { // up
+		pos = max(pos, 0);
+	}
+	else if (rotation < 0) { // down
+		pos = min(pos, m_lines.GetHeight() - size.y);
+	}
+
+	if (pos != scrollPos) {
+		scrollPos = pos;
+		DrawLayout();
+	}
+}
+
 void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
-	// Remove tooltips
-	/*if (m_revTooltip.IsShown()) {
-		m_revTooltip.Hide();
-	}*/
-
 	if (GetScrollThumb(wxVERTICAL)) { // Only handle scrollwheel if we have a scrollbar
-		const wxSize size = GetClientSize();
-		int pos = scrollPos;
-		const int rotation = event.GetWheelRotation();
-
-		if (event.GetLinesPerAction() == (int)UINT_MAX) { // signifies to scroll a page
-			wxScrollWinEvent newEvent;
-			newEvent.SetOrientation(wxVERTICAL);
-			newEvent.SetEventObject(this);
-			newEvent.SetEventType(rotation>0 ? wxEVT_SCROLLWIN_PAGEUP : wxEVT_SCROLLWIN_PAGEDOWN);
-            ProcessEvent(newEvent);
-			return;
-		}
-
-		if (rotation == 0) return;
-
-		const int linescount = (rotation / event.GetWheelDelta()) * event.GetLinesPerAction();
-		pos = pos - (pos % m_lines.GetLineHeight()) - (m_lines.GetLineHeight() * linescount);
-
-		if (rotation > 0) { // up
-			pos = max(pos, 0);
-		}
-		else if (rotation < 0) { // down
-			pos = min(pos, m_lines.GetHeight() - size.y);
-		}
-
-		if (pos != scrollPos) {
-			scrollPos = pos;
-			DrawLayout();
-		}
+		DoVerticalWheelScroll(event);
 	}
 }
 
@@ -7663,8 +7662,7 @@ void EditorCtrl::OnScroll(wxScrollWinEvent& event) {
 			DrawLayout(true);
 		}
 	}
-	else {
-		// Horizontal scroll
+	else { // Horizontal scroll
 		if (pos != m_scrollPosX) {
 			m_scrollPosX = pos;
 			DrawLayout(false);

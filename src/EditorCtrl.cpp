@@ -7596,12 +7596,35 @@ void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
 }
 
 void EditorCtrl::DoHorizontalWheelScroll(wxMouseEvent& event) {
+	const wxSize size = GetClientSize();
+	int pos = m_scrollPosX;
+	const int rotation = event.GetWheelRotation();
+
+	if (event.GetLinesPerAction() == (int)UINT_MAX) { // signifies to scroll a page
+		wxScrollWinEvent newEvent;
+		newEvent.SetOrientation(wxHORIZONTAL);
+		newEvent.SetEventObject(this);
+		newEvent.SetEventType(rotation>0 ? wxEVT_SCROLLWIN_PAGEUP : wxEVT_SCROLLWIN_PAGEDOWN);
+        ProcessEvent(newEvent);
+		return;
+	}
+
+	if (rotation == 0) return;
+
+	const int scroll_amount= (rotation / event.GetWheelDelta()) * event.GetLinesPerAction();
+	pos -= 10 * scroll_amount;
+
+	if (rotation > 0) pos = max(pos, 0); // left
+	else if (rotation < 0) pos = min(pos, m_lines.GetWidth() - (int)m_lines.GetDisplayWidth()); // right
+
+	if (pos != m_scrollPosX) {
+		m_scrollPosX = pos;
+		DrawLayout();
+	}
 }
 
 void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
-	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
-
-	if (shiftDown) {
+	if (event.ShiftDown()) {
 		// Only handle scrollwheel if we have a scrollbar
 		if (GetScrollThumb(wxHORIZONTAL))
 			DoHorizontalWheelScroll(event);

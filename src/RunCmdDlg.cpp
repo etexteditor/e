@@ -15,6 +15,13 @@
 #include <wx/gbsizer.h>
 #include "tmCommand.h"
 
+// control ids
+enum
+{
+	COMMAND_BOX = 100,
+};
+
+
 RunCmdDlg::RunCmdDlg(wxWindow *parent)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {
 	SetTitle (_("Filter Through Command"));
@@ -24,7 +31,7 @@ RunCmdDlg::RunCmdDlg(wxWindow *parent)
 	wxStaticText* cmdLabel = new wxStaticText(this, wxID_ANY, _("Command:"));
 	gridBagSizer->Add(cmdLabel, wxGBPosition(0,0), wxDefaultSpan, wxALIGN_CENTER_VERTICAL);
 
-	m_cmdCtrl = new wxTextCtrl(this, wxID_ANY);
+	m_cmdCtrl = new wxComboBox(this, COMMAND_BOX);
 	gridBagSizer->Add(m_cmdCtrl, wxGBPosition(0,1), wxGBSpan(1,2), wxGROW);
 
 	wxArrayString inputOptions;

@@ -19,7 +19,6 @@
 	#include <wx/wx.h>
 #endif
 
-// pre-definitions
 class tmCommand;
 
 class RunCmdDlg : public wxDialog {
@@ -29,7 +28,7 @@ public:
 	tmCommand GetCommand() const;
 
 private:
-	wxTextCtrl* m_cmdCtrl;
+	wxComboBox* m_cmdCtrl;
 	wxRadioBox* m_inputBox;
 	wxRadioBox* m_outputBox;
 };

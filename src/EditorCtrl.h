@@ -105,6 +105,8 @@ public:
 	unsigned int GetLineFromPos(unsigned int pos) {return m_lines.GetLineFromCharPos(pos);};
 	bool IsLineEnd(unsigned int pos) {return m_lines.IsLineEnd(pos);};
 
+	void SetDocumentAndScrollPosition(int pos, int topline);
+
 	// Editing
 	void InsertChar(const wxChar& text);
 	void Insert(const wxString& text);

@@ -174,9 +174,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	}
 	else SetSyntax(syntax);
 
-	// Set lines & positions
-	m_lines.SetPos(newpos);
-	scrollPos = m_lines.GetYPosFromLine(topline);
+	SetDocumentAndScrollPosition(newpos, topline);
 
 	// Fold lines that was folded in previous session
 	if (!folds.empty()) {
@@ -200,7 +198,6 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 		AddBookmark(*p);
 	}
 }
-
 
 /// Open a document
 EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
@@ -377,7 +374,7 @@ void EditorCtrl::Init() {
 	if (!doShowMargin) marginChars = 0;
 	m_lines.ShowMargin(marginChars);
 
-	// Create a Carret to indicate edit position
+	// Create a caret to indicate edit position
 	m_caretHeight = m_lines.GetLineHeight();
 	caret = new LiveCaret(this, m_caretWidth, m_caretHeight); // will be deleted by window on destroy
 	caret->Move(0, 0);
@@ -452,6 +449,11 @@ unsigned int EditorCtrl::GetLength() const {
 
 unsigned int EditorCtrl::GetPos() const {
 	return m_lines.GetPos();
+}
+
+void EditorCtrl::SetDocumentAndScrollPosition(int pos, int topline) {
+	m_lines.SetPos(pos);
+	scrollPos = m_lines.GetYPosFromLine(topline);
 }
 
 unsigned int EditorCtrl::GetCurrentLineNumber() {

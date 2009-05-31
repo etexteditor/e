@@ -1040,9 +1040,14 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 			const wxString& path = paths[i];
 
 			if (reloaddlg.IsChecked(i)) {
+				// Get editor document & vertical scroll positions
+				const int pos = ec->GetPos();
+				const int topline = ec->GetTopLine();
+
 				const cxFileResult fileResult = ec->LoadText(path, ec->GetRemoteProfile());
 
 				if (fileResult == cxFILE_OK) {
+					ec->SetDocumentAndScrollPosition(pos, topline);
 					if (ec == editorCtrl) editorCtrl->ReDraw();
 				}
 				else {

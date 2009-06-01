@@ -186,7 +186,14 @@ void SearchPanel::InitSearch(const wxString& searchtext, bool replace) {
 	}
 
 	nosearch = true;
-	if (!searchtext.empty()) searchbox->SetValue(searchtext);
+	if (!searchtext.empty()) {
+		searchbox->SetValue(searchtext);
+
+		nextButton->Enable();
+		prevButton->Enable();
+		replaceButton->Enable();
+		allButton->Enable();
+	}
 	nosearch = false;
 
 	SetState(cxFOUND);

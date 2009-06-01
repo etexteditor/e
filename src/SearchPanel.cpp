@@ -496,12 +496,24 @@ void SearchPanel::SeperatorLine::OnEraseBackground(wxEraseEvent& WXUNUSED(event)
 // -- SearchEvtHandler -----------------------------------------------------------------
 
 BEGIN_EVENT_TABLE(SearchPanel::SearchEvtHandler, wxEvtHandler)
+	EVT_KEY_DOWN(SearchPanel::SearchEvtHandler::OnKeyDown)
 	EVT_CHAR(SearchPanel::SearchEvtHandler::OnChar)
 	EVT_KILL_FOCUS(SearchPanel::SearchEvtHandler::OnFocusLost)
 END_EVENT_TABLE()
 
 SearchPanel::SearchEvtHandler::SearchEvtHandler(wxWindow* parent)
 : parent(parent) {
+}
+
+void SearchPanel::SearchEvtHandler::OnKeyDown(wxKeyEvent &event) {
+	// When wxTE_PROCESS_ENTER is set, we have to manually process tab
+	if (event.GetKeyCode() == WXK_TAB) {
+		const int direction = wxGetKeyState(WXK_SHIFT) ? 0 : wxNavigationKeyEvent::IsForward;
+		((wxWindow*)event.GetEventObject())->Navigate(direction);
+		return;
+	}
+
+	event.Skip();
 }
 
 void SearchPanel::SearchEvtHandler::OnChar(wxKeyEvent &evt) {

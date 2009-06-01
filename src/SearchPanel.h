@@ -73,6 +73,7 @@ private:
 		SearchEvtHandler(wxWindow* parent);
 	private:
 		// Event handlers
+		void OnKeyDown(wxKeyEvent &evt);
 		void OnChar(wxKeyEvent &evt);
 		void OnFocusLost(wxFocusEvent& evt);
 		DECLARE_EVENT_TABLE();

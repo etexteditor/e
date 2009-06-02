@@ -1518,25 +1518,30 @@ void EditorFrame::ShowBundlePane() {
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
 	projectPane.Caption(_("Bundles"));
 
-	if (projectPane.window == m_projectPane) {
-		// If the project pane is active, hide it, and activate the bundle pane
-		m_projectPane->Hide();
+	const bool showPane = !projectPane.IsShown() || projectPane.window != m_bundlePane;
+
+	if (showPane) {
 		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, &m_syntax_handler);
-		projectPane.Window(m_bundlePane);	
-	}
+
+		if (projectPane.window != m_bundlePane) {
+			projectPane.Window(m_bundlePane);
+			if (m_projectPane) m_projectPane->Hide();
+		}
+
+		projectPane.Show();
+		m_frameManager.Update();
+	} 
 	else {
-		// Otherwise, the bundle pane is active; return if it is already showing.
-		wxASSERT(projectPane.window == m_bundlePane);
-		if (projectPane.IsShown()) return;
+		// WORKAROUND: Aui does not save size between hide/show
+		projectPane.BestSize(projectPane.window->GetSize());
+		projectPane.Hide();
+		m_frameManager.Update();
+		editorCtrl->SetFocus();
 	}
 
-	projectPane.Show();
-	m_frameManager.Update();
-
-	m_settings.SetSettingBool(wxT("showproject"), true);
-	m_settings.SetSettingString(wxT("project"), wxT("cx:bundles"));
+	m_settings.SetSettingBool(wxT("showproject"), showPane);
+	if (showPane) m_settings.SetSettingString(wxT("project"), wxT("cx:bundles"));
 }
-
 
 void EditorFrame::OnMenuShowProject(wxCommandEvent& WXUNUSED(event)) {
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));

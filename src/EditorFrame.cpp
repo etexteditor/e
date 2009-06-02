@@ -633,7 +633,6 @@ void EditorFrame::InitMenus() {
 
 void EditorFrame::RestoreState() {
 #ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
-	// Shouldn't this function be using m_settings instead of retreiving them again?
 	const unsigned int pagecount = m_settings.GetPageCount();
 
 	if (pagecount <= 0) {
@@ -1505,10 +1504,9 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 	m_frameManager.Update();
 
 	if (!project.empty()) {
-		eSettings& settings = eGetSettings();
-		settings.SetSettingBool(wxT("showproject"), true);
-		settings.SetSettingString(wxT("project"), project);
-		settings.AddRecentProject(project);
+		m_settings.SetSettingBool(wxT("showproject"), true);
+		m_settings.SetSettingString(wxT("project"), project);
+		m_settings.AddRecentProject(project);
 		UpdateRecentFiles();
 	}
 

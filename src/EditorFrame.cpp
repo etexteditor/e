@@ -724,7 +724,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	m_settings.GetSettingBool(wxT("bundleDebug"), enableDebug);
 
 	wxMenu *funcMenu = new wxMenu;
-	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"));
+	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"), wxITEM_CHECK);
 	funcMenu->Append(MENU_MANAGE_BUNDLES, _("&Manage Bundles"), _("Show Bundle Manager"));
 	funcMenu->AppendSeparator();
 	funcMenu->Append(MENU_DEBUG_BUNDLES, _("Enable Debug Mode"), _("Enable Debug Mode"), wxITEM_CHECK);
@@ -1988,12 +1988,21 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	wxMenuItem* uhItem = GetMenuBar()->FindItem(MENU_UNDOHIS); // "Undo History"
 	if (uhItem) uhItem->Check(undoHistoryPane.IsShown());
 
-	// "Project Pane"
+	// Project & Bundle Pane
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
+
+	// Project Pane
 	wxMenuItem* spItem = GetMenuBar()->FindItem(MENU_SHOWPROJECT);
 	if (spItem) {
 		const bool showingProjectPane = projectPane.IsShown() && projectPane.window == m_projectPane;
 		spItem->Check(showingProjectPane);
+	}
+
+	// Bundle Pane
+	wxMenuItem* bundleItem = GetMenuBar()->FindItem(MENU_EDIT_BUNDLES);
+	if (spItem) {
+		const bool showingBundlePane = projectPane.IsShown() && projectPane.window == m_bundlePane;
+		bundleItem->Check(showingBundlePane);
 	}
 
 	// Find in Project

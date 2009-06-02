@@ -226,6 +226,9 @@ public:
 	// Settings
 	void SaveSettings(unsigned int i, eSettings& m_settings);
 
+	// Needed by IEditorSearch interface
+	wxEvtHandler* GetEventHandlerI() const {return GetEventHandler();};
+
 	// Caret and Selection Visibility
 private:
 	bool IsCaretVisible();

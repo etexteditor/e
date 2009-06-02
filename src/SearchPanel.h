@@ -31,6 +31,7 @@
 class CloseButton;
 class eSettings;
 class IFrameSearchService;
+class IEditorSearch;
 
 class wxBoxSizer;
 class wxButton;
@@ -52,6 +53,8 @@ public:
 
 	bool HasSearchString() const {return !searchbox->GetValue().IsEmpty();};
 	bool IsActive() const;
+
+	IEditorSearch* GetEditorSearch();
 
 private:
 	// Embedded class: SeperatorLine
@@ -76,6 +79,7 @@ private:
 		void OnKeyDown(wxKeyEvent &evt);
 		void OnChar(wxKeyEvent &evt);
 		void OnFocusLost(wxFocusEvent& evt);
+		void OnMouseWheel(wxMouseEvent& evt);
 		DECLARE_EVENT_TABLE();
 		// Member variables
 		wxWindow* parent;

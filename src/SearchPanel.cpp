@@ -172,6 +172,10 @@ bool SearchPanel::IsActive() const {
 	return false; // no focus
 }
 
+IEditorSearch* SearchPanel::GetEditorSearch() {
+	return m_searchService.GetSearch();
+}
+
 void SearchPanel::InitSearch(const wxString& searchtext, bool replace) {
 	wxWindow* focus_win = FindFocus();
 	if (focus_win == replaceBox) {
@@ -506,6 +510,7 @@ BEGIN_EVENT_TABLE(SearchPanel::SearchEvtHandler, wxEvtHandler)
 	EVT_KEY_DOWN(SearchPanel::SearchEvtHandler::OnKeyDown)
 	EVT_CHAR(SearchPanel::SearchEvtHandler::OnChar)
 	EVT_KILL_FOCUS(SearchPanel::SearchEvtHandler::OnFocusLost)
+	EVT_MOUSEWHEEL(SearchPanel::SearchEvtHandler::OnMouseWheel)
 END_EVENT_TABLE()
 
 SearchPanel::SearchEvtHandler::SearchEvtHandler(wxWindow* parent)
@@ -543,3 +548,11 @@ void SearchPanel::SearchEvtHandler::OnFocusLost(wxFocusEvent& evt) {
 
 	evt.Skip();
 }
+
+void SearchPanel::SearchEvtHandler::OnMouseWheel(wxMouseEvent& evt) {
+	// We want mousewheel events to go to the active editor
+	// (instead of just scrolling comboBox with search history)
+	IEditorSearch* editorSearch = ((SearchPanel*)parent)->GetEditorSearch();
+	if (editorSearch) editorSearch->GetEventHandlerI()->ProcessEvent(evt);
+}
+

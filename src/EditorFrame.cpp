@@ -1519,11 +1519,13 @@ void EditorFrame::ShowBundlePane() {
 	projectPane.Caption(_("Bundles"));
 
 	if (projectPane.window == m_projectPane) {
+		// If the project pane is active, hide it, and activate the bundle pane
 		m_projectPane->Hide();
 		if (!m_bundlePane) m_bundlePane = new BundlePane(*this, &m_syntax_handler);
 		projectPane.Window(m_bundlePane);	
 	}
 	else {
+		// Otherwise, the bundle pane is active; return if it is already showing.
 		wxASSERT(projectPane.window == m_bundlePane);
 		if (projectPane.IsShown()) return;
 	}

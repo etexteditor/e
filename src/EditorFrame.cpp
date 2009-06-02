@@ -3361,19 +3361,8 @@ void EditorFrame::SaveState() {
 	const unsigned int pageCount = m_tabBar->GetPageCount();
 	if (pageCount > 1 || !editorCtrl->IsEmpty()) { // don't save state if just a single empty page
 		for (unsigned int i = 0; i < pageCount; ++i) {
-			//wxWindow* page = m_tabBar->GetPage(i);
 			EditorCtrl* editor = GetEditorCtrlFromPage(i);
-
-			const wxString& path = editor->GetPath();
-			const doc_id di = editor->GetDocID();
-			const int pos = editor->GetPos();
-			const int topline = editor->GetTopLine();
-			const wxString& syntax = editor->GetSyntaxName();
-			const vector<unsigned int> folds = editor->GetFoldedLines();
-			const vector<cxBookmark>& bookmarks = editor->GetBookmarks();
-			m_settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks);
-
-			//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
+			editor->SaveSettings(i, m_settings);
 		}
 	}
 	const wxString tablayout = m_tabBar->SavePerspective();

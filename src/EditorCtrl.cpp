@@ -431,6 +431,19 @@ EditorCtrl::~EditorCtrl() {
 	ClearRemoteInfo();
 }
 
+void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings) {
+	const wxString& path = GetPath();
+	const doc_id di = GetDocID();
+	const int pos = GetPos();
+	const int topline = GetTopLine();
+	const wxString& syntax = GetSyntaxName();
+	const vector<unsigned int> folds = GetFoldedLines();
+	const vector<cxBookmark>& bookmarks = GetBookmarks();
+
+	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks);
+	//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
+}
+
 const char** EditorCtrl::RecommendedIcon() {
 	return document_xpm;
 }

@@ -223,6 +223,8 @@ public:
 	void SetSearchRange();
 	void ClearSearchRange(bool reset=false);
 
+	// Settings
+	void SaveSettings(unsigned int i, eSettings& m_settings);
 
 	// Caret and Selection Visibility
 private:

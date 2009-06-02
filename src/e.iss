@@ -9,7 +9,7 @@
 
 [Setup]
 AppName=e
-AppVerName=e - v1.0.34b
+AppVerName=e - v1.0.35
 AppMutex=eApp
 OutputBaseFilename=e_setup
 AppPublisherURL=http://www.e-texteditor.com/
@@ -49,9 +49,9 @@ Source: "Release\e.exe"; DestDir: "{app}"
 Source: "..\docs\release_notes.txt"; DestDir: "{app}"
 Source: "XCrashReport.exe"; DestDir: "{app}"
 Source: "installer\dbghelp.dll"; DestDir: "{app}"
-Source: "Debug\Bundles\*.*"; DestDir: "{app}\Bundles"; Excludes: "\local"; Flags: recursesubdirs createallsubdirs
-Source: "Debug\Support\*.*"; DestDir: "{app}\Support"; Excludes: "\bin\CocoaDialog.app"; Flags: recursesubdirs createallsubdirs
-Source: "Debug\Themes\*.*"; DestDir: "{app}\Themes"; Excludes: "\local"; Flags: recursesubdirs createallsubdirs
+Source: "e-exe\Debug\Bundles\*.*"; DestDir: "{app}\Bundles"; Excludes: "\local"; Flags: recursesubdirs createallsubdirs
+Source: "e-exe\Debug\Support\*.*"; DestDir: "{app}\Support"; Excludes: "\bin\CocoaDialog.app"; Flags: recursesubdirs createallsubdirs
+Source: "e-exe\Debug\Themes\*.*"; DestDir: "{app}\Themes"; Excludes: "\local"; Flags: recursesubdirs createallsubdirs
 
 ; Install emate command
 Source: "cmd\e.exe"; DestDir: "{app}\cmd"
@@ -67,7 +67,7 @@ Name: "{userdesktop}\e - texteditor"; Filename: "{app}\e.exe"; Tasks: desktopico
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\e - texteditor"; Filename: "{app}\e.exe"; Tasks: quicklaunchicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\e"; ValueType: string; ValueName: "version"; ValueData: "1.0.34b (197)"
+Root: HKCU; Subkey: "Software\e"; ValueType: string; ValueName: "version"; ValueData: "1.0.35 (198)"
 Root: HKCU; Subkey: "Software\e"; ValueType: string; ValueName: "path"; ValueData: "{app}\e.exe"
 Root: HKCR; Subkey: "txtfile\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\e.exe,1"; Tasks: associate
 Root: HKCR; Subkey: "txtfile\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\e.exe"" ""%1"""; Tasks: associate

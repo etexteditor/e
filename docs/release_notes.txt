@@ -1,3 +1,33 @@
+2-june-2009 - 1.0.35
+  o Use selection as initial pattern for 'Find in Project'
+  
+  o Clicking a match in 'Find in Project' now selects the
+    matching text.
+    
+  o Antialiasing mode can now be set in theme editor.
+  
+  o Fixed tabbing out of search field.
+  
+  o Enable buttons when initiating search from selection.
+  
+  o Mousewheel over search field now scrolls editor.
+  
+  o Added support for native DragCommands #4 [adamv]
+  
+  o Fixed updating all tabs on SaveAll #136 [adamv]
+  
+  o Added 'Close other Tabs' to filemenu #289 [adamv]
+  
+  o Allow full name filespec matches #193 [adamv]
+  
+  o Add horizontal scrolling on mousewheel #322 [adamv]
+  
+  o Remember 'Filter through command' entries #198 [adamv]
+  
+  o Save scroll state when reloading files #22 [adamv]
+  
+  o Make 'Show Bundle Editor' checked menu item #310 [adamv]
+
 21-may-2009 - 1.0.34b
   o Fixed plain search in 'Find in Files'.
   

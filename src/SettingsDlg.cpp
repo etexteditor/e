@@ -15,12 +15,14 @@
 #include "wx/image.h"
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
+#include <wx/spinctrl.h>
+
 #include "eSettings.h"
 
 #ifdef __WXMSW__
-#include "eDocumentPath.h"
-#include "ShellRunner.h"
-#include "Env.h"
+	#include "eDocumentPath.h"
+	#include "ShellRunner.h"
+	#include "Env.h"
 #endif
 
 

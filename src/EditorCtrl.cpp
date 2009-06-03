@@ -5666,11 +5666,6 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 }
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {
-	// Remove tooltips
-	/*if (m_revTooltip.IsShown()) {
-		m_revTooltip.Hide();
-	}*/
-
 	wxString modifiers;
 	if (event.ControlDown()) modifiers += wxT("CTRL-");
 	if (event.AltDown()) modifiers += wxT("ALT-");
@@ -5839,9 +5834,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 		}
 
 		if (!commandMode) {
-
 			switch (key) {
-
 	#ifdef __WXDEBUG__
 			/*case WXK_F1:
 				// Simulate crash
@@ -5917,7 +5910,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				TestMilestones();
 				break;
 	#endif //__WXDEBUG__
-
 
 			case WXK_LEFT:
 			case WXK_NUMPAD_LEFT:

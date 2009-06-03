@@ -2534,7 +2534,7 @@ void EditorFrame::OnMenuSpacesToTabs(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuSettings(wxCommandEvent& WXUNUSED(event)) {
-	SettingsDlg dlg(this, m_catalyst);
+	SettingsDlg dlg(this, m_catalyst, m_settings);
 	dlg.ShowModal();
 }
 

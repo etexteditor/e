@@ -61,9 +61,9 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_CHECKBOX(CTRL_BOM, SettingsDlg::OnCheckBom)
 END_EVENT_TABLE()
 
-SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw)
+SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings)
 : wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_settings(eGetSettings()), m_catalyst(cw), m_ctUserPic(false)
+  m_settings(settings), m_catalyst(cw), m_ctUserPic(false)
 {
 	SetTitle (_("Settings"));
 

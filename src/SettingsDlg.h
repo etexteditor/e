@@ -23,7 +23,7 @@ class eSettings;
 
 class SettingsDlg : public wxDialog {
 public:
-	SettingsDlg(wxWindow *parent, CatalystWrapper cw);
+	SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings);
 
 private:
 	void UpdateEncoding();

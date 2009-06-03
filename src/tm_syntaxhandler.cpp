@@ -476,14 +476,11 @@ void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 bool TmSyntaxHandler::SetTheme(const char* uuid) {
 	wxASSERT(uuid);
 
-	if(LoadTheme(uuid)) {
-		eGetSettings().SetSettingString(wxT("theme_id"), wxString(uuid, wxConvUTF8));
+	if(!LoadTheme(uuid)) return false;
 
-		m_dispatcher.Notify(wxT("THEME_CHANGED"), NULL, 0);
-		return true;
-	}
-
-	return false;
+	eGetSettings().SetSettingString(wxT("theme_id"), wxString(uuid, wxConvUTF8));
+	m_dispatcher.Notify(wxT("THEME_CHANGED"), NULL, 0);
+	return true;
 }
 
 void TmSyntaxHandler::SetDefaultTheme() {
@@ -592,41 +589,31 @@ map<wxString, wxString> TmSyntaxHandler::GetShellVariables(const deque<const wxS
 		return vars;
 		//return *(*result)[0];
 	}
-	else return map<wxString, wxString>();
 
+	return map<wxString, wxString>();
 }
 
 map<wxString, wxString> TmSyntaxHandler::GetSmartTypingPairs(const deque<const wxString*>& scopes) const {
-	//m_smartPairsNode.Print();
-
-	// Get all shell variables
 	const vector<const map<wxString, wxString>*>* result = m_smartPairsNode.GetMatch(scopes);
-	if (result && !result->empty()) {
-		return *(*result)[0];
-	}
-	else return map<wxString, wxString>();
+	if (result && !result->empty()) return *(*result)[0];
+	return map<wxString, wxString>();
 }
 
 const vector<wxString>* TmSyntaxHandler::GetCompletionList(const deque<const wxString*>& scopes) const {
 	const vector<const vector<wxString>*>* result = m_completionsNode.GetMatch(scopes);
-	if (result && !result->empty()) {
-		return (*result)[0];
-	}
-	else return NULL;
+	if (result && !result->empty()) return (*result)[0];
+	return NULL;
 }
 
 const tmCompletionCmd* TmSyntaxHandler::GetCompletionCmd(const deque<const wxString*>& scopes) const {
 	const vector<const tmCompletionCmd*>* result = m_completionCmdNode.GetMatch(scopes);
-	if (result && !result->empty()) {
-		return (*result)[0];
-	}
-	else return NULL;
+	if (result && !result->empty()) return (*result)[0];
+	return NULL;
 }
 
 bool TmSyntaxHandler::DisableDefaultCompletion(const deque<const wxString*>& scopes) const {
 	const vector<const void*>* result = m_disableCompletionNode.GetMatch(scopes);
-	if (result) return true;
-	else return false;
+	return result != NULL;
 }
 
 bool TmSyntaxHandler::ShowSymbol(const deque<const wxString*>& scopes, const wxString*& transform) const {
@@ -636,15 +623,13 @@ bool TmSyntaxHandler::ShowSymbol(const deque<const wxString*>& scopes, const wxS
 		wxASSERT(transform->size() >= 0); // just to check it is a valid pointer
 		return true;
 	}
-	else return false;
+	return false;
 }
 
 const TmSyntaxHandler::cxFoldRule* TmSyntaxHandler::GetFoldRule(const deque<const wxString*>& scopes) const {
 	const vector<const cxFoldRule*>* result = m_foldNode.GetMatch(scopes);
-	if (result && !result->empty()) {
-		return (*result)[0];
-	}
-	else return NULL;
+	if (result && !result->empty())  return (*result)[0];
+	return NULL;
 }
 
 void TmSyntaxHandler::GetAllActions(const deque<const wxString*>& scopes, vector<const tmAction*>& result) const {
@@ -745,7 +730,6 @@ cxSyntaxInfo* TmSyntaxHandler::GetSyntaxInfo(unsigned int bundleId, unsigned int
 
 		// Add to cleanup list
 		m_foldRules.push_back(rule);
-
 	}
 
 	return si;
@@ -753,7 +737,7 @@ cxSyntaxInfo* TmSyntaxHandler::GetSyntaxInfo(unsigned int bundleId, unsigned int
 
 const cxSyntaxInfo* TmSyntaxHandler::InitSyntax(cxSyntaxInfo& si, bool WXUNUSED(isTop)) {
 	if (si.topmatcher) return &si;
-	else if (ParseSyntax(si)) {
+	if (ParseSyntax(si)) {
 		//if (isTop && si.topmatcher) si.topmatcher->Init(true);
 		/*if (isTop) {
 			// There might be included matchers so we have to init all
@@ -765,7 +749,7 @@ const cxSyntaxInfo* TmSyntaxHandler::InitSyntax(cxSyntaxInfo& si, bool WXUNUSED(
 
 		return &si;
 	}
-	else return NULL;
+	return NULL;
 }
 
 bool TmSyntaxHandler::ParseSyntax(cxSyntaxInfo& si) {
@@ -849,35 +833,34 @@ bool TmSyntaxHandler::ParseGroup(const PListArray& groupArray, group_matcher& gm
 }
 
 bool TmSyntaxHandler::ParsePattern(const PListDict& patternDict, matcher*& m) {
-
 	if (patternDict.HasKey("match")) {
 		match_matcher* mm = NewMatcher();
 		m = mm;
 		return ParseMatch(mm, patternDict);
 	}
-	else if (patternDict.HasKey("begin")) {
+
+	if (patternDict.HasKey("begin")) {
 		span_matcher* sm = NewSpan();
 		m = sm;
 		return ParseSpan(sm, patternDict);
 	}
-	else if (patternDict.HasKey("include")) {
+
+	if (patternDict.HasKey("include")) {
 		ParseInclude(patternDict, m);
 		return true; // return true even if we don't find include
 	}
-	else if (patternDict.HasKey("patterns")) {
-		PListArray groupArray;
 
-		if (patternDict.GetArray("patterns", groupArray)) {
-			group_matcher* gm = NewGroup();
-			m = gm;
-			return ParseGroup(groupArray, *gm);
-		}
-		else return false;
+	if (patternDict.HasKey("patterns")) {
+		PListArray groupArray;
+		if (!patternDict.GetArray("patterns", groupArray)) return false;
+
+		group_matcher* gm = NewGroup();
+		m = gm;
+		return ParseGroup(groupArray, *gm);
 	}
-	else {
-		// Empty pattern (may be just comment)
-		return false;
-	}
+
+	// Empty pattern or comment
+	return false;
 }
 
 bool TmSyntaxHandler::ParseInclude(const PListDict& patternDict, matcher*& m) {

@@ -555,4 +555,3 @@ void SearchPanel::SearchEvtHandler::OnMouseWheel(wxMouseEvent& evt) {
 	IEditorSearch* editorSearch = ((SearchPanel*)parent)->GetEditorSearch();
 	if (editorSearch) editorSearch->GetEventHandlerI()->ProcessEvent(evt);
 }
-

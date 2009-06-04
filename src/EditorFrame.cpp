@@ -1688,10 +1688,8 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
 	wxBusyCursor busy;
 
-	bool doReload = true;
 	bool isCurrent = false;
 	const bool isBundleItem = eDocumentPath::IsBundlePath(filepath);
-	const bool isRemoteItem = eDocumentPath::IsRemotePath(filepath);
 
 	if (!editorCtrl) {
 		// This should never happen, but there have been
@@ -1700,8 +1698,6 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 		AddTab();
 	}
 	EditorCtrl* ec = editorCtrl;
-
-	//Freeze(); // kills busy cursor
 
 	// Check if there is a mirror that matches the file
 	doc_id di;
@@ -1727,98 +1723,39 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 				break;
 			}
 		}
+	}
 
-		// Check if the file on disk has been changed since last save
-		if (modifiedDate.IsValid()) {
-			if (isBundleItem) {} // EditorCtrl does its own check for changes
-			else if (isRemoteItem) {
-				if (!rp) rp = GetRemoteProfile(filepath, false);
-				const wxDateTime fileDate = GetRemoteThread().GetModDate(filepath, *rp);
-				if (modifiedDate == fileDate) doReload = false; // No need to reload unchanged file
-				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
-			}
-			else {
-				const wxFileName path(filepath);
-				if (path.FileExists() && modifiedDate == path.GetModificationTime()) doReload = false; // No need to reload unchanged file
-				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
-			}
-		}
-
-		// If we don't have to reload file, just set the doc
-		// TODO: if we have mirror, set doc before reload to update
-		if (!isCurrent && !isBundleItem) { // bundle items cannot reuse plain editorCtrl
-			if (editorCtrl->IsEmpty()) {
-				const bool res = ec->SetDocument(di, filepath, rp); // Reuse the current editorCtrl
-				if (!res) return false;
-			}
-			else {
-				ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
-				const bool res = ec->SetDocument(di, filepath, rp);
-				if (!res) {
-					delete ec;
-					return false;
-				}
-			}
-			isCurrent = true;
-		}
-
-#ifdef __WXMSW__
-		// Filename may have changed case
-		if (isCurrent && !isBundleItem && !isRemoteItem) {
-			filepath = wxFileName(filepath).GetLongPath(); // gets path with correct case
-
-			// Filename gets corrected during reload, but otherwise we have to correct it manually
-			if (!doReload) {
-				const wxString newName = wxFileName(filepath).GetFullName();
-				const wxString oldName = ec->GetName();
-				if (newName != oldName) {
-					cxLOCKDOC_WRITE(ec->GetDocument())
-						doc.SetPropertyName(newName);
-					cxENDLOCK
-				}
-			}
-		}
-#endif
-	} // end if(isMirror)
-
+	// Reuse the current editorCtrl if possible
 	wxWindow* page = ec;
-	if (doReload) {
-		// Reuse the current editorCtrl if possible
-		if (!isCurrent) {
-			if (isBundleItem) {
-				EditorBundlePanel* bundlePanel = new EditorBundlePanel(m_tabBar, *this, m_catalyst, bitmap);
-				page = bundlePanel;
-				ec = bundlePanel->GetEditor();
-			}
-			else if (!editorCtrl->IsEmpty()) page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
+	if (!isCurrent) {
+		if (isBundleItem) {
+			EditorBundlePanel* bundlePanel = new EditorBundlePanel(m_tabBar, *this, m_catalyst, bitmap);
+			page = bundlePanel;
+			ec = bundlePanel->GetEditor();
+		}
+		else if (!editorCtrl->IsEmpty()) page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
+	}
+
+	// Load the text (or update with changes)
+	const cxFileResult result = ec->OpenFile(filepath, enc, rp, mate);
+	if (result != cxFILE_OK) {
+		if (result == cxFILE_DOWNLOAD_ERROR) {} // do nothing, download code has reported error
+		else if (result == cxFILE_CONV_ERROR) {
+			const wxString msg = _T("Could not read file: ") + filepath + _T("\nTry importing with another encoding");
+			wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
+		}
+		else {
+			wxString msg = _T("Could not open file: ") + filepath;
+			wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
 		}
 
-		// Load the text (or update with changes)
-		const cxFileResult result = ec->LoadText(filepath, enc, rp);
-		if (result != cxFILE_OK) {
-			if (result == cxFILE_DOWNLOAD_ERROR) {} // do nothing, download code has reported error
-			else if (result == cxFILE_CONV_ERROR) {
-				const wxString msg = _T("Could not read file: ") + filepath + _T("\nTry importing with another encoding");
-				wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
-			}
-			else {
-				wxString msg = _T("Could not open file: ") + filepath;
-				wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
-			}
-
-			if (ec != editorCtrl) delete page; // clean up
-			return false;
-		}
+		if (ec != editorCtrl) delete page; // clean up
+		return false;
 	}
 
 	// Add to recent files list
 	m_settings.AddRecentFile(filepath);
 	UpdateRecentFiles();
-
-	// Do we need to notify mate on close?
-	if (!mate.empty()) {
-		ec->SetMate(mate);
-	}
 
 	// Create and draw the new page
 	if (ec != editorCtrl) {
@@ -1833,8 +1770,6 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 	// Bring frame to front
 	BringToFront();
 	page->SetFocus();
-
-	//Thaw();
 
 	return true;
 }

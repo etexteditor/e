@@ -141,6 +141,7 @@ public:
 	// Document handling
 	void Clear();
 	bool IsEmpty() const;
+	cxFileResult OpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp=NULL, const wxString& mate=wxEmptyString);
 	cxFileResult LoadText(const wxFileName& newpath);
 	cxFileResult LoadText(const wxString& newpath, const RemoteProfile* rp=NULL);
 	cxFileResult LoadText(const wxString& newpath, wxFontEncoding enc, const RemoteProfile* rp=NULL);
@@ -311,6 +312,7 @@ public:
 	// Bracket Highlighting
 	virtual const interval& GetHlBracket() const {return m_bracketHighlight.GetInterval();};
 
+	// Folding
 	vector<unsigned int> GetFoldedLines() const;
 	virtual const vector<cxFold>& GetFolds() const {return m_folds;};
 	void UpdateFolds() {ParseFoldMarkers();};

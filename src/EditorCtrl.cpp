@@ -2675,6 +2675,67 @@ bool EditorCtrl::IsModified() const {
 	return false;
 }
 
+cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
+	// Bundle items do their own mirror handling during loading
+	if (eDocumentPath::IsBundlePath(filepath)) return LoadText(filepath, enc, rp);
+
+	// Do we need to notify mate on close?
+	if (!mate.empty()) SetMate(mate);
+
+	// Check if there is a mirror that matches the file
+	doc_id di;
+	wxDateTime modifiedDate;
+	bool isMirror;
+	cxLOCK_READ(m_catalyst)
+		isMirror = catalyst.GetFileMirror(filepath, di, modifiedDate);
+	cxENDLOCK
+
+	if(isMirror) {
+		const bool isRemoteItem = eDocumentPath::IsRemotePath(filepath);
+		bool doReload = true;
+
+		// Check if the file on disk has been changed since last save
+		if (modifiedDate.IsValid()) {
+			if (isRemoteItem) {
+				if (!rp) rp = m_parentFrame.GetRemoteProfile(filepath, false);
+				const wxDateTime fileDate = m_parentFrame.GetRemoteThread().GetModDate(filepath, *rp);
+				if (modifiedDate == fileDate) doReload = false; // No need to reload unchanged file
+				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
+			}
+			else {
+				const wxFileName path(filepath);
+				if (path.FileExists() && modifiedDate == path.GetModificationTime()) doReload = false; // No need to reload unchanged file
+				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
+			}
+		}
+
+		// Set doc before reload to update)
+		const bool res = SetDocument(di, filepath, rp); // Reuse the current editorCtrl
+		if (!res) return cxFILE_OPEN_ERROR;
+
+#ifdef __WXMSW__
+		// Filename may have changed case
+		if (!isRemoteItem) {
+			const wxString longpath = wxFileName(filepath).GetLongPath(); // gets path with correct case
+
+			// Filename gets corrected during reload, but otherwise we have to correct it manually
+			if (!doReload) {
+				const wxString newName = wxFileName(longpath).GetFullName();
+				const wxString oldName = GetName();
+				if (newName != oldName) {
+					cxLOCKDOC_WRITE(GetDocument())
+						doc.SetPropertyName(newName);
+					cxENDLOCK
+				}
+			}
+		}
+#endif
+		if (!doReload) return cxFILE_OK;
+	}
+
+	return LoadText(filepath, enc, rp);
+}
+
 bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const RemoteProfile* rp) {
 	// No reason to set doc if we are already there
 	doc_id oldDoc;

@@ -113,12 +113,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 
 	// Load env variables
 	if (project.IsRoot()) {
-		for (map<wxString,wxString>::const_iterator p = project.env.begin(); p != project.env.end(); ++p) {
-			//const unsigned int rowId = m_envList->GetNumberRows();
-			//m_envList->InsertRows(rowId);
-			//m_envList->SetCellValue(rowId, 0, p->first);
-			//m_envList->SetCellValue(rowId, 1, p->second);
-		}
+		m_envPage->AddVars(project.env);
 	}
 
 	notebook->ChangeSelection(0);
@@ -130,6 +125,7 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 
 bool ProjectSettings::IsModified() const {
 	if (m_inheritCheck->GetValue() == m_projectInfo.HasFilters()) return true;
+
 	if (m_includeDirs->IsModified()) return true;
 	if (m_excludeDirs->IsModified()) return true;
 	if (m_includeFiles->IsModified()) return true;
@@ -153,19 +149,12 @@ void ProjectSettings::GetSettings(cxProjectInfo& project) const {
 
 	if (m_projectInfo.IsRoot()) {
 		project.env.clear();
-
-		//for (int i = 0; i < m_envList->GetNumberRows(); ++i) {
-		//	project.env[m_envList->GetCellValue(i, 0)] = m_envList->GetCellValue(i, 1);
-		//}
+		m_envPage->GetVars(project.env);
 	}
 }
 
 void ProjectSettings::OnInheritCheck(wxCommandEvent& event) {
 	if (event.IsChecked()) {
-		m_includeDirs->Clear();
-		m_includeFiles->Clear();
-		m_excludeDirs->Clear();
-		m_excludeFiles->Clear();
 
 		const wxString ind = wxJoin(m_parentProject.includeDirs, wxT('\n'), NULL);
 		m_includeDirs->SetValue(ind);
@@ -178,6 +167,7 @@ void ProjectSettings::OnInheritCheck(wxCommandEvent& event) {
 
 		const wxString exf = wxJoin(m_parentProject.excludeFiles, wxT('\n'), NULL);
 		m_excludeFiles->SetValue(exf);
+
 
 		m_includeDirs->Disable();
 		m_excludeDirs->Disable();

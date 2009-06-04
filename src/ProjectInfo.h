@@ -14,12 +14,10 @@
 #ifndef __PROJECTINFO_H__
 #define __PROJECTINFO_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
-
-#include "wx/filename.h"
 
 // STL can't compile with Level 4
 #ifdef __WXMSW__
@@ -32,11 +30,13 @@
 #endif
 using namespace std;
 
+class wxFileName;
+
 class cxProjectInfo {
 public:
 	cxProjectInfo();
 	cxProjectInfo(const cxProjectInfo& info);
-	cxProjectInfo(const wxFileName &rootPath, const wxString& path, bool onlyFilters);
+	cxProjectInfo(const wxFileName& rootPath, const wxString& path, bool onlyFilters);
 
 	void Clear();
 

@@ -71,3 +71,18 @@ void EnvVarsPanel::OnButtonDelEnv(wxCommandEvent& WXUNUSED(event)) {
 void EnvVarsPanel::OnGridChange(wxGridEvent& WXUNUSED(event)) {
 	m_varsChanged = true;
 }
+
+void EnvVarsPanel::AddVars(const map<wxString,wxString>& vars) {
+	for (map<wxString,wxString>::const_iterator p = vars.begin(); p != vars.end(); ++p) {
+		const unsigned int rowId = m_envList->GetNumberRows();
+		m_envList->InsertRows(rowId);
+		m_envList->SetCellValue(rowId, 0, p->first);
+		m_envList->SetCellValue(rowId, 1, p->second);
+	}
+}
+
+void EnvVarsPanel::GetVars(map<wxString,wxString>& vars) {
+	for (int i = 0; i < m_envList->GetNumberRows(); ++i) {
+		vars[m_envList->GetCellValue(i, 0)] = m_envList->GetCellValue(i, 1);
+	}
+}

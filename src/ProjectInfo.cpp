@@ -1,5 +1,6 @@
 #include "ProjectInfo.h"
 #include <wx/ffile.h>
+#include <wx/filename.h>
 
 #include "tinyxml.h"
 #include "EasyPlistWriter.h"

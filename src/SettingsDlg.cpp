@@ -12,10 +12,13 @@
  ******************************************************************************/
 
 #include "SettingsDlg.h"
-#include "wx/image.h"
+
+#include <wx/image.h>
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 #include <wx/spinctrl.h>
+
+#include "EnvVarsPanel.h"
 
 #include "eSettings.h"
 
@@ -126,9 +129,8 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 					m_marginSpin->Disable();
 					m_wrapMargin->Disable();
 				}
-
-				notebook->AddPage(settingsPage, _("Settings"), true);
 			}
+			notebook->AddPage(settingsPage, _("Settings"), true);
 
 			// Create encoding page
 			wxPanel* encodingPage = new wxPanel(notebook, wxID_ANY);
@@ -153,9 +155,8 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 				encodingPage->SetSizer(encSizer);
 
 				UpdateEncoding();
-					
-				notebook->AddPage(encodingPage, _("Encoding"), true);
 			}
+			notebook->AddPage(encodingPage, _("Encoding"), true);
 			
 			// Create the profile page
 			wxPanel* profilePage = new wxPanel(notebook, wxID_ANY);
@@ -191,6 +192,10 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 				}
 				notebook->AddPage(profilePage, _("Profile"), true);
 			}
+
+			wxPanel *envPage = new EnvVarsPanel(notebook);
+			notebook->AddPage(envPage, _("Environment"), true);
+
 
 #ifdef __WXMSW__
 			// Create the UNIX-on-Windws page

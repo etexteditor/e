@@ -3670,6 +3670,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\StringHistorySetting.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\StringHistorySetting.h"
+			>
+		</File>
+		<File
 			RelativePath=".\Strings.cpp"
 			>
 		</File>

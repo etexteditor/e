@@ -193,8 +193,8 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 				notebook->AddPage(profilePage, _("Profile"), true);
 			}
 
-			wxPanel *envPage = new EnvVarsPanel(notebook);
-			notebook->AddPage(envPage, _("Environment"), true);
+			m_envPage = new EnvVarsPanel(notebook);
+			notebook->AddPage(m_envPage, _("Environment"), true);
 
 
 #ifdef __WXMSW__

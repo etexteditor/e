@@ -25,6 +25,7 @@
 class eSettings;
 class wxSpinCtrl;
 class wxSpinEvent;
+class EnvVarsPanel;
 
 class SettingsDlg : public wxDialog {
 public:
@@ -74,6 +75,9 @@ private:
 	// -- Settings page
 	wxSpinCtrl* m_marginSpin;
 	wxCheckBox* m_wrapMargin;
+
+	// --Environmental Variables page
+	EnvVarsPanel *m_envPage;
 
 #ifdef __WXMSW__
 	// -- UNIX-on-Windws page

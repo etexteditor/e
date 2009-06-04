@@ -22,13 +22,15 @@ wxString StringHistorySetting::GetItem(const wxJSONValue& root, size_t ndx) cons
 bool StringHistorySetting::AddItem(wxJSONValue& root, const wxString& item) {
 	wxJSONValue& items = root[m_key];
 
-	// Don't add duplicates
+	// Duplicate check
 	if (items.Size() > 0) {
+		// If the last-added item is the same, then don't add to history.
 		const wxJSONValue last = items.ItemAt(0);
 		if (last.AsString() == item) return false;
 		
-		// Check if there should be a duplicate lower down
-		for (int i = 0; i < items.Size(); ++i) {
+		// If the same item exists further down the list, remove it
+		// since we will re-add it at the top.
+		for (int i = 1; i < items.Size(); ++i) {
 			if (items[i].AsString() == item) {
 				items.Remove(i);
 				break;

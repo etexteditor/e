@@ -2518,6 +2518,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\EnvVarsPanel.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\EnvVarsPanel.h"
+			>
+		</File>
+		<File
 			RelativePath=".\eSettings.cpp"
 			>
 		</File>

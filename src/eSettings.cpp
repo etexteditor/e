@@ -27,8 +27,7 @@
     #pragma warning(pop)
 #endif
 
-eSettings::eSettings() {
-}
+eSettings::eSettings() {}
 
 void eSettings::Load(const wxString& appDataPath) {
 	m_path = appDataPath + wxT("e.cfg");

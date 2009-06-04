@@ -6880,6 +6880,9 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// Load existing enviroment
 	env.SetToCurrent();
 
+	// Add any keys configured in app settings
+	env.SetEnv(eGetSettings().env);
+
 	// Add app keys
 	env.AddSystemVars(isUnix, dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath());
 

@@ -85,6 +85,9 @@ public:
 	wxString GetFilterCommand(size_t ndx) const;
 	bool AddFilterCommand(const wxString& command);
 
+	// Environmental variables
+	map<wxString, wxString> env;
+
 private:
 	// Recent files (support functions)
 	void AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max);

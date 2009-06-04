@@ -194,6 +194,7 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 			}
 
 			m_envPage = new EnvVarsPanel(notebook);
+			m_envPage->AddVars(this->m_settings.env);
 			notebook->AddPage(m_envPage, _("Environment"), true);
 
 
@@ -372,6 +373,11 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 		cxLOCK_WRITE(m_catalyst)
 			catalyst.SetProfile(name, m_userImage);
 		cxENDLOCK
+	}
+
+	if (m_envPage->VarsChanged()) {
+		m_settings.env.clear();
+		m_envPage->GetVars(m_settings.env);
 	}
 
 	EndModal(wxID_OK);

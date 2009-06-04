@@ -6,13 +6,20 @@
 	#include <wx/string.h>
 #endif
 
-#include "jsonval.h"
+class wxJSONValue;
 
 class StringHistorySetting
 {
 public:
-	StringHistorySetting(void);
-	~StringHistorySetting(void);
+	StringHistorySetting(const wxString& key, size_t maxItems=20);
+
+	size_t GetItemCount(const wxJSONValue& root) const;
+	wxString GetItem(const wxJSONValue& root, size_t ndx) const;
+	bool AddItem(wxJSONValue& root, const wxString& item);
+
+private:
+	const wxString m_key;
+	const size_t m_maxItems;
 };
 
 #endif

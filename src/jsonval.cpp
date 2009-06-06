@@ -355,11 +355,7 @@ bool
 wxJSONValue::IsNull() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_NULL )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_NULL;
 }
 
 
@@ -372,11 +368,7 @@ bool
 wxJSONValue::IsEmpty() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_EMPTY )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_EMPTY;
 }
 
 //! Return TRUE if the type of the value stored is integer.
@@ -397,11 +389,7 @@ bool
 wxJSONValue::IsInt() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_INT || type == wxJSONTYPE_INT64 )  {
-    r = true;
-  }
-  return r;
+  return ( type == wxJSONTYPE_INT || type == wxJSONTYPE_INT64 );
 }
 
 //! Return TRUE if the type of the value stored is a unsigned int.
@@ -424,11 +412,7 @@ bool
 wxJSONValue::IsUInt() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_UINT || type == wxJSONTYPE_UINT64 )  {
-    r = true;
-  }
-  return r;
+  return ( type == wxJSONTYPE_UINT || type == wxJSONTYPE_UINT64 );
 }
 
 //! Return TRUE if the type of the value stored is a boolean.
@@ -436,11 +420,7 @@ bool
 wxJSONValue::IsBool() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_BOOL )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_BOOL;
 }
 
 //! Return TRUE if the type of the value stored is a double.
@@ -448,11 +428,7 @@ bool
 wxJSONValue::IsDouble() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_DOUBLE )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_DOUBLE;
 }
 
 //! Return TRUE if the type of the value stored is a wxString object.
@@ -460,11 +436,7 @@ bool
 wxJSONValue::IsString() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_STRING )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_STRING;
 }
 
 //! Return TRUE if the type of the value stored is a pointer to a static C string.
@@ -472,11 +444,7 @@ bool
 wxJSONValue::IsCString() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_CSTRING )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_CSTRING;
 }
 
 //! Return TRUE if the type of the value stored is an array type.
@@ -484,11 +452,7 @@ bool
 wxJSONValue::IsArray() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_ARRAY )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_ARRAY;
 }
 
 //! Return TRUE if the type of this value is a key/value map.
@@ -496,11 +460,7 @@ bool
 wxJSONValue::IsObject() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_OBJECT )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_OBJECT;
 }
 
 // get the stored value; all these functions are 'const'
@@ -796,7 +756,7 @@ wxJSONValue::AsArray() const
 
 //! Return TRUE if the object contains an element at the specified index.
 /*!
- If the stoerd value is not an array or a map, the function returns FALSE.
+ If the stored value is not an array or a map, the function returns FALSE.
 */
 bool
 wxJSONValue::HasMember( unsigned index ) const

@@ -12,7 +12,6 @@
     #pragma implementation "jsonval.cpp"
 #endif
 
-
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
@@ -73,10 +72,8 @@ wxJSONRefData::wxJSONRefData()
 #endif
 }
 
-// Dtor - does nothing
-wxJSONRefData::~wxJSONRefData()
-{
-}
+// Destructor - does nothing
+wxJSONRefData::~wxJSONRefData() {}
 
 int
 wxJSONRefData::GetRefCount() const
@@ -1382,7 +1379,7 @@ wxJSONValue::Find( const wxString& key ) const
 
 //! Return a string description of the type
 /*!
- This static function is only usefull for debugging purposes and
+ This static function is only useful for debugging purposes and
  should not be used by users of this class.
  It simply returns a string representation of the JSON value
  type stored in a object.
@@ -1420,9 +1417,9 @@ wxJSONValue::TypeToString( wxJSONType type )
 }
 
 
-//! Returns informations about the object
+//! Returns information about the object
 /*!
- The function is only usefull for debugging purposes and will probably
+ The function is only useful for debugging purposes and will probably
  be dropped in future versions.
  Returns a string that contains info about the object such as:
 
@@ -1516,9 +1513,9 @@ wxJSONValue::Dump( bool deep, int indent ) const
 
 
 
-//! Returns informations about the object
+//! Returns information about the object
 /*!
- The function is only usefull for debugging purposes and will probably
+ The function is only useful for debugging purposes and will probably
  be dropped in future versions.
  You should not rely on this function to exist in future versions.
 */
@@ -1634,11 +1631,8 @@ wxJSONValue::IsSameAs( const wxJSONValue& other ) const
         return false;
         break;
     }
-    bool r = false;
-    if ( val == otherVal )  {
-      r = true;
-    }
-    return r;
+
+	return val == otherVal;
   }
 
   // for comparing wxJSONTYPE_CSTRING we use two temporary wxString
@@ -1912,7 +1906,6 @@ wxJSONValue::GetCommentArray() const
 {
   wxJSONRefData* data = GetRefData();
   wxASSERT( data );
-
   return data->m_comments;
 }
 
@@ -1922,7 +1915,6 @@ wxJSONValue::ClearComments()
 {
   wxJSONRefData* data = COW();
   wxASSERT( data );
-
   data->m_comments.clear();
 }
 
@@ -2105,12 +2097,9 @@ int
 wxJSONValue::GetLineNo() const
 {
   // return ZERO if there is not a referenced data structure
-  int n = 0;
   wxJSONRefData* data = GetRefData();
-  if ( data != 0 ) {
-    n = data->m_lineNo;
-  }
-  return n;
+  if (data == 0) return 0;
+  return data->m_lineNo;
 }
 
 //! Set the line number of this JSON value object.

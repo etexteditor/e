@@ -55,10 +55,33 @@ void eSettings::Load(const wxString& appDataPath) {
 		wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
 		return;
 	}
+
+	//// Now pull out any settings we don't store internally in the JSON object
+	// Environmental Variables
+	env.clear();
+
+	if (m_jsonRoot.HasMember(wxT("env"))) {
+		const wxJSONValue envNode = m_jsonRoot.ItemAt(wxT("env"));
+		const wxArrayString keys = envNode.GetMemberNames();
+		for( size_t i = 0; i < keys.Count(); i++){
+			const wxString& key = keys[i];
+			env[key] = envNode.ItemAt(key).AsString();
+		}
+	}
 }
 
 bool eSettings::Save() {
 	wxASSERT(!m_path.empty());
+
+	//// Add back to the JSON object any settings we store internally
+	// Environmental Variables
+	wxJSONValue envNode;
+	for (map<wxString,wxString>::const_iterator p = env.begin(); p != env.end(); ++p) {
+		envNode[p->first] = p->second;
+	}
+
+	m_jsonRoot[wxT("env")] = envNode;
+
 
 	// Open (or create) the settings file
 	wxFileOutputStream fstream(m_path);
@@ -213,7 +236,8 @@ size_t eSettings::GetPageCount() const {
 	return pages.Size();
 }
 
-void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks) {
+void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks) 
+{
 	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
 	if (!pages.IsArray()) pages.SetType(wxJSONTYPE_ARRAY);
 
@@ -246,7 +270,8 @@ void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di,
 	}
 }
 
-void eSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks) const {
+void eSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks) const 
+{
 	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
 	wxASSERT((int)page_id < pages.Size());
 	const wxJSONValue page = pages.ItemAt(page_id);

@@ -958,14 +958,12 @@ wxJSONValue::Cat( const wxString& str )
   wxJSONRefData* data = GetRefData();
   wxASSERT( data );
 
-  bool r = false;
-  if ( data->m_type == wxJSONTYPE_STRING )  { 
-    wxJSONRefData* data = COW();
-    wxASSERT( data );
-    data->m_value.m_valString.append( str );
-    r = true;
-  }
-  return r;
+  if ( data->m_type != wxJSONTYPE_STRING ) return false;
+
+  wxJSONRefData* copied_data = COW();
+  wxASSERT( copied_data );
+  copied_data->m_value.m_valString.append( str );
+  return true;
 }
 
 //! \overload Cat( const wxString& )
@@ -975,14 +973,12 @@ wxJSONValue::Cat( const wxChar* str )
   wxJSONRefData* data = GetRefData();
   wxASSERT( data );
 
-  bool r = false;
-  if ( data->m_type == wxJSONTYPE_STRING )  { 
-    wxJSONRefData* data = COW();
-    wxASSERT( data );
-    data->m_value.m_valString.append( str );
-    r = true;
-  }
-  return r;
+  if (data ->m_type != wxJSONTYPE_STRING) return false;
+  
+  wxJSONRefData* copied_data = COW();
+  wxASSERT( copied_data );
+  copied_data->m_value.m_valString.append( str );
+  return true;
 }
 
 

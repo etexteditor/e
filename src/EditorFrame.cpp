@@ -573,7 +573,7 @@ void EditorFrame::InitMenus() {
 	textMenu->AppendSeparator();
 	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tEscape"), _("Complete Word"));
 	textMenu->AppendSeparator();
-	textMenu->Append(MENU_FILTER, _("&Filter Through Command..."), _("Filter Through Command..."));
+	textMenu->Append(MENU_FILTER, _("&Filter Through Command...\tCtrl-H"), _("Filter Through Command..."));
 	textMenu->Append(MENU_RUN, _("&Run current line/selection\tCtrl-Alt-R"), _("Run current line/selection"));
 	menuBar->Append(textMenu, _("&Text"));
 

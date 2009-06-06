@@ -268,6 +268,17 @@ void eApp::ClearLayout() {
 	m_settings.Save();
 }
 
+#ifdef __WXMSW__
+void eApp::SendCommandToServer(HWND hWndRecv, const wxString& cmd) {
+	const wxCharBuffer msg = cmd.mb_str(wxConvUTF8);
+	COPYDATASTRUCT cds;
+	cds.dwData = 0;
+	cds.cbData = strlen( msg.data() )+1;
+	cds.lpData = (void*)msg.data();
+	::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
+}
+#endif
+
 bool eApp::SendArgsToInstance() {
 #ifdef __WXMSW__
 	// Get handle to main frame of running instance
@@ -315,27 +326,20 @@ bool eApp::SendArgsToInstance() {
 				}
 			}
 
-			// Send WM_COPYDATA message
-			const wxCharBuffer msg = cmd.mb_str(wxConvUTF8);
-			COPYDATASTRUCT cds;
-			cds.dwData = 0;
-			cds.cbData = strlen( msg.data() )+1;
-			cds.lpData = (void*)msg.data();
-			::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
+			SendCommandToServer(hWndRecv, cmd);
 		}
 	}
 	else {
 		// Activate and create new document
 		const wxString cmd = wxT("NEW_WINDOW");
-		const wxCharBuffer msg = cmd.mb_str(wxConvUTF8);
-
-		// Send WM_COPYDATA message
-		COPYDATASTRUCT cds;
-		cds.dwData = 0;
-		cds.cbData = strlen( msg.data() )+1;
-		cds.lpData = (void*)msg.data();
-		::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
+		SendCommandToServer(hWndRecv, cmd);
 	}
+
+	{ // Bring window to front
+		const wxString cmd = wxT("VIEW_RAISE");
+		SendCommandToServer(hWndRecv, cmd);
+	}
+
 	return true;
 #else
 	eClient client(*this);
@@ -434,8 +438,10 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 
 	wxLogDebug(wxT("Execute command: %s "), exec_cmd.c_str());
 
-	// Option vars
-
+	if (command == wxT("VIEW_RAISE")) {
+		frame->BringToFront();
+		return true;
+	}
 
 	if (command == wxT("NEW_WINDOW")) {
 		frame->AddTab();

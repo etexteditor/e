@@ -104,6 +104,11 @@ private:
 	wxString ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) const;
 
 #ifdef __WXMSW__
+	void SendCommandToServer(HWND hWndRecv, const wxString& cmd);
+#endif
+
+
+#ifdef __WXMSW__
 	// Callback for ASProtect to set days left
 	static void __declspec(dllexport) __stdcall GetTrialDays(int Total, int Left);
 #endif

@@ -19,9 +19,8 @@
 
 // ---- eIpcWin -----------------------------------
 
-eIpcWin::eIpcWin(IExecuteAppCommand& app)
-: wxFrame(NULL, wxID_ANY, wxT("eIpcWin"), wxPoint(-100,-100)), m_app(app) {
-}
+eIpcWin::eIpcWin(IExecuteAppCommand& app):
+	wxFrame(NULL, wxID_ANY, wxT("eIpcWin"), wxPoint(-100,-100)), m_app(app) {}
 
 wxString eIpcWin::SetMateName() {
 	unsigned int count = 1;
@@ -48,10 +47,10 @@ WXLRESULT eIpcWin::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) 
 
 		wxLogDebug(wxT("Received WM_COPYDATA: %s"), cmd);
 
-		if (cmd.StartsWith(wxT("OPEN_FILE"))) {
-			m_app.ExecuteCmd(cmd);
-		}
-		else if (cmd == wxT("NEW_WINDOW")) {
+		if (cmd.StartsWith(wxT("OPEN_FILE")) ||
+			cmd == wxT("NEW_WINDOW") ||
+			cmd == wxT("VIEW_RAISE")) 
+		{
 			m_app.ExecuteCmd(cmd);
 		}
 		else if (cmd == wxT("DONE")) {
@@ -61,7 +60,7 @@ WXLRESULT eIpcWin::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) 
 		return 1; // msg processed
 	}
 
-	// Let the window do it's own message handling
+	// Let the window do its own message handling
 	return wxFrame::MSWWindowProc(nMsg, wParam, lParam);
 }
 

@@ -679,6 +679,8 @@ private:
 			}
 		};
 
+		void Clear() { m_pairStack.clear(); };
+
 		void ClearIfInsertingOutsideInnerPair(unsigned int pos) {
 			// Reset autoPair state if inserting outside inner pair
 			if (!m_pairStack.empty() && pos != m_pairStack.back().end) {

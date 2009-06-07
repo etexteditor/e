@@ -2033,7 +2033,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 		}
 		else if (iv.start > start || iv.end < end) {
 			// Reset autoPair state if deleting outside inner pair
-			m_autopair.m_pairStack.clear();
+			m_autopair.Clear();
 		}
 	}
 
@@ -2366,7 +2366,7 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 		m_snippetHandler.Delete(start, end);
 		return;
 	}
-	m_autopair.m_pairStack.clear(); // invalidate auto-pair state
+	m_autopair.Clear(); // invalidate auto-pair state
 
 	const unsigned int pos = m_lines.GetPos();
 
@@ -2736,7 +2736,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 
 	topline = -1;
 	m_currentSel = -1;
-	m_autopair.m_pairStack.clear(); // reset autoPair state - adamv - changed from 'empty' to 'clear'.
+	m_autopair.Clear(); // reset autoPair state - adamv - changed from 'empty' to 'clear'.
 
 	bool inSameHistory = false;
 	if (oldDoc.IsOk()) {
@@ -3055,7 +3055,7 @@ void EditorCtrl::DeleteSelections() {
 		m_snippetHandler.Delete(iv.start, iv.end);
 		return;
 	}
-	m_autopair.m_pairStack.clear(); // invalidate auto-pair state
+	m_autopair.Clear(); // invalidate auto-pair state
 
 	cxLOCKDOC_WRITE(m_doc)
 		doc.Freeze(); // always freeze before modifying sel contents
@@ -3107,7 +3107,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		}
 		else if ((nextchar && pos >= iv.end) || (!nextchar && pos <= iv.start)) {
 			// Reset autoPair state if deleting outside inner pair
-			m_autopair.m_pairStack.clear();
+			m_autopair.Clear();
 		}
 	}
 
@@ -3213,7 +3213,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 			if (m_autopair.HasPairs()) {
 				if (pos != m_autopair.InnerPair().end) {
 					// Reset autoPair state if inserting outside inner pair
-					m_autopair.m_pairStack.clear();
+					m_autopair.Clear();
 				}
 				else {
 					wxChar c;
@@ -5733,7 +5733,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	{
 		const interval& inner_pair = m_autopair.InnerPair();
 		if (oldpos < inner_pair.start || inner_pair.end < oldpos)
-			m_autopair.m_pairStack.clear();
+			m_autopair.Clear();
 	}
 	m_lastScopePos = -1; // scope selections
 
@@ -6048,7 +6048,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					{
 						const interval& inner_pair = m_autopair.InnerPair();
 						if (pos < inner_pair.start || inner_pair.end <= pos)
-							m_autopair.m_pairStack.clear();
+							m_autopair.Clear();
 					}
 
 					// Check if we should delete entire word

@@ -1729,10 +1729,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 	if (text.empty()) return 0;
 	wxASSERT(pos <= m_lines.GetLength());
 
-	// Reset autoPair state if inserting outside inner pair
-	if (!m_autopair.m_pairStack.empty() && pos != m_autopair.m_pairStack.back().end) {
-		m_autopair.m_pairStack.clear();
-	}
+	m_autopair.ClearIfInsertingOutsideInnerPair(pos);
 
 	wxString autoPair;
 	if (doSmartType) {
@@ -3214,10 +3211,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 	const vector<interval>& selections = m_lines.GetSelections();
 	unsigned int pos = m_lines.GetPos();
 
-	// Reset autoPair state if inserting outside inner pair
-	if (!m_autopair.m_pairStack.empty() && pos != m_autopair.m_pairStack.back().end) {
-		m_autopair.m_pairStack.clear();
-	}
+	m_autopair.ClearIfInsertingOutsideInnerPair(pos);
 
 	wxString autoPair;
 	if (text.length() == 1) {

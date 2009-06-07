@@ -667,6 +667,20 @@ private:
 
 	class xAutoPair {
 	public:
+		void AdjustIntervalsUp(unsigned int bytes_inserted){
+			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+				t->start += bytes_inserted;
+				t->end += bytes_inserted;
+			}
+		};
+
+		void AdjustIntervalsDown(unsigned int bytes_removed) {
+			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+				t->start -= bytes_removed;
+				t->end -= bytes_removed;
+			}
+		};
+
 		void AdjustEndsUp(unsigned int bytes_inserted){
 			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
 				t->end += bytes_inserted;

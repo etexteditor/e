@@ -1820,13 +1820,7 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 	if (!m_autopair.m_doAutoPair) return wxEmptyString;
 
 	// Are we just before a pair end?
-	bool inPair = false;
-	for (vector<interval>::const_iterator k = m_autopair.m_pairStack.begin(); k != m_autopair.m_pairStack.end(); ++k) {
-		if (k->end == pos) {
-			inPair = true;
-			break;
-		}
-	}
+	bool inPair = m_autopair.AtEndOfPair(pos);
 
 	const unsigned int lineid = m_lines.GetLineFromCharPos(pos);
 	const unsigned int lineend = m_lines.GetLineEndpos(lineid);

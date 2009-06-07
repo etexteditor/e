@@ -1,9 +1,11 @@
 #ifndef __TMTHEME_H__
 #define __TMTHEME_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-#include "wx/wx.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/string.h>
+	#include <wx/colour.h>
+	#include <wx/font.h>
 #endif
 
 struct tmTheme {

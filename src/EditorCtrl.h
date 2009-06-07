@@ -32,6 +32,7 @@
 #include "BundleItemType.h"
 #include "BracketHighlight.h"
 #include "DetectTripleClicks.h"
+#include "AutoPairs.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -665,69 +666,7 @@ private:
 
 	wxString m_indent;
 
-	class xAutoPair {
-	public:
-		void AdjustIntervalsUp(unsigned int bytes_inserted){
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-				t->start += bytes_inserted;
-				t->end += bytes_inserted;
-			}
-		};
-
-		void AdjustIntervalsDown(unsigned int bytes_removed) {
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-				t->start -= bytes_removed;
-				t->end -= bytes_removed;
-			}
-		};
-
-		void AdjustEndsUp(unsigned int bytes_inserted){
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-				t->end += bytes_inserted;
-			}
-		};
-
-		void AdjustEndsDown(unsigned int bytes_removed) {
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-				t->end -= bytes_removed;
-			}
-		};
-
-		void Clear() { m_pairStack.clear(); };
-
-		void ClearIfInsertingOutsideInnerPair(unsigned int pos) {
-			// Reset autoPair state if inserting outside inner pair
-			if (HasPairs() && pos == InnerPair().end) Clear();
-		};
-
-		bool HasPairs() const { return !m_pairStack.empty(); };
-
-		bool AtEndOfPair(unsigned int pos) const {
-			for (vector<interval>::const_iterator p = m_pairStack.begin(); p != m_pairStack.end(); ++p) {
-				if (p->end == pos) return true;
-			}
-			return false;
-		};
-
-		bool BeforeOuterPair(unsigned int pos) const {
-			return HasPairs() && pos < OuterPair().start;
-		};
-
-		const interval& InnerPair() const { return m_pairStack.back(); };
-		const interval& OuterPair() const { return m_pairStack[0]; };
-
-		void DropInnerPair() { m_pairStack.pop_back(); };
-		void AddInnerPair(unsigned int pos) { m_pairStack.push_back(interval(pos, pos)); };
-
-		bool Enabled() const { return m_doAutoPair; };
-		void Enable(bool enable) { m_doAutoPair = enable; };
-
-	private:
-		vector<interval> m_pairStack;
-		bool m_doAutoPair;
-	};
-
-	xAutoPair m_autopair;
+	AutoPairs m_autopair;
 
 	// Wrapping
 	bool m_doAutoWrap;

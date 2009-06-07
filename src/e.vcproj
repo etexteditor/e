@@ -1738,6 +1738,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\AutoPairs.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\AutoPairs.h"
+			>
+		</File>
+		<File
 			RelativePath=".\BracketHighlight.cpp"
 			>
 		</File>

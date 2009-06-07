@@ -4495,6 +4495,10 @@ void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
 }
 
 void EditorCtrl::SelectLine(unsigned int line_id, bool multiselect) {
+	// If we have a new, empty document, and the user triple-clicks anyway,
+	// don't do anything.
+	if (m_lines.GetLineCount() == 0) return;
+
 	wxASSERT(line_id < m_lines.GetLineCount());
 	m_lastScopePos = -1; // invalidate scope selections
 

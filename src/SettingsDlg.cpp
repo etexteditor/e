@@ -205,16 +205,14 @@ wxPanel* SettingsDlg::CreateProfilePage(wxWindow* parent) {
 		profileSizer->Add(labelPic, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 		wxBoxSizer* picSizer = new wxBoxSizer(wxHORIZONTAL);
-		{
-			m_ctrlUserPic = new wxStaticBitmap(profilePage, wxID_ANY, catalyst.GetUserPic(0));
-			m_ctrlUserPic->SetBackgroundColour(*wxWHITE);
-			picSizer->Add(m_ctrlUserPic, 0);
+		m_ctrlUserPic = new wxStaticBitmap(profilePage, wxID_ANY, catalyst.GetUserPic(0));
+		m_ctrlUserPic->SetBackgroundColour(*wxWHITE);
+		picSizer->Add(m_ctrlUserPic, 0);
 
-			wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load..."));
-			picSizer->Add(loadButton, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+		wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load..."));
+		picSizer->Add(loadButton, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
 
-			profileSizer->Add(picSizer, 0, wxALL, 5);
-		}
+		profileSizer->Add(picSizer, 0, wxALL, 5);
 	cxENDLOCK
 
 	profilePage->SetSizerAndFit(profileSizer);

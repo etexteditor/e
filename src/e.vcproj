@@ -1994,6 +1994,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\DetectTripleClicks.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DetectTripleClicks.h"
+			>
+		</File>
+		<File
 			RelativePath="DirWatcher.cpp"
 			>
 			<FileConfiguration

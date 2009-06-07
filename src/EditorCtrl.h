@@ -20,10 +20,10 @@
 #endif
 
 #include <wx/dnd.h>
+#include <wx/caret.h>
 
 #include "Catalyst.h"
 #include "Lines.h"
-#include <wx/caret.h>
 #include "styler_searchhl.h"
 #include "styler_syntax.h"
 #include "SnippetHandler.h"
@@ -31,6 +31,7 @@
 #include "FindFlags.h"
 #include "BundleItemType.h"
 #include "BracketHighlight.h"
+#include "DetectTripleClicks.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -631,28 +632,6 @@ private:
 
 	// Drag'n'Drop
 	wxPoint m_dragStartPos;
-
-	class DetectTripleClicks {
-	public:
-		DetectTripleClicks(): m_doubleClickedLine(-1) {}
-		void Reset() { 
-			m_doubleClickedLine = -1;
-			m_timer.Pause();
-		};
-
-		void Start(int doubleClickedLine){
-			m_doubleClickedLine = doubleClickedLine;
-			m_timer.Start();
-		};
-
-		bool TripleClickedLine(int line_id){
-			return m_doubleClickedLine == line_id && m_timer.Time() < 250;
-		};
-
-	private:
-		int m_doubleClickedLine;
-		wxStopWatch m_timer;
-	};
 
 	DetectTripleClicks m_tripleClicks;
 

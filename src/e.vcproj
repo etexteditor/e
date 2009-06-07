@@ -1738,6 +1738,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\BracketHighlight.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\BracketHighlight.h"
+			>
+		</File>
+		<File
 			RelativePath=".\BundleInfo.h"
 			>
 		</File>
@@ -2991,6 +2999,10 @@
 		</File>
 		<File
 			RelativePath="IEHtmlWin.h"
+			>
+		</File>
+		<File
+			RelativePath=".\Interval.h"
 			>
 		</File>
 		<File

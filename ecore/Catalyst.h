@@ -45,6 +45,7 @@
 #include "Dispatcher.h"
 //#include "zeroconf.h"
 #include "RecursiveCriticalSection.h"
+#include "Interval.h"
 
 using namespace std;
 
@@ -117,16 +118,6 @@ struct cxBookmark {
 	unsigned int end;
 };
 
-class interval {
-public:
-	interval() : start((unsigned int)-1), end((unsigned int)-1) {};
-	interval(unsigned int s, unsigned int e) : start(s), end(e) {};
-	bool operator==(const interval& iv) const {return (start == iv.start && end == iv.end);};
-	bool operator!=(const interval& iv) const {return (start != iv.start || end != iv.end);};
-	void Set(unsigned int s, unsigned int e) {start = s; end = e;};
-	unsigned int start;
-	unsigned int end;
-};
 struct match {
 	unsigned int iv1_start_pos;
 	unsigned int iv1_end_pos;

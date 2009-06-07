@@ -3174,7 +3174,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		}
 
 		// pairStack may be moved by insertions above it
-		if (!m_autopair.m_pairStack.empty() && m_autopair.m_pairStack[0].start > del_end) {
+		if (!m_autopair.m_pairStack.empty() && m_autopair.OuterPair().start > del_end) {
 			for (vector<interval>::iterator p = m_autopair.m_pairStack.begin(); p != m_autopair.m_pairStack.end(); ++p) {
 				p->start -= byte_len;
 				p->end -= byte_len;
@@ -3335,7 +3335,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 			if (m_lines.IsSelectionShadow()) m_lines.AddSelection(*i+il, *i+il+shadowlength+full_len);
 
 			// pairStack may be moved by insertions above it
-			if (m_autopair.HasPairs() && m_autopair.m_pairStack[0].start > pair_pos) {
+			if (m_autopair.HasPairs() && m_autopair.OuterPair().start > pair_pos) {
 				for (vector<interval>::iterator p = m_autopair.m_pairStack.begin(); p != m_autopair.m_pairStack.end(); ++p) {
 					p->start += full_len;
 					p->end += full_len;

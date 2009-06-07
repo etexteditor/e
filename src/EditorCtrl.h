@@ -686,9 +686,7 @@ private:
 			}
 		};
 
-		bool HasPairs() const {
-			return !m_pairStack.empty();
-		};
+		bool HasPairs() const { return !m_pairStack.empty(); };
 
 		bool AtEndOfPair(unsigned int pos) const {
 			for (vector<interval>::const_iterator p = m_pairStack.begin(); p != m_pairStack.end(); ++p) {
@@ -697,9 +695,8 @@ private:
 			return false;
 		};
 
-		const interval& InnerPair() const {
-			return m_pairStack.back();
-		};
+		const interval& InnerPair() const { return m_pairStack.back(); };
+		const interval& OuterPair() const { return m_pairStack[0]; };
 
 		bool m_doAutoPair;
 		vector<interval> m_pairStack;

@@ -322,18 +322,20 @@ void EditorCtrl::Init() {
 	m_selMode = SEL_NORMAL;
 
 	// Settings
-	m_doAutoPair = true;
+	bool autopair = true;
 	m_doAutoWrap = true;
 	m_wrapAtMargin = false;
 	bool doShowMargin = false;
 	int marginChars = 80;
 
 	eSettings& settings = eGetSettings();
-	settings.GetSettingBool(wxT("autoPair"), m_doAutoPair);
+	settings.GetSettingBool(wxT("autoPair"), autopair);
 	settings.GetSettingBool(wxT("autoWrap"), m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	settings.GetSettingBool(wxT("wrapMargin"), m_wrapAtMargin);
 	settings.GetSettingInt(wxT("marginChars"), marginChars);
+
+	m_autopair.m_doAutoPair = autopair;
 
 	m_lastScopePos = -1; // scope selection
 	if (!doShowMargin) m_wrapAtMargin = false;
@@ -1728,14 +1730,14 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 	wxASSERT(pos <= m_lines.GetLength());
 
 	// Reset autoPair state if inserting outside inner pair
-	if (!m_pairStack.empty() && pos != m_pairStack.back().end) {
-		m_pairStack.clear();
+	if (!m_autopair.m_pairStack.empty() && pos != m_autopair.m_pairStack.back().end) {
+		m_autopair.m_pairStack.clear();
 	}
 
 	wxString autoPair;
 	if (doSmartType) {
 		// Check if we are inserting at end of inner pair
-		if (!m_pairStack.empty()) { // we must be at end
+		if (!m_autopair.m_pairStack.empty()) { // we must be at end
 			wxChar c;
 			cxLOCKDOC_READ(m_doc)
 				c = doc.GetChar(pos);
@@ -1747,7 +1749,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 					pos = doc.GetNextCharPos(pos);
 				cxENDLOCK
 				m_lines.SetPos(pos);
-				m_pairStack.pop_back();
+				m_autopair.m_pairStack.pop_back();
 				return 0;
 			}
 		}
@@ -1783,7 +1785,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 		}
 		else {
 			// Adjust containing pairs
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+			for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
 				t->end += byte_len;
 			}
 		}
@@ -1802,7 +1804,6 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
 	const map<wxString, wxString> smartPairs = m_syntaxHandler.GetSmartTypingPairs(scope);
-
 	const map<wxString, wxString>::const_iterator p = smartPairs.find(text);
 
 #ifdef __WXDEBUG__
@@ -1821,11 +1822,11 @@ wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addToStack) {
 	wxASSERT(!text.empty());
 
-	if (!m_doAutoPair) return wxEmptyString;
+	if (!m_autopair.m_doAutoPair) return wxEmptyString;
 
 	// Are we just before a pair end?
 	bool inPair = false;
-	for (vector<interval>::const_iterator k = m_pairStack.begin(); k != m_pairStack.end(); ++k) {
+	for (vector<interval>::const_iterator k = m_autopair.m_pairStack.begin(); k != m_autopair.m_pairStack.end(); ++k) {
 		if (k->end == pos) {
 			inPair = true;
 			break;
@@ -1858,12 +1859,12 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 		const size_t byte_len = starter_len + ender_len;
 
 		// Adjust containing pairs
-		for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+		for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
 			t->end += (unsigned int)byte_len;
 		}
 
 		const unsigned int pairPos = pos + starter_len;
-		m_pairStack.push_back(interval(pairPos, pairPos));
+		m_autopair.m_pairStack.push_back(interval(pairPos, pairPos));
 	}
 
 	return pairEnd;
@@ -2029,8 +2030,8 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 
 	const unsigned int pos = m_lines.GetPos();
 
-	if (!m_pairStack.empty()) {
-		const interval& iv = m_pairStack.back();
+	if (!m_autopair.m_pairStack.empty()) {
+		const interval& iv = m_autopair.m_pairStack.back();
 
 		// Detect backspacing in active auto-pair
 		if (end == iv.start && end == iv.end) {
@@ -2041,11 +2042,11 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 
 			// Also delete pair ender
 			end = nextpos;
-			m_pairStack.pop_back();
+			m_autopair.m_pairStack.pop_back();
 		}
 		else if (iv.start > start || iv.end < end) {
 			// Reset autoPair state if deleting outside inner pair
-			m_pairStack.clear();
+			m_autopair.m_pairStack.clear();
 		}
 	}
 
@@ -2065,7 +2066,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	}
 
 	// Adjust containing pairs
-	for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+	for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
 		t->end -= del_len;
 	}
 
@@ -2380,7 +2381,7 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 		m_snippetHandler.Delete(start, end);
 		return;
 	}
-	m_pairStack.clear(); // invalidate auto-pair state
+	m_autopair.m_pairStack.clear(); // invalidate auto-pair state
 
 	const unsigned int pos = m_lines.GetPos();
 
@@ -2750,7 +2751,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 
 	topline = -1;
 	m_currentSel = -1;
-	m_pairStack.empty(); // reset autoPair state
+	m_autopair.m_pairStack.empty(); // reset autoPair state
 
 	bool inSameHistory = false;
 	if (oldDoc.IsOk()) {
@@ -3069,7 +3070,7 @@ void EditorCtrl::DeleteSelections() {
 		m_snippetHandler.Delete(iv.start, iv.end);
 		return;
 	}
-	m_pairStack.clear(); // invalidate auto-pair state
+	m_autopair.m_pairStack.clear(); // invalidate auto-pair state
 
 	cxLOCKDOC_WRITE(m_doc)
 		doc.Freeze(); // always freeze before modifying sel contents
@@ -3110,18 +3111,18 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 	wxASSERT(pos <= m_lines.GetLength());
 
 	bool inAutoPair = false;
-	if (!m_pairStack.empty()) {
-		const interval& iv = m_pairStack.back();
+	if (!m_autopair.m_pairStack.empty()) {
+		const interval& iv = m_autopair.m_pairStack.back();
 
 		// Detect backspacing in active auto-pair
 		if (!nextchar && pos == iv.start && pos == iv.end) {
 			// Also delete pair ender
 			inAutoPair = true;
-			m_pairStack.pop_back();
+			m_autopair.m_pairStack.pop_back();
 		}
 		else if ((nextchar && pos >= iv.end) || (!nextchar && pos <= iv.start)) {
 			// Reset autoPair state if deleting outside inner pair
-			m_pairStack.clear();
+			m_autopair.m_pairStack.clear();
 		}
 	}
 
@@ -3188,8 +3189,8 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		}
 
 		// pairStack may be moved by insertions above it
-		if (!m_pairStack.empty() && m_pairStack[0].start > del_end) {
-			for (vector<interval>::iterator p = m_pairStack.begin(); p != m_pairStack.end(); ++p) {
+		if (!m_autopair.m_pairStack.empty() && m_autopair.m_pairStack[0].start > del_end) {
+			for (vector<interval>::iterator p = m_autopair.m_pairStack.begin(); p != m_autopair.m_pairStack.end(); ++p) {
 				p->start -= byte_len;
 				p->end -= byte_len;
 			}
@@ -3197,7 +3198,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 
 		if (atCaret) {
 			// Adjust containing pairs
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+			for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
 				t->end -= byte_len;
 			}
 		}
@@ -3222,17 +3223,17 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 	unsigned int pos = m_lines.GetPos();
 
 	// Reset autoPair state if inserting outside inner pair
-	if (!m_pairStack.empty() && pos != m_pairStack.back().end) {
-		m_pairStack.clear();
+	if (!m_autopair.m_pairStack.empty() && pos != m_autopair.m_pairStack.back().end) {
+		m_autopair.m_pairStack.clear();
 	}
 
 	wxString autoPair;
 	if (text.length() == 1) {
 		if (m_lines.IsSelectionShadow()) {
-			if (!m_pairStack.empty()) {
-				if (pos != m_pairStack.back().end) {
+			if (!m_autopair.m_pairStack.empty()) {
+				if (pos != m_autopair.m_pairStack.back().end) {
 					// Reset autoPair state if inserting outside inner pair
-					m_pairStack.clear();
+					m_autopair.m_pairStack.clear();
 				}
 				else {
 					wxChar c;
@@ -3246,7 +3247,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 							pos = doc.GetNextCharPos(pos);
 						cxENDLOCK
 						m_lines.SetPos(pos);
-						m_pairStack.pop_back();
+						m_autopair.m_pairStack.pop_back();
 						return;
 					}
 				}
@@ -3354,8 +3355,8 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 			if (m_lines.IsSelectionShadow()) m_lines.AddSelection(*i+il, *i+il+shadowlength+full_len);
 
 			// pairStack may be moved by insertions above it
-			if (!m_pairStack.empty() && m_pairStack[0].start > pair_pos) {
-				for (vector<interval>::iterator p = m_pairStack.begin(); p != m_pairStack.end(); ++p) {
+			if (!m_autopair.m_pairStack.empty() && m_autopair.m_pairStack[0].start > pair_pos) {
+				for (vector<interval>::iterator p = m_autopair.m_pairStack.begin(); p != m_autopair.m_pairStack.end(); ++p) {
 					p->start += full_len;
 					p->end += full_len;
 				}
@@ -3368,7 +3369,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 
 				// If we are just inserting text, adjust containing pairs
 				if (autoPair.empty()) {
-					for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
+					for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
 						t->end += byte_len;
 					}
 				}
@@ -5750,8 +5751,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	const unsigned int oldpos = m_lines.GetPos();
 
 	// Invalidate state
-	if (!m_pairStack.empty() && (oldpos < m_pairStack.back().start || oldpos > m_pairStack.back().end)) {
-		m_pairStack.clear();
+	if (!m_autopair.m_pairStack.empty() && (oldpos < m_autopair.m_pairStack.back().start || oldpos > m_autopair.m_pairStack.back().end)) {
+		m_autopair.m_pairStack.clear();
 	}
 	m_lastScopePos = -1; // scope selections
 
@@ -6062,8 +6063,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					pos = m_lines.GetPos();
 
 					// Reset autoPair state if deleting outside inner pair
-					if (!m_pairStack.empty() && (m_pairStack.back().start > pos || m_pairStack.back().end <= pos)) {
-						m_pairStack.clear();
+					if (!m_autopair.m_pairStack.empty() && (m_autopair.m_pairStack.back().start > pos || m_autopair.m_pairStack.back().end <= pos)) {
+						m_autopair.m_pairStack.clear();
 					}
 
 					// Check if we should delete entire word
@@ -7863,7 +7864,7 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 
 	// Update settings
 	eSettings& settings = eGetSettings();
-	settings.GetSettingBool(wxT("autoPair"), self->m_doAutoPair);
+	settings.GetSettingBool(wxT("autoPair"), self->m_autopair.m_doAutoPair);
 	settings.GetSettingBool(wxT("autoWrap"), self->m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	settings.GetSettingBool(wxT("wrapMargin"), self->m_wrapAtMargin);

@@ -665,14 +665,19 @@ private:
 
 	wxString m_indent;
 
-	// Auto-pair brackets
-	bool m_doAutoPair;
+	class xAutoPair {
+	public:
+		bool m_doAutoPair;
+		vector<interval> m_pairStack;
+	};
+
+	xAutoPair m_autopair;
+
+	// Wrapping
 	bool m_doAutoWrap;
-	vector<interval> m_pairStack;
 	bool m_wrapAtMargin;
 
 	BracketHighlight m_bracketHighlight;
-
 
 	int m_lastScopePos;
 

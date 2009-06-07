@@ -686,6 +686,10 @@ private:
 			}
 		};
 
+		bool HasPairs() const {
+			return !m_pairStack.empty();
+		};
+
 		bool m_doAutoPair;
 		vector<interval> m_pairStack;
 	};

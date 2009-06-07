@@ -1734,7 +1734,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 	wxString autoPair;
 	if (doSmartType) {
 		// Check if we are inserting at end of inner pair
-		if (!m_autopair.m_pairStack.empty()) { // we must be at end
+		if (m_autopair.HasPairs()) { // we must be at end
 			wxChar c;
 			cxLOCKDOC_READ(m_doc)
 				c = doc.GetChar(pos);
@@ -2742,7 +2742,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 
 	topline = -1;
 	m_currentSel = -1;
-	m_autopair.m_pairStack.empty(); // reset autoPair state
+	m_autopair.m_pairStack.clear(); // reset autoPair state - adamv - changed from 'empty' to 'clear'.
 
 	bool inSameHistory = false;
 	if (oldDoc.IsOk()) {
@@ -3102,7 +3102,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 	wxASSERT(pos <= m_lines.GetLength());
 
 	bool inAutoPair = false;
-	if (!m_autopair.m_pairStack.empty()) {
+	if (m_autopair.HasPairs()) {
 		const interval& iv = m_autopair.m_pairStack.back();
 
 		// Detect backspacing in active auto-pair
@@ -3216,7 +3216,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 	wxString autoPair;
 	if (text.length() == 1) {
 		if (m_lines.IsSelectionShadow()) {
-			if (!m_autopair.m_pairStack.empty()) {
+			if (m_autopair.HasPairs()) {
 				if (pos != m_autopair.m_pairStack.back().end) {
 					// Reset autoPair state if inserting outside inner pair
 					m_autopair.m_pairStack.clear();
@@ -3341,7 +3341,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 			if (m_lines.IsSelectionShadow()) m_lines.AddSelection(*i+il, *i+il+shadowlength+full_len);
 
 			// pairStack may be moved by insertions above it
-			if (!m_autopair.m_pairStack.empty() && m_autopair.m_pairStack[0].start > pair_pos) {
+			if (m_autopair.HasPairs() && m_autopair.m_pairStack[0].start > pair_pos) {
 				for (vector<interval>::iterator p = m_autopair.m_pairStack.begin(); p != m_autopair.m_pairStack.end(); ++p) {
 					p->start += full_len;
 					p->end += full_len;
@@ -5735,7 +5735,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	const unsigned int oldpos = m_lines.GetPos();
 
 	// Invalidate state
-	if (!m_autopair.m_pairStack.empty() && (oldpos < m_autopair.m_pairStack.back().start || oldpos > m_autopair.m_pairStack.back().end)) {
+	if (m_autopair.HasPairs() && (oldpos < m_autopair.m_pairStack.back().start || oldpos > m_autopair.m_pairStack.back().end)) {
 		m_autopair.m_pairStack.clear();
 	}
 	m_lastScopePos = -1; // scope selections
@@ -6047,7 +6047,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					pos = m_lines.GetPos();
 
 					// Reset autoPair state if deleting outside inner pair
-					if (!m_autopair.m_pairStack.empty() && (m_autopair.m_pairStack.back().start > pos || m_autopair.m_pairStack.back().end <= pos)) {
+					if (m_autopair.HasPairs() && (m_autopair.m_pairStack.back().start > pos || m_autopair.m_pairStack.back().end <= pos)) {
 						m_autopair.m_pairStack.clear();
 					}
 

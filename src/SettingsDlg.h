@@ -32,9 +32,14 @@ public:
 	SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings);
 
 private:
+	wxPanel* CreateSettingsPage(wxWindow* parent);
+	wxPanel* CreateEncodingPage(wxWindow* parent);
+	wxPanel* CreateProfilePage(wxWindow* parent);
+
 	void UpdateEncoding();
 
 #ifdef __WXMSW__
+	wxPanel* CreateUnixPage(wxWindow* parent);
 	void UpdateUnixPage();
 #endif
 

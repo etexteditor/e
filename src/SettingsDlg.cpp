@@ -34,7 +34,7 @@ inline bool encoding_allows_bom(wxFontEncoding enc) {
 		enc == wxFONTENCODING_UTF16BE || enc == wxFONTENCODING_UTF32LE || enc == wxFONTENCODING_UTF32BE);
 }
 
-// Ctrl id's
+// Ctrl ids
 enum {
 	CTRL_LOADPIC = 100,
 	CTRL_AUTOPAIR,
@@ -66,201 +66,201 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_CHECKBOX(CTRL_BOM, SettingsDlg::OnCheckBom)
 END_EVENT_TABLE()
 
-SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings)
-: wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_settings(settings), m_catalyst(cw), m_ctUserPic(false)
+
+SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_settings(settings), m_catalyst(cw), m_ctUserPic(false)
 {
 	SetTitle (_("Settings"));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-	{
-		// Create the notebook
-		wxNotebook* notebook = new wxNotebook(this, wxID_ANY);
-		{
-			// Create the settings page
-			wxPanel* settingsPage = new wxPanel(notebook, wxID_ANY);
-			{
-				wxCheckBox* autoPair = new wxCheckBox(settingsPage, CTRL_AUTOPAIR, _("Auto-pair characters (quotes etc.)"));
-				wxCheckBox* autoWrap = new wxCheckBox(settingsPage, CTRL_AUTOWRAP, _("Auto-wrap selections"));
-				wxCheckBox* keepState = new wxCheckBox(settingsPage, CTRL_KEEPSTATE, _("Keep state between sessions"));
-				wxCheckBox* checkChange = new wxCheckBox(settingsPage, CTRL_CHECKCHANGE, _("Check for external file modifications"));
-				wxCheckBox* showMargin = new wxCheckBox(settingsPage, CTRL_SHOWMARGIN, _("Show margin line"));
-				m_marginSpin = new wxSpinCtrl(settingsPage, CTRL_MARGINSPIN, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 500, 80);
-				m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
 
-				wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
-					settingsSizer->Add(autoPair, 0, wxALL, 5);
-					settingsSizer->Add(autoWrap, 0, wxALL, 5);
-					settingsSizer->Add(keepState, 0, wxALL, 5);
-					settingsSizer->Add(checkChange, 0, wxALL, 5);
-					wxBoxSizer* marginSizer = new wxBoxSizer(wxHORIZONTAL);
-						marginSizer->Add(showMargin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-						marginSizer->Add(m_marginSpin);
-						settingsSizer->Add(marginSizer);
-					settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
-				settingsPage->SetSizer(settingsSizer);
+	wxNotebook* notebook = new wxNotebook(this, wxID_ANY);
 
-				// Settings defaults.
-				bool doAutoPair = true;
-				bool doAutoWrap = true;
-				bool doKeepState = true;
-				bool doCheckChange = true;
-				bool doShowMargin = false;
-				bool doWrapMargin = false;
-				int marginChars = 80;  
+	wxPanel* settingsPage = CreateSettingsPage(notebook);
+	notebook->AddPage(settingsPage, _("Settings"), true);
 
-				m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
-				m_settings.GetSettingBool(wxT("autoWrap"), doAutoWrap);
-				m_settings.GetSettingBool(wxT("keepState"), doKeepState);
-				m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
-				m_settings.GetSettingBool(wxT("showMargin"), doShowMargin);
-				m_settings.GetSettingBool(wxT("wrapMargin"), doWrapMargin);
-				m_settings.GetSettingInt(wxT("marginChars"), marginChars);
+	wxPanel* encodingPage = CreateEncodingPage(notebook);
+	notebook->AddPage(encodingPage, _("Encoding"), true);
+	
+	wxPanel* profilePage = CreateProfilePage(notebook);
+	notebook->AddPage(profilePage, _("Profile"), true);
 
-				// Update ctrls
-				autoPair->SetValue(doAutoPair);
-				autoWrap->SetValue(doAutoWrap);
-				keepState->SetValue(doKeepState);
-				checkChange->SetValue(doCheckChange);
-				showMargin->SetValue(doShowMargin);
-				m_marginSpin->SetValue(marginChars);
-				m_wrapMargin->SetValue(doWrapMargin);
-				if (!doShowMargin) {
-					m_marginSpin->Disable();
-					m_wrapMargin->Disable();
-				}
-			}
-			notebook->AddPage(settingsPage, _("Settings"), true);
-
-			// Create encoding page
-			wxPanel* encodingPage = new wxPanel(notebook, wxID_ANY);
-			{
-				wxStaticText* desc = new wxStaticText(encodingPage, wxID_ANY, _("Set default encoding for new files."));
-				wxStaticText* labelLine = new wxStaticText(encodingPage, wxID_ANY, _("Line Endings:"));
-				wxStaticText* labelEnc = new wxStaticText(encodingPage, wxID_ANY, _("Encoding:"));
-				m_defLine = new wxComboBox(encodingPage, CTRL_LINEENDING, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN|wxCB_READONLY);
-				m_defEnc = new wxComboBox(encodingPage, CTRL_ENCODING, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN|wxCB_READONLY);
-				m_defBom = new wxCheckBox(encodingPage, CTRL_BOM, _("Byte Order Marker"));
-
-				wxBoxSizer* encSizer = new wxBoxSizer(wxVERTICAL);
-					encSizer->Add(desc, 0, wxALL, 5);
-					wxFlexGridSizer* combiSizer = new wxFlexGridSizer(2, 2, 5, 5);
-						combiSizer->Add(labelLine);
-						combiSizer->Add(m_defLine);
-						combiSizer->Add(labelEnc);
-						combiSizer->Add(m_defEnc);
-						combiSizer->AddStretchSpacer(0);
-						combiSizer->Add(m_defBom);
-						encSizer->Add(combiSizer, 0, wxALL, 5);
-				encodingPage->SetSizer(encSizer);
-
-				UpdateEncoding();
-			}
-			notebook->AddPage(encodingPage, _("Encoding"), true);
-			
-			// Create the profile page
-			wxPanel* profilePage = new wxPanel(notebook, wxID_ANY);
-			{
-				wxFlexGridSizer* profileSizer = new wxFlexGridSizer(2, 2, 0, 0);
-				{
-					profileSizer->AddGrowableCol(1); // col 2 is sizable
-
-					wxStaticText* labelName = new wxStaticText(profilePage, wxID_ANY, _("Name:"));
-					profileSizer->Add(labelName, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-					
-					cxLOCK_READ(m_catalyst)
-						m_ctrlUserName = new wxTextCtrl(profilePage, wxID_ANY, catalyst.GetUserName(0));
-						profileSizer->Add(m_ctrlUserName, 1, wxEXPAND|wxALL, 5);
-
-						wxStaticText* labelPic = new wxStaticText(profilePage, wxID_ANY, _("Picture:"));
-						profileSizer->Add(labelPic, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-						wxBoxSizer* picSizer = new wxBoxSizer(wxHORIZONTAL);
-						{
-							m_ctrlUserPic = new wxStaticBitmap(profilePage, wxID_ANY, catalyst.GetUserPic(0));
-							m_ctrlUserPic->SetBackgroundColour(*wxWHITE);
-							picSizer->Add(m_ctrlUserPic, 0);
-
-							wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load..."));
-							picSizer->Add(loadButton, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
-
-							profileSizer->Add(picSizer, 0, wxALL, 5);
-						}
-					cxENDLOCK
-
-					profilePage->SetSizerAndFit(profileSizer);
-				}
-				notebook->AddPage(profilePage, _("Profile"), true);
-			}
-
-			m_envPage = new EnvVarsPanel(notebook);
-			m_envPage->AddVars(this->m_settings.env);
-			notebook->AddPage(m_envPage, _("Environment"), true);
+	m_envPage = new EnvVarsPanel(notebook);
+	m_envPage->AddVars(this->m_settings.env);
+	notebook->AddPage(m_envPage, _("Environment"), true);
 
 
 #ifdef __WXMSW__
-			// Create the UNIX-on-Windws page
-			{
-				m_unixPage = new wxPanel(notebook, wxID_ANY);
-				wxFlexGridSizer* sizer = new wxFlexGridSizer(4, 2, 0, 0);
-				{
-					sizer->AddGrowableCol(1); // 2nd column is sizable
-
-					// Is Cygwin intialized?
-					wxStaticText* labelCygInit = new wxStaticText(m_unixPage, wxID_ANY, _("Cygwin initialized?"));
-					sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-					m_labelCygInitValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
-					sizer->Add(m_labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-					// Bash path
-					wxStaticText* labelBashPath = new wxStaticText(m_unixPage, wxID_ANY, _("Bash path:"));
-					sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-					m_labelBashPathValue = new wxStaticText(m_unixPage, wxID_ANY, 	_(""));
-					sizer->Add(m_labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-					// Cygdrive path
-					wxStaticText* labelCygdrive = new wxStaticText(m_unixPage, wxID_ANY, _("Cygdrive prefix:"));
-					sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-					m_labelCygdriveValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
-					sizer->Add(m_labelCygdriveValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-
-					// Button
-					sizer->AddStretchSpacer();
-
-					m_cygwinButton = new wxButton(m_unixPage, CTRL_CYGWIN_ACTION, _(""));
-					sizer->Add(m_cygwinButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
-				}
-
-				// Size and fit
-				m_unixPage->SetSizerAndFit(sizer);
-				UpdateUnixPage();
-
-				notebook->AddPage(m_unixPage, _("UNIX"), true);
-			}
+	m_unixPage = CreateUnixPage(notebook);
+	notebook->AddPage(m_unixPage, _("UNIX"), true);
 #endif
 
-			notebook->SetSelection(0);
-			mainSizer->Add(notebook, 0, wxEXPAND|wxALL, 5);
-		}
-
-		// Buttons
-		mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
-	}
-
+	notebook->SetSelection(0);
+	mainSizer->Add(notebook, 0, wxEXPAND|wxALL, 5);
+	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 	SetSizerAndFit(mainSizer);
 
 	// Manually set size hints
-	// This should be removed when there are multiple pages
 	const wxSize size = GetSize();
 	SetSizeHints(size.x, size.y, -1, size.y);
 
 	Centre();
 }
 
+wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
+	wxPanel* settingsPage = new wxPanel(parent, wxID_ANY);
+	
+	wxCheckBox* autoPair = new wxCheckBox(settingsPage, CTRL_AUTOPAIR, _("Auto-pair characters (quotes etc.)"));
+	wxCheckBox* autoWrap = new wxCheckBox(settingsPage, CTRL_AUTOWRAP, _("Auto-wrap selections"));
+	wxCheckBox* keepState = new wxCheckBox(settingsPage, CTRL_KEEPSTATE, _("Keep state between sessions"));
+	wxCheckBox* checkChange = new wxCheckBox(settingsPage, CTRL_CHECKCHANGE, _("Check for external file modifications"));
+	wxCheckBox* showMargin = new wxCheckBox(settingsPage, CTRL_SHOWMARGIN, _("Show margin line"));
+	m_marginSpin = new wxSpinCtrl(settingsPage, CTRL_MARGINSPIN, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 500, 80);
+	m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
+
+	wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
+		settingsSizer->Add(autoPair, 0, wxALL, 5);
+		settingsSizer->Add(autoWrap, 0, wxALL, 5);
+		settingsSizer->Add(keepState, 0, wxALL, 5);
+		settingsSizer->Add(checkChange, 0, wxALL, 5);
+		wxBoxSizer* marginSizer = new wxBoxSizer(wxHORIZONTAL);
+			marginSizer->Add(showMargin, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+			marginSizer->Add(m_marginSpin);
+			settingsSizer->Add(marginSizer);
+		settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
+	settingsPage->SetSizer(settingsSizer);
+
+	// Settings defaults.
+	bool doAutoPair = true;
+	bool doAutoWrap = true;
+	bool doKeepState = true;
+	bool doCheckChange = true;
+	bool doShowMargin = false;
+	bool doWrapMargin = false;
+	int marginChars = 80;  
+
+	m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
+	m_settings.GetSettingBool(wxT("autoWrap"), doAutoWrap);
+	m_settings.GetSettingBool(wxT("keepState"), doKeepState);
+	m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+	m_settings.GetSettingBool(wxT("showMargin"), doShowMargin);
+	m_settings.GetSettingBool(wxT("wrapMargin"), doWrapMargin);
+	m_settings.GetSettingInt(wxT("marginChars"), marginChars);
+
+	// Update ctrls
+	autoPair->SetValue(doAutoPair);
+	autoWrap->SetValue(doAutoWrap);
+	keepState->SetValue(doKeepState);
+	checkChange->SetValue(doCheckChange);
+	showMargin->SetValue(doShowMargin);
+	m_marginSpin->SetValue(marginChars);
+	m_wrapMargin->SetValue(doWrapMargin);
+	if (!doShowMargin) {
+		m_marginSpin->Disable();
+		m_wrapMargin->Disable();
+	}
+
+	return settingsPage;
+}
+
+wxPanel* SettingsDlg::CreateEncodingPage(wxWindow* parent) {
+	wxPanel* encodingPage = new wxPanel(parent, wxID_ANY);
+	wxStaticText* desc = new wxStaticText(encodingPage, wxID_ANY, _("Set default encoding for new files."));
+	wxStaticText* labelLine = new wxStaticText(encodingPage, wxID_ANY, _("Line Endings:"));
+	wxStaticText* labelEnc = new wxStaticText(encodingPage, wxID_ANY, _("Encoding:"));
+	m_defLine = new wxComboBox(encodingPage, CTRL_LINEENDING, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN|wxCB_READONLY);
+	m_defEnc = new wxComboBox(encodingPage, CTRL_ENCODING, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN|wxCB_READONLY);
+	m_defBom = new wxCheckBox(encodingPage, CTRL_BOM, _("Byte Order Marker"));
+
+	wxBoxSizer* encSizer = new wxBoxSizer(wxVERTICAL);
+	encSizer->Add(desc, 0, wxALL, 5);
+	wxFlexGridSizer* combiSizer = new wxFlexGridSizer(2, 2, 5, 5);
+		combiSizer->Add(labelLine);
+		combiSizer->Add(m_defLine);
+		combiSizer->Add(labelEnc);
+		combiSizer->Add(m_defEnc);
+		combiSizer->AddStretchSpacer(0);
+		combiSizer->Add(m_defBom);
+		encSizer->Add(combiSizer, 0, wxALL, 5);
+	encodingPage->SetSizer(encSizer);
+
+	UpdateEncoding();
+	return encodingPage;
+}
+
+wxPanel* SettingsDlg::CreateProfilePage(wxWindow* parent) {
+	wxPanel* profilePage = new wxPanel(parent, wxID_ANY);
+	wxFlexGridSizer* profileSizer = new wxFlexGridSizer(2, 2, 0, 0);
+	profileSizer->AddGrowableCol(1); // col 2 is sizable
+
+	wxStaticText* labelName = new wxStaticText(profilePage, wxID_ANY, _("Name:"));
+	profileSizer->Add(labelName, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+	
+	cxLOCK_READ(m_catalyst)
+		m_ctrlUserName = new wxTextCtrl(profilePage, wxID_ANY, catalyst.GetUserName(0));
+		profileSizer->Add(m_ctrlUserName, 1, wxEXPAND|wxALL, 5);
+
+		wxStaticText* labelPic = new wxStaticText(profilePage, wxID_ANY, _("Picture:"));
+		profileSizer->Add(labelPic, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+		wxBoxSizer* picSizer = new wxBoxSizer(wxHORIZONTAL);
+		{
+			m_ctrlUserPic = new wxStaticBitmap(profilePage, wxID_ANY, catalyst.GetUserPic(0));
+			m_ctrlUserPic->SetBackgroundColour(*wxWHITE);
+			picSizer->Add(m_ctrlUserPic, 0);
+
+			wxButton* loadButton = new wxButton(profilePage, CTRL_LOADPIC, _("Load..."));
+			picSizer->Add(loadButton, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 15);
+
+			profileSizer->Add(picSizer, 0, wxALL, 5);
+		}
+	cxENDLOCK
+
+	profilePage->SetSizerAndFit(profileSizer);
+	return profilePage;
+}
+
 #ifdef __WXMSW__
+wxPanel* SettingsDlg::CreateUnixPage(wxWindow* parent) {
+	wxPanel* unixPage = new wxPanel(parent, wxID_ANY);
+
+	wxFlexGridSizer* sizer = new wxFlexGridSizer(4, 2, 0, 0);
+	sizer->AddGrowableCol(1); // 2nd column is sizable
+
+	// Is Cygwin intialized?
+	wxStaticText* labelCygInit = new wxStaticText(m_unixPage, wxID_ANY, _("Cygwin initialized?"));
+	sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	m_labelCygInitValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
+	sizer->Add(m_labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	// Bash path
+	wxStaticText* labelBashPath = new wxStaticText(m_unixPage, wxID_ANY, _("Bash path:"));
+	sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	m_labelBashPathValue = new wxStaticText(m_unixPage, wxID_ANY, 	_(""));
+	sizer->Add(m_labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	// Cygdrive path
+	wxStaticText* labelCygdrive = new wxStaticText(m_unixPage, wxID_ANY, _("Cygdrive prefix:"));
+	sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	m_labelCygdriveValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
+	sizer->Add(m_labelCygdriveValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	// Button
+	sizer->AddStretchSpacer();
+
+	m_cygwinButton = new wxButton(m_unixPage, CTRL_CYGWIN_ACTION, _(""));
+	sizer->Add(m_cygwinButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	unixPage->SetSizerAndFit(sizer);
+	UpdateUnixPage();
+
+	return unixPage;
+}
+
 void SettingsDlg::UpdateUnixPage() {
 	const bool cygwin_initialized = eDocumentPath::IsInitialized();
 

@@ -3174,7 +3174,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		}
 
 		// pairStack may be moved by insertions above it
-		if (m_autopair.HasPairs() && del_end < m_autopair.OuterPair().start) {
+		if (m_autopair.BeforeOuterPair(del_end)) {
 			m_autopair.AdjustIntervalsDown(byte_len);
 		}
 
@@ -3332,7 +3332,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 			if (m_lines.IsSelectionShadow()) m_lines.AddSelection(*i+il, *i+il+shadowlength+full_len);
 
 			// pairStack may be moved by insertions above it
-			if (m_autopair.HasPairs() && pair_pos < m_autopair.OuterPair().start) {
+			if (m_autopair.BeforeOuterPair(pair_pos)) {
 				m_autopair.AdjustIntervalsUp(full_len);
 			}
 

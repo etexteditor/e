@@ -14,7 +14,7 @@
 #include "matchers.h"
 #include <wx/file.h>
 #include "pcre.h"
-#include "Catalyst.h"
+#include "Interval.h"
 #include <wx/regex.h>
 
 // STL can't compile with Level 4

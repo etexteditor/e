@@ -1785,9 +1785,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 		}
 		else {
 			// Adjust containing pairs
-			for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
-				t->end += byte_len;
-			}
+			m_autopair.AdjustEndsUp(byte_len);
 		}
 	}
 	else {
@@ -1859,9 +1857,7 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 		const size_t byte_len = starter_len + ender_len;
 
 		// Adjust containing pairs
-		for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
-			t->end += (unsigned int)byte_len;
-		}
+		m_autopair.AdjustEndsUp(byte_len);
 
 		const unsigned int pairPos = pos + starter_len;
 		m_autopair.m_pairStack.push_back(interval(pairPos, pairPos));
@@ -2066,9 +2062,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	}
 
 	// Adjust containing pairs
-	for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
-		t->end -= del_len;
-	}
+	m_autopair.AdjustEndsDown(del_len);
 
 	MarkAsModified();
 	return del_len;
@@ -3198,9 +3192,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 
 		if (atCaret) {
 			// Adjust containing pairs
-			for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
-				t->end -= byte_len;
-			}
+			m_autopair.AdjustEndsDown(byte_len);
 		}
 
 		// Restore shadow selection
@@ -3369,9 +3361,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 
 				// If we are just inserting text, adjust containing pairs
 				if (autoPair.empty()) {
-					for (vector<interval>::iterator t = m_autopair.m_pairStack.begin(); t != m_autopair.m_pairStack.end(); ++t) {
-						t->end += byte_len;
-					}
+					m_autopair.AdjustEndsUp(byte_len);
 				}
 			}
 

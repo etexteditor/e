@@ -1746,7 +1746,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 					pos = doc.GetNextCharPos(pos);
 				cxENDLOCK
 				m_lines.SetPos(pos);
-				m_autopair.m_pairStack.pop_back();
+				m_autopair.DropInnerPair();
 				return 0;
 			}
 		}
@@ -1851,7 +1851,7 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 		m_autopair.AdjustEndsUp(byte_len);
 
 		const unsigned int pairPos = pos + starter_len;
-		m_autopair.m_pairStack.push_back(interval(pairPos, pairPos));
+		m_autopair.AddInnerPair(pairPos);
 	}
 
 	return pairEnd;
@@ -2029,7 +2029,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 
 			// Also delete pair ender
 			end = nextpos;
-			m_autopair.m_pairStack.pop_back();
+			m_autopair.DropInnerPair();
 		}
 		else if (iv.start > start || iv.end < end) {
 			// Reset autoPair state if deleting outside inner pair
@@ -3103,7 +3103,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		if (!nextchar && pos == iv.start && pos == iv.end) {
 			// Also delete pair ender
 			inAutoPair = true;
-			m_autopair.m_pairStack.pop_back();
+			m_autopair.DropInnerPair();
 		}
 		else if ((nextchar && pos >= iv.end) || (!nextchar && pos <= iv.start)) {
 			// Reset autoPair state if deleting outside inner pair
@@ -3224,7 +3224,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 							pos = doc.GetNextCharPos(pos);
 						cxENDLOCK
 						m_lines.SetPos(pos);
-						m_autopair.m_pairStack.pop_back();
+						m_autopair.DropInnerPair();
 						return;
 					}
 				}

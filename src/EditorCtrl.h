@@ -697,9 +697,8 @@ private:
 
 		void ClearIfInsertingOutsideInnerPair(unsigned int pos) {
 			// Reset autoPair state if inserting outside inner pair
-			if (!m_pairStack.empty() && pos != m_pairStack.back().end) {
-				m_pairStack.clear();
-			}
+			if (!HasPairs()) return;
+			if (pos == InnerPair().end) Clear();
 		};
 
 		bool HasPairs() const { return !m_pairStack.empty(); };
@@ -714,12 +713,14 @@ private:
 		const interval& InnerPair() const { return m_pairStack.back(); };
 		const interval& OuterPair() const { return m_pairStack[0]; };
 
+		void DropInnerPair() { m_pairStack.pop_back(); };
+		void AddInnerPair(unsigned int pos) { m_pairStack.push_back(interval(pos, pos)); };
+
 		bool Enabled() const { return m_doAutoPair; };
 		void Enable(bool enable) { m_doAutoPair = enable; };
 
-		vector<interval> m_pairStack;
-
 	private:
+		vector<interval> m_pairStack;
 		bool m_doAutoPair;
 	};
 

@@ -335,7 +335,7 @@ void EditorCtrl::Init() {
 	settings.GetSettingBool(wxT("wrapMargin"), m_wrapAtMargin);
 	settings.GetSettingInt(wxT("marginChars"), marginChars);
 
-	m_autopair.m_doAutoPair = autopair;
+	m_autopair.Enable(autopair);
 
 	m_lastScopePos = -1; // scope selection
 	if (!doShowMargin) m_wrapAtMargin = false;
@@ -1817,7 +1817,7 @@ wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addToStack) {
 	wxASSERT(!text.empty());
 
-	if (!m_autopair.m_doAutoPair) return wxEmptyString;
+	if (!m_autopair.Enabled()) return wxEmptyString;
 
 	// Are we just before a pair end?
 	bool inPair = m_autopair.AtEndOfPair(pos);
@@ -2017,7 +2017,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 
 	const unsigned int pos = m_lines.GetPos();
 
-	if (!m_autopair.m_pairStack.empty()) {
+	if (m_autopair.HasPairs()) {
 		const interval& iv = m_autopair.InnerPair();
 
 		// Detect backspacing in active auto-pair
@@ -7848,7 +7848,10 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 
 	// Update settings
 	eSettings& settings = eGetSettings();
-	settings.GetSettingBool(wxT("autoPair"), self->m_autopair.m_doAutoPair);
+	bool autoPair = false;
+	settings.GetSettingBool(wxT("autoPair"), autoPair);
+	self->m_autopair.Enable(autoPair);
+
 	settings.GetSettingBool(wxT("autoWrap"), self->m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	settings.GetSettingBool(wxT("wrapMargin"), self->m_wrapAtMargin);

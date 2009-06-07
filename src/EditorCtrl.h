@@ -698,8 +698,13 @@ private:
 		const interval& InnerPair() const { return m_pairStack.back(); };
 		const interval& OuterPair() const { return m_pairStack[0]; };
 
-		bool m_doAutoPair;
+		bool Enabled() const { return m_doAutoPair; };
+		void Enable(bool enable) { m_doAutoPair = enable; };
+
 		vector<interval> m_pairStack;
+
+	private:
+		bool m_doAutoPair;
 	};
 
 	xAutoPair m_autopair;

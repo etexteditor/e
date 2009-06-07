@@ -2018,7 +2018,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	const unsigned int pos = m_lines.GetPos();
 
 	if (!m_autopair.m_pairStack.empty()) {
-		const interval& iv = m_autopair.m_pairStack.back();
+		const interval& iv = m_autopair.InnerPair();
 
 		// Detect backspacing in active auto-pair
 		if (end == iv.start && end == iv.end) {
@@ -3097,7 +3097,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 
 	bool inAutoPair = false;
 	if (m_autopair.HasPairs()) {
-		const interval& iv = m_autopair.m_pairStack.back();
+		const interval& iv = m_autopair.InnerPair();
 
 		// Detect backspacing in active auto-pair
 		if (!nextchar && pos == iv.start && pos == iv.end) {
@@ -3211,7 +3211,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 	if (text.length() == 1) {
 		if (m_lines.IsSelectionShadow()) {
 			if (m_autopair.HasPairs()) {
-				if (pos != m_autopair.m_pairStack.back().end) {
+				if (pos != m_autopair.InnerPair().end) {
 					// Reset autoPair state if inserting outside inner pair
 					m_autopair.m_pairStack.clear();
 				}
@@ -5729,8 +5729,11 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	const unsigned int oldpos = m_lines.GetPos();
 
 	// Invalidate state
-	if (m_autopair.HasPairs() && (oldpos < m_autopair.m_pairStack.back().start || oldpos > m_autopair.m_pairStack.back().end)) {
-		m_autopair.m_pairStack.clear();
+	if (m_autopair.HasPairs())
+	{
+		const interval& inner_pair = m_autopair.InnerPair();
+		if (oldpos < inner_pair.start || inner_pair.end < oldpos)
+			m_autopair.m_pairStack.clear();
 	}
 	m_lastScopePos = -1; // scope selections
 
@@ -6041,8 +6044,11 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					pos = m_lines.GetPos();
 
 					// Reset autoPair state if deleting outside inner pair
-					if (m_autopair.HasPairs() && (m_autopair.m_pairStack.back().start > pos || m_autopair.m_pairStack.back().end <= pos)) {
-						m_autopair.m_pairStack.clear();
+					if (m_autopair.HasPairs())
+					{
+						const interval& inner_pair = m_autopair.InnerPair();
+						if (pos < inner_pair.start || inner_pair.end <= pos)
+							m_autopair.m_pairStack.clear();
 					}
 
 					// Check if we should delete entire word

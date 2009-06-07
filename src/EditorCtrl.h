@@ -697,6 +697,10 @@ private:
 			return false;
 		};
 
+		const interval& InnerPair() const {
+			return m_pairStack.back();
+		};
+
 		bool m_doAutoPair;
 		vector<interval> m_pairStack;
 	};

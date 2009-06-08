@@ -12,10 +12,23 @@
  ******************************************************************************/
 
 #include "ThemeEditor.h"
+#include <wx/grid.h>
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
 #include "Strings.h"
 #include "ITmThemeHandler.h"
+
+
+class ColourCellRenderer : public wxGridCellRenderer {
+public:
+	ColourCellRenderer(const PListDict& themeDict) : m_themeDict(themeDict) {};
+	void Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected);
+	wxSize GetBestSize(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, int row, int col);
+	wxGridCellRenderer* Clone() const;
+private:
+	const PListDict& m_themeDict;
+};
+
 
 enum {
 	CTRL_FONTSELECT,
@@ -1106,7 +1119,7 @@ ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alp
 
 // ---- ColourCellRenderer ----------------------------------------------------------------
 
-void ThemeEditor::ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected) {
+void ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected) {
 	// Draw background first
 	wxGridCellRenderer::Draw(grid, attr, dc, rect, row, col, isSelected);
 
@@ -1140,11 +1153,11 @@ void ThemeEditor::ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, w
 }
 
 
-wxSize ThemeEditor::ColourCellRenderer::GetBestSize(wxGrid& WXUNUSED(grid), wxGridCellAttr& WXUNUSED(attr), wxDC& WXUNUSED(dc), int WXUNUSED(row), int WXUNUSED(col)) {
+wxSize ColourCellRenderer::GetBestSize(wxGrid& WXUNUSED(grid), wxGridCellAttr& WXUNUSED(attr), wxDC& WXUNUSED(dc), int WXUNUSED(row), int WXUNUSED(col)) {
 	return wxSize(-1, -1);
 }
 
-wxGridCellRenderer* ThemeEditor::ColourCellRenderer::Clone() const {
+wxGridCellRenderer* ColourCellRenderer::Clone() const {
 	return new ColourCellRenderer(m_themeDict);
 }
 

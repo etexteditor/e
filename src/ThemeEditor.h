@@ -14,12 +14,10 @@
 #ifndef __THEMEEDITOR_H__
 #define __THEMEEDITOR_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable: 4786)
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include <wx/grid.h>
 
 #include "plistHandler.h"
 
@@ -34,6 +32,9 @@
 using namespace std;
 
 class ITmThemeHandler;
+
+class wxGrid;
+class wxGridEvent;
 
 class ThemeEditor : public wxDialog {
 public:
@@ -104,16 +105,6 @@ private:
 		unsigned int GetAlpha() const {return m_slider->GetValue();};
 	private:
 		wxSlider* m_slider;
-	};
-
-	class ColourCellRenderer : public wxGridCellRenderer {
-	public:
-		ColourCellRenderer(const PListDict& themeDict) : m_themeDict(themeDict) {};
-		void Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected);
-		wxSize GetBestSize(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, int row, int col);
-		wxGridCellRenderer* Clone() const;
-	private:
-		const PListDict& m_themeDict;
 	};
 
 	class FocusTextCtrl : public wxTextCtrl {

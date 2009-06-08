@@ -74,11 +74,11 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_COMBOBOX(CTRL_FONTQUALITY, ThemeEditor::OnFontQuality)
 END_EVENT_TABLE()
 
-ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler)
-:  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-   m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
-   m_themeNdx(-1), m_currentRow(-1) {
-
+ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
+	m_themeNdx(-1), m_currentRow(-1) 
+{
 	SetTitle (_("Edit Themes"));
 
 	// Create the controls
@@ -342,20 +342,28 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 		wxColour colour;
 		unsigned int alpha;
 
+		wxColour themeBackground;
+		wxColour themeForeground;
+
 		// First entry is the general settings
 		PListDict general;
 		PListDict genSettings;
 		if (settings.GetDict(0, general) && general.GetDict("settings", genSettings)) {
 			const char* fg = genSettings.GetString("foreground");
-			if (fg && ParseColour(fg, colour, alpha)) m_fgButton->SetColour(colour, alpha);
+			if (fg && ParseColour(fg, themeForeground, alpha)) m_fgButton->SetColour(themeForeground, alpha);
+
 			const char* bg = genSettings.GetString("background");
-			if (bg && ParseColour(bg, colour, alpha)) m_bgButton->SetColour(colour, alpha);
+			if (bg && ParseColour(bg, themeBackground, alpha)) m_bgButton->SetColour(themeBackground, alpha);
+
 			const char* sel = genSettings.GetString("selection");
 			if (sel && ParseColour(sel, colour, alpha)) m_selButton->SetColour(colour, alpha);
+
 			const char* inv = genSettings.GetString("invisibles");
 			if (inv && ParseColour(inv, colour, alpha)) m_invButton->SetColour(colour, alpha);
+
 			const char* line = genSettings.GetString("lineHighlight");
 			if (line && ParseColour(line, colour, alpha)) m_lineButton->SetColour(colour, alpha);
+
 			//const char* caret = genSettings.GetString("caret");
 			//if (caret && ParseColour(caret, colour, alpha)) m_caretButton->SetColour(colour, alpha);
 
@@ -410,10 +418,17 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 						m_grid->SetCellTextColour(row, 0, colour);
 						m_grid->SetCellValue(row, 1, wxString(fg, wxConvUTF8));
 					}
+					else { // Else use theme-wide foreground
+						m_grid->SetCellTextColour(row, 0, themeForeground);
+					}
+
 					const char* bg = fontSettings.GetString("background");
 					if (bg && ParseColour(bg, colour, alpha)) {
 						m_grid->SetCellBackgroundColour(row, 0, colour);
 						m_grid->SetCellValue(row, 2, wxString(bg, wxConvUTF8));
+					}
+					else { // Else use theme-wide background
+						m_grid->SetCellBackgroundColour(row, 0, themeBackground);
 					}
 
 					const char* fontStyle = fontSettings.GetString("fontStyle");
@@ -1130,25 +1145,25 @@ void ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, cons
 	const wxString colourStr = grid.GetCellValue(row, col);
 	wxColour colour;
 	unsigned int alpha;
-	if (ThemeEditor::ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha)) {
-		dc.SetPen(*wxBLACK);
-		dc.SetBrush(colour);
+	if (!ThemeEditor::ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha)) return;
 
-		// Draw colour box
-		dc.DrawRectangle(boxRect);
+	dc.SetPen(*wxBLACK);
+	dc.SetBrush(colour);
 
-		if (alpha) {
-			const wxColour alphaColour(alpha, alpha, alpha);
+	// Draw colour box
+	dc.DrawRectangle(boxRect);
 
-			// Draw alpha triangle
-			wxPoint points[3];
-			points[0] = wxPoint(boxRect.x, boxRect.GetBottom());
-			points[1] = wxPoint(boxRect.GetRight(), boxRect.y);
-			points[2] = wxPoint(boxRect.GetRight(), boxRect.GetBottom() );
-			dc.SetPen(alphaColour);
-			dc.SetBrush(alphaColour);
-			dc.DrawPolygon(3, points);
-		}
+	if (alpha) {
+		const wxColour alphaColour(alpha, alpha, alpha);
+
+		// Draw alpha triangle
+		wxPoint points[3];
+		points[0] = wxPoint(boxRect.x, boxRect.GetBottom());
+		points[1] = wxPoint(boxRect.GetRight(), boxRect.y);
+		points[2] = wxPoint(boxRect.GetRight(), boxRect.GetBottom() );
+		dc.SetPen(alphaColour);
+		dc.SetBrush(alphaColour);
+		dc.DrawPolygon(3, points);
 	}
 }
 
@@ -1167,16 +1182,10 @@ BEGIN_EVENT_TABLE(ThemeEditor::FocusTextCtrl, wxTextCtrl)
 	EVT_KILL_FOCUS(ThemeEditor::FocusTextCtrl::OnKillFocus)
 END_EVENT_TABLE()
 
-ThemeEditor::FocusTextCtrl::FocusTextCtrl(ThemeEditor& parent, wxWindowID id)
-: wxTextCtrl(&parent, id), m_parentDlg(parent) {
-}
+ThemeEditor::FocusTextCtrl::FocusTextCtrl(ThemeEditor& parent, wxWindowID id):
+	wxTextCtrl(&parent, id), m_parentDlg(parent) {}
 
 void ThemeEditor::FocusTextCtrl::OnKillFocus(wxFocusEvent& event) {
 	m_parentDlg.OnSelectorKillFocus();
-
 	event.Skip();
 }
-
-
-
-

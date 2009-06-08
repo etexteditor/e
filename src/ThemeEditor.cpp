@@ -15,9 +15,26 @@
 #include <wx/grid.h>
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
+#include <wx/clipbrd.h>
+
 #include "Strings.h"
 #include "ITmThemeHandler.h"
 
+wxString GetClipboardText() {
+	wxString value = wxEmptyString;
+
+	if (wxTheClipboard->Open()) {
+		if (wxTheClipboard->IsSupported( wxDF_TEXT )) {
+			wxTextDataObject data;
+			if (wxTheClipboard->GetData(data)) {
+				value = data.GetText();
+			}
+		}
+		wxTheClipboard->Close();
+	}
+
+	return value;
+}
 
 class ColourCellRenderer : public wxGridCellRenderer {
 public:
@@ -66,11 +83,16 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_BUTTON(CTRL_NEWSETTING, ThemeEditor::OnNewSetting)
 	EVT_BUTTON(CTRL_DELSETTING, ThemeEditor::OnDelSetting)
 	EVT_BUTTON(CTRL_FONTSELECT, ThemeEditor::OnFontSelect)
+
 	EVT_LISTBOX(CTRL_THEMELIST, ThemeEditor::OnThemeSelected)
+
 	EVT_SIZE(ThemeEditor::OnSize)
+
 	EVT_GRID_SELECT_CELL(ThemeEditor::OnGridSelect)
 	EVT_GRID_CELL_LEFT_DCLICK(ThemeEditor::OnGridLeftDClick)
 	EVT_GRID_CELL_CHANGE(ThemeEditor::OnGridCellChange)
+	EVT_GRID_CELL_RIGHT_CLICK(ThemeEditor::OnGridRightClick)
+
 	EVT_COMBOBOX(CTRL_FONTQUALITY, ThemeEditor::OnFontQuality)
 END_EVENT_TABLE()
 
@@ -520,7 +542,6 @@ void ThemeEditor::OnFontQuality(wxCommandEvent& event) {
 void ThemeEditor::OnThemeSelected(wxCommandEvent& event) {
 	const int ndx = event.GetSelection();
 	wxASSERT((unsigned int)ndx < m_themes.size());
-
 	SetTheme(m_themes[ndx]);
 }
 
@@ -792,6 +813,43 @@ void ThemeEditor::OnGridSelect(wxGridEvent& event) {
 
 	// If we get to here, there is no selector
 	m_selectorCtrl->Clear();
+}
+
+void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
+	// Only handle right click for colour cells
+	if (evt.GetCol() != 1 && evt.GetCol() != 2) {
+		evt.Skip();
+		return;
+	}
+
+	const wxString colourStr = m_grid->GetCellValue(evt.GetRow(), evt.GetCol());
+	wxColour colour;
+	unsigned int alpha = 0;
+	if (!colourStr.empty()) {
+		ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha);
+	}
+
+	// See if there is a color on the clipboard.
+	bool hasClipboardColour = false;
+	wxColour clipboardColour;
+	unsigned int clipboardAlpha = 0;
+
+	const wxString clipboardColourStr = GetClipboardText();
+	if (!clipboardColourStr.empty()) {
+		hasClipboardColour = ParseColour(clipboardColourStr.mb_str(wxConvUTF8), clipboardColour, clipboardAlpha);
+	}
+
+	// Need to save the potential copy/paste colors, so the event handlers can use them later.
+
+	// Create the tabs menu
+	wxMenu colourMenu;
+	colourMenu.Append(1, _("Copy color"));
+	colourMenu.Append(2, _("Paste color"));
+
+	colourMenu.Enable(2, hasClipboardColour);
+
+	wxRect pos = m_grid->CellToRect(evt.GetRow(), evt.GetCol());
+	PopupMenu(&colourMenu);
 }
 
 void ThemeEditor::OnGridLeftDClick(wxGridEvent& event) {

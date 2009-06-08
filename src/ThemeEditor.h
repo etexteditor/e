@@ -82,6 +82,7 @@ private:
 	void OnGridSelect(wxGridEvent& event);
 	void OnGridLeftDClick(wxGridEvent& event);
 	void OnGridCellChange(wxGridEvent& event);
+	void OnGridRightClick(wxGridEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	class ColourButton : public wxBitmapButton {

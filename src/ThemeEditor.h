@@ -41,7 +41,6 @@ public:
 	ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler);
 	~ThemeEditor();
 
-	static bool ParseColour(const char* text, wxColour& colour, unsigned int& alpha);
 	static vector<char> WriteColour(const wxColour& colour, unsigned int& alpha);
 
 	void OnSelectorKillFocus(); // called by selectorCtrl

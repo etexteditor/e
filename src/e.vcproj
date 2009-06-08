@@ -1954,6 +1954,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Colours.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Colours.h"
+			>
+		</File>
+		<File
 			RelativePath="CompletionPopup.cpp"
 			>
 			<FileConfiguration

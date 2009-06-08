@@ -19,6 +19,7 @@
 
 #include "Strings.h"
 #include "ITmThemeHandler.h"
+#include "Colours.h"
 
 wxString GetClipboardText() {
 	wxString value = wxEmptyString;
@@ -372,44 +373,44 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 		PListDict genSettings;
 		if (settings.GetDict(0, general) && general.GetDict("settings", genSettings)) {
 			const char* fg = genSettings.GetString("foreground");
-			if (fg && ParseColour(fg, themeForeground, alpha)) m_fgButton->SetColour(themeForeground, alpha);
+			if (fg && ParseColourAlpha(fg, themeForeground, alpha)) m_fgButton->SetColour(themeForeground, alpha);
 
 			const char* bg = genSettings.GetString("background");
-			if (bg && ParseColour(bg, themeBackground, alpha)) m_bgButton->SetColour(themeBackground, alpha);
+			if (bg && ParseColourAlpha(bg, themeBackground, alpha)) m_bgButton->SetColour(themeBackground, alpha);
 
 			const char* sel = genSettings.GetString("selection");
-			if (sel && ParseColour(sel, colour, alpha)) m_selButton->SetColour(colour, alpha);
+			if (sel && ParseColourAlpha(sel, colour, alpha)) m_selButton->SetColour(colour, alpha);
 
 			const char* inv = genSettings.GetString("invisibles");
-			if (inv && ParseColour(inv, colour, alpha)) m_invButton->SetColour(colour, alpha);
+			if (inv && ParseColourAlpha(inv, colour, alpha)) m_invButton->SetColour(colour, alpha);
 
 			const char* line = genSettings.GetString("lineHighlight");
-			if (line && ParseColour(line, colour, alpha)) m_lineButton->SetColour(colour, alpha);
+			if (line && ParseColourAlpha(line, colour, alpha)) m_lineButton->SetColour(colour, alpha);
 
 			//const char* caret = genSettings.GetString("caret");
-			//if (caret && ParseColour(caret, colour, alpha)) m_caretButton->SetColour(colour, alpha);
+			//if (caret && ParseColourAlpha(caret, colour, alpha)) m_caretButton->SetColour(colour, alpha);
 
 			const char* gutter = genSettings.GetString("gutter");
 			if (gutter)	{
-				if (ParseColour(gutter, colour, alpha)) m_gutterButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(gutter, colour, alpha)) m_gutterButton->SetColour(colour, alpha);
 			}
 			else m_gutterButton->SetColour(wxColour(192, 192, 255), 0); // default for gutter is Pastel purple
 
 			const char* search = genSettings.GetString("searchHighlight");
 			if (search)	{
-				if (ParseColour(search, colour, alpha)) m_searchButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(search, colour, alpha)) m_searchButton->SetColour(colour, alpha);
 			}
 			else m_searchButton->SetColour(wxColour(wxT("Yellow")), 0); // default for searchHL is Yellow
 
 			const char* multi = genSettings.GetString("multiEditHighlight");
 			if (multi)	{
-				if (ParseColour(multi, colour, alpha)) m_multiButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(multi, colour, alpha)) m_multiButton->SetColour(colour, alpha);
 			}
 			else m_multiButton->SetColour(wxColour(225, 225, 225), 0); // default for multiEdit is Grey
 
 			const char* bracket = genSettings.GetString("bracketHighlight");
 			if (bracket) {
-				if (ParseColour(bracket, colour, alpha)) m_bracketButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(bracket, colour, alpha)) m_bracketButton->SetColour(colour, alpha);
 			}
 			else m_bracketButton->SetColour(wxColour(wxT("Yellow")), 0); // default for bracketHL is Yellow
 		}
@@ -436,7 +437,7 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 				PListDict fontSettings;
 				if (set.GetDict("settings", fontSettings)) {
 					const char* fg = fontSettings.GetString("foreground");
-					if (fg && ParseColour(fg, colour, alpha)) {
+					if (fg && ParseColourAlpha(fg, colour, alpha)) {
 						m_grid->SetCellTextColour(row, 0, colour);
 						m_grid->SetCellValue(row, 1, wxString(fg, wxConvUTF8));
 					}
@@ -445,7 +446,7 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 					}
 
 					const char* bg = fontSettings.GetString("background");
-					if (bg && ParseColour(bg, colour, alpha)) {
+					if (bg && ParseColourAlpha(bg, colour, alpha)) {
 						m_grid->SetCellBackgroundColour(row, 0, colour);
 						m_grid->SetCellValue(row, 2, wxString(bg, wxConvUTF8));
 					}
@@ -826,7 +827,7 @@ void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
 	wxColour colour;
 	unsigned int alpha = 0;
 	if (!colourStr.empty()) {
-		ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha);
+		ParseColourAlpha(colourStr.mb_str(wxConvUTF8), colour, alpha);
 	}
 
 	// See if there is a color on the clipboard.
@@ -836,7 +837,7 @@ void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
 
 	const wxString clipboardColourStr = GetClipboardText();
 	if (!clipboardColourStr.empty()) {
-		hasClipboardColour = ParseColour(clipboardColourStr.mb_str(wxConvUTF8), clipboardColour, clipboardAlpha);
+		hasClipboardColour = ParseColourAlpha(clipboardColourStr.mb_str(wxConvUTF8), clipboardColour, clipboardAlpha);
 	}
 
 	// Need to save the potential copy/paste colors, so the event handlers can use them later.
@@ -863,7 +864,7 @@ void ThemeEditor::OnGridLeftDClick(wxGridEvent& event) {
 	wxColour colour;
 	unsigned int alpha = 0;
 	if (!colourStr.empty()) {
-		ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha);
+		ParseColourAlpha(colourStr.mb_str(wxConvUTF8), colour, alpha);
 	}
 
 	if (AskForColour(colour, alpha) && colour.Ok()) {
@@ -940,21 +941,6 @@ void ThemeEditor::OnSelectorKillFocus() {
 	if (newText != selector) {
 		SetSettingScope(ndx, newText);
 	}
-}
-
-bool ThemeEditor::ParseColour(const char* text, wxColour& colour, unsigned int& alpha) { // static
-	if (!text) return false;
-	if (strlen(text) < 7) return false;
-	if (text[0] != '#') return false;
-
-	int red;
-	int green;
-	int blue;
-	alpha = 0;
-	sscanf(text, "#%2x%2x%2x%2x", &red, &green, &blue, &alpha);
-
-	colour.Set(red, green, blue);
-	return true;
 }
 
 vector<char> ThemeEditor::WriteColour(const wxColour& colour, unsigned int& alpha) { // static
@@ -1203,7 +1189,7 @@ void ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, cons
 	const wxString colourStr = grid.GetCellValue(row, col);
 	wxColour colour;
 	unsigned int alpha;
-	if (!ThemeEditor::ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha)) return;
+	if (!ParseColourAlpha(colourStr.mb_str(wxConvUTF8), colour, alpha)) return;
 
 	dc.SetPen(*wxBLACK);
 	dc.SetBrush(colour);

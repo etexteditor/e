@@ -8733,23 +8733,23 @@ void EditorCtrl::SelectFold(unsigned int line_id) {
 	wxASSERT(line_id < m_lines.GetLineCount());
 
 	vector<cxFold*> foldStack = GetFoldStack(line_id);
-	if (!foldStack.empty()) {
-		// If current fold is folded, we want parent if possible
-		while (foldStack.size() > 1 && foldStack.back()->type == cxFOLD_START_FOLDED) foldStack.pop_back();
+	if (foldStack.empty()) return;
 
-		// Find start of fold
-		vector<cxFold>::iterator p = m_folds.begin() + (foldStack.back() - &*m_folds.begin()); // convert pointer to iterator
-		const unsigned int fold_start = m_lines.GetLineStartpos(p->line_id);
+	// If current fold is folded, we want parent if possible
+	while (foldStack.size() > 1 && foldStack.back()->type == cxFOLD_START_FOLDED) foldStack.pop_back();
 
-		// Find the end of fold
-		const unsigned int lastline = GetLastLineInFold(foldStack);
-		unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+	// Find start of fold
+	vector<cxFold>::iterator p = m_folds.begin() + (foldStack.back() - &*m_folds.begin()); // convert pointer to iterator
+	const unsigned int fold_start = m_lines.GetLineStartpos(p->line_id);
 
-		// Select the entire fold
-		m_lines.RemoveAllSelections();
-		m_currentSel = m_lines.AddSelection(fold_start, lastposinfold);
-		m_lines.SetPos(lastposinfold);
-	}
+	// Find the end of fold
+	const unsigned int lastline = GetLastLineInFold(foldStack);
+	unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+
+	// Select the entire fold
+	m_lines.RemoveAllSelections();
+	m_currentSel = m_lines.AddSelection(fold_start, lastposinfold);
+	m_lines.SetPos(lastposinfold);
 }
 
 bool EditorCtrl::IsLineFolded(unsigned int line_id) const {

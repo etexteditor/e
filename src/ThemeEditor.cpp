@@ -1180,7 +1180,7 @@ ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alp
 
 	wxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-	m_slider = new wxSlider(this, wxID_ANY, alpha, 0, 256, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_LABELS);
+	m_slider = new wxSlider(this, wxID_ANY, alpha, 0, 255, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_LABELS);
 	mainSizer->Add(m_slider, 0, wxEXPAND|wxALL, 5);
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 

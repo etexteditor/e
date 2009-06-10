@@ -1015,7 +1015,7 @@ void Lines::Draw(int xoffset, int yoffset, wxRect& rect) {
 
 	Verify();
 
-	// Draw margen line
+	// Draw margin line
 	if (m_marginPos) {
 		dc.SetPen(wxPen(m_theme.invisiblesColor));
 		const unsigned int xpos = xoffset + m_marginPos;

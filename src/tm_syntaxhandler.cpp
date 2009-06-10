@@ -1222,6 +1222,7 @@ bool TmSyntaxHandler::ParseSettings(const PListDict& dict, tmTheme& settings) {
 	wxColour backgroundColor;
 	wxColour foregroundColor;
 	wxColour selectionColor;
+	wxColour invisiblesColor;
 	wxColour lineHighlightColor;
 	wxColour searchHighlightColor;
 	wxColour bracketHighlightColor;
@@ -1236,6 +1237,9 @@ bool TmSyntaxHandler::ParseSettings(const PListDict& dict, tmTheme& settings) {
 
 	const char* selection = dict.GetString("selection");
 	if (selection) selectionColor = ParseColor(wxString(selection, wxConvUTF8), backgroundColor);
+
+	const char* invisibles = dict.GetString("invisibles");
+	if (invisibles) invisiblesColor = ParseColor(wxString(invisibles, wxConvUTF8), invisiblesColor);
 
 	const char* lineHighlight = dict.GetString("lineHighlight");
 	if (lineHighlight) lineHighlightColor = ParseColor(wxString(lineHighlight, wxConvUTF8), backgroundColor);
@@ -1255,6 +1259,7 @@ bool TmSyntaxHandler::ParseSettings(const PListDict& dict, tmTheme& settings) {
 	if (backgroundColor.Ok()) settings.backgroundColor = backgroundColor;
 	if (foregroundColor.Ok()) settings.foregroundColor = foregroundColor;
 	if (selectionColor.Ok()) settings.selectionColor = selectionColor;
+	if (invisiblesColor.Ok()) settings.invisiblesColor = invisiblesColor;
 	if (lineHighlightColor.Ok()) settings.lineHighlightColor = lineHighlightColor;
 
 	if (searchHighlightColor.Ok()) settings.searchHighlightColor = searchHighlightColor;

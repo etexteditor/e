@@ -925,7 +925,7 @@ void ThemeEditor::OnGridCellChange(wxGridEvent& event) {
 
 	if (col == 0) {
 		// Name
-		SetSettingName(ndx, m_grid->GetCellValue(row, 0));
+		SetSelectorValue(ndx, "name", m_grid->GetCellValue(row, 0), false);
 	}
 	else if (col >= 3 && col <= 5) {
 		// Font Style
@@ -968,7 +968,7 @@ void ThemeEditor::OnSelectorKillFocus() {
 
 	const wxString newText = m_selectorCtrl->GetValue();
 	if (newText != selector) {
-		SetSettingScope(ndx, newText);
+		SetSelectorValue(ndx, "scope", newText, true);
 	}
 }
 
@@ -1044,36 +1044,7 @@ void ThemeEditor::SetSettingFontStyle(unsigned int ndx, bool bold, bool italic, 
 	}
 }
 
-void ThemeEditor::SetSettingName(unsigned int ndx, const wxString& name) {
-	wxASSERT(m_themeNdx > 0); // zero is general settings, which do not have name
-
-	if (!m_plistHandler.IsThemeEditable(m_themeNdx)) {
-		m_plistHandler.GetEditableTheme(m_themeNdx, m_themeDict);
-	}
-
-	PListArray settings;
-	if (m_themeDict.GetArray("settings", settings) && settings.GetSize()) {
-		wxASSERT(ndx < settings.GetSize());
-
-		PListDict set;
-		PListDict fontSettings;
-		if (settings.GetDict(ndx, set)) {
-			if (!name.empty()) {
-				set.SetString("name", name.mb_str(wxConvUTF8));
-			}
-			else {
-				fontSettings.DeleteItem("name");
-			}
-
-			m_plistHandler.MarkThemeAsModified(m_themeNdx);
-
-			// No need to reload theme for namechange
-		}
-		else wxASSERT(false);
-	}
-}
-
-void ThemeEditor::SetSettingScope(unsigned int ndx, const wxString& scope) {
+void ThemeEditor::SetSelectorValue(unsigned int ndx, const char* key, const wxString& value, bool reloadTheme) {
 	wxASSERT(m_themeNdx > 0); // zero is general settings, which do not have scope
 
 	if (!m_plistHandler.IsThemeEditable(m_themeNdx)) {
@@ -1087,14 +1058,11 @@ void ThemeEditor::SetSettingScope(unsigned int ndx, const wxString& scope) {
 		PListDict set;
 		PListDict fontSettings;
 		if (settings.GetDict(ndx, set)) {
-			if (!scope.empty()) {
-				set.SetString("scope", scope.mb_str(wxConvUTF8));
-			}
-			else {
-				fontSettings.DeleteItem("scope");
-			}
+			if (value.empty()) fontSettings.DeleteItem(key);
+			else set.SetString(key, value.mb_str(wxConvUTF8));
 
-			NotifyThemeChanged();
+			if (reloadTheme) NotifyThemeChanged();
+			else m_plistHandler.MarkThemeAsModified(m_themeNdx);
 		}
 		else wxASSERT(false);
 	}

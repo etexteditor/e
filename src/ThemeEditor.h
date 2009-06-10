@@ -51,8 +51,7 @@ private:
 
 	void SetSettingColour(unsigned int ndx, const char* id, const wxColour& colour, unsigned int alpha);
 	void SetSettingFontStyle(unsigned int ndx, bool bold, bool italic, bool underline);
-	void SetSettingName(unsigned int ndx, const wxString& name);
-	void SetSettingScope(unsigned int ndx, const wxString& scope);
+	void SetSelectorValue(unsigned int ndx, const char* key, const wxString& value, bool reloadTheme=false);
 
 	bool AskForColour(wxColour& colour, unsigned int& alpha);
 	void NotifyThemeChanged();

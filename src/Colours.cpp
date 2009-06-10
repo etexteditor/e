@@ -16,3 +16,20 @@ bool ParseColourAlpha(const char* text, wxColour& colour, unsigned int& alpha) {
 	colour.Set(red, green, blue);
 	return true;
 }
+
+std::vector<char> WriteColourAlpha(const wxColour& colour, const unsigned int alpha) {
+	wxASSERT(colour.Ok());
+	wxASSERT(alpha <= 256);
+
+	std::vector<char> str;
+	if (alpha) {
+		str.resize(10); // "#xxxxxxxx\0"
+		sprintf(&*str.begin(), "#%02X%02X%02X%02X", colour.Red(), colour.Green(), colour.Blue(), alpha);
+	}
+	else {
+		str.resize(8); // "#xxxxxx\0"
+		sprintf(&*str.begin(), "#%02X%02X%02X", colour.Red(), colour.Green(), colour.Blue());
+	}
+
+	return str;
+}

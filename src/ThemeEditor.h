@@ -41,8 +41,6 @@ public:
 	ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler);
 	~ThemeEditor();
 
-	static vector<char> WriteColour(const wxColour& colour, unsigned int& alpha);
-
 	void OnSelectorKillFocus(); // called by selectorCtrl
 
 private:
@@ -58,6 +56,8 @@ private:
 
 	bool AskForColour(wxColour& colour, unsigned int& alpha);
 	void NotifyThemeChanged();
+
+	void SetColour(const wxColour& colour, const unsigned int alpha, const int row, const int col);
 
 	// Event handlers
 	void OnFontSelect(wxCommandEvent& event);
@@ -82,6 +82,8 @@ private:
 	void OnGridLeftDClick(wxGridEvent& event);
 	void OnGridCellChange(wxGridEvent& event);
 	void OnGridRightClick(wxGridEvent& event);
+	void OnCopyColour(wxCommandEvent& event);
+	void OnPasteColour(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	class ColourButton : public wxBitmapButton {
@@ -116,6 +118,41 @@ private:
 		ThemeEditor& m_parentDlg;
 	};
 
+	struct CopyColours {
+		CopyColours() {
+			this->row = this->col = -1;
+			this->hasCopyColour = false;
+			this->hasPasteColour = false;
+		};
+
+		CopyColours(int _row, int _col, wxColour _copyColour, unsigned int _copyAlpha) {
+			this->row = _row; this->col = _col;
+			this->hasCopyColour = true;
+			this->copyColour = _copyColour;
+			this->copyAlpha = _copyAlpha;
+			this->hasPasteColour = false;
+		};
+
+		CopyColours(int _row, int _col, wxColour _copyColour, unsigned int _copyAlpha, wxColour _pasteColour, unsigned int _pasteAlpha) {
+			this->row = _row; this->col = _col;
+			this->hasCopyColour = true;
+			this->copyColour = _copyColour;
+			this->copyAlpha = _copyAlpha;
+			this->hasPasteColour = true;
+			this->pasteColour = _pasteColour;
+			this->pasteAlpha = _pasteAlpha;
+		};
+
+		int row, col;
+
+		bool hasCopyColour;
+		wxColour copyColour;
+		unsigned int copyAlpha;
+		bool hasPasteColour;
+		wxColour pasteColour;
+		unsigned int pasteAlpha;
+	};
+
 	// Member variables
 	ITmThemeHandler& m_syntaxHandler;
 	PListHandler& m_plistHandler;
@@ -123,6 +160,8 @@ private:
 	vector<PListHandler::cxItemRef> m_themes;
 	int m_themeNdx;
 	int m_currentRow;
+
+	CopyColours copyColours;
 
 	// Member Ctrls
 	wxTextCtrl* m_fontDesc;

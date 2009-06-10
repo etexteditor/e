@@ -21,6 +21,14 @@
 #include "ITmThemeHandler.h"
 #include "Colours.h"
 
+void SetClipboardText(const wxString& text) {
+	if (wxTheClipboard->Open())
+	{
+		wxTheClipboard->SetData( new wxTextDataObject(text) );
+		wxTheClipboard->Close();
+	}
+}
+
 wxString GetClipboardText() {
 	wxString value = wxEmptyString;
 
@@ -65,7 +73,10 @@ enum {
 	CTRL_NEWSETTING,
 	CTRL_DELSETTING,
 	CTRL_NEWTHEME,
-	CTRL_DELTHEME
+	CTRL_DELTHEME,
+
+	MENU_COPY_COLOUR,
+	MENU_PASTE_COLOUR
 };
 
 BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
@@ -95,6 +106,10 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_GRID_CELL_RIGHT_CLICK(ThemeEditor::OnGridRightClick)
 
 	EVT_COMBOBOX(CTRL_FONTQUALITY, ThemeEditor::OnFontQuality)
+
+	EVT_MENU(MENU_COPY_COLOUR, ThemeEditor::OnCopyColour)
+	EVT_MENU(MENU_PASTE_COLOUR, ThemeEditor::OnPasteColour)
+
 END_EVENT_TABLE()
 
 ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler):
@@ -684,8 +699,6 @@ void ThemeEditor::OnNewSetting(wxCommandEvent& WXUNUSED(event)) {
 
 void ThemeEditor::OnDelSetting(wxCommandEvent& WXUNUSED(event)) {
 	// WORKAROUND: GetSelectedRows() does not work
-	//const wxArrayInt sels = m_grid->GetSelectedRows();
-	//if (sels.IsEmpty()) return;
 	if (m_currentRow == -1) return;
 
 	// Make sure the theme is editable
@@ -696,10 +709,6 @@ void ThemeEditor::OnDelSetting(wxCommandEvent& WXUNUSED(event)) {
 	PListArray settings;
 	if (!m_themeDict.GetArray("settings", settings)) return;
 
-	//for (unsigned int i = sels.GetCount()-1; i > 0; --i) {
-	//	settings.DeleteItem(i + 1);
-	//	m_grid->DeleteRows(i);
-	//}
 	settings.DeleteItem(m_currentRow + 1);
 	m_grid->DeleteRows(m_currentRow);
 	m_currentRow = -1;
@@ -816,6 +825,7 @@ void ThemeEditor::OnGridSelect(wxGridEvent& event) {
 	m_selectorCtrl->Clear();
 }
 
+
 void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
 	// Only handle right click for colour cells
 	if (evt.GetCol() != 1 && evt.GetCol() != 2) {
@@ -841,16 +851,52 @@ void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
 	}
 
 	// Need to save the potential copy/paste colors, so the event handlers can use them later.
+	if (hasClipboardColour) {
+		this->copyColours = CopyColours(evt.GetRow(), evt.GetCol(), colour, alpha, clipboardColour, clipboardAlpha);
+	} else {
+		this->copyColours = CopyColours(evt.GetRow(), evt.GetCol(), colour, alpha);
+	}
 
 	// Create the tabs menu
 	wxMenu colourMenu;
-	colourMenu.Append(1, _("Copy color"));
-	colourMenu.Append(2, _("Paste color"));
+	colourMenu.Append(MENU_COPY_COLOUR, _("Copy color"));
+	colourMenu.Append(MENU_PASTE_COLOUR, _("Paste color"));
 
-	colourMenu.Enable(2, hasClipboardColour);
+	colourMenu.Enable(MENU_PASTE_COLOUR, hasClipboardColour);
 
-	wxRect pos = m_grid->CellToRect(evt.GetRow(), evt.GetCol());
 	PopupMenu(&colourMenu);
+}
+
+void ThemeEditor::OnCopyColour(wxCommandEvent& WXUNUSED(event)) {
+	if(!copyColours.hasCopyColour) return;
+	const vector<char> newcolour = WriteColourAlpha(copyColours.copyColour, copyColours.copyAlpha);
+	SetClipboardText(wxString(&*newcolour.begin(), wxConvUTF8));
+}
+
+void ThemeEditor::OnPasteColour(wxCommandEvent& WXUNUSED(event)) {
+	if (!copyColours.hasPasteColour) return;
+	SetColour(copyColours.pasteColour, copyColours.pasteAlpha, copyColours.row, copyColours.col);
+}
+
+void ThemeEditor::SetColour(const wxColour& colour, const unsigned int alpha, const int row, const int col) {
+	// Update grid
+	const vector<char> newcolour = WriteColourAlpha(colour, alpha);
+	if (!newcolour.empty()) m_grid->SetCellValue(row, col, wxString(&*newcolour.begin(), wxConvUTF8));
+
+	// Refresh dlg before setting theme (which might cause a delay)
+	if (col == 1) m_grid->SetCellTextColour(row, 0, colour);
+	else if (col == 2) m_grid->SetCellBackgroundColour(row, 0, colour);
+	Refresh();
+	Update();
+
+	const unsigned int ndx = row + 1; // 0 is general settings
+
+	if (col == 1) {
+		SetSettingColour(ndx, "foreground", colour, alpha);
+	}
+	else if (col == 2) {
+		SetSettingColour(ndx, "background", colour, alpha);
+	}
 }
 
 void ThemeEditor::OnGridLeftDClick(wxGridEvent& event) {
@@ -868,24 +914,7 @@ void ThemeEditor::OnGridLeftDClick(wxGridEvent& event) {
 	}
 
 	if (AskForColour(colour, alpha) && colour.Ok()) {
-		// Update grid
-		const vector<char> newcolour = WriteColour(colour, alpha);
-		if (!newcolour.empty()) m_grid->SetCellValue(event.GetRow(), event.GetCol(), wxString(&*newcolour.begin(), wxConvUTF8));
-
-		// Refresh dlg before setting theme (which might cause a delay)
-		if (event.GetCol() == 1) m_grid->SetCellTextColour(event.GetRow(), 0, colour);
-		else if (event.GetCol() == 2) m_grid->SetCellBackgroundColour(event.GetRow(), 0, colour);
-		Refresh();
-		Update();
-
-		const unsigned int ndx = event.GetRow() + 1; // 0 is general settings
-
-		if (event.GetCol() == 1) {
-			SetSettingColour(ndx, "foreground", colour, alpha);
-		}
-		else if (event.GetCol() == 2) {
-			SetSettingColour(ndx, "background", colour, alpha);
-		}
+		SetColour(colour, alpha, event.GetRow(), event.GetCol());
 	}
 }
 
@@ -943,23 +972,6 @@ void ThemeEditor::OnSelectorKillFocus() {
 	}
 }
 
-vector<char> ThemeEditor::WriteColour(const wxColour& colour, unsigned int& alpha) { // static
-	wxASSERT(colour.Ok());
-	wxASSERT(alpha <= 256);
-
-	vector<char> str;
-	if (alpha) {
-		str.resize(10); // "#xxxxxxxx\0"
-		sprintf(&*str.begin(), "#%02X%02X%02X%02X", colour.Red(), colour.Green(), colour.Blue(), alpha);
-	}
-	else {
-		str.resize(8); // "#xxxxxx\0"
-		sprintf(&*str.begin(), "#%02X%02X%02X", colour.Red(), colour.Green(), colour.Blue());
-	}
-
-	return str;
-}
-
 void ThemeEditor::SetSettingColour(unsigned int ndx, const char* id, const wxColour& colour, unsigned int alpha) {
 	wxASSERT(m_themeNdx != -1);
 
@@ -975,7 +987,7 @@ void ThemeEditor::SetSettingColour(unsigned int ndx, const char* id, const wxCol
 		PListDict fontSettings;
 		if (settings.GetDict(ndx, set) && set.GetDict("settings", fontSettings)) {
 			if (colour.Ok()) {
-				vector<char> colourStr = WriteColour(colour, alpha);
+				vector<char> colourStr = WriteColourAlpha(colour, alpha);
 				if (!colourStr.empty()) fontSettings.SetString(id, &*colourStr.begin());
 			}
 			else {

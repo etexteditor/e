@@ -256,6 +256,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\test_parseColour.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\test_urlencode.cpp"
 				>
 			</File>

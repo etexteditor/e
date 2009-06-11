@@ -74,26 +74,26 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 	SetTitle (_("Settings"));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-
 	wxNotebook* notebook = new wxNotebook(this, wxID_ANY);
 
 	wxPanel* settingsPage = CreateSettingsPage(notebook);
-	notebook->AddPage(settingsPage, _("Settings"), true);
+	notebook->AddPage(settingsPage, _("Settings"));
 
 	wxPanel* encodingPage = CreateEncodingPage(notebook);
-	notebook->AddPage(encodingPage, _("Encoding"), true);
+	notebook->AddPage(encodingPage, _("Encoding"));
 	
 	wxPanel* profilePage = CreateProfilePage(notebook);
-	notebook->AddPage(profilePage, _("Profile"), true);
+	notebook->AddPage(profilePage, _("Profile"));
 
 	m_envPage = new EnvVarsPanel(notebook);
 	m_envPage->AddVars(this->m_settings.env);
-	notebook->AddPage(m_envPage, _("Environment"), true);
+	notebook->AddPage(m_envPage, _("Environment"));
 
 
 #ifdef __WXMSW__
 	m_unixPage = CreateUnixPage(notebook);
-	notebook->AddPage(m_unixPage, _("UNIX"), true);
+	notebook->AddPage(m_unixPage, _("UNIX"));
+	UpdateUnixPage();
 #endif
 
 	notebook->SetSelection(0);
@@ -227,35 +227,33 @@ wxPanel* SettingsDlg::CreateUnixPage(wxWindow* parent) {
 	sizer->AddGrowableCol(1); // 2nd column is sizable
 
 	// Is Cygwin intialized?
-	wxStaticText* labelCygInit = new wxStaticText(m_unixPage, wxID_ANY, _("Cygwin initialized?"));
+	wxStaticText* labelCygInit = new wxStaticText(unixPage, wxID_ANY, _("Cygwin initialized?"));
 	sizer->Add(labelCygInit, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-	m_labelCygInitValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
+	m_labelCygInitValue = new wxStaticText(unixPage, wxID_ANY, _(""));
 	sizer->Add(m_labelCygInitValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	// Bash path
-	wxStaticText* labelBashPath = new wxStaticText(m_unixPage, wxID_ANY, _("Bash path:"));
+	wxStaticText* labelBashPath = new wxStaticText(unixPage, wxID_ANY, _("Bash path:"));
 	sizer->Add(labelBashPath, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-	m_labelBashPathValue = new wxStaticText(m_unixPage, wxID_ANY, 	_(""));
+	m_labelBashPathValue = new wxStaticText(unixPage, wxID_ANY, 	_(""));
 	sizer->Add(m_labelBashPathValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	// Cygdrive path
-	wxStaticText* labelCygdrive = new wxStaticText(m_unixPage, wxID_ANY, _("Cygdrive prefix:"));
+	wxStaticText* labelCygdrive = new wxStaticText(unixPage, wxID_ANY, _("Cygdrive prefix:"));
 	sizer->Add(labelCygdrive, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-	m_labelCygdriveValue = new wxStaticText(m_unixPage, wxID_ANY, _(""));
+	m_labelCygdriveValue = new wxStaticText(unixPage, wxID_ANY, _(""));
 	sizer->Add(m_labelCygdriveValue, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	// Button
 	sizer->AddStretchSpacer();
 
-	m_cygwinButton = new wxButton(m_unixPage, CTRL_CYGWIN_ACTION, _(""));
+	m_cygwinButton = new wxButton(unixPage, CTRL_CYGWIN_ACTION, _(""));
 	sizer->Add(m_cygwinButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	unixPage->SetSizerAndFit(sizer);
-	UpdateUnixPage();
-
 	return unixPage;
 }
 

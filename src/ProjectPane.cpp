@@ -1011,10 +1011,23 @@ void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 		if (wxRenameFile(data->m_path, new_path))
 		{
 			wxLogDebug(wxT("rename done, setting new path"));
+			wxString oldPath = data->m_path;
 			data->SetNewPath( new_path );
 
 			if (data->m_isDir && data->m_isExpanded) {
 				RefreshSubItemPaths(id);
+			}
+
+			// chequeo si el archivo estaba abierto, lo cierro y vuelvo a abrir el nuevo
+			// EditorCtrl -> SetPath(pathStr);
+
+			// Open file in editor
+			if (!data->m_isDir) {
+				//m_projectService.OpenFile(new_path);
+				//m_projectService.CloseTab(1, true);
+				//wxAuiNotebook tabBar = m_projectService.GetTabBar();
+				m_projectService.UpdateRenamedFileIsOpen(oldPath, new_path);
+
 			}
 		}
 		else

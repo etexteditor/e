@@ -195,15 +195,12 @@ bool eApp::OnInit() {
 
 	// Open files from command-line options
 	if (argc > 1) {
-		bool isFirst = true;
 		for (unsigned int i = 0; i < m_files.Count(); ++i) {
 			const wxString& arg = m_files[i];
-
 			frame->Open(arg, mate);
 
-			if (isFirst) {
+			if (i == 0) {
 				if (m_lineNum || m_columnNum) frame->GotoPos(m_lineNum, m_columnNum);
-				isFirst = false;
 			}
 		}
 	}
@@ -225,9 +222,13 @@ bool eApp::OnInit() {
 	frame->CheckForModifiedFilesAsync();
 	wxLogDebug(wxT("Done Checking for modified files"));
 
+	// If the command-line option didn't prevent checking for updates,
+	// read the corresponding setting.
 	if (checkForUpdate) {
-		// Check website to se if there are updates
-		CheckForUpdates(m_settings);
+		m_settings.GetSettingBool(wxT("checkForUpdates"), checkForUpdate);
+		if (checkForUpdate) {
+			CheckForUpdates(m_settings);
+		}
 	}
 
     return true;

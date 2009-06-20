@@ -64,6 +64,7 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_CHECKBOX(CTRL_CHECKCHANGE, SettingsDlg::OnCheckCheckChange)
 	EVT_CHECKBOX(CTRL_SHOWMARGIN, SettingsDlg::OnCheckShowMargin)
 	EVT_CHECKBOX(CTRL_WRAPMARGIN, SettingsDlg::OnCheckWrapMargin)
+	EVT_CHECKBOX(CTRL_AUTOUPDATE, SettingsDlg::OnCheckCheckForUpdates)
 	EVT_SPINCTRL(CTRL_MARGINSPIN, SettingsDlg::OnMarginSpin) 
 	EVT_COMBOBOX(CTRL_LINEENDING, SettingsDlg::OnComboEol)
 	EVT_COMBOBOX(CTRL_ENCODING, SettingsDlg::OnComboEncoding)
@@ -121,6 +122,7 @@ wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
 	wxFlexGridSizer* sizer = new wxFlexGridSizer(4, 2, 0, 0);
 	sizer->AddGrowableCol(1); // 2nd column is sizable
 
+
 	// Last update string
 	wxString when = wxT("<unknown>");
 	wxLongLong lastup = -1;
@@ -149,8 +151,14 @@ wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
 	m_checkForUpdatesButton = new wxButton(page, CTRL_CHECK_FOR_UPDATES, _("Check now"));
 	sizer->Add(m_checkForUpdatesButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-
 	page->SetSizerAndFit(sizer);
+
+
+	// Settings defaults.
+	bool checkForUpdates = true;
+	m_settings.GetSettingBool(wxT("checkForUpdates"), checkForUpdates);
+	m_checkForUpdatesAtStartup->SetValue(checkForUpdates);
+
 	return page;
 }
 
@@ -522,10 +530,15 @@ void SettingsDlg::OnMarginSpin(wxSpinEvent& event) {
 	dispatcher.Notify(wxT("SETTINGS_CHANGED"), NULL, 0);
 }
 
+
 void SettingsDlg::OnCheckKeepState(wxCommandEvent& event) {
 	m_settings.SetSettingBool(wxT("keepState"), event.IsChecked());
 }
 
 void SettingsDlg::OnCheckCheckChange(wxCommandEvent& event) {
 	m_settings.SetSettingBool(wxT("checkChange"), event.IsChecked());
+}
+
+void SettingsDlg::OnCheckCheckForUpdates(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("checkForUpdates"), event.IsChecked());
 }

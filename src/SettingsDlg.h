@@ -55,6 +55,7 @@ private:
 	void OnCheckCheckChange(wxCommandEvent& event);
 	void OnCheckShowMargin(wxCommandEvent& event);
 	void OnCheckWrapMargin(wxCommandEvent& event);
+	void OnCheckCheckForUpdates(wxCommandEvent& event);
 	void OnMarginSpin(wxSpinEvent& event);
 	void OnComboEol(wxCommandEvent& event);
 	void OnComboEncoding(wxCommandEvent& event);

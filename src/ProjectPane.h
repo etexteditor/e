@@ -22,7 +22,6 @@
 #include <wx/treectrl.h>
 #include <wx/filename.h>
 #include <wx/dnd.h>
-#include <wx/aui/aui.h>
 #include <wx/imaglist.h>
 
 #include "ProjectInfoHandler.h"

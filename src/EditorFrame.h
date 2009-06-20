@@ -202,7 +202,7 @@ public:
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);
 	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
-	virtual void UpdateRenamedFileIsOpen(const wxFileName& path, const wxFileName& newPath);
+	virtual void UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath);
 
 	bool OpenTxmtUrl(const wxString& url);
 	bool AskToSaveMulti(int keep_tab=-1);
@@ -289,6 +289,7 @@ private:
 	void InitMemberSettings();
 
 	EditorCtrl* GetEditorCtrlFromPage(size_t page_idx);
+	EditorCtrl* GetEditorCtrlFromFile(const wxString& filepath, unsigned int& page_idx);
 
 	// Menu & statusdbar handling
 	wxMenu* GetBundleMenu();
@@ -299,7 +300,7 @@ private:
 	void UpdateRecentFiles();
 
 	// Loading files
-	bool DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp=NULL, const wxString& mate=wxEmptyString);
+	bool DoOpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp=NULL, const wxString& mate=wxEmptyString);
 
 	// Changed files
 	void AskToReloadMulti(const vector<unsigned int>& pathToPages, const vector<wxDateTime>& modDates);

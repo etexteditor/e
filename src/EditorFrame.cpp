@@ -1279,7 +1279,7 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromPage(size_t page_idx) {
 
 	//if (page->IsKindOf(CLASSINFO(DiffPanel))) return ((DiffPanel*)page)->GetActiveEditor();
 	if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) return ((EditorBundlePanel*)page)->GetEditor();
-	else return (EditorCtrl*)page;
+	return (EditorCtrl*)page;
 }
 
 void EditorFrame::BringToFront() {
@@ -1609,7 +1609,7 @@ bool EditorFrame::OpenFile(const wxFileName& path, wxFontEncoding enc, const wxS
 	return DoOpenFile(filepath, enc, NULL, mate);
 }
 
-void EditorFrame::UpdateRenamedFileIsOpen(const wxFileName& path, const wxFileName& newPath) {
+void EditorFrame::UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath) {
 	// Check if there is a mirror that matches the file
 	const wxString filepath = path.GetFullPath();
 
@@ -1620,40 +1620,28 @@ void EditorFrame::UpdateRenamedFileIsOpen(const wxFileName& path, const wxFileNa
 		isMirror = catalyst.GetFileMirror(filepath, di, modifiedDate);
 	cxENDLOCK
 
-	if(!isMirror) {
-		return;
-	}
+	if(!isMirror) return;
 
-	// Check if the file is already open
-	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-		EditorCtrl* page = GetEditorCtrlFromPage(i);
+	unsigned int i;
+	EditorCtrl* existingControl = this->GetEditorCtrlFromFile(filepath, i);
+	if (!existingControl) return;
 
-#ifdef __WXMSW__
-		if (filepath.CmpNoCase(page->GetPath()) == 0) { // paths on windows are case-insensitive
-#else
-		if (filepath == page->GetPath()) {
-#endif
-			cxLOCK_WRITE(m_catalyst)
-			catalyst.SetFileMirror(newPath.GetFullPath(), di, modifiedDate);
-			cxENDLOCK
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetFileMirror(newPath.GetFullPath(), di, modifiedDate);
+	cxENDLOCK
 
-			cxLOCKDOC_WRITE(page->GetDocument())
-				doc.SetPropertyName(wxFileName(newPath.GetLongPath()).GetFullName());
-			cxENDLOCK
+	cxLOCKDOC_WRITE(existingControl->GetDocument())
+		doc.SetPropertyName(wxFileName(newPath.GetLongPath()).GetFullName());
+	cxENDLOCK
 
-			m_tabBar->SetSelection(i);
-			page->SetPath(newPath.GetFullPath());
-			UpdateWindowTitle();
-			page->ReDraw();
+	m_tabBar->SetSelection(i);
+	existingControl->SetPath(newPath.GetFullPath());
+	UpdateWindowTitle();
+	existingControl->ReDraw();
 
-			// Bring frame to front
-			BringToFront();
-			page->SetFocus();
-			break;
-		}
-	}
-
-	return;
+	// Bring frame to front
+	BringToFront();
+	existingControl->SetFocus();
 }
 
 bool EditorFrame::OpenRemoteFile(const wxString& url, const RemoteProfile* rp) {
@@ -1732,7 +1720,25 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	return true;
 }
 
-bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
+EditorCtrl* EditorFrame::GetEditorCtrlFromFile(const wxString& filepath, unsigned int& page_idx) {
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* editorCtrl = GetEditorCtrlFromPage(i);
+
+		// paths on windows are case-insensitive
+#ifdef __WXMSW__
+		if (filepath.CmpNoCase(editorCtrl->GetPath()) == 0) { 
+#else
+		if (filepath == page->GetPath()) {
+#endif
+			page_idx = i;
+			return editorCtrl;
+		}
+	}
+
+	return NULL;
+}
+
+bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
 	wxBusyCursor busy;
 
 	bool isCurrent = false;
@@ -1744,7 +1750,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 		wxFAIL_MSG(wxT("No editorCtrl in OpenFile"));
 		AddTab();
 	}
-	EditorCtrl* ec = editorCtrl;
+	EditorCtrl* ec = this->editorCtrl;
 
 	// Check if there is a mirror that matches the file
 	doc_id di;
@@ -1755,20 +1761,12 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 	cxENDLOCK
 
 	if(isMirror) {
-		// Check if the file is already open
-		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-			EditorCtrl* page = GetEditorCtrlFromPage(i);
-
-#ifdef __WXMSW__
-			if (filepath.CmpNoCase(page->GetPath()) == 0) { // paths on windows are case-insensitive
-#else
-			if (filepath == page->GetPath()) {
-#endif
-				m_tabBar->SetSelection(i);
-				ec = editorCtrl;
-				isCurrent = true;
-				break;
-			}
+		unsigned int i;
+		EditorCtrl* existingControl = this->GetEditorCtrlFromFile(filepath, i);
+		if (existingControl) {
+			m_tabBar->SetSelection(i);
+			ec = existingControl;
+			isCurrent = true;
 		}
 	}
 

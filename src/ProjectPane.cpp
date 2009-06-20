@@ -20,6 +20,7 @@
 #include <wx/dir.h>
 #include <wx/tokenzr.h>
 #include <wx/artprov.h>
+#include <wx/aui/aui.h>
 
 #include "IFrameProjectService.h"
 #include "ProjectSettings.h"
@@ -1026,7 +1027,7 @@ void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 				//m_projectService.OpenFile(new_path);
 				//m_projectService.CloseTab(1, true);
 				//wxAuiNotebook tabBar = m_projectService.GetTabBar();
-				m_projectService.UpdateRenamedFileIsOpen(oldPath, new_path);
+				m_projectService.UpdateRenamedFile(oldPath, new_path);
 
 			}
 		}

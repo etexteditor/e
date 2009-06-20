@@ -4070,6 +4070,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\UpdaterThread.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\UpdaterThread.h"
+			>
+		</File>
+		<File
 			RelativePath=".\urlencode.cpp"
 			>
 		</File>

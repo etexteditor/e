@@ -35,6 +35,7 @@ private:
 	wxPanel* CreateSettingsPage(wxWindow* parent);
 	wxPanel* CreateEncodingPage(wxWindow* parent);
 	wxPanel* CreateProfilePage(wxWindow* parent);
+	wxPanel* CreateUpdatePage(wxWindow* parent);
 
 	void UpdateEncoding();
 
@@ -47,6 +48,7 @@ private:
 	void OnButtonOk(wxCommandEvent& event);
 	void OnButtonLoadPic(wxCommandEvent& event);
 	void OnButtonCygwinAction(wxCommandEvent& event);
+	void OnButtonCheckForUpdates(wxCommandEvent& event);
 	void OnCheckAutoPair(wxCommandEvent& event);
 	void OnCheckAutoWrap(wxCommandEvent& event);
 	void OnCheckKeepState(wxCommandEvent& event);
@@ -93,6 +95,10 @@ private:
 	wxStaticText* m_labelCygdriveValue;
 	wxButton* m_cygwinButton;
 #endif
+
+	// Updates page
+	wxCheckBox* m_checkForUpdatesAtStartup;
+	wxButton* m_checkForUpdatesButton;
 };
 
 #endif // __SETTINGSDLG_H__

@@ -98,7 +98,6 @@ private:
 	void ClearState();
 	void ClearLayout();
 	wxRect DetermineFrameSize();
-	void CheckForUpdates();
 
 	bool SendArgsToInstance();
 	wxString ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) const;
@@ -160,15 +159,5 @@ private:
 };
 #endif
 
-class wxHTTP; // pre-declaration
-
-class UpdaterThread : public wxThread {
-public:
-	UpdaterThread(wxHTTP* http) : m_http(http) {};
-	virtual void *Entry();
-
-private:
-	wxHTTP* m_http;
-};
 
 #endif // __EAPP_H__

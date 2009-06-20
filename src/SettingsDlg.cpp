@@ -20,6 +20,7 @@
 
 #include "EnvVarsPanel.h"
 
+#include "UpdaterThread.h"
 #include "eSettings.h"
 
 #ifdef __WXMSW__
@@ -47,13 +48,16 @@ enum {
 	CTRL_LINEENDING,
 	CTRL_ENCODING,
 	CTRL_BOM,
-	CTRL_CYGWIN_ACTION // Only added on Windows
+	CTRL_CYGWIN_ACTION, // Only added on Windows
+	CTRL_CHECK_FOR_UPDATES,
+	CTRL_AUTOUPDATE,
 };
 
 BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, SettingsDlg::OnButtonOk)
 	EVT_BUTTON(CTRL_LOADPIC, SettingsDlg::OnButtonLoadPic)
 	EVT_BUTTON(CTRL_CYGWIN_ACTION, SettingsDlg::OnButtonCygwinAction)
+	EVT_BUTTON(CTRL_CHECK_FOR_UPDATES, SettingsDlg::OnButtonCheckForUpdates)
 	EVT_CHECKBOX(CTRL_AUTOPAIR, SettingsDlg::OnCheckAutoPair)
 	EVT_CHECKBOX(CTRL_AUTOWRAP, SettingsDlg::OnCheckAutoWrap)
 	EVT_CHECKBOX(CTRL_KEEPSTATE, SettingsDlg::OnCheckKeepState)
@@ -96,6 +100,9 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 	UpdateUnixPage();
 #endif
 
+	wxPanel* updatePage = CreateUpdatePage(notebook);
+	notebook->AddPage(updatePage, _("Updates"));
+
 	notebook->SetSelection(0);
 	mainSizer->Add(notebook, 0, wxEXPAND|wxALL, 5);
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
@@ -106,6 +113,45 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 	SetSizeHints(size.x, size.y, -1, size.y);
 
 	Centre();
+}
+
+wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
+	wxPanel* page = new wxPanel(parent, wxID_ANY);
+
+	wxFlexGridSizer* sizer = new wxFlexGridSizer(4, 2, 0, 0);
+	sizer->AddGrowableCol(1); // 2nd column is sizable
+
+	// Last update string
+	wxString when = wxT("<unknown>");
+	wxLongLong lastup = -1;
+	if (m_settings.GetSettingLong(wxT("lastupdatecheck"), lastup)) {
+		wxDateTime lastupdated(lastup);
+		when = lastupdated.Format();
+	}
+
+	// Last update label
+	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update:"));
+	sizer->Add(labelLastUpdate , 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	wxStaticText* labelWhen= new wxStaticText(page, wxID_ANY, when);
+	sizer->Add(labelWhen, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+	// Checkbox
+	sizer->AddStretchSpacer();
+
+	m_checkForUpdatesAtStartup = new wxCheckBox(page, CTRL_AUTOUPDATE, _("Check for updates automatically"));
+	sizer->Add(m_checkForUpdatesAtStartup, 0, wxALL, 5);
+
+
+	// Button
+	sizer->AddStretchSpacer();
+
+	m_checkForUpdatesButton = new wxButton(page, CTRL_CHECK_FOR_UPDATES, _("Check now"));
+	sizer->Add(m_checkForUpdatesButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+
+
+	page->SetSizerAndFit(sizer);
+	return page;
 }
 
 wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
@@ -377,6 +423,10 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	EndModal(wxID_OK);
+}
+
+void SettingsDlg::OnButtonCheckForUpdates(wxCommandEvent& WXUNUSED(event)) {
+	CheckForUpdates(m_settings, true);
 }
 
 void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {

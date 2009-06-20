@@ -869,8 +869,8 @@ void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
 
 void ThemeEditor::OnCopyColour(wxCommandEvent& WXUNUSED(event)) {
 	if(!copyColours.hasCopyColour) return;
-	const vector<char> newcolour = WriteColourAlpha(copyColours.copyColour, copyColours.copyAlpha);
-	SetClipboardText(wxString(&*newcolour.begin(), wxConvUTF8));
+	wxString newcolour = WriteColourAlpha(copyColours.copyColour, copyColours.copyAlpha);
+	SetClipboardText(newcolour);
 }
 
 void ThemeEditor::OnPasteColour(wxCommandEvent& WXUNUSED(event)) {
@@ -880,8 +880,8 @@ void ThemeEditor::OnPasteColour(wxCommandEvent& WXUNUSED(event)) {
 
 void ThemeEditor::SetColour(const wxColour& colour, const unsigned int alpha, const int row, const int col) {
 	// Update grid
-	const vector<char> newcolour = WriteColourAlpha(colour, alpha);
-	if (!newcolour.empty()) m_grid->SetCellValue(row, col, wxString(&*newcolour.begin(), wxConvUTF8));
+	wxString newcolour = WriteColourAlpha(colour, alpha);
+	if (!newcolour.empty()) m_grid->SetCellValue(row, col, newcolour);
 
 	// Refresh dlg before setting theme (which might cause a delay)
 	if (col == 1) m_grid->SetCellTextColour(row, 0, colour);
@@ -987,8 +987,8 @@ void ThemeEditor::SetSettingColour(unsigned int ndx, const char* id, const wxCol
 		PListDict fontSettings;
 		if (settings.GetDict(ndx, set) && set.GetDict("settings", fontSettings)) {
 			if (colour.Ok()) {
-				vector<char> colourStr = WriteColourAlpha(colour, alpha);
-				if (!colourStr.empty()) fontSettings.SetString(id, &*colourStr.begin());
+				wxString colourStr = WriteColourAlpha(colour, alpha);
+				if (!colourStr.empty()) fontSettings.wxSetString(id, colourStr);
 			}
 			else {
 				fontSettings.DeleteItem(id);

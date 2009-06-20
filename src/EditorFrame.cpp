@@ -1609,6 +1609,53 @@ bool EditorFrame::OpenFile(const wxFileName& path, wxFontEncoding enc, const wxS
 	return DoOpenFile(filepath, enc, NULL, mate);
 }
 
+void EditorFrame::UpdateRenamedFileIsOpen(const wxFileName& path, const wxFileName& newPath) {
+	// Check if there is a mirror that matches the file
+	const wxString filepath = path.GetFullPath();
+
+	doc_id di;
+	wxDateTime modifiedDate;
+	bool isMirror;
+	cxLOCK_READ(m_catalyst)
+		isMirror = catalyst.GetFileMirror(filepath, di, modifiedDate);
+	cxENDLOCK
+
+	if(!isMirror) {
+		return;
+	}
+
+	// Check if the file is already open
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+
+#ifdef __WXMSW__
+		if (filepath.CmpNoCase(page->GetPath()) == 0) { // paths on windows are case-insensitive
+#else
+		if (filepath == page->GetPath()) {
+#endif
+			cxLOCK_WRITE(m_catalyst)
+			catalyst.SetFileMirror(newPath.GetFullPath(), di, modifiedDate);
+			cxENDLOCK
+
+			cxLOCKDOC_WRITE(page->GetDocument())
+				doc.SetPropertyName(wxFileName(newPath.GetLongPath()).GetFullName());
+			cxENDLOCK
+
+			m_tabBar->SetSelection(i);
+			page->SetPath(newPath.GetFullPath());
+			UpdateWindowTitle();
+			page->ReDraw();
+
+			// Bring frame to front
+			BringToFront();
+			page->SetFocus();
+			break;
+		}
+	}
+
+	return;
+}
+
 bool EditorFrame::OpenRemoteFile(const wxString& url, const RemoteProfile* rp) {
 	return DoOpenFile(url, wxFONTENCODING_SYSTEM, rp);
 }

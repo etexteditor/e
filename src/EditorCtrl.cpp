@@ -2665,7 +2665,6 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 	// Bundle items do their own mirror handling during loading
 	if (eDocumentPath::IsBundlePath(filepath)) return LoadText(filepath, enc, rp);
 
-	// Do we need to notify mate on close?
 	if (!mate.empty()) SetMate(mate);
 
 	// Check if there is a mirror that matches the file

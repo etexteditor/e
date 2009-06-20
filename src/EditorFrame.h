@@ -202,12 +202,15 @@ public:
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);
 	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
+	virtual void UpdateRenamedFileIsOpen(const wxFileName& path, const wxFileName& newPath);
+
 	bool OpenTxmtUrl(const wxString& url);
 	bool AskToSaveMulti(int keep_tab=-1);
 	void SaveAllFilesInProject();
 	//void CheckForModifiedFiles();
 	void CheckForModifiedFilesAsync();
 	wxString GetSaveDir() const;
+	
 
 	// RemoteFile support functions
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);

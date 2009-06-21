@@ -14,11 +14,7 @@
 #ifndef __DOCUMENT_H__
 #define __DOCUMENT_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-#endif
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif

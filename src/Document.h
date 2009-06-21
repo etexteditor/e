@@ -27,6 +27,7 @@ class doc_byte_iter;
 struct real_pcre;                 // This double pre-definition is needed
 typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h
 struct pcre_extra;
+class ISettings;
 
 class Document {
 public:
@@ -116,7 +117,7 @@ public:
 	bool GetPropertyBOM() const;
 	void SetPropertyBOM(bool hasBOM);
 	void SetDocRead(bool isRead=true);
-	void SetDefaultsFromSettings(const eSettings& settings);
+	void SetDefaultsFromSettings(const ISettings& settings);
 
 	// Properties (generic)
 	bool HasProperty(const wxString& name) const;
@@ -125,7 +126,7 @@ public:
 	void DeleteProperty(const wxString& name);
 
 	// Document ID & meta
-	void CreateNew(const eSettings& settings);
+	void CreateNew(const ISettings& settings);
 	void SetDocument(const doc_id& di);
 	doc_id GetDocument() const {return m_docId;};
 	doc_id GetParent() const;

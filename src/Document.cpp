@@ -50,7 +50,7 @@ Document::~Document() {
 
 // - Public API ---
 
-void Document::CreateNew(const eSettings& settings) {
+void Document::CreateNew(const ISettings& settings) {
 	// Create the new document
 	SetDocument(m_catalyst.NewDocument());
 
@@ -58,7 +58,7 @@ void Document::CreateNew(const eSettings& settings) {
 	SetDefaultsFromSettings(settings);
 }
 
-void Document::SetDefaultsFromSettings(const eSettings& settings) {
+void Document::SetDefaultsFromSettings(const ISettings& settings) {
 	// Check if we need to set eol property
 	wxString eolStr;
 	if (settings.GetSettingString(wxT("formatEol"), eolStr)) {
@@ -450,7 +450,7 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 			pDate(vRevisions[m_docId.document_id]) = wxDateTime::Now().GetValue().GetValue();
 		}
 
-		const eSettings& settings = eGetSettings();
+		const ISettings& settings = eGetSettings();
 		SetDefaultsFromSettings(settings);
 
 		Freeze();
@@ -2370,7 +2370,7 @@ DocumentWrapper::DocumentWrapper(CatalystWrapper& cw, bool createNew): m_doc(cw)
 	wxASSERT(createNew);
 	if (createNew) {
 		RecursiveCriticalSectionLocker cx_lock(GetReadLock());
-		eSettings& settings = eGetSettings();
+		ISettings& settings = eGetSettings();
 		m_doc.CreateNew(settings);
 	}
 }

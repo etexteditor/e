@@ -116,7 +116,7 @@ public:
 	bool GetPropertyBOM() const;
 	void SetPropertyBOM(bool hasBOM);
 	void SetDocRead(bool isRead=true);
-	void SetDefaultEncoding();
+	void SetDefaultsFromSettings(const eSettings& settings);
 
 	// Properties (generic)
 	bool HasProperty(const wxString& name) const;
@@ -125,7 +125,7 @@ public:
 	void DeleteProperty(const wxString& name);
 
 	// Document ID & meta
-	void CreateNew();
+	void CreateNew(const eSettings& settings);
 	void SetDocument(const doc_id& di);
 	doc_id GetDocument() const {return m_docId;};
 	doc_id GetParent() const;
@@ -192,13 +192,7 @@ private:
 class DocumentWrapper {
 public:
 	DocumentWrapper(CatalystWrapper& cw) : m_doc(cw) {}; // unintialized doc
-	DocumentWrapper(CatalystWrapper& cw, bool createNew) : m_doc(cw) { // new doc
-		wxASSERT(createNew);
-		if (createNew) {
-			RecursiveCriticalSectionLocker cx_lock(GetReadLock());
-			m_doc.CreateNew();
-		}
-	};
+	DocumentWrapper(CatalystWrapper& cw, bool createNew); // new doc
 	DocumentWrapper(Document& doc) : m_doc(doc) {};
 	DocumentWrapper(const doc_id& di, CatalystWrapper& cw) : m_doc(di, cw) {};
 

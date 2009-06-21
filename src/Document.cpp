@@ -50,18 +50,17 @@ Document::~Document() {
 
 // - Public API ---
 
-void Document::CreateNew() {
+void Document::CreateNew(const eSettings& settings) {
 	// Create the new document
 	SetDocument(m_catalyst.NewDocument());
 
 	// The user may have defined a default encoding
-	SetDefaultEncoding();
+	SetDefaultsFromSettings(settings);
 }
 
-void Document::SetDefaultEncoding() {
+void Document::SetDefaultsFromSettings(const eSettings& settings) {
 	// Check if we need to set eol property
 	wxString eolStr;
-	eSettings& settings = eGetSettings();
 	if (settings.GetSettingString(wxT("formatEol"), eolStr)) {
 		wxTextFileType eol = wxTextBuffer::typeDefault;
 		if (eolStr == wxT("crlf")) eol = wxTextFileType_Dos;
@@ -451,8 +450,8 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 			pDate(vRevisions[m_docId.document_id]) = wxDateTime::Now().GetValue().GetValue();
 		}
 
-		// Set encoding to users default
-		SetDefaultEncoding();
+		const eSettings& settings = eGetSettings();
+		SetDefaultsFromSettings(settings);
 
 		Freeze();
 
@@ -2366,3 +2365,12 @@ void Document::PrintAll() const {
 }
 
 #endif  //__WXDEBUG__
+
+DocumentWrapper::DocumentWrapper(CatalystWrapper& cw, bool createNew): m_doc(cw) {
+	wxASSERT(createNew);
+	if (createNew) {
+		RecursiveCriticalSectionLocker cx_lock(GetReadLock());
+		eSettings& settings = eGetSettings();
+		m_doc.CreateNew(settings);
+	}
+}

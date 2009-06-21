@@ -22,7 +22,7 @@
 #include "Catalyst.h"
 #include "DataText.h"
 
-// pre-declarations
+
 class doc_byte_iter;
 struct real_pcre;                 // This double pre-definition is needed
 typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h

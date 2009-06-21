@@ -405,6 +405,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ISettings.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ITmGetSyntaxes.h"
 				>
 			</File>

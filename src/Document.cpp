@@ -2369,8 +2369,8 @@ void Document::PrintAll() const {
 DocumentWrapper::DocumentWrapper(CatalystWrapper& cw, bool createNew): m_doc(cw) {
 	wxASSERT(createNew);
 	if (createNew) {
-		RecursiveCriticalSectionLocker cx_lock(GetReadLock());
 		ISettings& settings = eGetSettings();
+		RecursiveCriticalSectionLocker cx_lock(GetReadLock());
 		m_doc.CreateNew(settings);
 	}
 }

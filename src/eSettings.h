@@ -22,17 +22,10 @@
 #include "jsonval.h"
 #include "Catalyst.h"
 #include "auto_vector.h"
+#include "ISettings.h"
 
 // pre-declarations
 class RemoteProfile;
-
-class ISettings {
-public:
-	virtual bool GetSettingBool(const wxString& name, bool& value) const = 0;
-	virtual bool GetSettingInt(const wxString& name, int& value) const = 0;
-	virtual bool GetSettingLong(const wxString& name, wxLongLong& value) const = 0;
-	virtual bool GetSettingString(const wxString& name, wxString& value) const = 0;
-};
 
 class eSettings: public ISettings {
 public:

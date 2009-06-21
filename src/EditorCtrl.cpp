@@ -6248,23 +6248,21 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_ESCAPE:
 				if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 				else if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
-				else {
-					DoCompletion();
-				}
+				else DoCompletion();
 				break;
 
 			default:
 				// If we process alt then menu shortcuts don't work
 				if (event.AltDown()) {
 					event.Skip();
-					return; // do nothing if we don't know the char
+					return;
 				}
 
 				// Ignore unhandled keycodes
 				if (key >= WXK_START && key <= WXK_COMMAND) break;
 				//if (key >= WXK_SPECIAL1 && key <= WXK_SPECIAL20) break;
 
-				//if (wxIsprint(c)) { // Normal chars (does not work with זרו??)
+				//if (wxIsprint(c)) { // Normal chars (does not work with 'ae', 'oslash', 'a-circle', etc.??)
 				if ((unsigned int)c > 31) { // Normal chars
 					InsertChar(c);
 				}

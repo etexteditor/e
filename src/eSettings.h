@@ -26,7 +26,15 @@
 // pre-declarations
 class RemoteProfile;
 
-class eSettings {
+class ISettings {
+public:
+	virtual bool GetSettingBool(const wxString& name, bool& value) const = 0;
+	virtual bool GetSettingInt(const wxString& name, int& value) const = 0;
+	virtual bool GetSettingLong(const wxString& name, wxLongLong& value) const = 0;
+	virtual bool GetSettingString(const wxString& name, wxString& value) const = 0;
+};
+
+class eSettings: public ISettings {
 public:
 	eSettings();
 	
@@ -43,6 +51,7 @@ public:
 	void SetSettingLong(const wxString& name, const wxLongLong& value);
 	bool GetSettingString(const wxString& name, wxString& value) const;
 	void SetSettingString(const wxString& name, const wxString& value);
+
 	void RemoveSetting(const wxString& name);
 
 	// Recent files

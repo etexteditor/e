@@ -20,7 +20,7 @@ typedef std::tr1::tuple<wxTextFileType, wxFontEncoding, void*, int> CONFIG;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-class DocumentEncodingTest: public TestWithParam<CONFIG> {
+class DocumentLineEndingTest: public TestWithParam<CONFIG> {
 protected:
 	// Per-test
 	virtual void SetUp() {
@@ -42,7 +42,7 @@ protected:
 	CatalystWrapper* cw;
 };
 
-TEST_P(DocumentEncodingTest, SavesCorrectly) {
+TEST_P(DocumentLineEndingTest, SavesCorrectly) {
 	CONFIG config = GetParam();
 	wxTextFileType configEOL = std::tr1::get<0>(config);
 	wxFontEncoding configEncoding = std::tr1::get<1>(config);
@@ -125,7 +125,7 @@ unsigned char bytes_crlf_utf32be[164] = {
 };
 
 INSTANTIATE_TEST_CASE_P(CRLF, 
-	DocumentEncodingTest, 
+	DocumentLineEndingTest, 
 	Values(
 		CONFIG(wxTextFileType_Dos, wxFONTENCODING_CP1252,
 			"This is a line.\x0d\x0aThis is a second line.\x0d\x0a", 41),
@@ -186,7 +186,7 @@ unsigned char bytes_cr_utf32be[156] = {
 };
 
 INSTANTIATE_TEST_CASE_P(CR,
-	DocumentEncodingTest, 
+	DocumentLineEndingTest, 
 	Values(
 		CONFIG(wxTextFileType_Mac, wxFONTENCODING_CP1252,
 			"This is a line.\x0DThis is a second line.\x0D", 39),
@@ -247,7 +247,7 @@ unsigned char bytes_lf_utf32be[156] = {
 };
 
 INSTANTIATE_TEST_CASE_P(LF,
-	DocumentEncodingTest, 
+	DocumentLineEndingTest, 
 	Values(
 		CONFIG(wxTextFileType_Unix, wxFONTENCODING_CP1252,
 			"This is a line.\x0AThis is a second line.\x0A", 39),

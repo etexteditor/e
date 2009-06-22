@@ -258,7 +258,7 @@ wxString Document::GetText() const {
 	m_catalyst.ResetIdle();
 
 	if (GetLength() == 0) return wxString();
-	else return m_textData.GetText();
+	return m_textData.GetText();
 }
 
 void Document::WriteText(wxOutputStream& stream) const {
@@ -298,7 +298,6 @@ wxString Document::GetTextPart(const doc_id& version, int start_pos, int end_pos
 
 	wxString text;
 	textData.GetTextPart(start_pos, end_pos, text);
-
 	return text;
 }
 
@@ -319,14 +318,13 @@ void Document::GetTextPart(int start_pos, int end_pos, vector<char>& buffer) con
 
 wxChar Document::GetChar(unsigned int pos) const {
 	wxASSERT(IsOk());
-
 	return m_textData.GetChar(pos);
 }
 
 unsigned int Document::GetLength() const {
 	wxASSERT(IsOk());
 	if (m_textData.IsOk()) return m_textData.GetLength();
-	else return 0;
+	return 0;
 }
 
 unsigned int Document::GetLengthInChars(unsigned int start_pos, unsigned int end_pos) const {
@@ -346,7 +344,6 @@ unsigned int Document::GetCharPos(const doc_id& version, unsigned int offset, in
 	wxASSERT(m_catalyst.IsOk(version));
 
 	const DataText textData(m_catalyst, m_docId, GetHeadnode(version));
-
 	return textData.GetCharPos(offset, char_count);
 }
 
@@ -600,22 +597,22 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 		case wxFONTENCODING_UTF32BE:
 			char_len = 4;
 			nl = "\x00\x00\x00\x0A";
-			cr = "\x00\x00\x00\x0C";
+			cr = "\x00\x00\x00\x0D";
 			break;
 		case wxFONTENCODING_UTF32LE:
 			char_len = 4;
 			nl = "\x0A\x00\x00\x00";
-			cr = "\x0C\x00\x00\x00";
+			cr = "\x0D\x00\x00\x00";
 			break;
 		case wxFONTENCODING_UTF16BE:
 			char_len = 2;
 			nl = "\x00\x0A";
-			cr = "\x00\x0C";
+			cr = "\x00\x0D";
 			break;
 		case wxFONTENCODING_UTF16LE:
 			char_len = 2;
 			nl = "\x0A\x00";
-			cr = "\x0C\x00";
+			cr = "\x0D\x00";
 			break;
 		default:
 			char_len = 1;
@@ -800,55 +797,55 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 		switch (propEncoding) {
 		case wxFONTENCODING_UTF32BE:
 			if (eol == wxTextFileType_Mac) {
-				nl = "\x00\x00\x00\x0C";
+				nl = "\x00\x00\x00\x0D";
 				nl_len = 4;
 			}
 			else if (eol == wxTextFileType_Dos) {
-				nl = "\x00\x00\x00\x0C\x00\x00\x00\x0A";
+				nl = "\x00\x00\x00\x0D\x00\x00\x00\x0A";
 				nl_len = 8;
 			}
 			char_len = 4;
 			break;
 		case wxFONTENCODING_UTF32LE:
 			if (eol == wxTextFileType_Mac) {
-				nl = "\x0C\x00\x00\x00";
+				nl = "\x0D\x00\x00\x00";
 				nl_len = 4;
 			}
 			else if (eol == wxTextFileType_Dos) {
-				nl = "\x0C\x00\x00\x00\x0A\x00\x00\x00";
+				nl = "\x0D\x00\x00\x00\x0A\x00\x00\x00";
 				nl_len = 8;
 			}
 			char_len = 4;
 			break;
 		case wxFONTENCODING_UTF16BE:
 			if (eol == wxTextFileType_Mac) {
-				nl = "\x00\x0C";
+				nl = "\x00\x0D";
 				nl_len = 2;
 			}
 			else if (eol == wxTextFileType_Dos) {
-				nl = "\x00\x0C\x00\x0A";
+				nl = "\x00\x0D\x00\x0A";
 				nl_len = 4;
 			}
 			char_len = 2;
 			break;
 		case wxFONTENCODING_UTF16LE:
 			if (eol == wxTextFileType_Mac) {
-				nl = "\x0C\x00";
+				nl = "\x0D\x00";
 				nl_len = 2;
 			}
 			else if (eol == wxTextFileType_Dos) {
-				nl = "\x0C\x00\x0A\x00";
+				nl = "\x0D\x00\x0A\x00";
 				nl_len = 4;
 			}
 			char_len = 2;
 			break;
 		default:
 			if (eol == wxTextFileType_Mac) {
-				nl = "\r";
+				nl = "\x0D";
 				nl_len = 1;
 			}
 			else if (eol == wxTextFileType_Dos) {
-				nl = "\r\n";
+				nl = "\x0D\x0A";
 				nl_len = 2;
 			}
 			char_len = 1;

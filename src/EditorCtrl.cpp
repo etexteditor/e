@@ -390,7 +390,6 @@ void EditorCtrl::Init() {
 	SetDropTarget(dropTarget);
 
 	// Make sure we get notified if we should display another document
-	// (Unsubscription is done in OnClose())
 	dispatcher.SubscribeC(wxT("WIN_SETDOCUMENT"), (CALL_BACK)OnSetDocument, this);
 	dispatcher.SubscribeC(wxT("DOC_COMMITED"), (CALL_BACK)OnDocCommited, this);
 	dispatcher.SubscribeC(wxT("THEME_CHANGED"), (CALL_BACK)OnThemeChanged, this);
@@ -7777,9 +7776,7 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	}
 }
 
-void EditorCtrl::OnClose(wxCloseEvent& WXUNUSED(event)) {
-	//Destroy();
-}
+void EditorCtrl::OnClose(wxCloseEvent& WXUNUSED(event)) {}
 
 void EditorCtrl::OnSetDocument(EditorCtrl* self, void* data, int filter) {
 	wxASSERT(self->IsOk());

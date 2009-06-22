@@ -21,18 +21,27 @@
 #include "eSettings.h"
 
 // Constructor
-Document::Document(const doc_id& di, CatalystWrapper cw)
-: m_catalyst(cw.m_catalyst), dispatcher(cw.GetDispatcher()), do_notify(true), m_textData(cw.m_catalyst), m_re(NULL) {
+Document::Document(const doc_id& di, CatalystWrapper cw):
+	m_catalyst(cw.m_catalyst),
+	dispatcher(cw.GetDispatcher()),
+	do_notify(true),
+	m_textData(cw.m_catalyst),
+	m_re(NULL)
+{
 	SetDocument(di);
 
 	// Make sure we get notified if the document gets deleted
 	dispatcher.SubscribeC(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
 }
 
-Document::Document(CatalystWrapper cw)
-: m_catalyst(cw.m_catalyst), dispatcher(cw.GetDispatcher()),
-  m_docId(DRAFT,-1,-1), do_notify(true),  m_textData(cw.m_catalyst), m_re(NULL) {
-
+Document::Document(CatalystWrapper cw):
+	m_catalyst(cw.m_catalyst),
+	dispatcher(cw.GetDispatcher()),
+	m_docId(DRAFT,-1,-1),
+	do_notify(true),
+	m_textData(cw.m_catalyst),
+	m_re(NULL)
+{
 	// Make sure we get notified if the document gets deleted
 	dispatcher.SubscribeC(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
 }

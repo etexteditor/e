@@ -81,19 +81,16 @@ public:
     virtual bool OnCmdLineError(wxCmdLineParser&) {return true;}
 #endif // wxUSE_CMDLINE_PARSER
         
+#ifdef __WXDEBUG__
+	void OnAssertFailure(const wxChar *file, int line, const wxChar *cond, const wxChar *msg);
+#endif  //__WXDEBUG__
+
 private:
 	// Member variables
 	EditorFrame* frame;
 	wxString m_version_name;
 	unsigned int m_version_id;
 
-public:
-
-#ifdef __WXDEBUG__
-	void OnAssertFailure(const wxChar *file, int line, const wxChar *cond, const wxChar *msg);
-#endif  //__WXDEBUG__
-
-private:
 	// Member functions
 	void ClearState();
 	void ClearLayout();
@@ -104,10 +101,7 @@ private:
 
 #ifdef __WXMSW__
 	void SendCommandToServer(HWND hWndRecv, const wxString& cmd);
-#endif
 
-
-#ifdef __WXMSW__
 	// Callback for ASProtect to set days left
 	static void __declspec(dllexport) __stdcall GetTrialDays(int Total, int Left);
 #endif

@@ -408,6 +408,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 			m_currentSel = lines.AddSelection(startpos, endpos);
 			lines.SetPos(endpos);
+			m_editorCtrl.SetFocus();
 
 			m_sel_startline = m_sel_endline = line_id;
 		}
@@ -421,6 +422,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		if (hasSelection) {
 			m_currentSel = lines.AddSelection(sel.start, lines.GetLength());
 			lines.SetPos(lines.GetLength());
+			m_editorCtrl.SetFocus();
 		}
 	}
 
@@ -538,9 +540,8 @@ void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
 			m_editorCtrl.DrawLayout();
 		}
 	}
-	else if (event.GetX() > (int)m_foldStartX && y >= 0 && y < lines.GetHeight()) {
+	else if (event.GetX() > (int)m_foldStartX && 0 <=y && y < lines.GetHeight()) {
 		const unsigned int line_id = lines.GetLineFromYPos(y);
-
 		vector<cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
 		if (!foldStack.empty()) {
 			m_currentFold = foldStack.back();
@@ -563,17 +564,16 @@ void GutterCtrl::OnMouseLeave(wxMouseEvent& WXUNUSED(event)) {
 }
 
 void GutterCtrl::OnMouseLeftUp(wxMouseEvent& WXUNUSED(event)) {
-	//wxLogDebug("OnMouseLeftUp");
-	if (!HasCapture()) return;
+	if (HasCapture()) {
+		// Reset state variables
+		m_currentSel = -1;
 
-	// Reset state variables
-	m_currentSel = -1;
+		// Release the capure made in OnMouseLeftDown()
+		ReleaseMouse();
 
-	// Release the capure made in OnMouseLeftDown()
-	ReleaseMouse();
-
-	// Redraw gutter to remove highlights
-	DrawGutter();
+		// Redraw gutter to remove highlights
+		DrawGutter();
+	}
 }
 
 void GutterCtrl::OnCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event)) {

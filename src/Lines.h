@@ -1,7 +1,7 @@
 #ifndef LINES_H
 #define LINES_H
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #include "Catalyst.h"
 #include "FixedLine.h"
 #include "LineListWrap.h"

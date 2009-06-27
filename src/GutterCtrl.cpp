@@ -34,7 +34,7 @@ BEGIN_EVENT_TABLE(GutterCtrl, wxControl)
 	EVT_MOUSE_CAPTURE_LOST(GutterCtrl::OnCaptureLost)
 END_EVENT_TABLE()
 
-GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id)	: 
+GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id): 
 	wxControl(&parent, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
 	m_editorCtrl(parent), 
 	m_mdc(), m_bitmap(1,1), m_width(0), m_gutterLeft(true), 
@@ -46,14 +46,7 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id)	:
 	m_mdc.SelectObject(m_bitmap);
 	if (!m_mdc.Ok()) wxLogError(wxT("wxMemoryDC() constructor was failed in creating!"));
 
-	// Initialize the memoryDC for double-buffering
 	UpdateTheme();
-
-	// Set the colors
-	//m_bgcolor.Set(192, 192, 255); // Pastel purple
-	//m_hlightcolor.Set(172, 172, 235); // Pastel purple (slightly darker)
-	//m_edgecolor.Set(92, 92, 155); // Pastel purple (darker)
-	//m_numbercolor.Set(52, 52, 115); // Pastel purple (even darker)
 
 	// Get the width of a single digit
 	wxCoord w;
@@ -160,7 +153,7 @@ unsigned GutterCtrl::CalcLayout(unsigned int height) {
 
 void GutterCtrl::SetGutterRight(bool doMove) {
 	m_gutterLeft = !doMove;
-	if (!doMove) SetPosition(wxPoint(0,0)); // reset pos
+	if (m_gutterLeft) SetPosition(wxPoint(0,0)); // reset pos
 }
 
 void GutterCtrl::DrawGutter(wxDC& dc) {
@@ -440,11 +433,12 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 }
 
 void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
-	if (m_showFolds && event.GetX() > (int)m_foldStartX) {
+	if (!m_showFolds) return;
+	if (event.GetX() > (int)m_foldStartX) {
 		const int y = event.GetY() + m_editorCtrl.scrollPos;
 		Lines& lines = m_editorCtrl.m_lines;
 
-		if (y >= 0 && y < lines.GetHeight()) {
+		if (0 <= y && y < lines.GetHeight()) {
 			const unsigned int line_id = lines.GetLineFromYPos(y);
 
 			vector<cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
@@ -454,7 +448,6 @@ void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
 
 				m_editorCtrl.Fold(foldStack.back()->line_id);
 				m_editorCtrl.DrawLayout();
-				return;
 			}
 		}
 	}
@@ -571,16 +564,16 @@ void GutterCtrl::OnMouseLeave(wxMouseEvent& WXUNUSED(event)) {
 
 void GutterCtrl::OnMouseLeftUp(wxMouseEvent& WXUNUSED(event)) {
 	//wxLogDebug("OnMouseLeftUp");
-	if (HasCapture()) {
-		// Reset state variables
-		m_currentSel = -1;
+	if (!HasCapture()) return;
 
-		// Release the capure made in OnMouseLeftDown()
-		ReleaseMouse();
+	// Reset state variables
+	m_currentSel = -1;
 
-		// Redraw gutter to remove highlights
-		DrawGutter();
-	}
+	// Release the capure made in OnMouseLeftDown()
+	ReleaseMouse();
+
+	// Redraw gutter to remove highlights
+	DrawGutter();
 }
 
 void GutterCtrl::OnCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event)) {

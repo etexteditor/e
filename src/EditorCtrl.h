@@ -342,7 +342,13 @@ public:
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
 	// Scroll Position
-	int GetYScrollPos() const { return scrollPos; }
+	int GetYScrollPos() const { return scrollPos; };
+
+	// Lines
+	Lines& GetLines() { return m_lines; };
+
+	// Theme
+	const tmTheme& GetTheme() const { return m_theme; };
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -449,7 +455,11 @@ private:
 
 	void ClearRemoteInfo();
 
+public:
+	// Used by GutterControl
 	void DrawLayout(bool isScrolling=false) {wxClientDC dc(this);DrawLayout(dc, isScrolling);};
+
+protected:
 	void DrawLayout(wxDC& dc, bool isScrolling=false);
 	bool UpdateScrollbars(unsigned int x, unsigned int y);
 
@@ -692,8 +702,6 @@ private:
 	// Key state
 	static unsigned long s_ctrlDownTime;
 	static bool s_altGrDown;
-
-	friend class GutterCtrl;
 };
 
 #endif // __EDITORCTRL_H__

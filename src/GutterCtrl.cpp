@@ -40,7 +40,7 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id):
 	m_mdc(), m_bitmap(1,1), m_width(0), m_gutterLeft(true), 
 	m_showBookmarks(true), 
 	m_showFolds(true), m_currentFold(NULL), m_posBeforeFoldClick(-1),
-	m_theme(m_editorCtrl.m_theme), m_bgcolor(m_theme.gutterColor),
+	m_theme(m_editorCtrl.GetTheme()), m_bgcolor(m_theme.gutterColor),
 	m_currentSel(-1)
 {
 	m_mdc.SelectObject(m_bitmap);
@@ -122,7 +122,7 @@ void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
 }
 
 unsigned GutterCtrl::CalcLayout(unsigned int height) {
-	const Lines& lines = m_editorCtrl.m_lines;
+	const Lines& lines = m_editorCtrl.GetLines();
 
 	// Calculate the number of digits in max linenumber; reserve space for at least 2
 	const int digits = wxMax(_gutter_digits_in_number(lines.GetLineCount()), 2);
@@ -154,7 +154,7 @@ void GutterCtrl::SetGutterRight(bool doMove) {
 }
 
 void GutterCtrl::DrawGutter(wxDC& dc) {
-	Lines& lines = m_editorCtrl.m_lines;
+	const Lines& lines = m_editorCtrl.GetLines();
 
 	const wxSize size = GetClientSize();
 	m_mdc.Clear();
@@ -352,7 +352,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	//wxLogDebug("OnMouseLeftDown");
 	//wxASSERT(m_editorCtrl);
 	wxASSERT(m_currentSel == -1);
-	Lines& lines = m_editorCtrl.m_lines;
+	Lines& lines = m_editorCtrl.GetLines();
 
 	// Get Mouse location
 	const int x = event.GetX();
@@ -361,7 +361,6 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	// Handle bookmarks
 	if (m_showBookmarks && x < (int)m_numberX) {
 		// Find out which line was clicked on
-		Lines& lines = m_editorCtrl.m_lines;
 		if ((int)y < lines.GetHeight()) {
 			const unsigned int line_id = lines.GetLineFromYPos(y);
 			m_editorCtrl.AddBookmark(line_id, true /*toggle*/);
@@ -434,7 +433,7 @@ void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
 	if (!m_showFolds) return;
 	if (event.GetX() > (int)m_foldStartX) {
 		const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
-		Lines& lines = m_editorCtrl.m_lines;
+		Lines& lines = m_editorCtrl.GetLines();
 
 		if (0 <= y && y < lines.GetHeight()) {
 			const unsigned int line_id = lines.GetLineFromYPos(y);
@@ -452,7 +451,7 @@ void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
 }
 
 void GutterCtrl::ClickOnFold(unsigned int y) {
-	Lines& lines = m_editorCtrl.m_lines;
+	const Lines& lines = m_editorCtrl.GetLines();
 	m_posBeforeFoldClick = -1;
 
 	// Find out which line was clicked on
@@ -485,7 +484,7 @@ void GutterCtrl::ClickOnFold(unsigned int y) {
 }
 
 void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
-	Lines& lines = m_editorCtrl.m_lines;
+	Lines& lines = m_editorCtrl.GetLines();
 
 	// Get Mouse location
 	const int y = event.GetY() + m_editorCtrl.GetYScrollPos();

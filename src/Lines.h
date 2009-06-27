@@ -74,9 +74,9 @@ public:
 	bool IsBeforeNewline(unsigned int pos);
 	bool IsLineEmpty(unsigned int lineid);
 
-	int GetLineFromYPos(int ypos);
-	int GetYPosFromLine(unsigned int lineid);
-	int GetBottomYPosFromLine(unsigned int lineid);
+	int GetLineFromYPos(int ypos) const;
+	int GetYPosFromLine(unsigned int lineid) const;
+	int GetBottomYPosFromLine(unsigned int lineid) const;
 	int PrepareYPos(int ypos);
 	int PrepareAll() const {return ll->prepare_all();};
 	int GetPosFromXY(int xpos, int ypos, bool allowOutbound=true);

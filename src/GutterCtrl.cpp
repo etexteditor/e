@@ -46,13 +46,7 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id):
 	m_mdc.SelectObject(m_bitmap);
 	if (!m_mdc.Ok()) wxLogError(wxT("wxMemoryDC() constructor was failed in creating!"));
 
-	UpdateTheme();
-
-	// Get the width of a single digit
-	wxCoord w;
-	wxCoord h;
-	m_mdc.GetTextExtent(wxT('0'), &w, &h);
-	m_digit_width = w;
+	UpdateTheme(true);
 
 // FIXME Do not set max values as CalcLayout would get another idea of width
 #if 0
@@ -68,10 +62,12 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id):
 	SetCursor(*wxSTANDARD_CURSOR);
 }
 
-void GutterCtrl::UpdateTheme() {
-	if (m_mdc.GetFont() != m_theme.font) {
-		m_mdc.SetFont(m_editorCtrl.GetEditorFont());
+void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
+	const bool hasNewFont = m_mdc.GetFont() != m_theme.font;
 
+	if (hasNewFont) m_mdc.SetFont(m_editorCtrl.GetEditorFont());
+
+	if (forceRecalculateDigitWidth || hasNewFont) {
 		// Get the width of a single digit
 		wxCoord w;
 		wxCoord h;

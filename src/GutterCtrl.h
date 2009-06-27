@@ -29,7 +29,7 @@ class EditorCtrl;
 class GutterCtrl : public wxControl {
 public:
 	GutterCtrl(EditorCtrl& parent, wxWindowID id);
-	void UpdateTheme();
+	void UpdateTheme(bool forceRecalculateDigitWidth=false);
 
 	void SetGutterRight(bool doMove=true);
 

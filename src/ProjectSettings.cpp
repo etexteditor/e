@@ -30,9 +30,11 @@ BEGIN_EVENT_TABLE(ProjectSettings, wxDialog)
 	EVT_CHECKBOX(ID_INHERIT, ProjectSettings::OnInheritCheck)
 END_EVENT_TABLE()
 
-ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project, const cxProjectInfo& parentProject)
-: wxDialog (parent, wxID_ANY, _("Project Settings"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_projectInfo(project), m_parentProject(parentProject), m_envModified(false)
+ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project, const cxProjectInfo& parentProject): 
+	wxDialog (parent, wxID_ANY, _("Project Settings"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_projectInfo(project), 
+	m_parentProject(parentProject), 
+	m_envModified(false)
 {
 	// Create the notebook
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -104,10 +106,10 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 		const wxString inf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
 		m_includeFiles->SetValue(inf);
 
-		const wxString exd = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		const wxString exd = wxJoin(projectToLoad->excludeDirs, wxT('\n'), NULL);
 		m_excludeDirs->SetValue(exd);
 
-		const wxString exf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		const wxString exf = wxJoin(projectToLoad->excludeFiles, wxT('\n'), NULL);
 		m_excludeFiles->SetValue(exf);
 	}
 

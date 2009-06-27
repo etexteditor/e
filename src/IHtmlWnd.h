@@ -1,7 +1,7 @@
 #ifndef __I_HTML_WND_H__
 #define __I_HTML_WND_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifdef __WXGTK__
    #include <wx/wx.h>
 #endif
@@ -58,4 +58,3 @@ END_DECLARE_EVENT_TYPES()
 				(wxObject *) NULL ),
 
 #endif
-

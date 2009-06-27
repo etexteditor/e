@@ -6,6 +6,11 @@ int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
     return s1->CmpNoCase(*s2);
 }
 
+void SimpleHtmlEncode(wxString& s) {
+	s.Replace(wxT("&"), wxT("&amp;"));
+	s.Replace(wxT("<"), wxT("&lt;"));
+	s.Replace(wxT(">"), wxT("&gt;"));
+}
 
 // ===========================================================================
 // wxJoin and wxSplit

@@ -5,6 +5,8 @@
 
 int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2);
 
+void SimpleHtmlEncode(wxString& s);
+
 // Back-port of wxJoin and wxSplit from newer versions of wxWidgets
 
 // ----------------------------------------------------------------------------

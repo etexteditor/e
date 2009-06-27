@@ -15,6 +15,7 @@
 #include "MMapBuffer.h"
 #include "EditorFrame.h"
 #include "ProjectInfoHandler.h"
+#include "Strings.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
@@ -525,19 +526,32 @@ void SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath
 			wxString line = wxString::Format(wxT("<tr><td bgcolor=#f6f6ef align=\"right\"><a href=\"txmt://open/?url=file://%s&line=%d&column=%d&sel=%d\">%d</a></td><td> "), path.c_str(), linecount, column, sel_len, linecount);
 			
 			// Start of line
-			line += wxString(linestart, wxConvUTF8, matchstart-linestart);
+			{
+				wxString result = wxString(linestart, wxConvUTF8, matchstart-linestart);
+				SimpleHtmlEncode(result);
+				line += result;
+			}
+
 
 			// Match
 			line += wxT("<i style=\"background-color: yellow\">");
 			const size_t match_len = m->end - m->start;
-			line += wxString(matchstart, wxConvUTF8, match_len);
+			{
+				wxString result = wxString(matchstart, wxConvUTF8, match_len);
+				SimpleHtmlEncode(result);
+				line += result;
+			}
 			line += wxT("</i>");
 
 			// End of line
 			const char* const matchend = subject + match_len;
 			const char* lineend = matchend;
 			while (lineend < end && *lineend != '\n') ++lineend;
-			line += wxString(matchend, wxConvUTF8, lineend - matchend);
+			{
+				wxString result = wxString(matchend, wxConvUTF8, lineend - matchend);
+				SimpleHtmlEncode(result);
+				line += result;
+			}
 			line += wxT("</td></tr>");
 			output += line;
 			

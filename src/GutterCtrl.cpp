@@ -91,8 +91,9 @@ void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
 	}
 	m_mdc.SetBackground(wxBrush(m_bgcolor));
 
-	// Draw open fold button
 	wxMemoryDC mdc;
+
+	// Draw open fold button
 	m_bmFoldOpen = wxBitmap(9, 9);
 	mdc.SelectObject(m_bmFoldOpen);
 	mdc.Clear();
@@ -170,7 +171,7 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 	// Draw the line numbers
 	m_mdc.SetTextForeground(m_numbercolor);
 	wxString number;
-	const int scrollPos = m_editorCtrl.scrollPos;
+	const int scrollPos = m_editorCtrl.GetYScrollPos();
 
 	const unsigned int firstline = lines.GetLineFromYPos(scrollPos);
 	const unsigned int linecount = lines.GetLineCount();
@@ -344,9 +345,8 @@ void GutterCtrl::OnSize(wxSizeEvent& WXUNUSED(event)) {
 	// DrawGutter();
 }
 
-void GutterCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// # no evt.skip() as we don't want the control to erase the background
-}
+// Don't erase the background
+void GutterCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	//wxLogDebug("OnMouseLeftDown");
@@ -356,7 +356,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 	// Get Mouse location
 	const int x = event.GetX();
-	const int y = event.GetY() + m_editorCtrl.scrollPos;
+	const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
 
 	// Handle bookmarks
 	if (m_showBookmarks && x < (int)m_numberX) {
@@ -433,7 +433,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
 	if (!m_showFolds) return;
 	if (event.GetX() > (int)m_foldStartX) {
-		const int y = event.GetY() + m_editorCtrl.scrollPos;
+		const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
 		Lines& lines = m_editorCtrl.m_lines;
 
 		if (0 <= y && y < lines.GetHeight()) {
@@ -488,7 +488,7 @@ void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
 	Lines& lines = m_editorCtrl.m_lines;
 
 	// Get Mouse location
-	const int y = event.GetY() + m_editorCtrl.scrollPos;
+	const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
 
 	if (event.LeftIsDown() && HasCapture()) {
 		// Find out what is under mouse

@@ -341,6 +341,9 @@ public:
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
+	// Scroll Position
+	int GetYScrollPos() const { return scrollPos; }
+
 #ifdef __WXDEBUG__
 	void Print();
 #endif  //__WXDEBUG__

@@ -14,7 +14,7 @@
 #ifndef __BUNDLEPANE_H__
 #define __BUNDLEPANE_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #include <wx/treectrl.h>
 #include <wx/imaglist.h>
 #include "plistHandler.h"

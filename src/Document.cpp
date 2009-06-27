@@ -763,13 +763,13 @@ decode_error:
 	return cxFILE_CONV_ERROR;
 }
 
-cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, const wxString& realpath, bool keepMirrorDate) {
+cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, const wxString& realpath, bool keepMirrorDate, bool noAtomic) {
 	wxASSERT(IsOk());
 	wxASSERT(path.IsOk());
 	wxASSERT(path.IsAbsolute());
 
 	const wxString fullPath = path.GetFullPath();
-	const wxString tmpPath = fullPath + wxT(".etmp");
+	const wxString tmpPath = noAtomic ? fullPath : fullPath + wxT(".etmp");
 
 	if (path.FileExists() && !path.IsFileWritable()) {
 		//wxMessageBox(fullPath + _T(" is write protected."), _T("e Error"), wxICON_ERROR);
@@ -974,8 +974,10 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 	}
 
 	// Atomic save.
-	if (path.FileExists()) wxRemoveFile(fullPath);
-	wxRenameFile(tmpPath, fullPath);
+	if (!noAtomic) {
+		if (path.FileExists()) wxRemoveFile(fullPath);
+		wxRenameFile(tmpPath, fullPath);
+	}
 
 	{
 		// If filename has changed we have to update it

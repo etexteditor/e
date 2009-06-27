@@ -76,7 +76,7 @@ public:
 
 	// Loading & Saving
 	cxFileResult LoadText(const wxFileName& path, vector<unsigned int>& offsets, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mirror=wxEmptyString);
-	cxFileResult SaveText(const wxFileName& path, bool forceNativeEOL=false, const wxString& realpath=wxEmptyString, bool keepMirrorDate=false);
+	cxFileResult SaveText(const wxFileName& path, bool forceNativeEOL=false, const wxString& realpath=wxEmptyString, bool keepMirrorDate=false, bool noAtomic=false);
 	void GetLines(vector<unsigned int>& list) const;
 
 	// Modification

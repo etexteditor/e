@@ -2558,13 +2558,16 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	// Check if we need to force the native end-of-line
 	bool forceNativeEOL = false;
-	eGetSettings().GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
+	bool noAtomic = false;
+	eSettings& settings = eGetSettings();
+	settings.GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
+	settings.GetSettingBool(wxT("disable_atomic_save"), noAtomic);
 
 	// Save the text
 	cxFileResult savedResult;
 	const wxString realname = m_remotePath.empty() ? wxT("") : docName;
 	cxLOCKDOC_WRITE(m_doc)
-		savedResult = doc.SaveText(filepath, forceNativeEOL, realname);
+		savedResult = doc.SaveText(filepath, forceNativeEOL, realname, false, noAtomic);
 	cxENDLOCK
 
 	const wxString pathStr = filepath.GetFullPath();

@@ -22,6 +22,64 @@
     #include "WebKitHtmlWnd.h"
 #endif
 
+class SearchThread : public wxThread {
+public:
+	SearchThread();
+	virtual void* Entry();
+	void DeleteThread();
+
+	void StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex);
+	void CancelSearch();
+	bool IsSearching() const {return m_isSearching;};
+	bool LastError() const {return m_lastError;};
+
+	bool GetCurrentPath(wxString& currentPath);
+	bool UpdateOutput(wxString& output);
+
+private:
+	struct FileMatch {
+		unsigned int line;
+		unsigned int column;
+		wxFileOffset start;
+		wxFileOffset end;
+	};
+
+	struct SearchInfo {
+		wxString pattern;
+		wxString patternUpper;
+		wxCharBuffer UTF8buffer;
+		wxCharBuffer UTF8bufferUpper;
+		size_t byte_len;
+		char charmap[256];
+		char lastChar;
+		bool matchCase;
+		pcre* regex;
+		wxString output;
+	};
+
+	void SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler);
+	void DoSearch(const MMapBuffer& buf, const SearchInfo& si, vector<FileMatch>& matches) const;
+	void WriteResult(const MMapBuffer& buf, const wxFileName& filepath, vector<FileMatch>& matches);
+	bool PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex);
+
+	// Member variables
+	bool m_isSearching;
+	bool m_isWaiting;
+	bool m_stopSearch;
+	wxString m_path;
+	wxString m_pattern;
+	bool m_matchCase;
+	bool m_regex;
+	bool m_lastError;
+	wxString m_currentPath;
+	wxString m_output;
+	wxCriticalSection m_outputCrit;
+
+	wxMutex m_condMutex;
+	wxCondition m_startSearchCond;
+};
+
+
 // Ctrl id's
 enum {
 	CTRL_SEARCH,
@@ -165,14 +223,15 @@ void FindInProjectDlg::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 
 // ---- SearchThread ---------------------------------------------------------------------------------------
 
-FindInProjectDlg::SearchThread::SearchThread()
-: m_isSearching(false), m_isWaiting(false), m_stopSearch(false), m_lastError(false), m_startSearchCond(m_condMutex) {
+SearchThread::SearchThread():
+	m_isSearching(false), m_isWaiting(false), m_stopSearch(false), m_lastError(false), m_startSearchCond(m_condMutex) 
+{
 	// Create and run the thread
 	Create();
 	Run();
 }
 
-void* FindInProjectDlg::SearchThread::Entry() {
+void* SearchThread::Entry() {
 	while (1) {
 		// Wait for signal that we should start search
 		m_isWaiting = true;
@@ -210,7 +269,7 @@ void* FindInProjectDlg::SearchThread::Entry() {
 	return NULL;
 }
 
-void FindInProjectDlg::SearchThread::DeleteThread() {
+void SearchThread::DeleteThread() {
 	// We may be waiting for the condition so we cannot just call Delete
 	m_stopSearch = true;
 	CancelSearch();
@@ -220,7 +279,7 @@ void FindInProjectDlg::SearchThread::DeleteThread() {
 	m_startSearchCond.Signal();
 }
 
-void FindInProjectDlg::SearchThread::StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex) {
+void SearchThread::StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex) {
 	m_path = path;
 	m_pattern = pattern.c_str(); // wxString is not threadsafe, so we have to force copy
 	m_matchCase = matchCase;
@@ -232,14 +291,14 @@ void FindInProjectDlg::SearchThread::StartSearch(const wxString& path, const wxS
 	m_startSearchCond.Signal();
 }
 
-void FindInProjectDlg::SearchThread::CancelSearch() {
+void SearchThread::CancelSearch() {
 	m_isSearching = false;
 
 	// Wait for the search to actually cancel
 	while (!m_isWaiting) wxSleep(1);
 }
 
-bool FindInProjectDlg::SearchThread::GetCurrentPath(wxString& currentPath) {
+bool SearchThread::GetCurrentPath(wxString& currentPath) {
 	wxCriticalSectionLocker locker(m_outputCrit);
 
 	if (m_currentPath != currentPath) {
@@ -250,7 +309,7 @@ bool FindInProjectDlg::SearchThread::GetCurrentPath(wxString& currentPath) {
 	return false;
 }
 
-bool FindInProjectDlg::SearchThread::UpdateOutput(wxString& output) {
+bool SearchThread::UpdateOutput(wxString& output) {
 	wxCriticalSectionLocker locker(m_outputCrit);
 
 	if (m_output.length() > output.length()) {
@@ -261,7 +320,7 @@ bool FindInProjectDlg::SearchThread::UpdateOutput(wxString& output) {
 	return false;
 }
 
-bool FindInProjectDlg::SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex) {
+bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex) {
 	si.pattern = pattern;
 	si.matchCase = matchCase;
 	si.regex = NULL;
@@ -327,7 +386,7 @@ bool FindInProjectDlg::SearchThread::PrepareSearchInfo(SearchInfo& si, const wxS
 	return true;
 }
 
-void FindInProjectDlg::SearchThread::SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler) {
+void SearchThread::SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler) {
 	MMapBuffer buf;
 	wxFileName filepath;
 	vector<FileMatch> matches;
@@ -365,7 +424,7 @@ void FindInProjectDlg::SearchThread::SearchDir(const wxString& path, const Searc
 	}
 }
 
-void FindInProjectDlg::SearchThread::DoSearch(const MMapBuffer& buf, const SearchInfo& si, vector<FileMatch>& matches) const {
+void SearchThread::DoSearch(const MMapBuffer& buf, const SearchInfo& si, vector<FileMatch>& matches) const {
 	// Ignore binary files (we just check for zero bytes in the first
 	// 100 bytes of the file)
 	const wxFileOffset len = buf.Length();
@@ -440,7 +499,7 @@ void FindInProjectDlg::SearchThread::DoSearch(const MMapBuffer& buf, const Searc
 	}
 }
 
-void FindInProjectDlg::SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath, vector<FileMatch>& matches) {
+void SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath, vector<FileMatch>& matches) {
 	if (matches.empty()) return;
 
 	// Header

@@ -818,8 +818,8 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 			scrollPos = wxMax(0, scrollPos);
 		}
 	}
-	wxASSERT(scrollPos >= 0);
 
+	wxASSERT(scrollPos >= 0);
 	wxASSERT(scrollPos <= m_lines.GetHeight());
 
 	// Check if we need to adjust scrollbar
@@ -1810,7 +1810,7 @@ wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 #endif
 
 	if (p == smartPairs.end()) return wxEmptyString;
-	else return p->second;
+	return p->second;
 }
 
 wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addToStack) {
@@ -5723,13 +5723,9 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	unsigned int pos;
 	const unsigned int oldpos = m_lines.GetPos();
 
-	// Invalidate state
-	if (m_autopair.HasPairs())
-	{
-		const interval& inner_pair = m_autopair.InnerPair();
-		if (oldpos < inner_pair.start || inner_pair.end < oldpos)
-			m_autopair.Clear();
-	}
+	if (m_autopair.HasPairs() && !m_autopair.ContainedInInnerPair(oldpos))
+		m_autopair.Clear();
+
 	m_lastScopePos = -1; // scope selections
 
 	// Menu shortcuts might have set commandMode

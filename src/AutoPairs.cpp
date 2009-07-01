@@ -30,11 +30,8 @@ void AutoPairs::Clear() { m_pairStack.clear(); }
 
 void AutoPairs::ClearIfInsertingOutsideInnerPair(unsigned int pos) {
 	// Reset autoPair state if inserting outside inner pair
-	if (m_pairStack.empty())
-		return;
-
-	if (pos == InnerPair().end)
-		Clear();
+	if (!m_pairStack.empty() && pos != m_pairStack.back().end)
+		m_pairStack.clear();
 }
 
 bool AutoPairs::HasPairs() const { return !m_pairStack.empty(); }

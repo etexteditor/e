@@ -1728,7 +1728,7 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromFile(const wxString& filepath, unsigne
 #ifdef __WXMSW__
 		if (filepath.CmpNoCase(editorCtrl->GetPath()) == 0) { 
 #else
-		if (filepath == page->GetPath()) {
+		if (filepath == editorCtrl->GetPath()) {
 #endif
 			page_idx = i;
 			return editorCtrl;

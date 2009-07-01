@@ -30,7 +30,11 @@ void AutoPairs::Clear() { m_pairStack.clear(); }
 
 void AutoPairs::ClearIfInsertingOutsideInnerPair(unsigned int pos) {
 	// Reset autoPair state if inserting outside inner pair
-	if (HasPairs() && pos == InnerPair().end) Clear();
+	if (m_pairStack.empty())
+		return;
+
+	if (pos == InnerPair().end)
+		Clear();
 }
 
 bool AutoPairs::HasPairs() const { return !m_pairStack.empty(); }
@@ -50,7 +54,12 @@ const interval& AutoPairs::InnerPair() const { return m_pairStack.back(); }
 const interval& AutoPairs::OuterPair() const { return m_pairStack[0]; }
 
 void AutoPairs::DropInnerPair() { m_pairStack.pop_back(); }
-void AutoPairs:: AddInnerPair(unsigned int pos) { m_pairStack.push_back(interval(pos, pos)); }
+void AutoPairs::AddInnerPair(unsigned int pos) { m_pairStack.push_back(interval(pos, pos)); }
 
 bool AutoPairs::Enabled() const { return m_doAutoPair; }
 void AutoPairs::Enable(bool enable) { m_doAutoPair = enable; }
+
+bool AutoPairs::ContainedInInnerPair(unsigned int pos) const {
+	const interval& inner_pair = InnerPair();
+	return (inner_pair.start <= pos) && (pos <= inner_pair.end);
+}

@@ -1111,7 +1111,7 @@ void ThemeEditor::ColourButton::DrawButton() {
 
 	wxSize size = GetClientSize();
 
-	// Make a margen
+	// Make a margin
 	size.x -= 5;
 	size.y -= 5;
 	wxBitmap bmp(size.x, size.y);
@@ -1141,8 +1141,8 @@ void ThemeEditor::ColourButton::DrawButton() {
 // ---- TransparencyDlg ----------------------------------------------------------------
 
 
-ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alpha)
-:  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alpha):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
 {
 	SetTitle (_("Set Transparency"));
 

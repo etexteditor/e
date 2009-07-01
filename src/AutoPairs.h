@@ -26,6 +26,7 @@ public:
 	bool HasPairs() const;
 	bool AtEndOfPair(unsigned int pos) const;
 	bool BeforeOuterPair(unsigned int pos) const;
+	bool ContainedInInnerPair(unsigned int pos) const;
 
 	const interval& InnerPair() const;
 	const interval& OuterPair() const;

@@ -6304,8 +6304,8 @@ void EditorCtrl::DoCommand(int c) {
 
 void EditorCtrl::EndCommand() {
 	if (!commandStack.empty()) {
-		if (commandStack[0] == 26) cmd_Undo(0, commandStack, true);
-
+		if (commandStack[0] == 26) 
+			cmd_Undo(0, commandStack, true);
 		commandStack.clear();
 	}
 	commandMode = false;
@@ -7391,7 +7391,9 @@ int EditorCtrl::ShowPopupList(const vector<const tmAction*>& actionList) {
 		
 		// Add bundle title
 		if (a.bundle && a.bundle != bundle) {
-			wxMenuItem* item = listMenu.Append(-1, a.bundle->name);
+			wxString bundleName = a.bundle->name;
+			bundleName.Replace(wxT("&"), wxT("&&"));
+			wxMenuItem* item = listMenu.Append(-1, bundleName);
 			item->Enable(false);
 			bundle = a.bundle;
 		}
@@ -7399,6 +7401,7 @@ int EditorCtrl::ShowPopupList(const vector<const tmAction*>& actionList) {
 		wxString itemText;
 		if (a.bundle) itemText = wxT("  "); // slight indentation for bundle members
 		itemText += a.name;
+		itemText.Replace(wxT("&"), wxT("&&"));
 		
 		if (shortcut < 10) itemText += wxString::Format(wxT("\t&%u"), shortcut);
 		else if (shortcut == 10) itemText += wxT("\t&0");

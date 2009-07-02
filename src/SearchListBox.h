@@ -14,7 +14,7 @@
 #ifndef __SEARCHLISTBOX_H__
 #define __SEARCHLISTBOX_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #include <wx/vlbox.h>
 
 
@@ -39,8 +39,6 @@ public:
 	static unsigned int CalcRank(const vector<unsigned int>& hl);
 
 protected:
-	//virtual const wxString& GetItemText() const = 0;
-
 	void DrawItemText(wxDC& dc, const wxRect& rect, const wxString& name, const vector<unsigned int>& hl, bool isCurrent) const;
 
 	wxCoord OnMeasureItem(size_t n) const;

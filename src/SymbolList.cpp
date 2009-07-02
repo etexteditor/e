@@ -24,8 +24,8 @@
 #endif
 
 #ifndef WX_PRECOMP
-        #include <wx/sizer.h>
-        #include <wx/dc.h>
+    #include <wx/sizer.h>
+    #include <wx/dc.h>
 #endif
 
 // Ctrl id's
@@ -41,9 +41,12 @@ BEGIN_EVENT_TABLE(SymbolList, wxPanel)
 	EVT_LISTBOX_DCLICK(CTRL_ALIST, SymbolList::OnAction)
 END_EVENT_TABLE()
 
-SymbolList::SymbolList(IFrameSymbolService& services)
-: wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
-  m_parentFrame(services), m_editorSymbols(NULL) {
+SymbolList::SymbolList(IFrameSymbolService& services, bool keepOpen):
+	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
+	m_parentFrame(services), 
+	m_editorSymbols(NULL),
+	m_keepOpen(keepOpen)
+{
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_symbolStrings);
@@ -141,21 +144,20 @@ void SymbolList::OnSearchChar(wxKeyEvent& event) {
 
 void SymbolList::OnAction(wxCommandEvent& WXUNUSED(event)) {
 	if (!m_editorSymbols) return;
+	if(m_listBox->GetSelectedCount() != 1) return;
 
-	if(m_listBox->GetSelectedCount() == 1) {
-		const int hit = m_listBox->GetSelectedAction();
+	const int hit = m_listBox->GetSelectedAction();
 
-		if (hit != wxNOT_FOUND && hit < (int)m_symbols.size()) {
-			// Go to symbol
-			m_editorSymbols->GotoSymbolPos(m_symbols[hit].start);
+	if (hit != wxNOT_FOUND && hit < (int)m_symbols.size()) {
+		// Go to symbol
+		m_editorSymbols->GotoSymbolPos(m_symbols[hit].start);
 
-			// Close symbollist if user holds down shift
-			if (wxGetKeyState(WXK_SHIFT)) {
-				m_parentFrame.CloseSymbolList();
-			}
-			else if (!m_searchCtrl->IsEmpty()) {
-				m_searchCtrl->Clear();
-			}
+		// Close symbollist if user holds down shift or "m_keepOpen" is false.
+		if (!m_keepOpen || wxGetKeyState(WXK_SHIFT)) {
+			m_parentFrame.CloseSymbolList();
+		}
+		else if (!m_searchCtrl->IsEmpty()) {
+			m_searchCtrl->Clear();
 		}
 	}
 }
@@ -166,9 +168,10 @@ BEGIN_EVENT_TABLE(SymbolList::ActionList, SearchListBox)
 	EVT_LEFT_DOWN(SymbolList::ActionList::OnLeftDown)
 END_EVENT_TABLE()
 
-SymbolList::ActionList::ActionList(wxWindow* parent, wxWindowID id, const wxArrayString& actions)
-: SearchListBox(parent, id), m_actions(actions) {
-
+SymbolList::ActionList::ActionList(wxWindow* parent, wxWindowID id, const wxArrayString& actions):
+	SearchListBox(parent, id), 
+	m_actions(actions)
+{
 	SetAllItems();
 }
 
@@ -184,7 +187,6 @@ void SymbolList::ActionList::SetAllItems() {
 			m_items[i].action = &m_actions[i];
 		}
 
-		//sort(m_items.begin(), m_items.end());
 		SetItemCount(m_items.size());
 	}
 	else {

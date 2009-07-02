@@ -16,7 +16,8 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-        #include <wx/textctrl.h>
+	#include <wx/panel.h>
+    #include <wx/textctrl.h>
 #endif
 
 #include "SearchListBox.h"
@@ -36,7 +37,7 @@ class IFrameSymbolService;
 
 class SymbolList : public wxPanel {
 public:
-	SymbolList(IFrameSymbolService& services);
+	SymbolList(IFrameSymbolService& services, bool keepOpen=true);
 	bool Destroy();
 
 private:
@@ -90,6 +91,8 @@ private:
 	// Editor state
 	IEditorSymbols* m_editorSymbols;
 	EditorChangeState m_editorChangeState;
+
+	bool m_keepOpen;
 
 	vector<SymbolRef> m_symbols;
 	wxArrayString m_symbolStrings;

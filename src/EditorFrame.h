@@ -256,7 +256,7 @@ public:
 	void AppendToOutput(const wxString& html);
 
 	// Symbol List (pane)
-	void ShowSymbolList();
+	void ShowSymbolList(bool keepOpen=true);
 	virtual void CloseSymbolList();
 
 	// DirWatcher & RemoteThread

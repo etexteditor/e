@@ -2915,11 +2915,12 @@ void EditorFrame::OnMenuPreview(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuShowSymbols(wxCommandEvent& event) {
-	// The project pane uses the same shortcut (F5) for refresh
-	if (m_projectPane->IsFocused()) {
-		m_projectPane->RefreshDirs();
-		return;
-	}
+	// Adam V: Symbol pane is now using Ctrl-Alt-L
+	//// The project pane uses the same shortcut (F5) for refresh
+	//if (m_projectPane->IsFocused()) {
+	//	m_projectPane->RefreshDirs();
+	//	return;
+	//}
 
 	if (event.IsChecked()) ShowSymbolList();
 	else CloseSymbolList();
@@ -2933,7 +2934,7 @@ void EditorFrame::OnMenuSymbols(wxCommandEvent& WXUNUSED(event)) {
 	}
 	else {
 		// Open symbol list
-		ShowSymbolList();
+		ShowSymbolList(false);
 		m_symbolList->SetFocus();
 	}
 }
@@ -2960,11 +2961,11 @@ void EditorFrame::ShowWebPreview() {
 	m_frameManager.Update();
 }
 
-void EditorFrame::ShowSymbolList() {
+void EditorFrame::ShowSymbolList(bool keepOpen) {
 	if (m_symbolList) return; // already shown
 
 	// Create the pane
-	m_symbolList = new SymbolList(*this);
+	m_symbolList = new SymbolList(*this, keepOpen);
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxT("Symbols")).Right().Caption(_("Symbols")).BestSize(wxSize(150,50)); // defaults
 
@@ -2989,7 +2990,7 @@ void EditorFrame::CloseSymbolList() {
 	m_settings.SetSettingString(wxT("symbol_pane"), panePerspective);
 	m_settings.SetSettingBool(wxT("showsymbols"), false);
 
-	// Delete the preview pane
+	// Delete the symbol pane
 	m_frameManager.DetachPane(m_symbolList);
 	m_symbolList->Hide();
 	m_symbolList->Destroy();

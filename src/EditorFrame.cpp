@@ -147,6 +147,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_SHIFT_PROJECT_FOCUS, EditorFrame::OnShiftProjectFocus)
 	EVT_MENU(MENU_REVHIS, EditorFrame::OnMenuRevisionHistory)
 	EVT_MENU(MENU_UNDOHIS, EditorFrame::OnMenuUndoHistory)
+	EVT_MENU(MENU_COMMANDOUTPUT, EditorFrame::OnMenuShowCommandOutput)
 	EVT_MENU(MENU_SHOWSYMBOLS, EditorFrame::OnMenuShowSymbols)
 	EVT_MENU(MENU_SYMBOLS, EditorFrame::OnMenuSymbols)
 	EVT_MENU(MENU_LINENUM, EditorFrame::OnMenuLineNumbers)
@@ -524,6 +525,9 @@ void EditorFrame::InitMenus() {
 	viewMenu->Check(MENU_REVHIS, true);
 	viewMenu->Append(MENU_UNDOHIS, _("&Undo History\tF7"), _("Show Undo History"), wxITEM_CHECK);
 	viewMenu->Check(MENU_UNDOHIS, true);
+	viewMenu->Append(MENU_COMMANDOUTPUT, _("Command Output\tF12"), _("Show Command Output"), wxITEM_CHECK);
+	viewMenu->Check(MENU_COMMANDOUTPUT, false);
+	viewMenu->AppendSeparator();
 	viewMenu->Append(MENU_LINENUM, _("&Line Numbers"), _("Show Line Numbers"), wxITEM_CHECK);
 	viewMenu->Check(MENU_LINENUM, m_showGutter);
 	viewMenu->Append(MENU_INDENTGUIDE, _("&Indent Guides"), _("Show Indent Guides"), wxITEM_CHECK);
@@ -2812,18 +2816,22 @@ void EditorFrame::OnMenuIncommingTool(wxCommandEvent& WXUNUSED(event)) {
 	}
 }*/
 
-void EditorFrame::OnMenuRevisionHistory(wxCommandEvent& event) {
-	wxAuiPaneInfo& revHistoryPane = m_frameManager.GetPane(documentHistory);
-	if (event.IsChecked()) revHistoryPane.Show();
-	else revHistoryPane.Hide();
+void EditorFrame::TogglePane(wxWindow* targetPane, bool showPane) {
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(targetPane);
+	pane.Show(showPane);
 	m_frameManager.Update();
 }
 
+void EditorFrame::OnMenuRevisionHistory(wxCommandEvent& event) {
+	TogglePane(documentHistory, event.IsChecked());
+}
+
 void EditorFrame::OnMenuUndoHistory(wxCommandEvent& event) {
-	wxAuiPaneInfo& undoHistoryPane = m_frameManager.GetPane(undoHistory);
-	if (event.IsChecked()) undoHistoryPane.Show();
-	else undoHistoryPane.Hide();
-	m_frameManager.Update();
+	TogglePane(undoHistory, event.IsChecked());
+}
+
+void EditorFrame::OnMenuShowCommandOutput(wxCommandEvent& event) {
+	TogglePane(m_outputPane, event.IsChecked());
 }
 
 void EditorFrame::OnMenuLineNumbers(wxCommandEvent& event) {

@@ -87,6 +87,7 @@ enum {
 	MENU_SETTINGS,
 	MENU_UNDOHIS,
 	MENU_REVHIS,
+	MENU_COMMANDOUTPUT,
 	MENU_LINENUM,
 	MENU_INDENTGUIDE,
 	MENU_WORDWRAP,
@@ -328,7 +329,10 @@ private:
 	};
 
 	// Event handlers
+	void OnShiftProjectFocus(wxCommandEvent& event);
+
 	void OnOpeningMenu(wxMenuEvent& event);
+
 	void OnMenuNew(wxCommandEvent& event);
 	void OnMenuOpen(wxCommandEvent& event);
 	void OnMenuOpenProject(wxCommandEvent& event);
@@ -395,9 +399,9 @@ private:
 	void OnMenuShowProject(wxCommandEvent& event);
 	void OnMenuShowSymbols(wxCommandEvent& event);
 	void OnMenuSymbols(wxCommandEvent& event);
-	void OnShiftProjectFocus(wxCommandEvent& event);
 	void OnMenuRevisionHistory(wxCommandEvent& event);
 	void OnMenuUndoHistory(wxCommandEvent& event);
+	void OnMenuShowCommandOutput(wxCommandEvent& event);
 	void OnMenuLineNumbers(wxCommandEvent& event);
 	void OnMenuIndentGuide(wxCommandEvent& event);
 	void OnMenuWordWrap(wxCommandEvent& event);
@@ -420,6 +424,7 @@ private:
 	void OnMenuEditBundles(wxCommandEvent& event);
 	void OnMenuManageBundles(wxCommandEvent& event);
 	void OnMenuBundleAction(wxCommandEvent& event);
+
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);
 	void OnEraseBackground(wxEraseEvent& event);
@@ -459,6 +464,8 @@ private:
 	static void OnIncommingChanged(EditorFrame* self, void* data, int filter);
 	static void OnBundleActionsReloaded(EditorFrame* self, void* data, int filter);
 	static void OnBundlesReloaded(EditorFrame* self, void* data, int filter);
+
+	void TogglePane(wxWindow* targetPane, bool showPane);
 
 	// Member variables
 	CatalystWrapper m_catalyst;

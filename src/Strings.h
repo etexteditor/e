@@ -5,7 +5,10 @@
 
 int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2);
 
+int HexToNumber(wxChar hexDigit);
+
 void SimpleHtmlEncode(wxString& s);
+wxString URLDecode(const wxString &value);
 
 // Back-port of wxJoin and wxSplit from newer versions of wxWidgets
 

@@ -317,9 +317,6 @@ private:
 	void ShowProjectPane(const wxString& project);
 	void ShowBundlePane();
 
-	// Utility functions
-	static wxString URLDecode(const wxString& value);
-
 	// Embedded class: FrameDropTarget
 	class FrameDropTarget : public wxFileDropTarget {
 	public:

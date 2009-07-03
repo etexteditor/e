@@ -59,13 +59,11 @@
 #include "DirWatcher.h"
 #include "FindInProjectDlg.h"
 #include "HtmlOutputPane.h"
+#include "Strings.h"
 
 #ifdef __WXMSW__
-// For multi-monitor-aware position restore on Windows.
-#include "Winuser.h"
-#endif
-
-#if defined (__WXMSW__)
+	// For multi-monitor-aware position restore on Windows, include WinUser.h
+	#include "Winuser.h"
     #include <wx/msw/registry.h>
 #endif
 
@@ -3645,35 +3643,6 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 	self->ResetSyntaxMenu();
 	self->ResetBundleMenu();
 	self->CheckForModifiedFilesAsync();
-}
-
-//! URL Decode a string.
-wxString EditorFrame::URLDecode(const wxString &value) { // static
-	wxString szDecoded;
-	wxString szEncoded = value;
-
-	unsigned int nEncodedPos = 0;
-
-	// Replace + with space
-	szEncoded.Replace(wxT("+"), wxT(" "));
-
-	while( nEncodedPos < szEncoded.length() ) {
-		if(szEncoded.GetChar(nEncodedPos) != wxT('%')) szDecoded.Append(  szEncoded.GetChar(nEncodedPos++) );
-		else
-		{
-			nEncodedPos++;
-			if( isxdigit(szEncoded.GetChar(nEncodedPos)) && isxdigit(szEncoded.GetChar(nEncodedPos+1)) ) {
-				
-				wxChar n1 = Catalyst::HexToNumber(szEncoded.GetChar(nEncodedPos));
-				wxChar n2 = Catalyst::HexToNumber(szEncoded.GetChar(nEncodedPos+1));
-
-				szDecoded.Append( (wxChar) ((n1 << 4) | n2) );
-				nEncodedPos += 2;
-			}
-		}
-	}
-
-	return szDecoded;
 }
 
 // -- FrameDropTarget -----------------------------------------------------------------

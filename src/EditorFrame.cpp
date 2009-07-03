@@ -299,7 +299,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		//incommingPane->MakeLastItemVisible();
 		//m_frameManager.AddPane(incommingPane, wxAuiPaneInfo().Name(wxT("Incoming")).Hide().Top().Caption(_("Incoming")).BestSize(wxSize(150,100)));
 
-		m_outputPane = new HtmlOutputWin(this, *this);
+		m_outputPane = new HtmlOutputPane(this, *this);
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
 
 		// Project dock
@@ -3702,11 +3702,11 @@ enum
 	ID_MSHTML
 };
 
-BEGIN_EVENT_TABLE(EditorFrame::HtmlOutputWin, wxPanel)
-	EVT_HTMLWND_BEFORE_LOAD(ID_MSHTML, EditorFrame::HtmlOutputWin::OnBeforeLoad)
+BEGIN_EVENT_TABLE(EditorFrame::HtmlOutputPane, wxPanel)
+	EVT_HTMLWND_BEFORE_LOAD(ID_MSHTML, EditorFrame::HtmlOutputPane::OnBeforeLoad)
 END_EVENT_TABLE()
 
-EditorFrame::HtmlOutputWin::HtmlOutputWin(wxWindow *parent, IOpenTextmateURL& opener):
+EditorFrame::HtmlOutputPane::HtmlOutputPane(wxWindow *parent, IOpenTextmateURL& opener):
 	wxPanel(parent, wxID_ANY), 
 	m_opener(opener) 
 {
@@ -3728,7 +3728,7 @@ EditorFrame::HtmlOutputWin::HtmlOutputWin(wxWindow *parent, IOpenTextmateURL& op
 	SetSizer(mainSizer);
 }
 
-void EditorFrame::HtmlOutputWin::SetPage(const wxString& text) {
+void EditorFrame::HtmlOutputPane::SetPage(const wxString& text) {
 #ifdef FEAT_BROWSER
 
 #ifdef __WXMSW__
@@ -3766,7 +3766,7 @@ void EditorFrame::HtmlOutputWin::SetPage(const wxString& text) {
 #endif //FEAT_BROWSER
 }
 
-void EditorFrame::HtmlOutputWin::AppendText(const wxString& html) {
+void EditorFrame::HtmlOutputPane::AppendText(const wxString& html) {
 #ifdef FEAT_BROWSER
 #ifdef __WXMSW__
 	m_browser->AppendString(html);
@@ -3774,7 +3774,7 @@ void EditorFrame::HtmlOutputWin::AppendText(const wxString& html) {
 #endif //FEAT_BROWSER
 }
 
-void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
+void EditorFrame::HtmlOutputPane::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
     const wxString url = event.GetURL();
 	if (url == wxT("about:blank")) return;
 
@@ -3802,7 +3802,7 @@ void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 	}
 }
 
-void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
+void EditorFrame::HtmlOutputPane::DecodePath(wxString& path) { // static
 	// Spaces transformed to %20 in paths confuses ie
 	for (unsigned int i2 = 0; i2 < path.size(); ++i2) {
 		if (path[i2] == wxT('%') && path.size() > i2+3 && path[i2+1] == wxT('2') && path[i2+2] == wxT('0')) {

@@ -167,7 +167,7 @@ enum {
 
 class IOpenTextmateURL {
 public:
-	virtual bool OpenTxmtUrl(const wxString& url);
+	virtual bool OpenTxmtUrl(const wxString& url) = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -339,9 +339,9 @@ private:
 		EditorFrame& m_parent;
 	};
 
-	class HtmlOutputWin : public wxPanel {
+	class HtmlOutputPane : public wxPanel {
 	public:
-		HtmlOutputWin(wxWindow *parent, IOpenTextmateURL& opener);
+		HtmlOutputPane(wxWindow *parent, IOpenTextmateURL& opener);
 		void SetPage(const wxString& html);
 		void AppendText(const wxString& html);
 
@@ -531,7 +531,7 @@ private:
 	UndoHistory* undoHistory;
 	DocHistory* documentHistory;
 	//Incomming* incommingPane;
-	HtmlOutputWin* m_outputPane;
+	HtmlOutputPane* m_outputPane;
 	ProjectPane* m_projectPane;
 	BundlePane* m_bundlePane;
 	SymbolList* m_symbolList;

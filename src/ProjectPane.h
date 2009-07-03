@@ -64,6 +64,7 @@ public:
 
 	bool SetProject(const wxFileName& path);
 	bool SetRemoteProject(const RemoteProfile* rp);
+	void CloseProject();
 
 	void Clear();
 	virtual bool HasProject() const {return m_prjPath.IsOk();};

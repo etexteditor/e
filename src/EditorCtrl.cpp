@@ -66,6 +66,15 @@ enum {
 	TIMER_FOLDTOOLTIP = 100
 };
 
+// Popup menu IDs
+enum {
+	MENU_SELECT,
+	MENU_SELECTWORD,
+	MENU_SELECTLINE,
+	MENU_SELECTSCOPE,
+	MENU_SELECTFOLD
+};
+
 BEGIN_EVENT_TABLE(EditorCtrl, wxControl)
 	EVT_PAINT(EditorCtrl::OnPaint)
 	EVT_CHAR(EditorCtrl::OnChar)

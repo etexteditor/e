@@ -177,7 +177,6 @@ bool ProjectPane::SetProject(const wxFileName& path) {
 
 	if (!m_prjPath.IsOk() || m_prjPath != path) {
 		m_prjPath = path;
-
 		Init();
 	}
 
@@ -198,6 +197,11 @@ bool ProjectPane::SetRemoteProject(const RemoteProfile* rp) {
 
 	Init();
 	return true;
+}
+
+void ProjectPane::CloseProject(){
+	m_prjPath = wxFileName();
+	Clear();
 }
 
 void ProjectPane::Clear() {

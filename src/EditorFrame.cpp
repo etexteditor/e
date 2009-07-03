@@ -72,6 +72,110 @@ enum {
 	CTRL_TABBAR=100
 };
 
+// Menu id's
+enum {
+	MENU_OPENPROJECT,
+	MENU_OPENREMOTE,
+	MENU_CLOSEPROJECT,
+	MENU_SAVEALL,
+	MENU_SAVEFORMAT,
+	MENU_LINEEND,
+	MENU_ENCODING,
+	MENU_BOM,
+	MENU_IMPORT,
+	MENU_CLOSE,
+	MENU_REVSEL,
+	MENU_FIND_IN_PROJECT,
+	MENU_FIND_IN_SEL,
+	MENU_FIND_NEXT,
+	MENU_FIND_PREVIOUS,
+	MENU_FIND_CURRENT,
+	MENU_SELECT,
+	MENU_SELECTWORD,
+	MENU_SELECTLINE,
+	MENU_SELECTSCOPE,
+	MENU_SELECTFOLD,
+	MENU_SYNTAX,
+	MENU_EDIT_THEME,
+	MENU_SETTINGS,
+	MENU_UNDOHIS,
+	MENU_REVHIS,
+	MENU_COMMANDOUTPUT,
+	MENU_LINENUM,
+	MENU_INDENTGUIDE,
+	MENU_WORDWRAP,
+	MENU_WRAP_NONE,
+	MENU_WRAP_NORMAL,
+	MENU_WRAP_SMART,
+	MENU_HL_USERS,
+	MENU_INCOMMING,
+	MENU_INCOMMING_TOOLBAR,
+	MENU_SHOWPROJECT,
+	MENU_SHOWSYMBOLS,
+	MENU_SYMBOLS,
+	MENU_SHIFT_PROJECT_FOCUS,
+	MENU_PREVIEW,
+	MENU_STATUSBAR,
+	MENU_NEXTTAB,
+	MENU_NEXTTAB_OR_LAST,
+	MENU_PREVTAB,
+	MENU_LASTTAB,
+	MENU_OPEN_EXT,
+	MENU_TABS,
+	MENU_TABS_SHOWDROPDOWN,
+	MENU_GOTOBRACKET,
+	MENU_GOTOLINE,
+	MENU_GOTOFILE,
+	MENU_FOLDTOGGLE,
+	MENU_FOLDALL,
+	MENU_FOLDOTHERS,
+	MENU_UNFOLDALL,
+	MENU_BUY,
+	MENU_REGISTER,
+	MENU_WEBSITE,
+	MENU_ABOUT,
+	MENU_EOL_DOS,
+	MENU_EOL_UNIX,
+	MENU_EOL_MAC,
+	MENU_EOL_NATIVE,
+	MENU_DOC_OPEN,
+	MENU_DOC_SHARE,
+	MENU_COMMIT,
+	MENU_REVTOOLTIP,
+	MENU_FINDCMD,
+	MENU_FILTER,
+	MENU_RUN,
+	MENU_HELP_FORUM,
+	MENU_RECENT_FILES,
+	MENU_RECENT_PROJECTS,
+	MENU_TEXTCONV,
+	MENU_UPPERCASE,
+	MENU_LOWERCASE,
+	MENU_TITLECASE,
+	MENU_REVERSECASE,
+	MENU_COMPLETE,
+	MENU_INDENTLEFT,
+	MENU_INDENTRIGHT,
+	MENU_TABSTOSPACES,
+	MENU_SPACESTOTABS,
+	MENU_BUNDLE_FUNCTIONS,
+	MENU_RELOAD_BUNDLES,
+	MENU_DEBUG_BUNDLES,
+	MENU_EDIT_BUNDLES,
+	MENU_MANAGE_BUNDLES,
+	MENU_TABS_NEW,
+	MENU_TABS_CLOSE,
+	MENU_TABS_CLOSE_OTHER,
+	MENU_TABS_CLOSE_ALL,
+	MENU_TABS_COPY_PATH,
+	MENU_KEYDIAG,
+	MENU_BOOKMARK_NEXT,
+	MENU_BOOKMARK_PREVIOUS,
+	MENU_BOOKMARK_TOGGLE,
+	MENU_BOOKMARK_CLEAR
+};
+
+
 wxString EditorFrame::DefaultFileFilters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
 						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
 						wxT("C/C++ Files (*.c, *.cpp, *.cxx)|*.c;*.cpp;*.cxx|") \
@@ -87,6 +191,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(wxID_OPEN, EditorFrame::OnMenuOpen)
 	EVT_MENU(MENU_OPENPROJECT, EditorFrame::OnMenuOpenProject)
 	EVT_MENU(MENU_OPENREMOTE, EditorFrame::OnMenuOpenRemote)
+	EVT_MENU(MENU_CLOSEPROJECT, EditorFrame::OnMenuCloseProject)
 	EVT_MENU(wxID_SAVE, EditorFrame::OnMenuSave)
 	EVT_MENU(wxID_SAVEAS, EditorFrame::OnMenuSaveAs)
 	EVT_MENU(MENU_SAVEALL, EditorFrame::OnMenuSaveAll)
@@ -462,6 +567,7 @@ void EditorFrame::InitMenus() {
 	fileMenu->AppendSeparator();
 	fileMenu->Append(MENU_OPENPROJECT, _("Open &Dir as Project..."), _("Open Dir as Project"));
 	fileMenu->Append(MENU_OPENREMOTE, _("Open &Remote Folder..."), _("Open Remote Folder"));
+	fileMenu->Append(MENU_CLOSEPROJECT, _("Close Pro&ject"), _("Close Project"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(MENU_SAVEFORMAT, _("Sa&ve format"), formatMenu, _("Save format"));
 	fileMenu->Append(MENU_IMPORT, _("&Import"), importMenu, _("Import"));
@@ -1328,6 +1434,12 @@ bool EditorFrame::HasProject() const {
 	if (!m_projectPane->IsShown()) return false;
 
 	return m_projectPane->HasProject();
+}
+
+bool EditorFrame::CloseProject() {
+	m_projectPane->Clear();
+	m_settings.RemoveSetting(wxT("project"));
+	return true;
 }
 
 bool EditorFrame::IsProjectRemote() const {
@@ -2260,6 +2372,10 @@ void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
 	// Get the profile from db
 	const RemoteProfile* rp = m_settings.GetRemoteProfile(profile_id);
 	if (rp) OpenRemoteProject(rp);
+}
+
+void EditorFrame::OnMenuCloseProject(wxCommandEvent& WXUNUSED(event)) {
+	CloseProject();
 }
 
 void EditorFrame::OnMenuOpenRecentFile(wxCommandEvent& event) {

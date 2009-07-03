@@ -2354,6 +2354,9 @@ void EditorCtrl::Insert(const wxString& text) {
 		// Update stylers
 		StylersInsert(pos, byte_len);
 
+		// Adjust containing pairs
+		m_autopair.AdjustEndsUp(byte_len);
+
 		// Make sure the caret is at the right position
 		pos += byte_len;
 		m_lines.SetPos(pos);
@@ -5732,6 +5735,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	unsigned int pos;
 	const unsigned int oldpos = m_lines.GetPos();
 
+	// If the cursor is positioned outside of the innermost bracket pair, then
+	// we toss our nested bracket pair information.
 	if (m_autopair.HasPairs() && !m_autopair.ContainedInInnerPair(oldpos))
 		m_autopair.Clear();
 

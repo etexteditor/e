@@ -37,8 +37,6 @@
 #include "IFrameSearchService.h"
 #include "IOpenTextmateURL.h"
 
-#include "IHtmlWnd.h"
-
 // Forward declarations
 class eApp;
 class EditorCtrl;
@@ -59,10 +57,6 @@ class StatusBar;
 class DirWatcher;
 class FindInProjectDlg;
 class HtmlOutputPane;
-
-#ifdef __WXMSW__
-class wxIEHtmlWin;
-#endif
 
 class IEditorSearch;
 

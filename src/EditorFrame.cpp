@@ -13,27 +13,32 @@
 
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
+
 #include <wx/regex.h>
 #include <wx/icon.h>
 #include <wx/filename.h>
 #include <wx/artprov.h>
 #include <wx/ffile.h>
+#include <wx/fontmap.h>
+#include <wx/sysopt.h>
+#include <wx/mstream.h>
+#include <wx/progdlg.h>
+#include <wx/printdlg.h>
+#include <wx/recguard.h>
+#include <wx/clipbrd.h>
+
 #include "eAbout.h"
 #include "eApp.h"
-#include <wx/clipbrd.h>
 #include "SaveDlg.h"
 #include "tm_syntaxhandler.h"
-#include <wx/fontmap.h>
 #include "eDockArt.h"
 #include "CommitDlg.h"
 #include "ReloadDlg.h"
 #include "OpenDocDlg.h"
 #include "ShareDlg.h"
 #include "SettingsDlg.h"
-#include <wx/sysopt.h>
 #include "ProjectPane.h"
 #include "ThemeEditor.h"
-#include <wx/mstream.h>
 #include "BundleManager.h"
 #include "PreviewDlg.h"
 #include "BundleMenu.h"
@@ -41,12 +46,9 @@
 #include "GotoFileDlg.h"
 #include "SymbolList.h"
 #include "ChangeCheckerThread.h"
-#include <wx/progdlg.h>
 #include "RemoteProfileDlg.h"
 #include "RemoteLoginDlg.h"
-#include <wx/printdlg.h>
 #include "EditorPrintout.h"
-#include <wx/recguard.h>
 #include "EditorBundlePanel.h"
 #include "BundlePane.h"
 #include "UndoHistory.h"

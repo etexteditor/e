@@ -14,10 +14,7 @@
 #ifndef __SEARCHPANEL_H__
 #define __SEARCHPANEL_H__
 
-#include "FindFlags.h"
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/panel.h>
 	#include <wx/control.h>
@@ -26,6 +23,8 @@
 	#include <wx/bitmap.h>
 	#include <wx/combobox.h>
 #endif
+
+#include "FindFlags.h"
 
 // pre-definitions
 class CloseButton;

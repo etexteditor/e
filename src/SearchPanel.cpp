@@ -58,12 +58,12 @@ BEGIN_EVENT_TABLE(SearchPanel, wxPanel)
 	EVT_KILL_FOCUS(SearchPanel::OnKillFocus)
 END_EVENT_TABLE()
 
-SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
-: wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE),
+SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size):
+	wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE),
 	m_searchService(searchService),
-  m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false),
-  m_settings(eGetSettings()) {
-
+	m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false),
+	m_settings(eGetSettings())
+{
 	// Create custom event handlers
 	searchbox_evt_handler = new SearchEvtHandler(this);
 	replacebox_evt_handler = new SearchEvtHandler(this);
@@ -150,7 +150,7 @@ SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, w
 }
 
 SearchPanel::~SearchPanel() {
-	// Make sure the SearchEventHandlers get deleted correctly
+	// Delete the SearchEventHandlers
 	searchbox->PopEventHandler(true);
 	replaceBox->PopEventHandler(true);
 }
@@ -158,7 +158,7 @@ SearchPanel::~SearchPanel() {
 bool SearchPanel::IsActive() const {
 	if (!IsShown()) return false;
 
-	// Check if any local ctrls has focus
+	// Check if any local control has focus
 	wxWindow* focused = FindFocus();
 	if (focused == (wxWindow*)searchbox) return true;
 	if (focused == (wxWindow*)replaceBox) return true;

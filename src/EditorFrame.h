@@ -35,6 +35,7 @@
 #include "IFrameProjectService.h"
 #include "IFrameUndoPane.h"
 #include "IFrameSearchService.h"
+#include "IOpenTextmateURL.h"
 
 #include "IHtmlWnd.h"
 
@@ -57,6 +58,7 @@ class TmSyntaxHandler;
 class StatusBar;
 class DirWatcher;
 class FindInProjectDlg;
+class HtmlOutputPane;
 
 #ifdef __WXMSW__
 class wxIEHtmlWin;
@@ -163,11 +165,6 @@ enum {
 	MENU_BOOKMARK_PREVIOUS,
 	MENU_BOOKMARK_TOGGLE,
 	MENU_BOOKMARK_CLEAR
-};
-
-class IOpenTextmateURL {
-public:
-	virtual bool OpenTxmtUrl(const wxString& url) = 0;
 };
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -337,28 +334,6 @@ private:
 
 	private:
 		EditorFrame& m_parent;
-	};
-
-	class HtmlOutputPane : public wxPanel {
-	public:
-		HtmlOutputPane(wxWindow *parent, IOpenTextmateURL& opener);
-		void SetPage(const wxString& html);
-		void AppendText(const wxString& html);
-
-	private:
-		static void DecodePath(wxString& path);
-
-		// Event handlers
-		void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
-
-		IOpenTextmateURL& m_opener;
-
-#ifdef __WXMSW__
-		wxIEHtmlWin* m_browser;
-#else
-		IHtmlWnd* m_browser;
-#endif
-		DECLARE_EVENT_TABLE()
 	};
 
 	// Event handlers

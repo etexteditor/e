@@ -401,6 +401,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IOpenTextmateURL.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IPrintableDocument.h"
 				>
 			</File>
@@ -2983,6 +2987,14 @@
 		</File>
 		<File
 			RelativePath="GutterCtrl.h"
+			>
+		</File>
+		<File
+			RelativePath=".\HtmlOutputPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\HtmlOutputPane.h"
 			>
 		</File>
 		<File

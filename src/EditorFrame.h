@@ -165,11 +165,17 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
+class IOpenTextmateURL {
+public:
+	virtual bool OpenTxmtUrl(const wxString& url);
+};
+
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService,
 	public IFrameUndoPane,
-	public IFrameSearchService
+	public IFrameSearchService,
+	public IOpenTextmateURL
 {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -204,7 +210,7 @@ public:
 	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
 	virtual void UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath);
 
-	bool OpenTxmtUrl(const wxString& url);
+	virtual bool OpenTxmtUrl(const wxString& url);
 	bool AskToSaveMulti(int keep_tab=-1);
 	void SaveAllFilesInProject();
 	//void CheckForModifiedFiles();
@@ -335,18 +341,18 @@ private:
 
 	class HtmlOutputWin : public wxPanel {
 	public:
-		HtmlOutputWin(EditorFrame& parent);
+		HtmlOutputWin(wxWindow *parent, IOpenTextmateURL& opener);
 		void SetPage(const wxString& html);
 		void AppendText(const wxString& html);
 
-		//void OnLinkClicked(const wxHtmlLinkInfo& link);
 	private:
 		static void DecodePath(wxString& path);
 
 		// Event handlers
 		void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
 
-		EditorFrame& m_parentFrame;
+		IOpenTextmateURL& m_opener;
+
 #ifdef __WXMSW__
 		wxIEHtmlWin* m_browser;
 #else

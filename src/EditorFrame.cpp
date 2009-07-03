@@ -299,7 +299,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		//incommingPane->MakeLastItemVisible();
 		//m_frameManager.AddPane(incommingPane, wxAuiPaneInfo().Name(wxT("Incoming")).Hide().Top().Caption(_("Incoming")).BestSize(wxSize(150,100)));
 
-		m_outputPane = new HtmlOutputWin(*this);
+		m_outputPane = new HtmlOutputWin(this, *this);
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
 
 		// Project dock
@@ -3706,9 +3706,10 @@ BEGIN_EVENT_TABLE(EditorFrame::HtmlOutputWin, wxPanel)
 	EVT_HTMLWND_BEFORE_LOAD(ID_MSHTML, EditorFrame::HtmlOutputWin::OnBeforeLoad)
 END_EVENT_TABLE()
 
-EditorFrame::HtmlOutputWin::HtmlOutputWin(EditorFrame& parent)
-: wxPanel(&parent, wxID_ANY), m_parentFrame(parent) {
-
+EditorFrame::HtmlOutputWin::HtmlOutputWin(wxWindow *parent, IOpenTextmateURL& opener):
+	wxPanel(parent, wxID_ANY), 
+	m_opener(opener) 
+{
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
 #ifdef FEAT_BROWSER
@@ -3778,7 +3779,7 @@ void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
 	if (url == wxT("about:blank")) return;
 
 	if (url.StartsWith(wxT("txmt://open"))) {
-		m_parentFrame.OpenTxmtUrl(url);
+		m_opener.OpenTxmtUrl(url);
 
 		// Don't try to open it in browser
 		event.Cancel(true);

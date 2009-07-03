@@ -38,11 +38,12 @@ wxString URLDecode(const wxString &value) {
 
 	// Replace hex encoded characters
 	while( nEncodedPos < szEncoded.length() ) {
-		if(szEncoded.GetChar(nEncodedPos) != wxT('%')) 
-			szDecoded.Append( szEncoded.GetChar(nEncodedPos++) );
+		wxChar nextChar = szEncoded.GetChar(nEncodedPos);
+		nEncodedPos++;
+
+		if(nextChar != wxT('%')) szDecoded.Append( nextChar );
 		else
 		{
-			nEncodedPos++;
 			if( isxdigit(szEncoded.GetChar(nEncodedPos)) && isxdigit(szEncoded.GetChar(nEncodedPos+1)) ) {
 				
 				int n1 = HexToNumber(szEncoded.GetChar(nEncodedPos));

@@ -72,7 +72,6 @@ private:
 	int m_posBeforeFoldClick;
 
 	const tmTheme& m_theme;
-	const wxColour& m_bgcolor;
 	wxColour m_numbercolor;
 	wxColour m_edgecolor;
 	wxColour m_hlightcolor;

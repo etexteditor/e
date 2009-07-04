@@ -40,7 +40,7 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id):
 	m_mdc(), m_bitmap(1,1), m_width(0), m_gutterLeft(true), 
 	m_showBookmarks(true), 
 	m_showFolds(true), m_currentFold(NULL), m_posBeforeFoldClick(-1),
-	m_theme(m_editorCtrl.GetTheme()), m_bgcolor(m_theme.gutterColor),
+	m_theme(m_editorCtrl.GetTheme()),
 	m_currentSel(-1)
 {
 	m_mdc.SelectObject(m_bitmap);
@@ -76,9 +76,9 @@ void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
 	}
 
 	// Create colors
-	const int red = m_bgcolor.Red();
-	const int blue = m_bgcolor.Blue();
-	const int green = m_bgcolor.Green();
+	const int red = m_theme.gutterColor.Red();
+	const int blue = m_theme.gutterColor.Blue();
+	const int green = m_theme.gutterColor.Green();
 	if (red - 140 < 0) {
 		m_hlightcolor.Set(0xFF & (red+20), 0xFF & (green+20), 0xFF & (blue+20)); // Pastel purple (slightly darker)
 		m_edgecolor.Set(0xFF & (red+100), 0xFF & (green+100), 0xFF & (blue+100)); // Pastel purple (darker)
@@ -89,7 +89,7 @@ void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
 		m_edgecolor.Set(wxMax(0,red-100), wxMax(0,green-100), wxMax(0,blue-100)); // Pastel purple (darker)
 		m_numbercolor.Set(wxMax(0,red-140), wxMax(0,green-140), wxMax(0,blue-140)); // Pastel purple (even darker)
 	}
-	m_mdc.SetBackground(wxBrush(m_bgcolor));
+	m_mdc.SetBackground(wxBrush(m_theme.gutterColor));
 
 	wxMemoryDC mdc;
 
@@ -115,7 +115,7 @@ void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
 	// Draw bookmark
 	m_bmBookmark = wxBitmap(10, 10);
 	mdc.SelectObject(m_bmBookmark);
-	mdc.SetBackground(wxBrush(m_bgcolor));
+	mdc.SetBackground(wxBrush(m_theme.gutterColor));
 	mdc.Clear();
 	mdc.SetBrush(m_edgecolor);
 	mdc.DrawCircle(5,5,5);

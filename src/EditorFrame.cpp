@@ -85,6 +85,7 @@ enum {
 	MENU_IMPORT,
 	MENU_CLOSE,
 	MENU_REVSEL,
+	MENU_FIND_AND_REPLACE,
 	MENU_FIND_IN_PROJECT,
 	MENU_FIND_IN_SEL,
 	MENU_FIND_NEXT,
@@ -602,11 +603,7 @@ void EditorFrame::InitMenus() {
 	editMenu->Append(wxID_COPY, _("&Copy\tCtrl+C"), _("Copy"));
 	editMenu->Append(wxID_PASTE, _("&Paste\tCtrl+V"), _("Paste"));
 	editMenu->AppendSeparator();
-	editMenu->Append(wxID_FIND, _("&Find\tCtrl+F"), _("Find"));
-	editMenu->Append(MENU_FIND_IN_SEL, _("Find &in Selection\tCtrl+Shift+F"), _("Find in Selection"));
-	editMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project\tCtrl-Alt-F"), _("Find in Project"));
-	editMenu->Append(wxID_REPLACE, _("&Replace\tCtrl+R"), _("Replace"));
-	editMenu->AppendSeparator();
+
 	wxMenu* selectMenu = new wxMenu;
 		selectMenu->Append(MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
@@ -614,6 +611,15 @@ void EditorFrame::InitMenus() {
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
 		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+
+	editMenu->AppendSeparator();
+	wxMenu* findMenu = new wxMenu;
+		findMenu->Append(wxID_FIND, _("&Find\tCtrl+F"), _("Find"));
+		findMenu->Append(MENU_FIND_IN_SEL, _("Find &in Selection\tCtrl+Shift+F"), _("Find in Selection"));
+		findMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project\tCtrl-Alt-F"), _("Find in Project"));
+		findMenu->Append(wxID_REPLACE, _("&Replace\tCtrl+R"), _("Replace"));
+		editMenu->Append(MENU_FIND_AND_REPLACE,  _("&Find and Replace"), findMenu, _("Find and Replace"));
+
 	editMenu->AppendSeparator();
 	editMenu->Append(MENU_SYNTAX, _("S&yntax"), m_syntaxMenu, _("Syntax"));
 	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));

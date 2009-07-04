@@ -19,18 +19,7 @@
    #include <wx/wx.h>
 #endif
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
-#include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
-
-#include <wx/dir.h>
-#include "SearchListBox.h"
+#include <vector>
 
 class ProjectInfoHandler;
 class cxProjectInfo;
@@ -61,13 +50,13 @@ private:
 
 	// Member variables
 	ProjectInfoHandler& m_project;
-	vector<FileEntry*> m_files;
+	std::vector<FileEntry*> m_files;
 	bool m_isDone;
 
 	// Dir traversing state
 	bool m_filesLoaded;
-	vector<DirState*> m_dirStack;
-	vector<cxProjectInfo*> m_filters;
+	std::vector<DirState*> m_dirStack;
+	std::vector<cxProjectInfo*> m_filters;
 
 	// Ctrls
 	wxTextCtrl* m_searchCtrl;

@@ -14,19 +14,14 @@
 #include "SymbolList.h"
 #include "IFrameSymbolService.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <algorithm>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
 
 #ifndef WX_PRECOMP
     #include <wx/sizer.h>
     #include <wx/dc.h>
 #endif
+
+using namespace std;
 
 // Ctrl id's
 enum {

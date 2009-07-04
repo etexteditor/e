@@ -19,6 +19,7 @@
 #include <wx/filename.h>
 #include <wx/artprov.h>
 #include <wx/ffile.h>
+#include <wx/dir.h>
 #include <wx/fontmap.h>
 #include <wx/sysopt.h>
 #include <wx/mstream.h>

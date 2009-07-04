@@ -12,8 +12,15 @@
  ******************************************************************************/
 
 #include "GotoFileDlg.h"
+
+using namespace std;
+#include <map>
 #include <algorithm>
+
+#include <wx/dir.h>
+
 #include "ProjectInfoHandler.h"
+#include "SearchListBox.h"
 
 class FileEntry {
 public:

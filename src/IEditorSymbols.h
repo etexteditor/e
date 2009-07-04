@@ -6,7 +6,7 @@
 
 class IEditorSymbols : public IGetChangeState {
 public:
-	virtual int GetSymbols(vector<SymbolRef>& symbols) const = 0;
+	virtual int GetSymbols(std::vector<SymbolRef>& symbols) const = 0;
 	virtual wxString GetSymbolString(const SymbolRef& sr) const = 0;
 	virtual void GotoSymbolPos(unsigned int pos) = 0;
 };

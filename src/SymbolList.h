@@ -23,15 +23,7 @@
 #include "SearchListBox.h"
 #include "IEditorSymbols.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class IFrameSymbolService;
 
@@ -64,7 +56,7 @@ private:
 		class aItem {
 		public:
 			aItem() : id(0), action(NULL), rank(0) {};
-			aItem(unsigned int id, const wxString* a, const vector<unsigned int>& hl)
+			aItem(unsigned int id, const wxString* a, const std::vector<unsigned int>& hl)
 				: id(id), action(a), hlChars(hl), rank(SearchListBox::CalcRank(hl)) {};
 			bool operator<(const aItem& ai) const {
 				if (rank < ai.rank) return true;
@@ -74,12 +66,12 @@ private:
 			}
 			unsigned int id;
 			const wxString* action;
-			vector<unsigned int> hlChars;
+			std::vector<unsigned int> hlChars;
 			unsigned int rank;
 		};
 
 		const wxArrayString& m_actions;
-		vector<aItem> m_items;
+		std::vector<aItem> m_items;
 		wxString m_searchText;
 	};
 
@@ -94,7 +86,7 @@ private:
 
 	bool m_keepOpen;
 
-	vector<SymbolRef> m_symbols;
+	std::vector<SymbolRef> m_symbols;
 	wxArrayString m_symbolStrings;
 };
 

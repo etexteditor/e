@@ -12,14 +12,16 @@
  ******************************************************************************/
 
 #include "SearchListBox.h"
-#include <wx/wx.h>
+
+using namespace std;
 
 BEGIN_EVENT_TABLE(SearchListBox, wxVListBox)
 	EVT_CHAR(SearchListBox::OnChar)
 END_EVENT_TABLE()
 
-SearchListBox::SearchListBox(wxWindow* parent, wxWindowID id)
-: wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxSUNKEN_BORDER) {
+SearchListBox::SearchListBox(wxWindow* parent, wxWindowID id):
+	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxSUNKEN_BORDER) 
+{
 	m_font = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
 	m_boldFont = m_font;
 	m_boldFont.SetWeight(wxFONTWEIGHT_BOLD);
@@ -33,8 +35,8 @@ SearchListBox::SearchListBox(wxWindow* parent, wxWindowID id)
 	dc.GetTextExtent(wxT("Xj"), &x, &m_itemHeight);
 	m_itemHeight += 4; // Add a bit of margin
 
-	m_topMargen = 1;
-	m_leftMargen = 1;
+	m_topMargin = 1;
+	m_leftMargin = 1;
 }
 
 wxCoord SearchListBox::OnMeasureItem(size_t WXUNUSED(n)) const {
@@ -42,16 +44,16 @@ wxCoord SearchListBox::OnMeasureItem(size_t WXUNUSED(n)) const {
 }
 
 void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& name, const vector<unsigned int>& hl, bool isCurrent) const {
-	const unsigned int ypos = rect.y + m_topMargen;
+	const unsigned int ypos = rect.y + m_topMargin;
 	
 	// Draw action name
 	if (hl.empty()) {
 		dc.SetFont(m_font);
 		if (!isCurrent) dc.SetTextForeground(m_textColor);
-		dc.DrawText(name, rect.x + m_leftMargen, ypos);
+		dc.DrawText(name, rect.x + m_leftMargin, ypos);
 	}
 	else {
-		unsigned int lastxpos = rect.x + m_leftMargen;
+		unsigned int lastxpos = rect.x + m_leftMargin;
 		unsigned int lastchar = 0;
 		const unsigned int len = name.length();
 		int w, h;
@@ -63,7 +65,7 @@ void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& n
 			
 			if (lastchar < e) {
 				wxString str = name.substr(lastchar, e - lastchar);
-				//dc.SetFont(m_font);
+				dc.SetFont(m_font);
 
 				dc.GetTextExtent(str, &w, &h);
 
@@ -77,7 +79,7 @@ void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& n
 			// highlight char
 			if (e == *p) {
 				const wxString charStr(name[e]);
-				//dc.SetFont(m_boldFont);
+				dc.SetFont(m_boldFont);
 				if (!isCurrent) dc.SetTextForeground(*wxBLACK);
 				dc.DrawText(charStr, lastxpos, ypos);
 
@@ -91,7 +93,7 @@ void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& n
 		}
 
 		if (lastchar < name.size()) {
-			//dc.SetFont(m_font);
+			dc.SetFont(m_font);
 			if (!isCurrent) dc.SetTextForeground(m_textColor);
 			dc.DrawText(name.substr(lastchar), lastxpos, ypos);
 		}

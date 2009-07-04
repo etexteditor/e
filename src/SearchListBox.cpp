@@ -56,13 +56,14 @@ void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& n
 		const unsigned int len = name.length();
 		int w, h;
 
+		dc.SetFont(m_font);
 		// Draw the command name, highlighting chars from search
 		for (vector<unsigned int>::const_iterator p = hl.begin(); p != hl.end(); ++p) {
 			const unsigned int e = (*p > len-1) ? len-1 : *p;
 			
 			if (lastchar < e) {
 				wxString str = name.substr(lastchar, e - lastchar);
-				dc.SetFont(m_font);
+				//dc.SetFont(m_font);
 
 				dc.GetTextExtent(str, &w, &h);
 
@@ -76,7 +77,7 @@ void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& n
 			// highlight char
 			if (e == *p) {
 				const wxString charStr(name[e]);
-				dc.SetFont(m_boldFont);
+				//dc.SetFont(m_boldFont);
 				if (!isCurrent) dc.SetTextForeground(*wxBLACK);
 				dc.DrawText(charStr, lastxpos, ypos);
 
@@ -90,7 +91,7 @@ void SearchListBox::DrawItemText(wxDC& dc, const wxRect& rect, const wxString& n
 		}
 
 		if (lastchar < name.size()) {
-			dc.SetFont(m_font);
+			//dc.SetFont(m_font);
 			if (!isCurrent) dc.SetTextForeground(m_textColor);
 			dc.DrawText(name.substr(lastchar), lastxpos, ypos);
 		}

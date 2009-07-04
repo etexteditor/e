@@ -34,6 +34,7 @@ using namespace std;
 
 class ProjectInfoHandler;
 class cxProjectInfo;
+class FileActionList;
 class FileEntry;
 struct DirState;
 
@@ -58,45 +59,6 @@ private:
 	void OnIdle(wxIdleEvent& event);
 	DECLARE_EVENT_TABLE();
 
-	class ActionList : public SearchListBox {
-	public:
-		ActionList(wxWindow* parent, wxWindowID id, const vector<FileEntry*>& actions);
-		~ActionList();
-
-		void Find(const wxString& text, const map<wxString,wxString>& triggers);
-		const FileEntry* GetSelectedAction();
-
-		void UpdateList(bool reloadAll = false);
-
-	private:
-		void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const;
-		int FindPath(const wxString& path) const;
-		void AddActionIfMatching(const wxString& searchtext, FileEntry* action);
-
-		class aItem {
-		public:
-			aItem() : action(NULL), rank(0) {};
-			aItem(const FileEntry* a, const vector<unsigned int>& hl);
-			bool operator<(const aItem& ai) const;
-			void swap(aItem& ai);
-
-			const FileEntry* action;
-			vector<unsigned int> hlChars;
-			unsigned int rank;
-		};
-
-		void iter_swap(vector<aItem>::iterator a, vector<aItem>::iterator b) {
-			a->swap(*b);
-		};
-
-		const vector<FileEntry*>& m_actions;
-		vector<aItem> m_items;
-		wxString m_searchText;
-
-		FileEntry* m_tempEntry;
-		unsigned int m_actionCount;
-	};
-
 	// Member variables
 	ProjectInfoHandler& m_project;
 	vector<FileEntry*> m_files;
@@ -109,7 +71,7 @@ private:
 
 	// Ctrls
 	wxTextCtrl* m_searchCtrl;
-	ActionList* m_cmdList;
+	FileActionList* m_cmdList;
 	wxStaticText* m_pathStatic;
 };
 

@@ -35,6 +35,7 @@ using namespace std;
 class ProjectInfoHandler;
 class cxProjectInfo;
 class FileEntry;
+struct DirState;
 
 class GotoFileDlg : public wxDialog {
 public:
@@ -94,15 +95,6 @@ private:
 
 		FileEntry* m_tempEntry;
 		unsigned int m_actionCount;
-	};
-
-	class DirState {
-	public:
-		wxDir dir;
-		cxProjectInfo* info;
-		const cxProjectInfo* filter;
-		wxString prefix;
-		wxString nextDirName;
 	};
 
 	// Member variables

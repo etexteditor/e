@@ -9,7 +9,6 @@ It is used to store .eprj (E Project) files, and was extracted from code in Proj
 */
 
 #include "wx/wxprec.h"
-
 #ifndef WX_PRECOMP
 	#include <wx/arrstr.h>
 #endif

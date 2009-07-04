@@ -15,6 +15,9 @@
 #define __RELOADDLG_H__
 
 #include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
 
 class ReloadDlg : public wxDialog {
 public:

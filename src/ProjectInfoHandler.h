@@ -1,14 +1,15 @@
 #ifndef __PROJECTINFOHANDLER_H__
 #define __PROJECTINFOHANDLER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include "wx/wx.h"
+	#include <wx/wx.h>
 #endif
+
+#include <map>
 
 #include <wx/filename.h>
 #include "ProjectInfo.h"
-
 
 class ProjectInfoHandler {
 public:
@@ -27,7 +28,7 @@ public:
 	static bool MatchFilter(const wxString& name, const wxArrayString& incFilter, const wxArrayString& excFilter);
 
 	// GotoFile triggers
-	const map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
+	const std::map<wxString,wxString>& GetTriggers() const {return m_projectInfo.triggers;};
 	void SetTrigger(const wxString& trigger, const wxString& path);
 	void ClearTrigger(const wxString& trigger);
 
@@ -37,6 +38,5 @@ private:
 	wxFileName m_prjPath;
 	cxProjectInfo m_projectInfo;
 };
-
 
 #endif // __PROJECTINFOHANDLER_H__

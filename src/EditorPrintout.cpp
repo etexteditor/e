@@ -19,10 +19,10 @@
 #include "Catalyst.h"
 
 // Dummy vars for line
-const vector<interval> EditorPrintout::s_sel;
-const interval EditorPrintout::s_hlBracket(0,0);
-const unsigned int EditorPrintout::s_lastpos = 0;
-const bool EditorPrintout::s_isShadow = false;
+const std::vector<interval> s_sel;
+const interval s_hlBracket(0,0);
+const unsigned int s_lastpos = 0;
+const bool s_isShadow = false;
 
 EditorPrintout::EditorPrintout(const IPrintableDocument& printDoc, const tmTheme& theme):
 	wxPrintout(printDoc.GetName()), 
@@ -78,10 +78,11 @@ void EditorPrintout::OnPreparePrinting() {
 		while (bottom_ypos <= m_lineList->height()) {
 			const unsigned int lastline = m_lineList->find_ypos(bottom_ypos)-1;
 			m_pages.push_back(lastline);
-
 			bottom_ypos = m_lineList->bottom(lastline) + m_page_height;
 		}
-		if (bottom_ypos > m_lineList->height()) m_pages.push_back(m_lineList->last());
+
+		if (bottom_ypos > m_lineList->height()) 
+			m_pages.push_back(m_lineList->last());
 	}
 }
 

@@ -14,10 +14,6 @@
 #ifndef __BUNDLEMENU_H__
 #define __BUNDLEMENU_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable: 4786)
-#endif
-
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/wx.h>

@@ -14,14 +14,12 @@
 #ifndef __CATALYST_H__
 #define __CATALYST_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-#endif
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
+// wxString, wxImage, wxDatetime, wxArrayString
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
+
 #include "mk4.h"
 #include <wx/filename.h>
 #include <wx/textbuf.h>
@@ -31,16 +29,9 @@
 
 #undef CATALYST_OLD_CODE
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
-#include <map>
+//#include <map>
 #include <vector>
 #include "auto_vector.h"
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
 
 #include "Dispatcher.h"
 //#include "zeroconf.h"

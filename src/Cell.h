@@ -18,16 +18,7 @@
 #include <wx/gdicmn.h>
 #include "Document.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-
-using namespace std;
 
 // pre-declare
 class CellRegion;
@@ -82,8 +73,8 @@ private:
 	const DocumentWrapper& m_doc;
 	int line_width;
 	int char_width;
-	vector<Cell*> subCells;
-	vector<int> top_xpos;
+	std::vector<Cell*> subCells;
+	std::vector<int> top_xpos;
 	wxColour m_insertColour;
 	wxColour m_deleteColour;
 	wxColour m_hiddenColour;

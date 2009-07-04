@@ -7,15 +7,7 @@
 #include "LineListWrap.h"
 #include "LineListNoWrap.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class wxFileName;
 class IFoldingEditor;
@@ -43,7 +35,7 @@ public:
 
 	void UpdateParsedLine(unsigned int line_id);
 
-	const vector<unsigned int>& GetOffsets() const {return ll->GetOffsets();};
+	const std::vector<unsigned int>& GetOffsets() const {return ll->GetOffsets();};
 
 	cxWrapMode GetWrapMode() const {return m_wrapMode;};
 	void SetWordWrap(cxWrapMode wrapMode);
@@ -93,7 +85,7 @@ public:
 	bool IsSelectionMultiline();
 	int AddSelection(unsigned int start, unsigned int end);
 	int UpdateSelection(unsigned int sel_id, unsigned int start, unsigned int end);
-	const vector<interval>& GetSelections() const;
+	const std::vector<interval>& GetSelections() const;
 	void ShadowSelections(bool isShadow=true) {m_isSelShadow = isShadow;};
 	void RemoveAllSelections(bool checkShadow=false, unsigned int pos=0);
 	void RemoveSelection(unsigned int sel_id);
@@ -107,7 +99,7 @@ public:
 	void InsertChar(unsigned int pos, const wxChar& newtext, unsigned int byte_len);
 	void Insert(unsigned int pos, unsigned int byte_len);
 	void Delete(unsigned int startpos, unsigned int endpos);
-	void ApplyDiff(vector<cxChange>& changes);
+	void ApplyDiff(std::vector<cxChange>& changes);
 	void Draw(int xoffset, int yoffset, wxRect& rect);
 
 	// Tabs
@@ -117,7 +109,7 @@ public:
 	wxRect GetFoldIndicatorRect(unsigned int line_id);
 	bool IsOverFoldIndicator(const wxPoint& point);
 
-	vector<cxLineChange> ChangesToFullLines(const vector<cxChange>& changes);
+	std::vector<cxLineChange> ChangesToFullLines(const std::vector<cxChange>& changes);
 
 	void Print();
 	int OnIdle() {return ll->OnIdle();};
@@ -148,7 +140,7 @@ private:
 	unsigned int m_marginPos;
 
 	// Selection variables
-	vector<interval> selections;
+	std::vector<interval> selections;
 	bool m_isSelShadow;
 
 	// LineList vars

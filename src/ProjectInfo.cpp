@@ -224,7 +224,7 @@ void cxProjectInfo::Save(const wxString& rootPath) const {
 	if (!this->env.empty()) {
 		TiXmlElement* envDict = eprj.AddDict(NULL, "environment");
 
-		for (map<wxString,wxString>::const_iterator p = this->env.begin(); p != this->env.end(); ++p) {
+		for (std::map<wxString,wxString>::const_iterator p = this->env.begin(); p != this->env.end(); ++p) {
 			if (!p->first.empty())
 				eprj.AddString(envDict, p->first.mb_str(wxConvUTF8), p->second.mb_str(wxConvUTF8));
 		}
@@ -234,7 +234,7 @@ void cxProjectInfo::Save(const wxString& rootPath) const {
 	if (!this->triggers.empty()) {
 		TiXmlElement* trigDict = eprj.AddDict(NULL, "fileTriggers");
 
-		for (map<wxString,wxString>::const_iterator p = this->triggers.begin(); p != this->triggers.end(); ++p) {
+		for (std::map<wxString,wxString>::const_iterator p = this->triggers.begin(); p != this->triggers.end(); ++p) {
 			if (p->first.empty()) continue;
 
 			wxFileName path(p->second);

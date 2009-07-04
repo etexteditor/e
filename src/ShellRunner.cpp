@@ -5,6 +5,8 @@
 #include "Execute.h"
 #include "IAppPaths.h"
 
+using namespace std;
+
 // Initialize statics
 wxString ShellRunner::s_bashCmd;
 wxString ShellRunner::s_bashEnv;

@@ -1052,7 +1052,7 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	for (unsigned int i = 0; i < count; ++i) {
 		const wxString& path = paths[i];
 
-		// Find doc with corrent path
+		// Find doc with current path
 		const unsigned int pageCount = m_tabBar->GetPageCount();
 		for (unsigned int p = 0; p < pageCount; ++p) {
 			const EditorCtrl* page = GetEditorCtrlFromPage(p);
@@ -2370,7 +2370,7 @@ void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
-	RemoteProfileDlg dlg(this);
+	RemoteProfileDlg dlg(this, this->m_settings);
 	if (dlg.ShowModal() != wxID_OPEN) return;
 
 	const int profile_id = dlg.GetCurrentProfile();

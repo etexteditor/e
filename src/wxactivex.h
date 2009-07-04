@@ -5,7 +5,7 @@
 #ifndef WX_ACTIVE_X
 #define WX_ACTIVE_X
 #pragma warning( disable : 4101 4786)
-#pragma warning( disable : 4786)
+//#pragma warning( disable : 4786)
 
 
 #include <wx/setup.h>
@@ -21,12 +21,10 @@
 #include <exdisp.h>
 #include <docobj.h>
 
-// STL can't compile with Level 4
-#pragma warning(push, 1)
 #include <iostream>
 #include <map>
 #include <vector>
-#pragma warning(pop)
+
 using namespace std;
 
 /// \brief wxActiveX Namespace for stuff I want to keep out of other tools way.

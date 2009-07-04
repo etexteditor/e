@@ -12,11 +12,13 @@
  ******************************************************************************/
 
 #include "RemoteThread.h"
-#include "ftpparse.h"
+
 #include <wx/ffile.h>
 #include <wx/filename.h>
-#include "DirWatcher.h"
 #include <wx/dir.h>
+
+#include "ftpparse.h"
+#include "DirWatcher.h"
 #include "eDocumentPath.h"
 #include "urlencode.h"
 
@@ -162,7 +164,7 @@ CURLcode RemoteThread::Download(const wxString& url, const wxString& buffPath, c
 	return m_lastErrorCode;
 }
 
-CURLcode RemoteThread::GetRemoteListWait(const wxString& url, const RemoteProfile& rp, vector<cxFileInfo>& fiList) {
+CURLcode RemoteThread::GetRemoteListWait(const wxString& url, const RemoteProfile& rp, std::vector<cxFileInfo>& fiList) {
 	wxASSERT(!url.empty() && url.Last() == wxT('/'));
 
 	m_fiList = &fiList;
@@ -262,7 +264,7 @@ void RemoteThread::AddAction(cxActionType action, const wxString& url, const wxS
 void RemoteThread::RemoveEventHandler(wxEvtHandler& evtHandler) {
 	// Delete all actions that should report to this handler
 	m_listCrit.Enter();
-		deque<RemoteAction>::iterator p = m_actionList.begin();
+		std::deque<RemoteAction>::iterator p = m_actionList.begin();
 		while (p != m_actionList.end()) {
 			if (p->m_evtHandler == &evtHandler) p = m_actionList.erase(p);
 			else ++p;
@@ -280,7 +282,7 @@ void RemoteThread::PostEvent(wxEvtHandler* evtHandler, wxEvent& event) {
 
 void RemoteThread::GetList(const RemoteAction& ra) {
 	cxRemoteListEvent event;
-	vector<cxFileInfo>& fiList = event.GetFileList();
+	std::vector<cxFileInfo>& fiList = event.GetFileList();
 
 	// Get lists of files and dirs
 	CURLcode res;
@@ -515,7 +517,7 @@ bool RemoteThread::IsDir(const wxString& url, const RemoteAction& ra) {
 	return (res == CURLE_OK);
 }
 
-CURLcode RemoteThread::DoGetDir(const wxString& url, const RemoteAction& ra, vector<cxFileInfo>& fiList) {
+CURLcode RemoteThread::DoGetDir(const wxString& url, const RemoteAction& ra, std::vector<cxFileInfo>& fiList) {
 	wxASSERT(!url.empty() && url.Last() == wxT('/'));
 
 	// Clean up first
@@ -532,8 +534,8 @@ CURLcode RemoteThread::DoGetDir(const wxString& url, const RemoteAction& ra, vec
 
 	if (res == CURLE_OK && !m_data.empty()) {
 		// Parse file list
-		vector<char>::iterator linestart = m_data.begin();
-		vector<char>::iterator lineend = m_data.begin();
+		std::vector<char>::iterator linestart = m_data.begin();
+		std::vector<char>::iterator lineend = m_data.begin();
 		while (lineend != m_data.end()) {
 			// Find end of line
 			while (lineend != m_data.end() && *lineend != '\r' && *lineend != '\n') ++lineend;
@@ -570,7 +572,7 @@ CURLcode RemoteThread::DoGetDir(const wxString& url, const RemoteAction& ra, vec
 
 #include <wx/tokenzr.h>
 
-CURLcode RemoteThread::DoGetDirWebDav(const wxString& url, const RemoteAction& ra, vector<cxFileInfo>& fiList) {
+CURLcode RemoteThread::DoGetDirWebDav(const wxString& url, const RemoteAction& ra, std::vector<cxFileInfo>& fiList) {
 	wxASSERT(!url.empty() && url.Last() == wxT('/'));
 	wxASSERT(url.StartsWith(wxT("http://")) || url.StartsWith(wxT("https://")));
 
@@ -668,12 +670,12 @@ CURLcode RemoteThread::DoDeleteDir(const wxString& url, const RemoteAction& ra) 
 	wxASSERT(!url.empty() && url.Last() == wxT('/'));
 
 	// Get lists of files and folders in dir
-	vector<cxFileInfo> fiList;
+	std::vector<cxFileInfo> fiList;
 	CURLcode res = DoGetDir(url, ra, fiList);
 	if (res != CURLE_OK) return res;
 
 	// Delete all files and folders
-	for (vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
+	for (std::vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
 		wxString path = url + p->m_name;
 		if (p->m_isDir) {
 			path += wxT('/');
@@ -849,7 +851,7 @@ int RemoteThread::CurlDebugCallback(void*, curl_infotype type, char * text, size
 	return 0;
 }
 
-void RemoteThread::ParseWebDavXml(const vector<char>& data, vector<cxFileInfo>& fiList) const {
+void RemoteThread::ParseWebDavXml(const std::vector<char>& data, std::vector<cxFileInfo>& fiList) const {
 	if (data.empty()) return;
 
 	TiXmlDocument doc;

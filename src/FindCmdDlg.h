@@ -23,20 +23,12 @@
 #include "SearchListBox.h"
 #include "tmAction.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
-#include <deque>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
+#include <vector>
 
 
 class FindCmdDlg : public wxDialog {
 public:
-	FindCmdDlg(wxWindow *parent, const vector<const tmAction*>& actions);
+	FindCmdDlg(wxWindow *parent, const std::vector<const tmAction*>& actions);
 	~FindCmdDlg();
 	const tmAction* GetSelection() {return m_cmdList->GetSelectedAction();};
 
@@ -48,7 +40,7 @@ private:
 
 	class ActionList : public SearchListBox {
 	public:
-		ActionList(wxWindow* parent, wxWindowID id, const vector<const tmAction*>& actions);
+		ActionList(wxWindow* parent, wxWindowID id, const std::vector<const tmAction*>& actions);
 		void Find(const wxString& text);
 		const tmAction* GetSelectedAction();
 
@@ -59,20 +51,20 @@ private:
 		class aItem {
 		public:
 			aItem() : action(NULL), rank(0) {};
-			aItem(const tmAction* a, const vector<unsigned int>& hl);
+			aItem(const tmAction* a, const std::vector<unsigned int>& hl);
 			bool operator<(const aItem& ai) const {
 				if (rank < ai.rank) return true;
-				else if (rank > ai.rank) return false;
-				else if (action && ai.action) return action->name < ai.action->name;
-				else return false;
+				if (rank > ai.rank) return false;
+				if (action && ai.action) return action->name < ai.action->name;
+				return false;
 			}
 			const tmAction* action;
-			vector<unsigned int> hlChars;
+			std::vector<unsigned int> hlChars;
 			unsigned int rank;
 		};
 
-		const vector<const tmAction*>& m_actions;
-		vector<aItem> m_items;
+		const std::vector<const tmAction*>& m_actions;
+		std::vector<aItem> m_items;
 		wxFont m_unifont;
 	};
 
@@ -89,7 +81,7 @@ private:
 	};
 
 	// Member variables
-	const vector<const tmAction*>& m_actions;
+	const std::vector<const tmAction*>& m_actions;
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_cmdList;
 };

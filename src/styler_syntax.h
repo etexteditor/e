@@ -14,21 +14,18 @@
 #ifndef __STYLER_SYNTAX_H__
 #define __STYLER_SYNTAX_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#include "Catalyst.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
+#include "Document.h"
+#include "Interval.h"
 #include "styler.h"
 #include "SymbolRef.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include "auto_vector.h"
 #include <deque>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class DocumentWrapper;
 class TmSyntaxHandler;

@@ -14,9 +14,9 @@
 #ifndef __REMOTEPROFILEDLG_H__
 #define __REMOTEPROFILEDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-  #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
 // pre-definitions
@@ -24,7 +24,7 @@ class eSettings;
 
 class RemoteProfileDlg : public wxDialog {
 public:
-	RemoteProfileDlg(wxWindow *parent);
+	RemoteProfileDlg(wxWindow *parent, eSettings& settings);
 
 	intptr_t GetCurrentProfile() const {return m_currentProfile;};
 

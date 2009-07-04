@@ -1023,7 +1023,7 @@ void ThemeEditor::SetSettingFontStyle(unsigned int ndx, bool bold, bool italic, 
 				const char* underlineStr = "underline";
 
 				// Build the font style
-				vector<char> styleStr;
+				std::vector<char> styleStr;
 				if (bold) styleStr.insert(styleStr.begin(), boldStr, boldStr + strlen(boldStr));
 				if (italic) {
 					if (!styleStr.empty()) styleStr.push_back(' ');

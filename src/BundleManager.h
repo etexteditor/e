@@ -49,7 +49,7 @@ private:
 	bool InstallBundle();
 	bool DownloadDir(const wxString& url, const wxFileName& path, wxProgressDialog& dlg);
 
-	void AddItems(const wxString& repoName, const vector<cxFileInfo>& bundleList);
+	void AddItems(const wxString& repoName, const std::vector<cxFileInfo>& bundleList);
 	void SetDirModDate(wxFileName& path, const wxDateTime& modDate);
 	void DelTree(const wxString& path);
 
@@ -89,7 +89,7 @@ private:
 		wxString name;
 		wxString url;
 		bool received;
-		vector<cxFileInfo> bundleList;
+		std::vector<cxFileInfo> bundleList;
 	};
 
 	// Member variables
@@ -97,8 +97,8 @@ private:
 	ITmLoadBundles* m_syntaxHandler;
 	PListHandler& m_plistHandler;
 	wxString m_tempFile;
-	vector<cxBundleInfo> m_installedBundles;
-	vector<RepoInfo> m_repositories;
+	std::vector<cxBundleInfo> m_installedBundles;
+	std::vector<RepoInfo> m_repositories;
 	bool m_allBundlesReceived;
 	bool m_needBundleReload;
 	static const wxString s_emptyString; // to avoid return temp warning

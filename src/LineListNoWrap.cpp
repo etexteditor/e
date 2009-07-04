@@ -15,9 +15,8 @@
 #include "Document.h"
 #include "FixedLine.h"
 
-LineListNoWrap::LineListNoWrap(FixedLine& l, const DocumentWrapper& dw)
-: m_line(l), m_doc(dw), m_maxWidth(0) {
-}
+LineListNoWrap::LineListNoWrap(FixedLine& l, const DocumentWrapper& dw):
+	m_line(l), m_doc(dw), m_maxWidth(0) {}
 
 bool LineListNoWrap::IsValidIndex(unsigned int index) const {
 	return (index < m_textOffsets.size());
@@ -64,7 +63,7 @@ bool LineListNoWrap::IsLineEnd(unsigned int pos) {
 	if (!size()) return false;
 	wxASSERT(pos <= m_textOffsets.back());
 
-	vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
+	std::vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
 	return (pos == *posline);
 }
 
@@ -72,7 +71,7 @@ unsigned int LineListNoWrap::EndFromPos(unsigned int pos) {
 	if (!size()) return 0;
 	wxASSERT(pos <= m_textOffsets.back());
 
-	vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
+	std::vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
 	if (pos != *posline) return *posline;
 	return pos == m_textOffsets.back() ? pos : *(++posline);
 }
@@ -81,12 +80,12 @@ unsigned int LineListNoWrap::StartFromPos(unsigned int pos) {
 	if (!size()) return 0;
 	wxASSERT(pos <= m_textOffsets.back());
 
-	vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
+	std::vector<unsigned int>::const_iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), pos);
 	if (pos == *posline) return pos;
 	return (posline == m_textOffsets.begin()) ? 0 : *(--posline);
 }
 
-vector<unsigned int>& LineListNoWrap::GetOffsets() {
+std::vector<unsigned int>& LineListNoWrap::GetOffsets() {
 	return m_textOffsets;
 }
 
@@ -120,7 +119,7 @@ void LineListNoWrap::insert(unsigned int index, int newend) {
 
 	// Update the following offsets
 	const unsigned int diff = newend - (index ? m_textOffsets[index-1] : 0);
-	for (vector<unsigned int>::iterator p = m_textOffsets.begin()+index+1; p != m_textOffsets.end(); ++p) {
+	for (std::vector<unsigned int>::iterator p = m_textOffsets.begin()+index+1; p != m_textOffsets.end(); ++p) {
 		*p += diff;
 	}
 
@@ -138,7 +137,7 @@ void LineListNoWrap::insertlines(unsigned int index, vector<unsigned int>& newli
 
 	// Update the following offsets
 	const unsigned int diff = newlines.back() - (index ? m_textOffsets[index-1] : 0);
-	for (vector<unsigned int>::iterator p = m_textOffsets.begin() + index + newlines.size(); p != m_textOffsets.end(); ++p) {
+	for (std::vector<unsigned int>::iterator p = m_textOffsets.begin() + index + newlines.size(); p != m_textOffsets.end(); ++p) {
 		*p += diff;
 	}
 
@@ -161,7 +160,7 @@ void LineListNoWrap::update(unsigned int index, unsigned int newend) {
 	const int tdiff = newend - m_textOffsets[index];
 
 	// Update the changed and following offsets
-	for (vector<unsigned int>::iterator p = m_textOffsets.begin()+index; p != m_textOffsets.end(); ++p) {
+	for (std::vector<unsigned int>::iterator p = m_textOffsets.begin()+index; p != m_textOffsets.end(); ++p) {
 		*p += tdiff;
 	}
 
@@ -241,7 +240,7 @@ int LineListNoWrap::find_offset(int pos) {
 	if (!size()) return 0;
 	wxASSERT(pos >= 0 && pos <= (int)m_textOffsets.back());
 
-	vector<unsigned int>::iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), (unsigned int)pos);
+	std::vector<unsigned int>::iterator posline = lower_bound(m_textOffsets.begin(), m_textOffsets.end(), (unsigned int)pos);
 	return distance(m_textOffsets.begin(), posline);
 }
 

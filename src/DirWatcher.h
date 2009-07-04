@@ -14,20 +14,14 @@
 #ifndef __DIRWATCHER_H__
 #define __DIRWATCHER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
+
 #include <wx/thread.h>
 
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 #define READ_DIR_CHANGE_BUFFER_SIZE 4096
 
@@ -117,7 +111,7 @@ private:
 	// Member variables
 	HANDLE m_hCompPort;	//i/o completion port
 #endif //__WXMSW__
-	vector<DirWatchInfo*> m_dirsWatched;
+	std::vector<DirWatchInfo*> m_dirsWatched;
 };
 
 enum {

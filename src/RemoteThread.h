@@ -14,22 +14,15 @@
 #ifndef __REMOTETHREAD_H__
 #define __REMOTETHREAD_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
+
 #include <curl/curl.h>
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <deque>
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 // pre-definitions
 class cxRemoteAction;
@@ -105,7 +98,7 @@ public:
 	wxDateTime GetModDate(const wxString& url, const RemoteProfile& rp);
 	CURLcode Download(const wxString& url, const wxString& buffPath, const RemoteProfile& rp);
 	CURLcode UploadAndDate(const wxString& url, const wxString& buffPath, const RemoteProfile& rp);
-	CURLcode GetRemoteListWait(const wxString& url, const RemoteProfile& rp, vector<cxFileInfo>& fiList);
+	CURLcode GetRemoteListWait(const wxString& url, const RemoteProfile& rp, std::vector<cxFileInfo>& fiList);
 
 	// Locking commands only to be used by ChangeCheckerThread
 	wxDateTime GetModDateLocking(const wxString& url, const RemoteProfile& rp);
@@ -141,8 +134,8 @@ private:
 	void DoRename(const RemoteAction& ra);
 
 	bool IsDir(const wxString& url, const RemoteAction& ra);
-	CURLcode DoGetDir(const wxString& url, const RemoteAction& ra, vector<cxFileInfo>& fiList);
-	CURLcode DoGetDirWebDav(const wxString& url, const RemoteAction& ra, vector<cxFileInfo>& fiList);
+	CURLcode DoGetDir(const wxString& url, const RemoteAction& ra, std::vector<cxFileInfo>& fiList);
+	CURLcode DoGetDirWebDav(const wxString& url, const RemoteAction& ra, std::vector<cxFileInfo>& fiList);
 	CURLcode DoDeleteFile(const wxString& url, const RemoteAction& ra);
 	CURLcode DoDeleteDir(const wxString& url, const RemoteAction& ra);
 	CURLcode DoUploadDir(const wxString& url, const wxString& path, const RemoteAction& ra);
@@ -159,7 +152,7 @@ private:
 	static int CurlDebugCallback(void*, curl_infotype type, char * text, size_t len, void *);
 
 	// WebDav xml parsers
-	void ParseWebDavXml(const vector<char>& data, vector<cxFileInfo>& fiList) const;
+	void ParseWebDavXml(const std::vector<char>& data, std::vector<cxFileInfo>& fiList) const;
 	bool ParseResponseXml(const TiXmlElement* response, cxFileInfo& fi) const;
 
 	wxString EscapeUrl(const wxString& url) const;
@@ -173,10 +166,10 @@ private:
 
 	// Member variables
 	wxCriticalSection m_listCrit;
-	deque<RemoteAction> m_actionList;
+	std::deque<RemoteAction> m_actionList;
 	wxEvtHandler* m_removedEvtHandler;
 
-	vector<char> m_data;
+	std::vector<char> m_data;
 
 	wxMutex m_condMutex;
 	wxCondition m_newActionsCond;
@@ -187,13 +180,12 @@ private:
 	wxDateTime m_modDate;
 	CURLcode m_lastErrorCode;
 	wxString m_lastError;
-	vector<cxFileInfo>* m_fiList;
+	std::vector<cxFileInfo>* m_fiList;
 
 	// Locked state
 	// (only to be used by ChangeCheckerThread)
 	bool m_isLocked;
 	wxDateTime m_lockedModDate;
-
 };
 
 // Declare custom event
@@ -249,10 +241,10 @@ public:
 		return new cxRemoteListEvent(*this);
 	};
 
-	vector<cxFileInfo>& GetFileList() {return m_fiList;};
+	std::vector<cxFileInfo>& GetFileList() {return m_fiList;};
 
 private:
-	vector<cxFileInfo> m_fiList;
+	std::vector<cxFileInfo> m_fiList;
 };
 
 typedef void (wxEvtHandler::*cxRemoteActionEventFunction) (cxRemoteAction&);

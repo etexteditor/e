@@ -14,18 +14,14 @@
 #ifndef __EDITORPRINTOUT_H__
 #define __EDITORPRINTOUT_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include <wx/print.h>
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 // Pre-definitions
 class IPrintableDocument;
@@ -52,15 +48,9 @@ private:
 	FixedLine* m_line;
 	LineListWrap* m_lineList;
 
-	vector<unsigned int> m_pages;
+	std::vector<unsigned int> m_pages;
 	unsigned int m_page_height;
 	unsigned int m_gutter_width;
-
-	// Dummy vars for line
-	static const vector<interval> s_sel;
-	static const interval s_hlBracket;
-	static const unsigned int s_lastpos;
-	static const bool s_isShadow;
 };
 
 #endif //__EDITORPRINTOUT_H__

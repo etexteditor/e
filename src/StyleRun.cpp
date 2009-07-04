@@ -14,10 +14,11 @@
 #include "StyleRun.h"
 
 // Initialize static vars
-map<int,wxFont> StyleRun::s_fontCache;
+std::map<int,wxFont> StyleRun::s_fontCache;
 
-StyleRun::StyleRun(const tmTheme& theme, FastDC& dc)
-: m_theme(theme), m_dc(dc), m_enableBold(true), m_printMode(false) {
+StyleRun::StyleRun(const tmTheme& theme, FastDC& dc):
+	m_theme(theme), m_dc(dc), m_enableBold(true), m_printMode(false)
+{
 	// Initialize default style
 	m_default_style.foregroundcolor = m_theme.foregroundColor;
 	m_default_style.backgroundcolor = wxNullColour;

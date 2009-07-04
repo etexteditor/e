@@ -17,14 +17,7 @@
 #include "Interval.h"
 #include <wx/regex.h>
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <set>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
 
 // Initialize statics
 const wxString matcher::s_emptyString;
@@ -50,7 +43,7 @@ void matcher::OptimizeRegex(wxString& pattern) {
 		const wxChar c = pattern[i];
 
 		if (!node) {
-			node = new map<wxChar, void*>;
+			node = new std::map<wxChar, void*>;
 			(*prevNode)[prevChar] = node;
 		}
 		prevNode = node;
@@ -251,7 +244,7 @@ pcre* match_matcher::GetMatchPattern() {
 	return m_compiledPattern;
 }
 
-size_t match_matcher::GetMembers(vector<calloutref>& refs) {
+size_t match_matcher::GetMembers(std::vector<calloutref>& refs) {
 	const calloutref cr = {this, this, 0};
 	refs.push_back(cr);
 	return 1;
@@ -271,7 +264,7 @@ void match_matcher::AddCapture(unsigned int capkey, const wxString& name) {
 }
 
 const wxString& match_matcher::GetCaptureName(unsigned int capkey) const {
-	map<unsigned int,wxString>::const_iterator p = m_captures.find(capkey);
+	std::map<unsigned int,wxString>::const_iterator p = m_captures.find(capkey);
 	if (p != m_captures.end()) return p->second;
 	else return s_emptyString;
 }
@@ -341,7 +334,7 @@ bool span_matcher::Init(bool WXUNUSED(deep)) {
 	return true;
 }
 
-void span_matcher::ReInit(const vector<char>& text, const int* captures, unsigned int capcount) {
+void span_matcher::ReInit(const std::vector<char>& text, const int* captures, unsigned int capcount) {
 	wxASSERT(m_isInitialized);
 
 	if (!m_endMatcher) return;
@@ -419,7 +412,7 @@ bool span_matcher::IsSpanEnd(unsigned int callout_id) {
 	return (callout_id == 0);
 }
 
-size_t span_matcher::GetMembers(vector<calloutref>& refs) {
+size_t span_matcher::GetMembers(std::vector<calloutref>& refs) {
 	// We do not need to init span yet, as parent only need starter
 	//if (!m_isInitialized) Init(true);
 
@@ -444,7 +437,7 @@ bool group_matcher::Init(bool WXUNUSED(deep)) {
 	m_initializing = true;
 
 	// Initialize all members and use their patterns
-	for (vector<matcher*>::const_iterator m = m_members.begin(); m != m_members.end(); ++m) {
+	for (std::vector<matcher*>::const_iterator m = m_members.begin(); m != m_members.end(); ++m) {
 		matcher* const member = *m;
 		
 		// Add all member sub-patterns and map new callout id's to old
@@ -493,7 +486,7 @@ matcher* group_matcher::GetMember(unsigned int callout_id) {
 	return m_refs[callout_id].matchptr;
 }
 
-size_t group_matcher::GetMembers(vector<calloutref>& refs) {
+size_t group_matcher::GetMembers(std::vector<calloutref>& refs) {
 	if (!m_isInitialized) Init(true);
 
 	size_t ndx = refs.size();

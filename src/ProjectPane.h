@@ -27,17 +27,8 @@
 #include "ProjectInfoHandler.h"
 #include "ProjectInfo.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <deque>
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
-
 
 // pre-definitions
 class wxDirWatcherEvent;
@@ -71,7 +62,7 @@ public:
 	virtual const wxFileName& GetRootPath() const {return m_prjPath;};
 	wxString GetProjectString() const {if (IsRemote()) return m_prjUrl; else return m_prjPath.GetFullPath();};
 	wxArrayString GetSelections() const;
-	const map<wxString,wxString>& GetEnv() const {return m_infoHandler.GetRootInfo().env;};
+	const std::map<wxString,wxString>& GetEnv() const {return m_infoHandler.GetRootInfo().env;};
 
 	void RenameItem();
 	void DeleteItems(bool allowUndo);
@@ -90,7 +81,7 @@ private:
 	class DirItemData : public wxTreeItemData
 	{
 	public:
-		DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, vector<unsigned int>& freeImages);
+		DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& freeImages);
 		~DirItemData();
 
 		void SetNewPath(const wxString& path);
@@ -101,7 +92,7 @@ private:
 		bool m_isHidden;
 		bool m_isExpanded;
 		int m_imageId;
-		vector<unsigned int>& m_freeImages;
+		std::vector<unsigned int>& m_freeImages;
 	};
 
 #ifdef __WXGTK__
@@ -199,7 +190,7 @@ private:
 
 	const RemoteProfile* m_remoteProfile;
 	wxString m_prjUrl;
-	vector<unsigned int> m_freeImages;
+	std::vector<unsigned int> m_freeImages;
 	wxString m_newFolder; // for OnDirChanged
 	wxString m_newFile;	  // for OnDirChanged
 	wxString m_atomicPath; // to ignore atomic saves
@@ -220,7 +211,7 @@ private:
 	wxMutex m_iconMutex;
 	wxCondition m_newIconsCond;
 	wxCriticalSection m_iconPathsCrit;
-	deque<wxString> m_iconPathsForRetrieval;
+	std::deque<wxString> m_iconPathsForRetrieval;
 	wxCriticalSection m_newIconsCrit;
 
 	class PathIcon {
@@ -231,7 +222,7 @@ private:
 		wxIcon icon;
 	};
 
-	vector<PathIcon> m_newIcons;
+	std::vector<PathIcon> m_newIcons;
 #ifdef __WXGTK__
 	bool isDirWatched;
 #endif

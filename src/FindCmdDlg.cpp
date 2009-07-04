@@ -20,6 +20,8 @@
     #include <wx/dc.h>
 #endif
 
+using namespace std;
+
 // Ctrl id's
 enum {
 	CTRL_SEARCH,

@@ -2,16 +2,7 @@
 #define __AUTOPAIRS_H__
 
 #include "Interval.h"
-
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-
 
 class AutoPairs {
 public:

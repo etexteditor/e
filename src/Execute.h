@@ -14,38 +14,28 @@
 #ifndef __EXECPROCESS_H__
 #define __EXECPROCESS_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
         #include <wx/file.h>
         #include <wx/event.h>
 #endif
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-    #pragma warning(push, 1)
-#endif
 #include <vector>
 #include <map>
 #include <algorithm>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class cxEnv;
 class wxProcessEvent;
 
 class cxExecute : public wxEvtHandler {
 public:
-	cxExecute(const cxEnv& env, const wxString& cwd=wxEmptyString)
-		: m_threadDone(false), m_env(env), m_cwd(cwd), m_debugLog(false), m_showWindow(false), m_updateWindow(true) {};
+	cxExecute(const cxEnv& env, const wxString& cwd=wxEmptyString):
+		m_threadDone(false), m_env(env), m_cwd(cwd), m_debugLog(false), m_showWindow(false), m_updateWindow(true) {};
 
 	int Execute(const wxString& command);
-	int Execute(const wxString& command, const vector<char>& input);
-	vector<char>& GetOutput() {return m_output;};
-	vector<char>& GetErrorOut() {return m_errout;};
+	int Execute(const wxString& command, const std::vector<char>& input);
+	std::vector<char>& GetOutput() {return m_output;};
+	std::vector<char>& GetErrorOut() {return m_errout;};
 
 	void SetDebugLogging(bool doLog) {m_debugLog = doLog;};
 	void SetShowWindow(bool doShow) {m_showWindow = doShow;};
@@ -57,7 +47,7 @@ private:
 
 	class cxExecuteThread : public wxThread {
 	public:
-		cxExecuteThread(const wxString& command, const vector<char>& input, vector<char>& output, vector<char>& errout, cxExecute& evtHandler, const cxEnv& env, const wxString& cwd, bool doShow);
+		cxExecuteThread(const wxString& command, const std::vector<char>& input, std::vector<char>& output, std::vector<char>& errout, cxExecute& evtHandler, const cxEnv& env, const wxString& cwd, bool doShow);
 		int Execute();
 		void Terminate() {m_isTerminated = true;};
 
@@ -72,9 +62,9 @@ private:
 		bool m_isTerminated;
 		const wxString& m_command;
 		cxExecute& m_evtHandler;
-		const vector<char>& m_input;
-		vector<char>& m_output;
-		vector<char>& m_errout;
+		const std::vector<char>& m_input;
+		std::vector<char>& m_output;
+		std::vector<char>& m_errout;
 		const cxEnv& m_env;
 		const wxString& m_cwd;
 		bool m_showWindow;
@@ -104,8 +94,8 @@ private:
 	// Member variables
 	bool m_threadDone;
 	int m_exitCode;
-	vector<char> m_output;
-	vector<char> m_errout;
+	std::vector<char> m_output;
+	std::vector<char> m_errout;
 	const cxEnv& m_env;
 	const wxString& m_cwd;
 	bool m_debugLog;

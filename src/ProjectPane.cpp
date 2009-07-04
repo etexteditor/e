@@ -334,10 +334,10 @@ void ProjectPane::OnRemoteListReceived(cxRemoteListEvent& event) {
 	wxASSERT(data && data->m_isDir);
 
 	// Split in dirs and files
-	vector<cxFileInfo>& fiList = event.GetFileList();
+	std::vector<cxFileInfo>& fiList = event.GetFileList();
 	wxArrayString dirs;
 	wxArrayString files;
-	for (vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
+	for (std::vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
 		if (p->m_isDir) dirs.Add(p->m_name);
 		else files.Add(p->m_name);
 	}
@@ -2003,7 +2003,7 @@ WXLRESULT ProjectPane::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lPar
 // DirItemData
 //-----------------------------------------------------------------------------
 
-ProjectPane::DirItemData::DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, vector<unsigned int>& fi)
+ProjectPane::DirItemData::DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& fi)
 : m_path(path), m_name(name), m_isDir(isDir), m_isHidden(false), m_isExpanded(false),
   m_imageId(image_id), m_freeImages(fi) {
 }

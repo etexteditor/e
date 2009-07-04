@@ -21,15 +21,7 @@
 
 #include "plistHandler.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class ITmThemeHandler;
 
@@ -156,7 +148,7 @@ private:
 	ITmThemeHandler& m_syntaxHandler;
 	PListHandler& m_plistHandler;
 	PListDict m_themeDict;
-	vector<PListHandler::cxItemRef> m_themes;
+	std::vector<PListHandler::cxItemRef> m_themes;
 	int m_themeNdx;
 	int m_currentRow;
 

@@ -25,10 +25,6 @@
 #include "IHtmlWnd.h"
 #include "pcre.h"
 
-#include <map>
-#include <vector>
-using namespace std;
-
 // pre-definitions
 class EditorFrame;
 class MMapBuffer;

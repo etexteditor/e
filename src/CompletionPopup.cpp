@@ -14,8 +14,9 @@
 #include "CompletionPopup.h"
 #include "EditorCtrl.h"
 
-CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions)
-: wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER) {
+CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions):
+	wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER)
+{
 	// Create ctrl
 	CompletionList* clist = new CompletionList(*this, parent, target, completions);
 

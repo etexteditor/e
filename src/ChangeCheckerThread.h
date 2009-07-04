@@ -14,19 +14,14 @@
 #ifndef __CHANGECHECKERTHREAD_H__
 #define __CHANGECHECKERTHREAD_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "RemoteThread.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
-
 
 class ChangeCheckerThread : public wxThread {
 public:
@@ -48,11 +43,11 @@ public:
 		bool isModified;
 	};
 
-	ChangeCheckerThread(const vector<ChangePath>& paths, wxEvtHandler& evtHandler, RemoteThread& rt, ChangeCheckerThread*& pointer);
+	ChangeCheckerThread(const std::vector<ChangePath>& paths, wxEvtHandler& evtHandler, RemoteThread& rt, ChangeCheckerThread*& pointer);
 	virtual void* Entry();
 
 private:
-	const vector<ChangePath> m_paths;
+	const std::vector<ChangePath> m_paths;
 	wxEvtHandler& m_evtHandler;
 	RemoteThread& m_remoteThread;
 	ChangeCheckerThread*& m_pointer;
@@ -65,7 +60,7 @@ END_DECLARE_EVENT_TYPES()
 
 class wxFilesChangedEvent : public wxEvent {
 public:
-	wxFilesChangedEvent(const wxArrayString& paths, const vector<wxDateTime>& dates, int id = 0)
+	wxFilesChangedEvent(const wxArrayString& paths, const std::vector<wxDateTime>& dates, int id = 0)
 		: wxEvent(id, wxEVT_FILESCHANGED), m_changedFiles(paths), m_modDates(dates) {};
 	wxFilesChangedEvent(const wxFilesChangedEvent& event)
 		: wxEvent(event), m_changedFiles(event.m_changedFiles), m_modDates(event.m_modDates) {};
@@ -74,11 +69,11 @@ public:
 	};
 
 	const wxArrayString& GetChangedFiles() const {return m_changedFiles;};
-	const vector<wxDateTime>& GetModDates() const {return m_modDates;};
+	const std::vector<wxDateTime>& GetModDates() const {return m_modDates;};
 
 private:
 	const wxArrayString m_changedFiles;
-	const vector<wxDateTime> m_modDates;
+	const std::vector<wxDateTime> m_modDates;
 };
 typedef void (wxEvtHandler::*wxFilesChangedEventFunction) (wxFilesChangedEvent&);
 

@@ -72,8 +72,8 @@ void EnvVarsPanel::OnGridChange(wxGridEvent& WXUNUSED(event)) {
 	m_varsChanged = true;
 }
 
-void EnvVarsPanel::AddVars(const map<wxString,wxString>& vars) {
-	for (map<wxString,wxString>::const_iterator p = vars.begin(); p != vars.end(); ++p) {
+void EnvVarsPanel::AddVars(const std::map<wxString,wxString>& vars) {
+	for (std::map<wxString,wxString>::const_iterator p = vars.begin(); p != vars.end(); ++p) {
 		const unsigned int rowId = m_envList->GetNumberRows();
 		m_envList->InsertRows(rowId);
 		m_envList->SetCellValue(rowId, 0, p->first);
@@ -81,7 +81,7 @@ void EnvVarsPanel::AddVars(const map<wxString,wxString>& vars) {
 	}
 }
 
-void EnvVarsPanel::GetVars(map<wxString,wxString>& vars) {
+void EnvVarsPanel::GetVars(std::map<wxString,wxString>& vars) {
 	for (int i = 0; i < m_envList->GetNumberRows(); ++i) {
 		vars[m_envList->GetCellValue(i, 0)] = m_envList->GetCellValue(i, 1);
 	}

@@ -11,13 +11,9 @@
  *
  ******************************************************************************/
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-#endif
-
 #include "FastDC.h"
 
-void FastDC::SetFontStyles(int fontStyles, map<int,wxFont>& fontMap) {
+void FastDC::SetFontStyles(int fontStyles, std::map<int,wxFont>& fontMap) {
 	const int fontStyle = (fontStyles & wxFONTFLAG_ITALIC) ? wxFONTSTYLE_ITALIC : wxFONTSTYLE_NORMAL;
 	const int fontWeight = (fontStyles & wxFONTFLAG_BOLD) ? wxFONTWEIGHT_BOLD : wxFONTWEIGHT_NORMAL;
 	const bool fontUnderline = (fontStyles & wxFONTFLAG_UNDERLINED) ? true : false;
@@ -30,7 +26,7 @@ void FastDC::SetFontStyles(int fontStyles, map<int,wxFont>& fontMap) {
 	if (!styleChanged && !widthChanged && !underlineChanged) return;
 
 	// Check if we have font in cache
-	map<int,wxFont>::const_iterator p = fontMap.find(fontStyles);
+	std::map<int,wxFont>::const_iterator p = fontMap.find(fontStyles);
 	if (p == fontMap.end()) {
 		m_font.SetStyle(fontStyle);
 		m_font.SetWeight(fontWeight);

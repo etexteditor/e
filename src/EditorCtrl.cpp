@@ -7192,12 +7192,15 @@ void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {
 	contextMenu.Append(wxID_PASTE, _("&Paste\tCtrl+V"), _("Paste"));
 	contextMenu.AppendSeparator();
 	wxMenu* selectMenu = new wxMenu;
+		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		selectMenu->Append(MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
 		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
-		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		contextMenu.Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+	contextMenu.AppendSeparator();
+	contextMenu.Append(wxID_UNDO, _("&Undo\tCtrl+Z"), _("Undo"));
+	contextMenu.Append(wxID_REDO, _("&Redo\tCtrl+Y"), _("Redo"));
 
 	if (!inSelection) {
 		contextMenu.Enable(wxID_CUT, false);

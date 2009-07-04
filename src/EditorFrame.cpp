@@ -605,11 +605,11 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 
 	wxMenu* selectMenu = new wxMenu;
+		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		selectMenu->Append(MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
 		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
-		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
 
 	editMenu->AppendSeparator();
@@ -622,8 +622,8 @@ void EditorFrame::InitMenus() {
 
 	editMenu->AppendSeparator();
 	editMenu->Append(MENU_SYNTAX, _("S&yntax"), m_syntaxMenu, _("Syntax"));
-	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->AppendSeparator();
+	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
 	menuBar->Append(editMenu, _("&Edit"));
 

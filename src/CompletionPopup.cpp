@@ -14,6 +14,30 @@
 #include "CompletionPopup.h"
 #include "EditorCtrl.h"
 
+class CompletionList : public wxListBox {
+public:
+	CompletionList(wxDialog& parent, EditorCtrl& editorCtrl, const wxString& target, const wxArrayString& completions);
+	~CompletionList();
+
+private:
+	void Update();
+	void SetCompletions(const wxArrayString& completions);
+	void EndCompletion() {m_parentDlg.Destroy();};
+
+	void OnKillFocus(wxFocusEvent& event);
+	void OnChar(wxKeyEvent& event);
+	void OnLeftDown(wxMouseEvent& event);
+	DECLARE_EVENT_TABLE();
+
+	wxDialog& m_parentDlg;
+	EditorCtrl& m_editorCtrl;
+	wxString m_target;
+	wxArrayString m_completions;
+	wxListBox* m_listBox;
+};
+
+
+
 CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions):
 	wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER)
 {

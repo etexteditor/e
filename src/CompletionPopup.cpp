@@ -37,30 +37,6 @@ private:
 };
 
 
-
-CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions):
-	wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER)
-{
-	CompletionList* clist = new CompletionList(*this, parent, target, completions);
-
-	// Create Layout
-	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
-	mainSizer->Add(clist, 1, wxEXPAND);
-
-	SetSizerAndFit(mainSizer);
-
-	// Make sure that there is room for dialog
-	const int screenHeight = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
-	const wxSize size = GetSize();
-	if (pos.y + size.y > screenHeight) {
-		Move(pos.x, topPos.y - size.y);
-	}
-
-	Show();
-	clist->SetFocus();
-}
-
-
 BEGIN_EVENT_TABLE(CompletionList, wxListBox)
 	EVT_KILL_FOCUS(CompletionList::OnKillFocus)
 	EVT_CHAR(CompletionList::OnChar)
@@ -189,4 +165,27 @@ void CompletionList::SetCompletions(const wxArrayString& completions) {
 		InsertItems(completions, 0);
 		SetSelection(0);
 	}
+}
+
+
+CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions):
+	wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER)
+{
+	CompletionList* clist = new CompletionList(*this, parent, target, completions);
+
+	// Create Layout
+	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
+	mainSizer->Add(clist, 1, wxEXPAND);
+
+	SetSizerAndFit(mainSizer);
+
+	// Make sure that there is room for dialog
+	const int screenHeight = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
+	const wxSize size = GetSize();
+	if (pos.y + size.y > screenHeight) {
+		Move(pos.x, topPos.y - size.y);
+	}
+
+	Show();
+	clist->SetFocus();
 }

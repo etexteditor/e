@@ -2018,6 +2018,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\CurrentTabsPopup.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CurrentTabsPopup.h"
+			>
+		</File>
+		<File
 			RelativePath=".\DetectTripleClicks.cpp"
 			>
 		</File>

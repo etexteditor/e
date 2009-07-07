@@ -21,7 +21,7 @@
 
 class EditorCtrl;
 
-class CompletionPopup : public wxDialog {
+class CompletionPopup: public wxDialog {
 public:
 	CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions);
 };

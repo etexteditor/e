@@ -61,6 +61,7 @@
 #include "FindInProjectDlg.h"
 #include "HtmlOutputPane.h"
 #include "Strings.h"
+#include "CurrentTabsPopup.h"
 
 #ifdef __WXMSW__
 	// For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -2719,7 +2720,11 @@ void EditorFrame::OnMenuGotoLastTab(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
-	m_tabBar->ShowWindowMenu();
+	// m_tabBar->ShowWindowMenu();
+	wxPoint pos = wxPoint(0, 0);
+	CurrentTabsPopup* p = new CurrentTabsPopup(this, pos);
+	p->ShowModal();
+	delete p;
 }
 
 void EditorFrame::UpdateTabMenu() {

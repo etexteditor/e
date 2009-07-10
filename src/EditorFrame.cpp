@@ -527,15 +527,14 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
-	const unsigned int accelcount = 7;
+	const unsigned int accelcount = 6;
 	wxAcceleratorEntry entries[accelcount];
 	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
 	entries[1].Set(wxACCEL_CTRL, (int)'9', MENU_LASTTAB);
-	entries[2].Set(wxACCEL_CTRL, (int)'0', MENU_TABS_SHOWDROPDOWN);
-	entries[3].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
-	entries[4].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
-	entries[5].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
-	entries[6].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
+	entries[2].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
+	entries[3].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
+	entries[4].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
+	entries[5].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
 	wxAcceleratorTable accel(accelcount, entries);
 	SetAcceleratorTable(accel);
 }
@@ -700,12 +699,13 @@ void EditorFrame::InitMenus() {
 	navMenu->AppendSeparator();
 	navMenu->Append(MENU_NEXTTAB_OR_LAST, _("&Last used File Tab or Next\tCtrl-Tab"), _("Go to Next Tab"));
 	navMenu->Append(MENU_PREVTAB, _("Pre&vious File Tab\tCtrl-Shift-Tab"), _("Go to Previous Tab"));
+	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
+	navMenu->Append(MENU_TABS_SHOWDROPDOWN, _("Go to &Tab...\tCtrl-0"), _("Go to Tab..."));
+	navMenu->Append(MENU_TABS, _("Ta&bs"), m_tabMenu, _("Tabs"));
+	navMenu->AppendSeparator();
 	navMenu->Append(MENU_OPEN_EXT, _("Go to &Header/Source\tCtrl-Alt-Up"), _(""));
 	navMenu->Append(MENU_GOTOFILE, _("Go to &File...\tCtrl-Shift-T"), _("Go to File..."));
 	navMenu->Append(MENU_SYMBOLS, _("Go to &Symbol...\tCtrl-L"), _("Show Symbol List"));
-	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
-	navMenu->Append(MENU_TABS, _("Go to &Tab..."), m_tabMenu, _("Go to Tab..."));
-	navMenu->AppendSeparator();
 	navMenu->Append(MENU_GOTOBRACKET, _("Go to &Matching Bracket\tCtrl-B"), _("Go to Matching Bracket"));
 	navMenu->Append(MENU_GOTOLINE, _("Go to &Line\tCtrl-G"), _("Go to Line"));
 	menuBar->Append(navMenu, _("N&avigation"));
@@ -2747,17 +2747,16 @@ void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
 		tabInfo.push_back(new OpenTabInfo(page->GetName(), relativePath));
 	}
 
-	CurrentTabsPopup* dialog = new CurrentTabsPopup(this, tabInfo);
-	bool tabWasSelected = dialog->ShowModal() == wxID_OK;
-	int newTabIndex = dialog->GetSelectedTabIndex();
-	delete dialog;
+	CurrentTabsPopup dialog(this, tabInfo);
+	if (dialog.ShowModal() == wxID_OK) {
+		int newTabIndex = dialog.GetSelectedTabIndex();
+		if (newTabIndex != -1 && newTabIndex != m_tabBar->GetSelection()) {
+			m_tabBar->SetSelection(newTabIndex);
+		}
+	}
 
 	for (vector<OpenTabInfo*>::iterator p = tabInfo.begin(); p != tabInfo.end(); ++p) {
 		delete *p;
-	}
-
-	if (newTabIndex != -1 && newTabIndex != m_tabBar->GetSelection()) {
-		m_tabBar->SetSelection(newTabIndex);
 	}
 }
 

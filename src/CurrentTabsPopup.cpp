@@ -21,7 +21,7 @@ void CurrentTabsPopup::ListEventHandler::OnChar(wxKeyEvent& event) {
 			return;
 		}
 		break;
-				 }
+	 }
 
 	case WXK_DOWN: {
 		int row = m_parent->GetSelectedRow();
@@ -31,7 +31,7 @@ void CurrentTabsPopup::ListEventHandler::OnChar(wxKeyEvent& event) {
 			return;
 		}
 		break;
-				   }
+   }
 
 	default:
 		const wxChar c = event.GetUnicodeKey();

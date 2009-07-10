@@ -2720,11 +2720,45 @@ void EditorFrame::OnMenuGotoLastTab(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
-	// m_tabBar->ShowWindowMenu();
-	wxPoint pos = wxPoint(0, 0);
-	CurrentTabsPopup* p = new CurrentTabsPopup(this, pos);
-	p->ShowModal();
-	delete p;
+	vector<OpenTabInfo*> tabInfo;
+
+	wxString rootPath = wxT("");
+	if (this->HasProject()) {
+		rootPath = this->GetRootPath().GetPath();
+	}
+
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+
+		wxFileName tabPath = page->GetFilePath();
+
+		wxString relativePath = wxT("");
+
+		if (this->HasProject()) {
+			// Get relative path
+			tabPath.MakeRelativeTo(rootPath);
+
+			relativePath += wxT(".");
+			relativePath += wxFileName::GetPathSeparator();
+		}
+
+		relativePath += tabPath.GetPath();
+
+		tabInfo.push_back(new OpenTabInfo(page->GetName(), relativePath));
+	}
+
+	CurrentTabsPopup* dialog = new CurrentTabsPopup(this, tabInfo);
+	bool tabWasSelected = dialog->ShowModal() == wxID_OK;
+	int newTabIndex = dialog->GetSelectedTabIndex();
+	delete dialog;
+
+	for (vector<OpenTabInfo*>::iterator p = tabInfo.begin(); p != tabInfo.end(); ++p) {
+		delete *p;
+	}
+
+	if (newTabIndex != -1 && newTabIndex != m_tabBar->GetSelection()) {
+		m_tabBar->SetSelection(newTabIndex);
+	}
 }
 
 void EditorFrame::UpdateTabMenu() {

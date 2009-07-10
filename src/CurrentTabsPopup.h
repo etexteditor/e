@@ -6,16 +6,35 @@
    #include <wx/wx.h>
 #endif
 
+#include <vector>
+
 class wxListCtrl;
 class wxListEvent;
 
+struct OpenTabInfo {
+	OpenTabInfo(const wxString& _filename, const wxString& _path): filename(_filename), path(_path) {};
+
+	wxString filename;
+	wxString path;
+};
+
 class CurrentTabsPopup: public wxDialog {
 public:
-	CurrentTabsPopup(wxWindow* parent, const wxPoint& pos);
+	CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo);
 	~CurrentTabsPopup();
 
+	int GetSelectedTabIndex() const;
+
 private:
-	DECLARE_EVENT_TABLE();
+	enum Columns {
+		Number = 0,
+		Filename,
+		Path,
+		ColumnCount
+	};
+
+	int GetSelectedRow() const;
+	void SetSelectedRow(int selectedRow);
 
 	class ListEventHandler : public wxEvtHandler {
 	public:
@@ -23,15 +42,17 @@ private:
 
 	private:
 		DECLARE_EVENT_TABLE();
-	
 		void OnChar(wxKeyEvent& event);
 		void OnItemActivated(wxListEvent& event);
 
 		CurrentTabsPopup* m_parent;
 	};
 
+	DECLARE_EVENT_TABLE();
 	void OnShow(wxShowEvent& event);
+
 	wxListCtrl* m_list;
+	int m_selectedTabIndex;
 };
 
 #endif

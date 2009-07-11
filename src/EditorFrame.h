@@ -278,11 +278,13 @@ private:
 	void OnMenuSettings(wxCommandEvent& event);
 	void OnMenuFilter(wxCommandEvent& event);
 	void OnMenuRunCurrent(wxCommandEvent& event);
+
 	void OnMenuNextTab(wxCommandEvent& event);
-	void OnMenuNextTabOrLast(wxCommandEvent& event);
+	void OnMenuLastTab(wxCommandEvent& event);
 	void OnMenuPrevTab(wxCommandEvent& event);
 	void OnMenuGotoTab(wxCommandEvent& event);
 	void OnMenuGotoLastTab(wxCommandEvent& event);
+
 	void OnMenuOpenExt(wxCommandEvent& event);
 	void OnMenuGotoFile(wxCommandEvent& event);
 	void OnMenuGotoLine(wxCommandEvent& event);

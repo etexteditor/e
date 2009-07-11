@@ -119,10 +119,11 @@ enum {
 	MENU_SHIFT_PROJECT_FOCUS,
 	MENU_PREVIEW,
 	MENU_STATUSBAR,
+
 	MENU_NEXTTAB,
-	MENU_NEXTTAB_OR_LAST,
-	MENU_PREVTAB,
 	MENU_LASTTAB,
+	MENU_PREVTAB,
+
 	MENU_OPEN_EXT,
 	MENU_TABS,
 	MENU_TABS_SHOWDROPDOWN,
@@ -234,10 +235,11 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_REVSEL, EditorFrame::OnMenuRevSel)
 	EVT_MENU(MENU_FILTER, EditorFrame::OnMenuFilter)
 	EVT_MENU(MENU_RUN, EditorFrame::OnMenuRunCurrent)
+
 	EVT_MENU(MENU_NEXTTAB, EditorFrame::OnMenuNextTab)
-	EVT_MENU(MENU_NEXTTAB_OR_LAST, EditorFrame::OnMenuNextTabOrLast)
 	EVT_MENU(MENU_PREVTAB, EditorFrame::OnMenuPrevTab)
-	EVT_MENU(MENU_LASTTAB, EditorFrame::OnMenuGotoLastTab)
+	EVT_MENU(MENU_LASTTAB, EditorFrame::OnMenuLastTab)
+
 	EVT_MENU(MENU_OPEN_EXT, EditorFrame::OnMenuOpenExt)
 	EVT_MENU(MENU_GOTOFILE, EditorFrame::OnMenuGotoFile)
 	EVT_MENU(MENU_GOTOLINE, EditorFrame::OnMenuGotoLine)
@@ -527,14 +529,13 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
-	const unsigned int accelcount = 6;
+	const unsigned int accelcount = 5;
 	wxAcceleratorEntry entries[accelcount];
 	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
-	entries[1].Set(wxACCEL_CTRL, (int)'9', MENU_LASTTAB);
-	entries[2].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
-	entries[3].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
-	entries[4].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
-	entries[5].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
+	entries[1].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
+	entries[2].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
+	entries[3].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
+	entries[4].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
 	wxAcceleratorTable accel(accelcount, entries);
 	SetAcceleratorTable(accel);
 }
@@ -697,17 +698,18 @@ void EditorFrame::InitMenus() {
 	navMenu->Append(MENU_BOOKMARK_PREVIOUS, _("&Previous Bookmark\tShift-F2"), _("Go to Previous Bookmark"));
 	navMenu->Append(MENU_BOOKMARK_CLEAR, _("&Remove All Bookmarks\tCtrl-Shift-F2"), _("Remove All Bookmarks"));
 	navMenu->AppendSeparator();
-	navMenu->Append(MENU_NEXTTAB_OR_LAST, _("&Last used File Tab or Next\tCtrl-Tab"), _("Go to Next Tab"));
-	navMenu->Append(MENU_PREVTAB, _("Pre&vious File Tab\tCtrl-Shift-Tab"), _("Go to Previous Tab"));
-	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
+	navMenu->Append(MENU_NEXTTAB, _("Next Tab\tCtrl-Tab"), _("Next Tab"));
+	navMenu->Append(MENU_PREVTAB, _("Pre&vious Tab\tCtrl-Shift-Tab"), _("Previous Tab"));
 	navMenu->Append(MENU_TABS_SHOWDROPDOWN, _("Go to &Tab...\tCtrl-0"), _("Go to Tab..."));
+	navMenu->Append(MENU_LASTTAB, _("Last used Tab\tCtrl-Alt-0"), _("Last used Tab"));
+	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
 	navMenu->Append(MENU_TABS, _("Ta&bs"), m_tabMenu, _("Tabs"));
 	navMenu->AppendSeparator();
 	navMenu->Append(MENU_OPEN_EXT, _("Go to &Header/Source\tCtrl-Alt-Up"), _(""));
 	navMenu->Append(MENU_GOTOFILE, _("Go to &File...\tCtrl-Shift-T"), _("Go to File..."));
 	navMenu->Append(MENU_SYMBOLS, _("Go to &Symbol...\tCtrl-L"), _("Show Symbol List"));
 	navMenu->Append(MENU_GOTOBRACKET, _("Go to &Matching Bracket\tCtrl-B"), _("Go to Matching Bracket"));
-	navMenu->Append(MENU_GOTOLINE, _("Go to &Line\tCtrl-G"), _("Go to Line"));
+	navMenu->Append(MENU_GOTOLINE, _("Go to &Line...\tCtrl-G"), _("Go to Line..."));
 	menuBar->Append(navMenu, _("N&avigation"));
 
 	// Document menu
@@ -2650,28 +2652,6 @@ void EditorFrame::OnMenuRunCurrent(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->RunCurrentSelectionAsCommand(false);
 }
 
-void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
-#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
-	const unsigned int tabCount = m_tabBar->GetPageCount();
-	if (tabCount <= 1) return;
-
-	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
-	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
-#endif
-}
-
-void EditorFrame::OnMenuNextTabOrLast(wxCommandEvent& event) {
-	// If this is the first time pressed, we go to the last used tab
-	if (!m_ctrlHeldDown && m_lastActiveTab != -1 && m_lastActiveTab != m_tabBar->GetSelection() && m_lastActiveTab < (int)m_tabBar->GetPageCount()) {
-		wxLogDebug(wxT("Going to last active page: %d"), m_lastActiveTab);
-		m_tabBar->SetSelection(m_lastActiveTab);
-	}
-	else OnMenuNextTab(event);
-
-	// Track ctrl key state
-	m_ctrlHeldDown = true;
-}
-
 bool EditorFrame::OnPreKeyUp(wxKeyEvent& event) {
 	// We do not seem to be able to catch EVT_KEY_UP for the frame
 	// so we catch it manually here.
@@ -2692,6 +2672,24 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 	}
 
 	event.Skip();
+}
+
+void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
+#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
+	const unsigned int tabCount = m_tabBar->GetPageCount();
+	if (tabCount <= 1) return;
+
+	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
+	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
+#endif
+}
+
+void EditorFrame::OnMenuLastTab(wxCommandEvent& event) {
+	// If this is the first time pressed, we go to the last used tab
+	if (m_lastActiveTab != -1 && m_lastActiveTab != m_tabBar->GetSelection() && m_lastActiveTab < (int)m_tabBar->GetPageCount()) {
+		wxLogDebug(wxT("Going to last active page: %d"), m_lastActiveTab);
+		m_tabBar->SetSelection(m_lastActiveTab);
+	}
 }
 
 void EditorFrame::OnMenuPrevTab(wxCommandEvent& WXUNUSED(event)) {

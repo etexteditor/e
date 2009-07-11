@@ -12,13 +12,19 @@
  ******************************************************************************/
 
 #include "SearchPanel.h"
+
+#include <wx/combobox.h>
+#include <wx/mstream.h>
+
 #include "IFrameSearchService.h"
 #include "IEditorSearch.h"
-#include "images/search_png.h"
-#include "images/search_re_png.h"
-#include <wx/mstream.h>
+
 #include "eSettings.h"
 #include "CloseButton.h"
+
+#include "images/search_png.h"
+#include "images/search_re_png.h"
+
 
 // control ids
 enum
@@ -499,9 +505,8 @@ void SearchPanel::SeperatorLine::OnPaint(wxPaintEvent& WXUNUSED(evt)) {
 	dc.DrawLine(0, 1, size.x, 1);
 }
 
-void SearchPanel::SeperatorLine::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// no evt.Skip() as we don't want the background to be erased
-}
+// no evt.Skip() as we don't want the background to be erased
+void SearchPanel::SeperatorLine::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 
 // -- SearchEvtHandler -----------------------------------------------------------------

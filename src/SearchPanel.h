@@ -21,12 +21,10 @@
 	#include <wx/string.h>
 	#include <wx/menu.h>
 	#include <wx/bitmap.h>
-	#include <wx/combobox.h>
 #endif
 
 #include "FindFlags.h"
 
-// pre-definitions
 class CloseButton;
 class eSettings;
 class IFrameSearchService;
@@ -35,6 +33,7 @@ class IEditorSearch;
 class wxBoxSizer;
 class wxButton;
 class wxBitmapButton;
+class wxComboBox;
 
 class SearchPanel : public wxPanel {
 public:

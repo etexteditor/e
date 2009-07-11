@@ -2804,16 +2804,24 @@ void EditorFrame::UpdateRecentFiles() {
 	while (m_recentFilesMenu->GetMenuItemCount()) {
 		m_recentFilesMenu->Delete(m_recentFilesMenu->FindItemByPosition(0));
 	}
-	for (unsigned int i = 0; i < m_recentFiles.GetCount(); ++i) {
-		m_recentFilesMenu->Append(4000 + i, m_recentFiles[i]);
+	for (unsigned int i = 0; i < m_recentFiles.GetCount(); i++) {
+		wxString filename = m_recentFiles[i];
+		if (i < 9) {
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+		}
+		m_recentFilesMenu->Append(4000 + i, filename);
 	}
 
 	// Update RecentProjects
 	while (m_recentProjectsMenu->GetMenuItemCount()) {
 		m_recentProjectsMenu->Delete(m_recentProjectsMenu->FindItemByPosition(0));
 	}
-	for (unsigned int i2 = 0; i2 < m_recentProjects.GetCount(); ++i2) {
-		m_recentProjectsMenu->Append(4100 + i2, m_recentProjects[i2]);
+	for (unsigned int i = 0; i < m_recentProjects.GetCount(); i++) {
+		wxString filename = m_recentProjects[i];
+		if (i < 9) {
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+		}
+		m_recentProjectsMenu->Append(4100 + i, filename);
 	}
 
 	Thaw();

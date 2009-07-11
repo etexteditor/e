@@ -25,6 +25,42 @@
 #include "images/tmUnknown.xpm"
 #include "images/tmSeparator.xpm"
 
+class BundleItemData : public wxTreeItemData {
+public:
+	BundleItemData(unsigned int bundleId)
+		: m_type(BUNDLE_BUNDLE), m_bundleId(bundleId), m_itemId(0), m_isMenuItem(false) {};
+	BundleItemData(BundleItemType type, unsigned int bundleId, const wxString uuid=wxEmptyString)
+		: m_type(type), m_bundleId(bundleId), m_itemId(0),
+		  m_uuid(type == BUNDLE_SEPARATOR ? wxT("------------------------------------") : uuid),
+		  m_isMenuItem(true) {};
+	BundleItemData(BundleItemType type, unsigned int bundleId, unsigned int itemId, const wxString uuid=wxEmptyString)
+		: m_type(type), m_bundleId(bundleId), m_itemId(itemId), m_uuid(uuid), m_isMenuItem(false) {};
+	BundleItemData(const BundleItemData& bid)
+		: m_type(bid.m_type), m_bundleId(bid.m_bundleId), m_itemId(bid.m_itemId), m_uuid(bid.m_uuid), m_isMenuItem(bid.m_isMenuItem) {};
+
+	bool IsBundle() const {return m_type == BUNDLE_BUNDLE;};
+	bool IsMenuItem() const {return m_isMenuItem;};
+	int GetImageId() const {
+		switch (m_type) {
+			case BUNDLE_COMMAND:   return 1;
+			case BUNDLE_SNIPPET:   return 2;
+			case BUNDLE_DRAGCMD:   return 3;
+			case BUNDLE_PREF:      return 4;
+			case BUNDLE_LANGUAGE:  return 5;
+			case BUNDLE_SUBDIR:    return 6;
+			case BUNDLE_NONE:      return 7;
+			case BUNDLE_SEPARATOR: return 8;
+			default: wxASSERT(false); return 0;
+		}
+	};
+
+	const BundleItemType m_type;
+	const unsigned int m_bundleId;
+	const unsigned int m_itemId;
+	const wxString m_uuid;
+	bool m_isMenuItem;
+};
+
 enum {
 	CTRL_BUNDLETREE,
 	CTRL_NEWBUNDLEITEM,

@@ -48,26 +48,10 @@ public:
 	void ReplaceAll();
 	void HidePanel();
 
-	bool HasSearchString() const {return !searchbox->GetValue().IsEmpty();};
+	bool HasSearchString() const;
 	bool IsActive() const;
 
 	IEditorSearch* GetEditorSearch();
-
-private:
-	// Embedded class: SearchEvtHandler
-	class SearchEvtHandler : public wxEvtHandler {
-	public:
-		SearchEvtHandler(wxWindow* parent);
-	private:
-		// Event handlers
-		void OnKeyDown(wxKeyEvent &evt);
-		void OnChar(wxKeyEvent &evt);
-		void OnFocusLost(wxFocusEvent& evt);
-		void OnMouseWheel(wxMouseEvent& evt);
-		DECLARE_EVENT_TABLE();
-		// Member variables
-		wxWindow* parent;
-	};
 
 	// Member functions
 	void SetState(cxFindResult result);
@@ -76,6 +60,7 @@ private:
 	void RefreshReplaceHistory();
 	void UpdateReplaceHistory();
 
+private:
 	// Event handlers
 	void OnSearchPopup(wxCommandEvent& evt);
 	void OnSearchText(wxCommandEvent& evt);
@@ -97,8 +82,6 @@ private:
 	IFrameSearchService& m_searchService;
 
 	// Member controls
-	SearchEvtHandler* searchbox_evt_handler;
-	SearchEvtHandler* replacebox_evt_handler;
 	wxMenu m_popupMenu;
 	wxBoxSizer* box;
 	wxBoxSizer* vbox;

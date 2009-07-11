@@ -27,6 +27,21 @@
 #include "images/search_re_png.h"
 
 
+class SearchEvtHandler : public wxEvtHandler {
+public:
+	SearchEvtHandler(SearchPanel* parent);
+private:
+	// Event handlers
+	void OnKeyDown(wxKeyEvent &evt);
+	void OnChar(wxKeyEvent &evt);
+	void OnFocusLost(wxFocusEvent& evt);
+	void OnMouseWheel(wxMouseEvent& evt);
+	DECLARE_EVENT_TABLE();
+	// Member variables
+	SearchPanel* parent;
+};
+
+
 // control ids
 enum
 {
@@ -72,8 +87,8 @@ SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, w
 	m_settings(eGetSettings())
 {
 	// Create custom event handlers
-	searchbox_evt_handler = new SearchEvtHandler(this);
-	replacebox_evt_handler = new SearchEvtHandler(this);
+	wxEvtHandler* searchbox_evt_handler = new SearchEvtHandler(this);
+	wxEvtHandler* replacebox_evt_handler = new SearchEvtHandler(this);
 
 	// Set up accelerator table
 	const unsigned int accelcount = 4;
@@ -160,6 +175,10 @@ SearchPanel::~SearchPanel() {
 	// Delete the SearchEventHandlers
 	searchbox->PopEventHandler(true);
 	replaceBox->PopEventHandler(true);
+}
+
+bool SearchPanel::HasSearchString() const {
+	return !searchbox->GetValue().IsEmpty();
 }
 
 bool SearchPanel::IsActive() const {
@@ -480,18 +499,16 @@ void SearchPanel::UpdateReplaceHistory() {
 
 // -- SearchEvtHandler -----------------------------------------------------------------
 
-BEGIN_EVENT_TABLE(SearchPanel::SearchEvtHandler, wxEvtHandler)
-	EVT_KEY_DOWN(SearchPanel::SearchEvtHandler::OnKeyDown)
-	EVT_CHAR(SearchPanel::SearchEvtHandler::OnChar)
-	EVT_KILL_FOCUS(SearchPanel::SearchEvtHandler::OnFocusLost)
-	EVT_MOUSEWHEEL(SearchPanel::SearchEvtHandler::OnMouseWheel)
+BEGIN_EVENT_TABLE(SearchEvtHandler, wxEvtHandler)
+	EVT_KEY_DOWN(SearchEvtHandler::OnKeyDown)
+	EVT_CHAR(SearchEvtHandler::OnChar)
+	EVT_KILL_FOCUS(SearchEvtHandler::OnFocusLost)
+	EVT_MOUSEWHEEL(SearchEvtHandler::OnMouseWheel)
 END_EVENT_TABLE()
 
-SearchPanel::SearchEvtHandler::SearchEvtHandler(wxWindow* parent)
-: parent(parent) {
-}
+SearchEvtHandler::SearchEvtHandler(SearchPanel* parent): parent(parent) {}
 
-void SearchPanel::SearchEvtHandler::OnKeyDown(wxKeyEvent &event) {
+void SearchEvtHandler::OnKeyDown(wxKeyEvent &event) {
 	// When wxTE_PROCESS_ENTER is set, we have to manually process tab
 	if (event.GetKeyCode() == WXK_TAB) {
 		const int direction = wxGetKeyState(WXK_SHIFT) ? 0 : wxNavigationKeyEvent::IsForward;
@@ -502,9 +519,9 @@ void SearchPanel::SearchEvtHandler::OnKeyDown(wxKeyEvent &event) {
 	event.Skip();
 }
 
-void SearchPanel::SearchEvtHandler::OnChar(wxKeyEvent &evt) {
+void SearchEvtHandler::OnChar(wxKeyEvent &evt) {
 	if (evt.GetKeyCode() == WXK_ESCAPE) {
-		((SearchPanel*)parent)->HidePanel();
+		parent->HidePanel();
 		return;
 	}
 	/*else if (evt.GetKeyCode() == WXK_RETURN) {
@@ -515,17 +532,16 @@ void SearchPanel::SearchEvtHandler::OnChar(wxKeyEvent &evt) {
 	evt.Skip();
 }
 
-void SearchPanel::SearchEvtHandler::OnFocusLost(wxFocusEvent& evt) {
+void SearchEvtHandler::OnFocusLost(wxFocusEvent& evt) {
 	// We don't want to save partial searches during incremental search
 	// so we only save when the ctrl loses focus. 
-	((SearchPanel*)parent)->UpdateSearchHistory();
-
+	parent->UpdateSearchHistory();
 	evt.Skip();
 }
 
-void SearchPanel::SearchEvtHandler::OnMouseWheel(wxMouseEvent& evt) {
+void SearchEvtHandler::OnMouseWheel(wxMouseEvent& evt) {
 	// We want mousewheel events to go to the active editor
 	// (instead of just scrolling comboBox with search history)
-	IEditorSearch* editorSearch = ((SearchPanel*)parent)->GetEditorSearch();
+	IEditorSearch* editorSearch = parent->GetEditorSearch();
 	if (editorSearch) editorSearch->GetEventHandlerI()->ProcessEvent(evt);
 }

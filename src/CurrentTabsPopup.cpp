@@ -10,10 +10,12 @@ void CurrentTabsPopup::ListEventHandler::OnChar(wxKeyEvent& event) {
 	switch ( event.GetKeyCode() )
     {
 	case WXK_ESCAPE:
+		// Cancel tab selection.
 		m_parent->EndModal(wxID_CANCEL);
 		return;
 
 	case WXK_UP: {
+		// Wrap to bottom of the list if needed.
 		int row = m_parent->m_list->GetSelectedRow();
 		if (row == 0) {
 			int max = m_parent->m_list->GetItemCount();
@@ -24,6 +26,7 @@ void CurrentTabsPopup::ListEventHandler::OnChar(wxKeyEvent& event) {
 	 }
 
 	case WXK_DOWN: {
+		// Wrap to top of the list if needed.
 		int row = m_parent->m_list->GetSelectedRow();
 		int max = m_parent->m_list->GetItemCount();
 		if (row == max -1) {
@@ -35,6 +38,8 @@ void CurrentTabsPopup::ListEventHandler::OnChar(wxKeyEvent& event) {
 
 	default:
 		const wxChar c = event.GetUnicodeKey();
+		// If a number 1-9 was pressed, and we have that many rows,
+		// then choose that (-1) as the selected row index.
 		if ((wxT('1') <= c) && ( c <= wxT('9'))) {
 			int max = m_parent->m_list->GetItemCount();
 
@@ -67,7 +72,7 @@ END_EVENT_TABLE()
 
 void CurrentTabsPopup::OnShow(wxShowEvent& WXUNUSED(event)) {
 	m_list->SetFocus();
-	m_list->SetItemState(0, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
+	m_list->SetSelectedRow(0);
 
 	for (int i = 0; i < CurrentTabsPopup::ColumnCount; i++)
 		m_list->SetColumnWidth(i, wxLIST_AUTOSIZE);
@@ -89,7 +94,7 @@ CurrentTabsPopup::CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabIn
 		if (index < 9)
 			m_list->InsertItem(index, wxString::Format(wxT("%d"), index+1));
 		else
-			m_list->InsertItem(index, wxT("#"));
+			m_list->InsertItem(index, wxT(""));
 
 		m_list->SetItem(index, CurrentTabsPopup::Filename, (*p)->filename);
 		m_list->SetItem(index, CurrentTabsPopup::Path, (*p)->path);

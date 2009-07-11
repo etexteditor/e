@@ -21,6 +21,7 @@
 
 #include "eSettings.h"
 #include "CloseButton.h"
+#include "SeparatorLine.h"
 
 #include "images/search_png.h"
 #include "images/search_re_png.h"
@@ -92,7 +93,7 @@ SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, w
 	m_popupMenu.Check(PMENU_HIGHLIGHT, m_highlight);
 
 	// Create the controls
-	sepline = new SeperatorLine(this, -1);
+	SeperatorLine* sepline = new SeperatorLine(this, -1);
 	closeButton = new CloseButton(this, SEARCH_CLOSE);
 	wxStaticText *searchlabel = new wxStaticText(this, -1, _("Search: "));
 
@@ -476,38 +477,6 @@ void SearchPanel::UpdateReplaceHistory() {
 		RefreshReplaceHistory();
 	}
 }
-
-
-// -- SeperatorLine -----------------------------------------------------------------
-
-BEGIN_EVENT_TABLE(SearchPanel::SeperatorLine, wxControl)
-	EVT_PAINT(SearchPanel::SeperatorLine::OnPaint)
-	EVT_ERASE_BACKGROUND(SearchPanel::SeperatorLine::OnEraseBackground)
-END_EVENT_TABLE()
-
-SearchPanel::SeperatorLine::SeperatorLine(wxWindow* parent, wxWindowID id, const wxPoint& pos)
-: wxControl(parent, id, pos, wxSize(10, 2)) {
-	// Make sure sizers min/max height are fixed to 2 pixels
-	SetSizeHints(-1, 2, -1, 2);
-}
-
-void SearchPanel::SeperatorLine::OnPaint(wxPaintEvent& WXUNUSED(evt)) {
-	wxPaintDC dc(this);
-	// Get view dimensions
-	wxSize size = GetClientSize();
-	wxPen darkPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW), 1, wxSOLID);
-    wxPen lightPen(wxSystemSettings::GetColour(wxSYS_COLOUR_3DHILIGHT), 1, wxSOLID);
-
-	dc.SetPen(darkPen);
-	dc.DrawLine(0, 0, size.x, 0);
-
-	dc.SetPen(lightPen);
-	dc.DrawLine(0, 1, size.x, 1);
-}
-
-// no evt.Skip() as we don't want the background to be erased
-void SearchPanel::SeperatorLine::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
-
 
 // -- SearchEvtHandler -----------------------------------------------------------------
 

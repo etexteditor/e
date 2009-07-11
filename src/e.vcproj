@@ -3546,6 +3546,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\SeparatorLine.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SeparatorLine.h"
+			>
+		</File>
+		<File
 			RelativePath="ShellContextMenu.cpp"
 			>
 			<FileConfiguration

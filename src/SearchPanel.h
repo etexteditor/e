@@ -17,7 +17,6 @@
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/panel.h>
-	#include <wx/control.h>
 	#include <wx/string.h>
 	#include <wx/menu.h>
 	#include <wx/bitmap.h>
@@ -55,19 +54,6 @@ public:
 	IEditorSearch* GetEditorSearch();
 
 private:
-	// Embedded class: SeperatorLine
-	class SeperatorLine : public wxControl {
-	public:
-		SeperatorLine(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition);
-	private:
-		// overriden base class virtuals
-		virtual bool AcceptsFocus() const { return FALSE; }
-		// Event handlers
-		void OnPaint(wxPaintEvent& evt);
-		void OnEraseBackground(wxEraseEvent& event);
-		DECLARE_EVENT_TABLE();
-	};
-
 	// Embedded class: SearchEvtHandler
 	class SearchEvtHandler : public wxEvtHandler {
 	public:
@@ -117,7 +103,6 @@ private:
 	wxBoxSizer* box;
 	wxBoxSizer* vbox;
 	wxComboBox* searchbox;
-	SeperatorLine* sepline;
 	wxButton* nextButton;
 	wxButton* prevButton;
 	wxButton* replaceButton;

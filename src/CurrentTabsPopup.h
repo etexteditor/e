@@ -8,7 +8,7 @@
 
 #include <vector>
 
-class wxListCtrl;
+class wxListCtrlEx;
 class wxListEvent;
 
 struct OpenTabInfo {
@@ -51,7 +51,7 @@ private:
 	DECLARE_EVENT_TABLE();
 	void OnShow(wxShowEvent& event);
 
-	wxListCtrl* m_list;
+	wxListCtrlEx* m_list;
 	int m_selectedTabIndex;
 };
 

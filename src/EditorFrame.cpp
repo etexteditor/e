@@ -2684,7 +2684,7 @@ void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
 #endif
 }
 
-void EditorFrame::OnMenuLastTab(wxCommandEvent& event) {
+void EditorFrame::OnMenuLastTab(wxCommandEvent& WXUNUSED(event)) {
 	// If this is the first time pressed, we go to the last used tab
 	if (m_lastActiveTab != -1 && m_lastActiveTab != m_tabBar->GetSelection() && m_lastActiveTab < (int)m_tabBar->GetPageCount()) {
 		wxLogDebug(wxT("Going to last active page: %d"), m_lastActiveTab);

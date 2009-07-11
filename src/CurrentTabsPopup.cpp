@@ -1,5 +1,5 @@
 #include "CurrentTabsPopup.h"
-#include <wx/listctrl.h>
+#include "wxListCtrlEx.h"
 
 BEGIN_EVENT_TABLE(CurrentTabsPopup::ListEventHandler, wxEvtHandler)
 	EVT_CHAR(CurrentTabsPopup::ListEventHandler::OnChar)
@@ -14,20 +14,20 @@ void CurrentTabsPopup::ListEventHandler::OnChar(wxKeyEvent& event) {
 		return;
 
 	case WXK_UP: {
-		int row = m_parent->GetSelectedRow();
+		int row = m_parent->m_list->GetSelectedRow();
 		if (row == 0) {
 			int max = m_parent->m_list->GetItemCount();
-			m_parent->SetSelectedRow(max-1);
+			m_parent->m_list->SetSelectedRow(max-1);
 			return;
 		}
 		break;
 	 }
 
 	case WXK_DOWN: {
-		int row = m_parent->GetSelectedRow();
+		int row = m_parent->m_list->GetSelectedRow();
 		int max = m_parent->m_list->GetItemCount();
 		if (row == max -1) {
-			m_parent->SetSelectedRow(0);
+			m_parent->m_list->SetSelectedRow(0);
 			return;
 		}
 		break;
@@ -79,7 +79,7 @@ CurrentTabsPopup::CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabIn
 {
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 
-	m_list = new wxListCtrl(this, wxID_ANY, wxPoint(0,0), wxSize(500,300), wxLC_REPORT|wxLC_SINGLE_SEL);
+	m_list = new wxListCtrlEx(this, wxID_ANY, wxPoint(0,0), wxSize(500,300), wxLC_REPORT|wxLC_SINGLE_SEL);
 	m_list->InsertColumn(CurrentTabsPopup::Number, wxT("#"));
 	m_list->InsertColumn(CurrentTabsPopup::Filename, wxT("Filename"));
 	m_list->InsertColumn(CurrentTabsPopup::Path, wxT("Path"));
@@ -109,25 +109,4 @@ CurrentTabsPopup::~CurrentTabsPopup() {
 
 int CurrentTabsPopup::GetSelectedTabIndex() const {
 	return m_selectedTabIndex;
-}
-
-int CurrentTabsPopup::GetSelectedRow() const {
-	long itemIndex = m_list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	return itemIndex;
-}
-
-/*
-// Deselect item (wxLIST_STATE_FOCUSED - dotted border)
-wxListCtrl->SetItemState(item, 0, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
- 
-// Select item
-wxListCtrl->SetItemState(item, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
-*/
-
-void CurrentTabsPopup::SetSelectedRow(int selectedRow) {
-	int count = m_list->GetItemCount();
-	for (int i = 0; i < count; i++) {
-		long flags = (i==selectedRow)?wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED : 0;
-		m_list->SetItemState(i, flags, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
-	}
 }

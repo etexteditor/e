@@ -704,6 +704,14 @@
 				RelativePath="wxactivex.h"
 				>
 			</File>
+			<File
+				RelativePath=".\wxListCtrlEx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wxListCtrlEx.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Dialogs"

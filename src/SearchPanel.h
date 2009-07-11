@@ -18,8 +18,6 @@
 #ifndef WX_PRECOMP
 	#include <wx/panel.h>
 	#include <wx/string.h>
-	#include <wx/menu.h>
-	#include <wx/bitmap.h>
 #endif
 
 #include "FindFlags.h"
@@ -31,7 +29,6 @@ class IEditorSearch;
 
 class wxBoxSizer;
 class wxButton;
-class wxBitmapButton;
 class wxComboBox;
 
 class SearchPanel : public wxPanel {
@@ -61,8 +58,9 @@ public:
 	void UpdateReplaceHistory();
 
 private:
+	void InitAcceleratorTable();
+
 	// Event handlers
-	void OnSearchPopup(wxCommandEvent& evt);
 	void OnSearchText(wxCommandEvent& evt);
 	void OnSearchTextEnter(wxCommandEvent& evt);
 	void OnSearchTextCombo(wxCommandEvent& evt);
@@ -82,8 +80,6 @@ private:
 	IFrameSearchService& m_searchService;
 
 	// Member controls
-	wxMenu m_popupMenu;
-	wxBoxSizer* box;
 	wxBoxSizer* vbox;
 	wxComboBox* searchbox;
 	wxButton* nextButton;
@@ -92,9 +88,11 @@ private:
 	CloseButton* closeButton;
 	wxComboBox* replaceBox;
 	wxButton* allButton;
-	wxBitmapButton* searchButton;
-	wxBitmap m_searchBitmap;
-	wxBitmap m_searchReBitmap;
+
+	wxCheckBox* checkHighlight;
+	wxCheckBox* checkRegex;
+	wxCheckBox* checkMatchcase;
+
 
 	// Member variables (user settings)
 	wxString m_searchText;

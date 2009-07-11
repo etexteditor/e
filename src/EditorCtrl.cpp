@@ -5526,7 +5526,7 @@ bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext
 	return DoFind(searchtext, m_lines.GetPos(), options);
 }
 
-bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options) {
+int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options) {
 	bool matchcase = options & FIND_MATCHCASE;
 
 	if (m_lines.GetLength() == 0 || searchtext.empty()) return false;
@@ -5550,6 +5550,8 @@ bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacet
 	vector<interval>::iterator p = m_searchRanges.begin();
 	map<unsigned int,interval> captures;
 	unsigned int byte_len = 0;
+
+	unsigned int replacements = 0;
 
 	// Replace and continue search
 	cxLOCKDOC_WRITE(m_doc)
@@ -5614,6 +5616,8 @@ bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacet
 			}
 		}
 
+		replacements++;
+
 		// If we have replaced upto end-of-line, move to next
 		// line to avoid infinite replace of ($).
 		start_pos = result.start+byte_len;
@@ -5642,7 +5646,7 @@ bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacet
 	MakeCaretVisible();
 	DrawLayout();
 
-	return true;
+	return replacements;
 }
 /*
 bool EditorCtrl::ReplaceAllRegex(const wxString& regex, const wxString& replacetext, int options) {

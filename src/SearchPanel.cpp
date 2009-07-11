@@ -41,7 +41,6 @@ private:
 enum
 {
     SEARCH_CLOSE = 100,
-    SEARCH_BUTTON,
 	SEARCH_BOX,
 	SEARCH_NEXT,
 	SEARCH_PREV,
@@ -50,7 +49,7 @@ enum
 	REPLACE_ALL,
 	CHECK_REGEX,
 	CHECK_MATCHCASE,
-	CHECK_HIGHLIGHT
+	CHECK_HIGHLIGHT,
 };
 
 BEGIN_EVENT_TABLE(SearchPanel, wxPanel)
@@ -119,6 +118,8 @@ SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, w
 	checkRegex = new wxCheckBox(this, CHECK_REGEX, wxT("Rege&x"));
 	checkMatchcase = new wxCheckBox(this, CHECK_MATCHCASE, wxT("Match &case"));
 
+	commandResults = new wxStaticText(this, wxID_ANY, wxT(""));
+
 	// Create the sizer layout
 	vbox = new wxBoxSizer(wxVERTICAL);
 	vbox->Add(sepline, 0, wxEXPAND);
@@ -143,7 +144,10 @@ SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, w
 	box2->Add(checkRegex, 0, wxALIGN_CENTER|wxTOP|wxBOTTOM, 2);
 	box2->AddSpacer(5);
 	box2->Add(checkMatchcase, 0, wxALIGN_CENTER|wxTOP|wxBOTTOM, 2);
+	box2->AddSpacer(10);
+	box2->Add(commandResults, 1, wxALIGN_CENTER|wxEXPAND|wxTOP|wxBOTTOM, 2);
 	box2->AddSpacer(5);
+
 	vbox->Add(box2, 0, wxEXPAND);
 
 	SetSizer(vbox);
@@ -163,12 +167,11 @@ SearchPanel::~SearchPanel() {
 }
 
 void SearchPanel::InitAcceleratorTable() {
-	const unsigned int accelcount = 4;
+	const unsigned int accelcount = 3;
 	wxAcceleratorEntry entries[accelcount];
-	entries[0].Set(wxACCEL_ALT, WXK_DOWN, SEARCH_BUTTON);
-	entries[1].Set(wxACCEL_ALT, (int)'R', REPLACE_REPLACE);
-	entries[2].Set(wxACCEL_ALT, (int)'A', REPLACE_ALL);
-	entries[3].Set(wxACCEL_NORMAL, WXK_ESCAPE, SEARCH_CLOSE);
+	entries[0].Set(wxACCEL_ALT, (int)'R', REPLACE_REPLACE);
+	entries[1].Set(wxACCEL_ALT, (int)'A', REPLACE_ALL);
+	entries[2].Set(wxACCEL_NORMAL, WXK_ESCAPE, SEARCH_CLOSE);
 	wxAcceleratorTable accel(accelcount, entries);
 	SetAcceleratorTable(accel);
 }
@@ -232,7 +235,7 @@ void SearchPanel::InitSearch(const wxString& searchtext, bool replace) {
 	}
 }
 
-void SearchPanel::SetState(cxFindResult result) {
+void SearchPanel::SetState(cxFindResult result, int resultCount) {
 	// Give visual feedback in the search field
 	if (result == cxFOUND) {
 		searchbox->SetBackgroundColour(*wxWHITE);
@@ -251,6 +254,11 @@ void SearchPanel::SetState(cxFindResult result) {
 		restart_next_search = true;
 	}
 	searchbox->Refresh();
+
+	if (resultCount < 0)
+		commandResults->SetLabel(wxT(""));
+	else
+		commandResults->SetLabel(wxString::Format(wxT("%d results"), resultCount));
 }
 
 void SearchPanel::Find() {
@@ -321,8 +329,8 @@ void SearchPanel::ReplaceAll() {
 	if (m_match_case) options |= FIND_MATCHCASE;
 	if (m_use_regex) options |= FIND_USE_REGEX;
 
-	int result = editorSearch->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
-	SetState(result ? cxFOUND : cxNOT_FOUND);
+	int resultCount = editorSearch->ReplaceAll(searchbox->GetValue(), replaceBox->GetValue(), options);
+	SetState(resultCount ? cxFOUND : cxNOT_FOUND, resultCount);
 }
 
 void SearchPanel::HidePanel() {

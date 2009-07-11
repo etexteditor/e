@@ -51,7 +51,7 @@ public:
 	IEditorSearch* GetEditorSearch();
 
 	// Member functions
-	void SetState(cxFindResult result);
+	void SetState(cxFindResult result, int resultCount = -1);
 	void RefreshSearchHistory();
 	void UpdateSearchHistory();
 	void RefreshReplaceHistory();
@@ -92,6 +92,7 @@ private:
 	wxCheckBox* checkHighlight;
 	wxCheckBox* checkRegex;
 	wxCheckBox* checkMatchcase;
+	wxStaticText* commandResults;
 
 
 	// Member variables (user settings)

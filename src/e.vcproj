@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="e"
 	ProjectGUID="{34A9B5C4-22D3-4F14-A896-0F12FDF194C5}"
 	RootNamespace="e"
@@ -758,6 +758,14 @@
 			</File>
 			<File
 				RelativePath="CommitDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CompareDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CompareDlg.h"
 				>
 			</File>
 			<File
@@ -2039,6 +2047,34 @@
 		</File>
 		<File
 			RelativePath=".\DetectTripleClicks.h"
+			>
+		</File>
+		<File
+			RelativePath=".\diff.xpm"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffBar.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffBar.h"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffMarkBar.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffMarkBar.h"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffPanel.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffPanel.h"
 			>
 		</File>
 		<File

@@ -14,14 +14,12 @@
 #ifndef __CATALYST_H__
 #define __CATALYST_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-#endif
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
+// wxString, wxImage, wxDatetime, wxArrayString
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
+
 #include "mk4.h"
 #include <wx/filename.h>
 #include <wx/textbuf.h>
@@ -31,21 +29,15 @@
 
 #undef CATALYST_OLD_CODE
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
-#include <map>
+//#include <map>
 #include <vector>
 #include <list>
 #include "auto_vector.h"
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
 
 #include "Dispatcher.h"
 //#include "zeroconf.h"
 #include "RecursiveCriticalSection.h"
+#include "Interval.h"
 
 using namespace std;
 
@@ -119,16 +111,6 @@ struct cxBookmark {
 	unsigned int end;
 };
 
-class interval {
-public:
-	interval() : start((unsigned int)-1), end((unsigned int)-1) {};
-	interval(unsigned int s, unsigned int e) : start(s), end(e) {};
-	bool operator==(const interval& iv) const {return (start == iv.start && end == iv.end);};
-	bool operator!=(const interval& iv) const {return (start != iv.start || end != iv.end);};
-	void Set(unsigned int s, unsigned int e) {start = s; end = e;};
-	unsigned int start;
-	unsigned int end;
-};
 struct match {
 	unsigned int iv1_start_pos;
 	unsigned int iv1_end_pos;

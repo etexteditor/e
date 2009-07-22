@@ -14,9 +14,9 @@
 #ifndef __COMMITDLG_H__
 #define __COMMITDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
 class CommitDlg : public wxDialog {

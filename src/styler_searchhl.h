@@ -23,15 +23,8 @@
 #include "Catalyst.h"
 #include "styler.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
+
 
 class DocumentWrapper;
 class StyleRun;
@@ -40,7 +33,7 @@ class Lines;
 
 class Styler_SearchHL : public Styler {
 public:
-	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme);
+	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme);
 	virtual ~Styler_SearchHL() {};
 
 	void Clear();
@@ -51,7 +44,7 @@ public:
 	// Handle document changes
 	void Insert(unsigned int pos, unsigned int length);
 	void Delete(unsigned int start_pos, unsigned int end_pos);
-	void ApplyDiff(const vector<cxChange>& changes);
+	void ApplyDiff(const std::vector<cxChange>& changes);
 
 private:
 	void DoSearch(unsigned int start, unsigned int end, bool from_last=false);
@@ -61,8 +54,8 @@ private:
 	const Lines& m_lines;
 	wxString m_text;
 	int m_options;
-	vector<interval> m_matches;
-	const vector<interval>& m_searchRanges;
+	std::vector<interval> m_matches;
+	const std::vector<interval>& m_searchRanges;
 
 	// Theme variables
 	const tmTheme& m_theme;

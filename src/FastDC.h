@@ -14,20 +14,12 @@
 #ifndef __FASTDC_H__
 #define __FASTDC_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class FastDC : public wxDC {
 public:
@@ -48,7 +40,7 @@ public:
 #endif
 	};
 
-	void SetFontStyles(int fontStyles, map<int,wxFont>& fontMap);
+	void SetFontStyles(int fontStyles, std::map<int,wxFont>& fontMap);
 
 	// Cannot have any member variables, as it is cast from wxDC
 };

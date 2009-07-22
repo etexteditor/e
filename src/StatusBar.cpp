@@ -107,7 +107,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 		// Symbols
 		if (newEditorCtrl || symbolsChanged || m_pos != pos) {
 			SetStatusText(wxEmptyString, 3);
-			for (vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
+			for (std::vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
 				if (m_pos >= p->start) {
 					const SymbolRef& sr = *p;
 					SetStatusText(editorCtrl->GetSymbolString(sr), 3);
@@ -164,7 +164,7 @@ void StatusBar::PopupSyntaxMenu(wxRect& menuPos) {
 		const wxString& current = m_editorCtrl->GetSyntaxName();
 
 		// Get syntaxes and sort
-		vector<cxSyntaxInfo*> syntaxes = m_syntax_handler->GetSyntaxes();
+		std::vector<cxSyntaxInfo*> syntaxes = m_syntax_handler->GetSyntaxes();
 		sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
 
 		// Syntax submenu
@@ -229,7 +229,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 			// Create the symbols menu
 			unsigned int id = 5000; // menu range 5000-6000
 			bool currentSet = false;
-			for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
+			for (std::vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
 				const SymbolRef& sr = *p;
 				wxString symbolString = m_editorCtrl->GetSymbolString(sr);
 				if (symbolString.empty()) symbolString = wxT(" "); // menu name cannot be empty

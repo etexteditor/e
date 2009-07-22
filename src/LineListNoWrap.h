@@ -39,12 +39,12 @@ public:
 	unsigned int EndFromPos(unsigned int pos);
 	unsigned int StartFromPos(unsigned int pos);
 
-	vector<unsigned int>& GetOffsets();
-	void SetOffsets(const vector<unsigned int>& offsets);
+	std::vector<unsigned int>& GetOffsets();
+	void SetOffsets(const std::vector<unsigned int>& offsets);
 	void NewOffsets();
 
 	void insert(unsigned int index, int newend);
-	void insertlines(unsigned int index, vector<unsigned int>& newlines);
+	void insertlines(unsigned int index, std::vector<unsigned int>& newlines);
 	void update(unsigned int index, unsigned int newend);
 	void update_parsed_line(unsigned int index);
 	void update_line_extent(unsigned int index, unsigned int extent);
@@ -71,8 +71,8 @@ private:
 	FixedLine& m_line;
 	const DocumentWrapper& m_doc;
 	unsigned int m_maxWidth;
-	vector<unsigned int> m_textOffsets;
-	vector<unsigned int> m_lineWidths;
+	std::vector<unsigned int> m_textOffsets;
+	std::vector<unsigned int> m_lineWidths;
 };
 
 #endif //__LINELISTNOWRAP_H__

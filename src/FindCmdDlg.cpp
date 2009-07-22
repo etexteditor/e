@@ -20,6 +20,8 @@
     #include <wx/dc.h>
 #endif
 
+using namespace std;
+
 // Ctrl id's
 enum {
 	CTRL_SEARCH,
@@ -108,7 +110,7 @@ void FindCmdDlg::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) 
 	const bool isCurrent = IsCurrent(n);
 	dc.SetTextForeground(isCurrent ? m_hlTextColor : m_textColor);
 
-	const unsigned int ypos = rect.y + m_topMargen;
+	const unsigned int ypos = rect.y + m_topMargin;
 	unsigned int rightBorder = rect.GetRight();
 
 	const tmAction& action = *m_items[n].action;

@@ -410,7 +410,7 @@ void DirWatcher::UnwatchDirectory(void* handle) {
 	DirWatchInfo* pDirInfo = (DirWatchInfo*)handle;
 
 	// Check if the handle is valid
-	vector<DirWatchInfo*>::iterator p = find(m_dirsWatched.begin(), m_dirsWatched.end(), pDirInfo);
+	std::vector<DirWatchInfo*>::iterator p = find(m_dirsWatched.begin(), m_dirsWatched.end(), pDirInfo);
 	if (p == m_dirsWatched.end()) return;
 
 	// Unwatch the dir
@@ -440,7 +440,7 @@ void DirWatcher::UnwatchDirByName(const wxString& path, bool unwatchSubDir /* = 
 			}
 			if ((pDirInfo->GetPath() == path) || (true == isNeedToRemove)) {
 				// this one
-				vector<DirWatchInfo*>::iterator p = find(m_dirsWatched.begin(),
+				std::vector<DirWatchInfo*>::iterator p = find(m_dirsWatched.begin(),
 					m_dirsWatched.end(), pDirInfo);
 				if (p != m_dirsWatched.end()) {
 					m_dirsWatched.erase(p);

@@ -19,15 +19,7 @@
 	#include <wx/wx.h>
 #endif
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class VersionTree : public wxControl {
 public:
@@ -91,9 +83,9 @@ private:
 	size_t tooltippedNode;
 	int treeWidth;
 	int treeHeight;
-	vector<size_t> parents;
-	vector<int> node_xpos;
-	vector<int> node_ypos;
+	std::vector<size_t> parents;
+	std::vector<int> node_xpos;
+	std::vector<int> node_ypos;
 
 	// Bitmaps
 	const wxBitmap m_bmDoc;

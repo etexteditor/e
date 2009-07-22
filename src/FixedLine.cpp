@@ -444,22 +444,20 @@ void FixedLine::DrawLine(int xoffset, int yoffset, const wxRect& WXUNUSED(rect),
 	// Style with selections
 	bool endstyle = false;
 	for(vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-		if((iv->end > textstart && iv->start < textend) || (iv->start == textstart && iv->end == textstart)) {
+		if((textstart < iv->end && iv->start < textend) || (iv->start == textstart && iv->end == textstart)) {
 			// Calculate enclosed interval
 			int s_start = wxMax(textstart, (*iv).start);
             int s_end   = wxMin(textend, (*iv).end);
 
-			if (m_isSelShadow) m_sr.SetBackgroundColor(s_start, s_end, m_theme.shadowColor);
-			else m_sr.SetBackgroundColor(s_start, s_end, m_theme.selectionColor);
-
+			const wxColour& useBackground = m_isSelShadow ? m_theme.shadowColor : m_theme.selectionColor;
+			m_sr.SetBackgroundColor(s_start, s_end, useBackground);
 			m_sr.SetShowHidden(s_start, s_end, true);
 		}
 		else if (iv->start == textend && iv->end == textend) {
 			// We might have to draw a selection caret at the end
 			endstyle = true;
-			if (m_isSelShadow) m_sr.SetBackgroundColor(textend, textend, m_theme.shadowColor);
-			else m_sr.SetBackgroundColor(textend, textend, m_theme.selectionColor);
-			break;
+			const wxColour& useBackground = m_isSelShadow ? m_theme.shadowColor : m_theme.selectionColor;
+			m_sr.SetBackgroundColor(textend, textend, useBackground);
 		}
 	}
 

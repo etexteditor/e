@@ -56,3 +56,9 @@ external/pcre/
 external/tinyxml/
 external/wxwidgets/
 external/webkit/
+
+# Ignore licensing files copied over to enable tests
+e.cfg
+e.db
+license_key
+

@@ -12,7 +12,6 @@
     #pragma implementation "jsonval.cpp"
 #endif
 
-
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
@@ -73,10 +72,8 @@ wxJSONRefData::wxJSONRefData()
 #endif
 }
 
-// Dtor - does nothing
-wxJSONRefData::~wxJSONRefData()
-{
-}
+// Destructor - does nothing
+wxJSONRefData::~wxJSONRefData() {}
 
 int
 wxJSONRefData::GetRefCount() const
@@ -355,11 +352,7 @@ bool
 wxJSONValue::IsNull() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_NULL )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_NULL;
 }
 
 
@@ -372,11 +365,7 @@ bool
 wxJSONValue::IsEmpty() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_EMPTY )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_EMPTY;
 }
 
 //! Return TRUE if the type of the value stored is integer.
@@ -397,11 +386,7 @@ bool
 wxJSONValue::IsInt() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_INT || type == wxJSONTYPE_INT64 )  {
-    r = true;
-  }
-  return r;
+  return ( type == wxJSONTYPE_INT || type == wxJSONTYPE_INT64 );
 }
 
 //! Return TRUE if the type of the value stored is a unsigned int.
@@ -424,11 +409,7 @@ bool
 wxJSONValue::IsUInt() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_UINT || type == wxJSONTYPE_UINT64 )  {
-    r = true;
-  }
-  return r;
+  return ( type == wxJSONTYPE_UINT || type == wxJSONTYPE_UINT64 );
 }
 
 //! Return TRUE if the type of the value stored is a boolean.
@@ -436,11 +417,7 @@ bool
 wxJSONValue::IsBool() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_BOOL )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_BOOL;
 }
 
 //! Return TRUE if the type of the value stored is a double.
@@ -448,11 +425,7 @@ bool
 wxJSONValue::IsDouble() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_DOUBLE )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_DOUBLE;
 }
 
 //! Return TRUE if the type of the value stored is a wxString object.
@@ -460,11 +433,7 @@ bool
 wxJSONValue::IsString() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_STRING )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_STRING;
 }
 
 //! Return TRUE if the type of the value stored is a pointer to a static C string.
@@ -472,11 +441,7 @@ bool
 wxJSONValue::IsCString() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_CSTRING )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_CSTRING;
 }
 
 //! Return TRUE if the type of the value stored is an array type.
@@ -484,11 +449,7 @@ bool
 wxJSONValue::IsArray() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_ARRAY )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_ARRAY;
 }
 
 //! Return TRUE if the type of this value is a key/value map.
@@ -496,11 +457,7 @@ bool
 wxJSONValue::IsObject() const
 {
   wxJSONType type = GetType();
-  bool r = false;
-  if ( type == wxJSONTYPE_OBJECT )  {
-    r = true;
-  }
-  return r;
+  return type == wxJSONTYPE_OBJECT;
 }
 
 // get the stored value; all these functions are 'const'
@@ -796,7 +753,7 @@ wxJSONValue::AsArray() const
 
 //! Return TRUE if the object contains an element at the specified index.
 /*!
- If the stoerd value is not an array or a map, the function returns FALSE.
+ If the stored value is not an array or a map, the function returns FALSE.
 */
 bool
 wxJSONValue::HasMember( unsigned index ) const
@@ -1001,14 +958,12 @@ wxJSONValue::Cat( const wxString& str )
   wxJSONRefData* data = GetRefData();
   wxASSERT( data );
 
-  bool r = false;
-  if ( data->m_type == wxJSONTYPE_STRING )  { 
-    wxJSONRefData* data = COW();
-    wxASSERT( data );
-    data->m_value.m_valString.append( str );
-    r = true;
-  }
-  return r;
+  if ( data->m_type != wxJSONTYPE_STRING ) return false;
+
+  wxJSONRefData* copied_data = COW();
+  wxASSERT( copied_data );
+  copied_data->m_value.m_valString.append( str );
+  return true;
 }
 
 //! \overload Cat( const wxString& )
@@ -1018,14 +973,12 @@ wxJSONValue::Cat( const wxChar* str )
   wxJSONRefData* data = GetRefData();
   wxASSERT( data );
 
-  bool r = false;
-  if ( data->m_type == wxJSONTYPE_STRING )  { 
-    wxJSONRefData* data = COW();
-    wxASSERT( data );
-    data->m_value.m_valString.append( str );
-    r = true;
-  }
-  return r;
+  if (data ->m_type != wxJSONTYPE_STRING) return false;
+  
+  wxJSONRefData* copied_data = COW();
+  wxASSERT( copied_data );
+  copied_data->m_value.m_valString.append( str );
+  return true;
 }
 
 
@@ -1422,7 +1375,7 @@ wxJSONValue::Find( const wxString& key ) const
 
 //! Return a string description of the type
 /*!
- This static function is only usefull for debugging purposes and
+ This static function is only useful for debugging purposes and
  should not be used by users of this class.
  It simply returns a string representation of the JSON value
  type stored in a object.
@@ -1460,9 +1413,9 @@ wxJSONValue::TypeToString( wxJSONType type )
 }
 
 
-//! Returns informations about the object
+//! Returns information about the object
 /*!
- The function is only usefull for debugging purposes and will probably
+ The function is only useful for debugging purposes and will probably
  be dropped in future versions.
  Returns a string that contains info about the object such as:
 
@@ -1556,9 +1509,9 @@ wxJSONValue::Dump( bool deep, int indent ) const
 
 
 
-//! Returns informations about the object
+//! Returns information about the object
 /*!
- The function is only usefull for debugging purposes and will probably
+ The function is only useful for debugging purposes and will probably
  be dropped in future versions.
  You should not rely on this function to exist in future versions.
 */
@@ -1674,11 +1627,8 @@ wxJSONValue::IsSameAs( const wxJSONValue& other ) const
         return false;
         break;
     }
-    bool r = false;
-    if ( val == otherVal )  {
-      r = true;
-    }
-    return r;
+
+	return val == otherVal;
   }
 
   // for comparing wxJSONTYPE_CSTRING we use two temporary wxString
@@ -1952,7 +1902,6 @@ wxJSONValue::GetCommentArray() const
 {
   wxJSONRefData* data = GetRefData();
   wxASSERT( data );
-
   return data->m_comments;
 }
 
@@ -1962,7 +1911,6 @@ wxJSONValue::ClearComments()
 {
   wxJSONRefData* data = COW();
   wxASSERT( data );
-
   data->m_comments.clear();
 }
 
@@ -2145,12 +2093,9 @@ int
 wxJSONValue::GetLineNo() const
 {
   // return ZERO if there is not a referenced data structure
-  int n = 0;
   wxJSONRefData* data = GetRefData();
-  if ( data != 0 ) {
-    n = data->m_lineNo;
-  }
-  return n;
+  if (data == 0) return 0;
+  return data->m_lineNo;
 }
 
 //! Set the line number of this JSON value object.

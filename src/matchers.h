@@ -1,25 +1,13 @@
-#ifdef __WXMSW__
-    #pragma warning(disable: 4786)
-#endif
-
 #ifndef __MATCHERS_H__
 #define __MATCHERS_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
 #include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 // pre-declarations
 class wxRegEx;
@@ -69,7 +57,7 @@ public:
 	};
 
 	// Only for other matchers
-	virtual size_t GetMembers(vector<calloutref>& refs) = 0;
+	virtual size_t GetMembers(std::vector<calloutref>& refs) = 0;
 	virtual matcher& SubGetCallout(unsigned int) {return *this;};
 	virtual bool SubIsSpanStart(unsigned int) {return false;};
 	virtual unsigned int SubGetId(unsigned int id) {return id;};
@@ -83,7 +71,7 @@ protected:
 #endif
 
 	// Regex optimization
-	typedef map<wxChar, void*> NodeMap;
+	typedef std::map<wxChar, void*> NodeMap;
 	static void OptimizeRegex(wxString& pattern);
 	static void RebuildPattern(wxString& pattern, const NodeMap& node);
 	static void DeleteNode(NodeMap* node);
@@ -119,7 +107,7 @@ public:
 	matcher* GetMember(unsigned int callout_id);
 
 	unsigned int GetSubId(unsigned int id);
-	size_t GetMembers(vector<calloutref>& refs);
+	size_t GetMembers(std::vector<calloutref>& refs);
 
 	// Matching
 	int Match(char* line, unsigned int start, unsigned int len, unsigned int& callout_id, int *ovector, int ovecsize, int zeromatch);
@@ -129,8 +117,8 @@ public:
 	unsigned int SubGetId(unsigned int id) {return GetSubId(id);};
 
 protected:
-	vector<matcher*> m_members;
-	vector<calloutref> m_refs;
+	std::vector<matcher*> m_members;
+	std::vector<calloutref> m_refs;
 
 	bool m_initializing;
 };
@@ -159,7 +147,7 @@ public:
 	// Generic class functions
 	matcher& GetCallout(unsigned int callout_id);
 
-	size_t GetMembers(vector<calloutref>& refs);
+	size_t GetMembers(std::vector<calloutref>& refs);
 
 #ifdef __WXDEBUG__
 	void Print() const {wxLogDebug(wxT("match_matcher: \"%s\""), m_pattern.c_str());};
@@ -174,7 +162,7 @@ private:
 	bool m_hasCaptures;
 	pcre* m_compiledPattern;
 	pcre_extra* m_patternStudy;
-	map<unsigned int,wxString> m_captures;
+	std::map<unsigned int,wxString> m_captures;
 };
 
 class span_matcher : public group_matcher {
@@ -184,7 +172,7 @@ public:
 	~span_matcher() {};
 
 	bool Init(bool deep=false);
-	void ReInit(const vector<char>& text, const int* captures, unsigned int capcount);
+	void ReInit(const std::vector<char>& text, const int* captures, unsigned int capcount);
 
 	void SetStartMatcher(match_matcher* m) {m_startMatcher = m;};
 	void SetEndMatcher(match_matcher* m) {m_endMatcher = m;};
@@ -204,7 +192,7 @@ public:
 	matcher& SubGetCallout(unsigned int) {return *this;};
 	unsigned int SubGetId(unsigned int id) {return id;};
 
-	size_t GetMembers(vector<calloutref>& refs);
+	size_t GetMembers(std::vector<calloutref>& refs);
 
 private:
 	match_matcher* m_startMatcher;

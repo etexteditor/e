@@ -6,6 +6,59 @@ int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
     return s1->CmpNoCase(*s2);
 }
 
+void SimpleHtmlEncode(wxString& s) {
+	s.Replace(wxT("&"), wxT("&amp;"));
+	s.Replace(wxT("<"), wxT("&lt;"));
+	s.Replace(wxT(">"), wxT("&gt;"));
+}
+
+int HexToNumber(wxChar hexDigit){
+	if (wxT('0') <= hexDigit && hexDigit <= wxT('9'))
+		return hexDigit - wxT('0');
+
+	if (wxT('a') <= hexDigit && hexDigit <= wxT('f'))
+		return hexDigit - wxT('a') + 10;
+
+	if (wxT('A') <= hexDigit && hexDigit <= wxT('F'))
+		return hexDigit - wxT('A') + 10;
+
+	// illegal digit.
+	return -1;
+}
+
+// Decode an encoded URL string.
+wxString URLDecode(const wxString &value) {
+	wxString szDecoded;
+	wxString szEncoded = value;
+
+	unsigned int nEncodedPos = 0;
+
+	// Replace + with space
+	szEncoded.Replace(wxT("+"), wxT(" "));
+
+	// Replace hex encoded characters
+	while( nEncodedPos < szEncoded.length() ) {
+		wxChar nextChar = szEncoded.GetChar(nEncodedPos);
+		nEncodedPos++;
+
+		if(nextChar != wxT('%')) szDecoded.Append( nextChar );
+		else
+		{
+			if( isxdigit(szEncoded.GetChar(nEncodedPos)) && isxdigit(szEncoded.GetChar(nEncodedPos+1)) ) {
+				
+				int n1 = HexToNumber(szEncoded.GetChar(nEncodedPos));
+				int n2 = HexToNumber(szEncoded.GetChar(nEncodedPos+1));
+
+				szDecoded.Append( (wxChar) ((n1 << 4) | n2) );
+				nEncodedPos += 2;
+			}
+		}
+	}
+
+	return szDecoded;
+}
+
+
 
 // ===========================================================================
 // wxJoin and wxSplit
@@ -29,8 +82,7 @@ wxString wxJoin(const wxArrayString& arr, const wxChar sep, const wxChar escape)
         // escaping is disabled:
         for ( size_t i = 0; i < count; i++ )
         {
-            if ( i )
-                str += sep;
+            if (i) str += sep;
             str += arr[i];
         }
     }
@@ -38,13 +90,10 @@ wxString wxJoin(const wxArrayString& arr, const wxChar sep, const wxChar escape)
     {
         for ( size_t n = 0; n < count; n++ )
         {
-            if ( n )
-                str += sep;
+            if ( n ) str += sep;
 
-            for ( wxString::const_iterator i = arr[n].begin(),
-                                         end = arr[n].end();
-                  i != end;
-                  ++i )
+            for ( wxString::const_iterator i = arr[n].begin(),end = arr[n].end();
+                  i != end;++i )
             {
                 const wxChar ch = *i;
                 if ( ch == sep )
@@ -70,10 +119,8 @@ wxArrayString wxSplit(const wxString& str, const wxChar sep, const wxChar escape
     wxString curr;
     wxChar prev = wxT('\0');
 
-    for ( wxString::const_iterator i = str.begin(),
-                                 end = str.end();
-          i != end;
-          ++i )
+    for ( wxString::const_iterator i = str.begin(),end = str.end();
+          i != end; ++i )
     {
         const wxChar ch = *i;
 

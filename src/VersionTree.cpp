@@ -22,6 +22,8 @@
 #include "images/vtree_draft.xpm"
 #include "images/vtree_draft_selected.xpm"
 
+using namespace std;
+
 BEGIN_EVENT_TABLE(VersionTree, wxControl)
 	EVT_PAINT(VersionTree::OnPaint)
 	EVT_SIZE(VersionTree::OnSize)

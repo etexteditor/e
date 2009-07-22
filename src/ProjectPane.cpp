@@ -20,6 +20,7 @@
 #include <wx/dir.h>
 #include <wx/tokenzr.h>
 #include <wx/artprov.h>
+#include <wx/aui/aui.h>
 
 #include "IFrameProjectService.h"
 #include "ProjectSettings.h"
@@ -176,7 +177,6 @@ bool ProjectPane::SetProject(const wxFileName& path) {
 
 	if (!m_prjPath.IsOk() || m_prjPath != path) {
 		m_prjPath = path;
-
 		Init();
 	}
 
@@ -197,6 +197,11 @@ bool ProjectPane::SetRemoteProject(const RemoteProfile* rp) {
 
 	Init();
 	return true;
+}
+
+void ProjectPane::CloseProject(){
+	m_prjPath = wxFileName();
+	Clear();
 }
 
 void ProjectPane::Clear() {
@@ -329,10 +334,10 @@ void ProjectPane::OnRemoteListReceived(cxRemoteListEvent& event) {
 	wxASSERT(data && data->m_isDir);
 
 	// Split in dirs and files
-	vector<cxFileInfo>& fiList = event.GetFileList();
+	std::vector<cxFileInfo>& fiList = event.GetFileList();
 	wxArrayString dirs;
 	wxArrayString files;
-	for (vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
+	for (std::vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
 		if (p->m_isDir) dirs.Add(p->m_name);
 		else files.Add(p->m_name);
 	}
@@ -1011,10 +1016,23 @@ void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 		if (wxRenameFile(data->m_path, new_path))
 		{
 			wxLogDebug(wxT("rename done, setting new path"));
+			wxString oldPath = data->m_path;
 			data->SetNewPath( new_path );
 
 			if (data->m_isDir && data->m_isExpanded) {
 				RefreshSubItemPaths(id);
+			}
+
+			// chequeo si el archivo estaba abierto, lo cierro y vuelvo a abrir el nuevo
+			// EditorCtrl -> SetPath(pathStr);
+
+			// Open file in editor
+			if (!data->m_isDir) {
+				//m_projectService.OpenFile(new_path);
+				//m_projectService.CloseTab(1, true);
+				//wxAuiNotebook tabBar = m_projectService.GetTabBar();
+				m_projectService.UpdateRenamedFile(oldPath, new_path);
+
 			}
 		}
 		else
@@ -1985,7 +2003,7 @@ WXLRESULT ProjectPane::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lPar
 // DirItemData
 //-----------------------------------------------------------------------------
 
-ProjectPane::DirItemData::DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, vector<unsigned int>& fi)
+ProjectPane::DirItemData::DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& fi)
 : m_path(path), m_name(name), m_isDir(isDir), m_isHidden(false), m_isExpanded(false),
   m_imageId(image_id), m_freeImages(fi) {
 }

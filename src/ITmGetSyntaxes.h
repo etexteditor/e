@@ -5,7 +5,7 @@
 
 class ITmGetSyntaxes {
 public:
-	virtual const vector<cxSyntaxInfo*>& GetSyntaxes() const = 0;
+	virtual const std::vector<cxSyntaxInfo*>& GetSyntaxes() const = 0;
 };
 
 #endif // __ITMGETSYNTAXES_H__

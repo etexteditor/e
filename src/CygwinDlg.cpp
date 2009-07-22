@@ -12,6 +12,8 @@
  ******************************************************************************/
 
 #include "CygwinDlg.h"
+#include "shlobj.h"
+
 #include "Execute.h"
 #include "Env.h"
 #include "eDocumentPath.h"
@@ -63,8 +65,10 @@ void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 
 // ---- CygwinInstallThread ------------------------------------------------------------
 
-CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath)
-: m_mode(mode), m_appPath(appPath) {
+CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath):
+	m_mode(mode), 
+	m_appPath(appPath) 
+{
 	Create();
     Run();
 }
@@ -72,12 +76,21 @@ CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, co
 void* CygwinDlg::CygwinInstallThread::Entry() {
 	wxString cygPath = eDocumentPath::GetCygwinDir();
 	if (cygPath.empty()) {
+		// Get the base drive letter from the Windows system path, assuming C:
+		wxString driveLetter = wxT("C");
+		TCHAR szPath[MAX_PATH]; szPath[0]='\0';
+		if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_SYSTEM, NULL, 0, szPath)) && 
+			szPath[0] != '\0') {
+				driveLetter = szPath[0];
+		}
+
+		cygPath = driveLetter + wxT(":\\cygwin");
+
 		// Make sure it get eventual proxy settings from IE
-		wxFileName::Mkdir(wxT("C:\\cygwin\\etc\\setup\\"), 0777, wxPATH_MKDIR_FULL);
-		wxFile file(wxT("C:\\cygwin\\etc\\setup\\last-connection"), wxFile::write);
+		wxFileName::Mkdir(cygPath + wxT("\\etc\\setup\\"), 0777, wxPATH_MKDIR_FULL);
+		wxFile file(cygPath + wxT("\\etc\\setup\\last-connection"), wxFile::write);
 		file.Write(wxT("IE"));
 
-		cygPath = wxT("C:\\cygwin");
 	}
 	const wxString supportPath = m_appPath + wxT("Support\\bin");
 	const wxString packages = wxT("curl,wget,tidy,perl,python,ruby,file,libiconv");

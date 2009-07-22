@@ -34,32 +34,19 @@ BEGIN_EVENT_TABLE(GutterCtrl, wxControl)
 	EVT_MOUSE_CAPTURE_LOST(GutterCtrl::OnCaptureLost)
 END_EVENT_TABLE()
 
-GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id)	: 
+GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id): 
 	wxControl(&parent, id, wxDefaultPosition, wxDefaultSize, wxNO_BORDER|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
 	m_editorCtrl(parent), 
 	m_mdc(), m_bitmap(1,1), m_width(0), m_gutterLeft(true), 
 	m_showBookmarks(true), 
 	m_showFolds(true), m_currentFold(NULL), m_posBeforeFoldClick(-1),
-	m_theme(m_editorCtrl.m_theme), m_bgcolor(m_theme.gutterColor),
+	m_theme(m_editorCtrl.GetTheme()),
 	m_currentSel(-1)
 {
 	m_mdc.SelectObject(m_bitmap);
 	if (!m_mdc.Ok()) wxLogError(wxT("wxMemoryDC() constructor was failed in creating!"));
 
-	// Initialize the memoryDC for double-buffering
-	UpdateTheme();
-
-	// Set the colors
-	//m_bgcolor.Set(192, 192, 255); // Pastel purple
-	//m_hlightcolor.Set(172, 172, 235); // Pastel purple (slightly darker)
-	//m_edgecolor.Set(92, 92, 155); // Pastel purple (darker)
-	//m_numbercolor.Set(52, 52, 115); // Pastel purple (even darker)
-
-	// Get the width of a single digit
-	wxCoord w;
-	wxCoord h;
-	m_mdc.GetTextExtent(wxT('0'), &w, &h);
-	m_digit_width = w;
+	UpdateTheme(true);
 
 // FIXME Do not set max values as CalcLayout would get another idea of width
 #if 0
@@ -75,10 +62,12 @@ GutterCtrl::GutterCtrl(EditorCtrl& parent, wxWindowID id)	:
 	SetCursor(*wxSTANDARD_CURSOR);
 }
 
-void GutterCtrl::UpdateTheme() {
-	if (m_mdc.GetFont() != m_theme.font) {
-		m_mdc.SetFont(m_editorCtrl.GetEditorFont());
+void GutterCtrl::UpdateTheme(bool forceRecalculateDigitWidth) {
+	const bool hasNewFont = m_mdc.GetFont() != m_theme.font;
 
+	if (hasNewFont) m_mdc.SetFont(m_editorCtrl.GetEditorFont());
+
+	if (forceRecalculateDigitWidth || hasNewFont) {
 		// Get the width of a single digit
 		wxCoord w;
 		wxCoord h;
@@ -87,9 +76,9 @@ void GutterCtrl::UpdateTheme() {
 	}
 
 	// Create colors
-	const int red = m_bgcolor.Red();
-	const int blue = m_bgcolor.Blue();
-	const int green = m_bgcolor.Green();
+	const int red = m_theme.gutterColor.Red();
+	const int blue = m_theme.gutterColor.Blue();
+	const int green = m_theme.gutterColor.Green();
 	if (red - 140 < 0) {
 		m_hlightcolor.Set(0xFF & (red+20), 0xFF & (green+20), 0xFF & (blue+20)); // Pastel purple (slightly darker)
 		m_edgecolor.Set(0xFF & (red+100), 0xFF & (green+100), 0xFF & (blue+100)); // Pastel purple (darker)
@@ -100,10 +89,11 @@ void GutterCtrl::UpdateTheme() {
 		m_edgecolor.Set(wxMax(0,red-100), wxMax(0,green-100), wxMax(0,blue-100)); // Pastel purple (darker)
 		m_numbercolor.Set(wxMax(0,red-140), wxMax(0,green-140), wxMax(0,blue-140)); // Pastel purple (even darker)
 	}
-	m_mdc.SetBackground(wxBrush(m_bgcolor));
+	m_mdc.SetBackground(wxBrush(m_theme.gutterColor));
+
+	wxMemoryDC mdc;
 
 	// Draw open fold button
-	wxMemoryDC mdc;
 	m_bmFoldOpen = wxBitmap(9, 9);
 	mdc.SelectObject(m_bmFoldOpen);
 	mdc.Clear();
@@ -125,14 +115,14 @@ void GutterCtrl::UpdateTheme() {
 	// Draw bookmark
 	m_bmBookmark = wxBitmap(10, 10);
 	mdc.SelectObject(m_bmBookmark);
-	mdc.SetBackground(wxBrush(m_bgcolor));
+	mdc.SetBackground(wxBrush(m_theme.gutterColor));
 	mdc.Clear();
 	mdc.SetBrush(m_edgecolor);
 	mdc.DrawCircle(5,5,5);
 }
 
 unsigned GutterCtrl::CalcLayout(unsigned int height) {
-	const Lines& lines = m_editorCtrl.m_lines;
+	const Lines& lines = m_editorCtrl.GetLines();
 
 	// Calculate the number of digits in max linenumber; reserve space for at least 2
 	const int digits = wxMax(_gutter_digits_in_number(lines.GetLineCount()), 2);
@@ -160,7 +150,7 @@ void GutterCtrl::SetGutterRight(bool doMove) {
 }
 
 void GutterCtrl::DrawGutter(wxDC& dc) {
-	Lines& lines = m_editorCtrl.m_lines;
+	const Lines& lines = m_editorCtrl.GetLines();
 
 	const wxSize size = GetClientSize();
 	m_mdc.Clear();
@@ -177,7 +167,7 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 	// Draw the line numbers
 	m_mdc.SetTextForeground(m_numbercolor);
 	wxString number;
-	const int scrollPos = m_editorCtrl.scrollPos;
+	const int scrollPos = m_editorCtrl.GetYScrollPos();
 
 	const unsigned int firstline = lines.GetLineFromYPos(scrollPos);
 	const unsigned int linecount = lines.GetLineCount();
@@ -351,24 +341,22 @@ void GutterCtrl::OnSize(wxSizeEvent& WXUNUSED(event)) {
 	// DrawGutter();
 }
 
-void GutterCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// # no evt.skip() as we don't want the control to erase the background
-}
+// Don't erase the background
+void GutterCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	//wxLogDebug("OnMouseLeftDown");
 	//wxASSERT(m_editorCtrl);
 	wxASSERT(m_currentSel == -1);
-	Lines& lines = m_editorCtrl.m_lines;
+	Lines& lines = m_editorCtrl.GetLines();
 
 	// Get Mouse location
 	const int x = event.GetX();
-	const int y = event.GetY() + m_editorCtrl.scrollPos;
+	const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
 
 	// Handle bookmarks
 	if (m_showBookmarks && x < (int)m_numberX) {
 		// Find out which line was clicked on
-		Lines& lines = m_editorCtrl.m_lines;
 		if ((int)y < lines.GetHeight()) {
 			const unsigned int line_id = lines.GetLineFromYPos(y);
 			m_editorCtrl.AddBookmark(line_id, true /*toggle*/);
@@ -411,6 +399,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 			m_currentSel = lines.AddSelection(startpos, endpos);
 			lines.SetPos(endpos);
+			m_editorCtrl.SetFocus();
 
 			m_sel_startline = m_sel_endline = line_id;
 		}
@@ -424,6 +413,7 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		if (hasSelection) {
 			m_currentSel = lines.AddSelection(sel.start, lines.GetLength());
 			lines.SetPos(lines.GetLength());
+			m_editorCtrl.SetFocus();
 		}
 	}
 
@@ -436,11 +426,12 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 }
 
 void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
-	if (m_showFolds && event.GetX() > (int)m_foldStartX) {
-		const int y = event.GetY() + m_editorCtrl.scrollPos;
-		Lines& lines = m_editorCtrl.m_lines;
+	if (!m_showFolds) return;
+	if (event.GetX() > (int)m_foldStartX) {
+		const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
+		Lines& lines = m_editorCtrl.GetLines();
 
-		if (y >= 0 && y < lines.GetHeight()) {
+		if (0 <= y && y < lines.GetHeight()) {
 			const unsigned int line_id = lines.GetLineFromYPos(y);
 
 			vector<cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
@@ -450,14 +441,13 @@ void GutterCtrl::OnMouseLeftDClick(wxMouseEvent& event) {
 
 				m_editorCtrl.Fold(foldStack.back()->line_id);
 				m_editorCtrl.DrawLayout();
-				return;
 			}
 		}
 	}
 }
 
 void GutterCtrl::ClickOnFold(unsigned int y) {
-	Lines& lines = m_editorCtrl.m_lines;
+	const Lines& lines = m_editorCtrl.GetLines();
 	m_posBeforeFoldClick = -1;
 
 	// Find out which line was clicked on
@@ -490,10 +480,10 @@ void GutterCtrl::ClickOnFold(unsigned int y) {
 }
 
 void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
-	Lines& lines = m_editorCtrl.m_lines;
+	Lines& lines = m_editorCtrl.GetLines();
 
 	// Get Mouse location
-	const int y = event.GetY() + m_editorCtrl.scrollPos;
+	const int y = event.GetY() + m_editorCtrl.GetYScrollPos();
 
 	if (event.LeftIsDown() && HasCapture()) {
 		// Find out what is under mouse
@@ -541,9 +531,8 @@ void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
 			m_editorCtrl.DrawLayout();
 		}
 	}
-	else if (event.GetX() > (int)m_foldStartX && y >= 0 && y < lines.GetHeight()) {
+	else if (event.GetX() > (int)m_foldStartX && 0 <=y && y < lines.GetHeight()) {
 		const unsigned int line_id = lines.GetLineFromYPos(y);
-
 		vector<cxFold*> foldStack = m_editorCtrl.GetFoldStack(line_id);
 		if (!foldStack.empty()) {
 			m_currentFold = foldStack.back();
@@ -566,7 +555,6 @@ void GutterCtrl::OnMouseLeave(wxMouseEvent& WXUNUSED(event)) {
 }
 
 void GutterCtrl::OnMouseLeftUp(wxMouseEvent& WXUNUSED(event)) {
-	//wxLogDebug("OnMouseLeftUp");
 	if (HasCapture()) {
 		// Reset state variables
 		m_currentSel = -1;

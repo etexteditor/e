@@ -12,30 +12,29 @@
  ******************************************************************************/
 
 #include "ProjectSettings.h"
-#include "ProjectInfo.h"
+
 #include <wx/notebook.h>
 #include <wx/tokenzr.h>
 #include <wx/grid.h>
+
+#include "EnvVarsPanel.h"
+#include "ProjectInfo.h"
 #include "Strings.h"
 
 // ctrl ids
 enum {
 	ID_INHERIT,
-	ID_BUTTON_ADD,
-	ID_BUTTON_DEL,
-	ID_ENVLIST
 };
 
 BEGIN_EVENT_TABLE(ProjectSettings, wxDialog)
 	EVT_CHECKBOX(ID_INHERIT, ProjectSettings::OnInheritCheck)
-	EVT_BUTTON(ID_BUTTON_ADD, ProjectSettings::OnButtonAddEnv)
-	EVT_BUTTON(ID_BUTTON_DEL, ProjectSettings::OnButtonDelEnv)
-	EVT_GRID_CMD_CELL_CHANGE(ID_ENVLIST, ProjectSettings::OnGridChange)
 END_EVENT_TABLE()
 
-ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project, const cxProjectInfo& parentProject)
-: wxDialog (parent, wxID_ANY, _("Project Settings"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_projectInfo(project), m_parentProject(parentProject), m_envModified(false)
+ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project, const cxProjectInfo& parentProject): 
+	wxDialog (parent, wxID_ANY, _("Project Settings"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_projectInfo(project), 
+	m_parentProject(parentProject), 
+	m_envModified(false)
 {
 	// Create the notebook
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -75,40 +74,8 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 		}
 
 		if (project.IsRoot()) {
-			// Create the environment variable page
-			wxPanel* envPage = new wxPanel(notebook, wxID_ANY);
-			{
-				m_envList = new wxGrid(envPage, ID_ENVLIST, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS|wxSUNKEN_BORDER);
-				wxButton* addButton = new wxButton(envPage, ID_BUTTON_ADD, wxT("+"), wxDefaultPosition, wxSize(45, -1));
-				wxButton* delButton = new wxButton(envPage, ID_BUTTON_DEL, wxT("-"), wxDefaultPosition, wxSize(45, -1));
-
-				m_envList->CreateGrid(0, 2);
-				m_envList->SetColLabelValue(0, _("Key"));
-				m_envList->SetColLabelValue(1, _("Value"));
-				m_envList->SetMargins(0,0);
-				m_envList->SetRowLabelSize(0);
-				m_envList->SetColLabelSize(19);
-				m_envList->EnableEditing(true);
-				m_envList->EnableGridLines(true);
-				m_envList->EnableDragColSize(true);
-				m_envList->EnableDragRowSize(false);
-				m_envList->EnableDragGridSize(false);
-				m_envList->SetSelectionMode(wxGrid::wxGridSelectRows);
-
-				m_envList->SetColSize(0, 100);
-				m_envList->SetColSize(1, 230);
-
-				// Layout
-				wxBoxSizer* pageSizer = new wxBoxSizer(wxVERTICAL);
-					pageSizer->Add(m_envList, 1, wxEXPAND|wxALL, 5);
-					wxBoxSizer* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-						buttonSizer->Add(addButton, 0, wxRIGHT, 5);
-						buttonSizer->Add(delButton, 0);
-						pageSizer->Add(buttonSizer, 0, wxLEFT|wxRIGHT|wxBOTTOM, 5);
-
-				envPage->SetSizer(pageSizer);
-				notebook->AddPage(envPage, _("Environment"), true);
-			}
+			m_envPage = new EnvVarsPanel(notebook);
+			notebook->AddPage(m_envPage, _("Environment"), true);
 		}
 
 		mainSizer->Add(notebook, 1, wxEXPAND|wxALL, 5);
@@ -139,21 +106,16 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 		const wxString inf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
 		m_includeFiles->SetValue(inf);
 
-		const wxString exd = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		const wxString exd = wxJoin(projectToLoad->excludeDirs, wxT('\n'), NULL);
 		m_excludeDirs->SetValue(exd);
 
-		const wxString exf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		const wxString exf = wxJoin(projectToLoad->excludeFiles, wxT('\n'), NULL);
 		m_excludeFiles->SetValue(exf);
 	}
 
 	// Load env variables
 	if (project.IsRoot()) {
-		for (map<wxString,wxString>::const_iterator p = project.env.begin(); p != project.env.end(); ++p) {
-			const unsigned int rowId = m_envList->GetNumberRows();
-			m_envList->InsertRows(rowId);
-			m_envList->SetCellValue(rowId, 0, p->first);
-			m_envList->SetCellValue(rowId, 1, p->second);
-		}
+		m_envPage->AddVars(project.env);
 	}
 
 	notebook->ChangeSelection(0);
@@ -165,12 +127,13 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 
 bool ProjectSettings::IsModified() const {
 	if (m_inheritCheck->GetValue() == m_projectInfo.HasFilters()) return true;
+
 	if (m_includeDirs->IsModified()) return true;
 	if (m_excludeDirs->IsModified()) return true;
 	if (m_includeFiles->IsModified()) return true;
 	if (m_excludeFiles->IsModified()) return true;
 
-	if (m_projectInfo.IsRoot() && m_envModified) return true;
+	if (m_projectInfo.IsRoot() && m_envPage->VarsChanged()) return true;
 
 	return false;
 }
@@ -188,37 +151,25 @@ void ProjectSettings::GetSettings(cxProjectInfo& project) const {
 
 	if (m_projectInfo.IsRoot()) {
 		project.env.clear();
-
-		for (int i = 0; i < m_envList->GetNumberRows(); ++i) {
-			project.env[m_envList->GetCellValue(i, 0)] = m_envList->GetCellValue(i, 1);
-		}
+		m_envPage->GetVars(project.env);
 	}
 }
 
 void ProjectSettings::OnInheritCheck(wxCommandEvent& event) {
 	if (event.IsChecked()) {
-		m_includeDirs->Clear();
-		m_includeFiles->Clear();
-		m_excludeDirs->Clear();
-		m_excludeFiles->Clear();
 
-		unsigned int i = 0;
-		for (i = 0; i < m_parentProject.includeDirs.GetCount(); ++i) {
-			if (i) m_includeDirs->AppendText(wxT("\n"));
-			m_includeDirs->AppendText(m_parentProject.includeDirs[i]);
-		}
-		for (i = 0; i < m_parentProject.includeFiles.GetCount(); ++i) {
-			if (i) m_includeFiles->AppendText(wxT("\n"));
-			m_includeFiles->AppendText(m_parentProject.includeFiles[i]);
-		}
-		for (i = 0; i < m_parentProject.excludeDirs.GetCount(); ++i) {
-			if (i) m_excludeDirs->AppendText(wxT("\n"));
-			m_excludeDirs->AppendText(m_parentProject.excludeDirs[i]);
-		}
-		for (i = 0; i < m_parentProject.excludeFiles.GetCount(); ++i) {
-			if (i) m_excludeFiles->AppendText(wxT("\n"));
-			m_excludeFiles->AppendText(m_parentProject.excludeFiles[i]);
-		}
+		const wxString ind = wxJoin(m_parentProject.includeDirs, wxT('\n'), NULL);
+		m_includeDirs->SetValue(ind);
+
+		const wxString inf = wxJoin(m_parentProject.includeFiles, wxT('\n'), NULL);
+		m_includeFiles->SetValue(inf);
+
+		const wxString exd = wxJoin(m_parentProject.excludeDirs, wxT('\n'), NULL);
+		m_excludeDirs->SetValue(exd);
+
+		const wxString exf = wxJoin(m_parentProject.excludeFiles, wxT('\n'), NULL);
+		m_excludeFiles->SetValue(exf);
+
 
 		m_includeDirs->Disable();
 		m_excludeDirs->Disable();
@@ -231,26 +182,4 @@ void ProjectSettings::OnInheritCheck(wxCommandEvent& event) {
 		m_includeFiles->Enable();
 		m_excludeFiles->Enable();
 	}
-}
-
-void ProjectSettings::OnButtonAddEnv(wxCommandEvent& WXUNUSED(event)) {
-	const unsigned int gridPos = m_envList->GetNumberRows();
-	m_envList->InsertRows(gridPos);
-	m_envList->SetGridCursor(gridPos, 0);
-	m_envList->MakeCellVisible(gridPos, 0);
-	m_envList->ForceRefresh();
-	m_envList->EnableCellEditControl();
-}
-
-void ProjectSettings::OnButtonDelEnv(wxCommandEvent& WXUNUSED(event)) {
-	const int rowId = m_envList->GetGridCursorRow();
-	if (rowId != -1) {
-		m_envList->DeleteRows(rowId);
-		m_envList->ForceRefresh();
-		m_envModified = true; // del does not send change event?
-	}
-}
-
-void ProjectSettings::OnGridChange(wxGridEvent& WXUNUSED(event)) {
-	m_envModified = true;
 }

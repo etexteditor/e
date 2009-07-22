@@ -14,21 +14,8 @@
 #ifndef __DISPATCHER_H__
 #define __DISPATCHER_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-#endif
 #include <wx/string.h>
-
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-
-using namespace std;
 
 typedef void (*CALL_BACK)(void* clp, const void* data, int filter);
 
@@ -51,7 +38,7 @@ private:
 
 	void (*callback)(void*, void*, int);
 	void *class_p;
-	multimap<wxString, call> subscribers;
+	std::multimap<wxString, call> subscribers;
 
 };
 

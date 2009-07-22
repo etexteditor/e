@@ -11,7 +11,7 @@ public:
 	virtual cxFindResult FindNext(const wxString& text, int options=0) = 0;
 	virtual bool FindPrevious(const wxString& text, int options=0) = 0;
 	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
-	virtual bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
+	virtual int ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0) = 0;
 	virtual void ClearSearchHighlight() = 0;
 	virtual wxEvtHandler* GetEventHandlerI() const = 0;
 };

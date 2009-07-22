@@ -19,9 +19,9 @@ BEGIN_EVENT_TABLE(Timeline, wxControl)
 	EVT_ERASE_BACKGROUND(Timeline::OnEraseBackground)
 END_EVENT_TABLE()
 
-Timeline::Timeline(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
-	: wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE), \
-	  m_mdc(), m_bitmap(1,1), m_scrollPos(0)
+Timeline::Timeline(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size):
+	wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
+	m_mdc(), m_bitmap(1,1), m_scrollPos(0)
 {
 	// Initialize variables
 	m_itemHeight = 18;

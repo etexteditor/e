@@ -14,6 +14,8 @@
 #include "ChangeCheckerThread.h"
 #include <wx/filename.h>
 
+using namespace std;
+
 DEFINE_EVENT_TYPE(wxEVT_FILESCHANGED)
 
 ChangeCheckerThread::ChangeCheckerThread(const vector<ChangePath>& paths, wxEvtHandler& evtHandler, RemoteThread& rt, ChangeCheckerThread*& pointer)

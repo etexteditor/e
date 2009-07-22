@@ -29,12 +29,7 @@ CMiniVersion::CMiniVersion(LPCTSTR lpszPath)
 	ZeroMemory(m_szPath, sizeof(m_szPath));
 
 	if (lpszPath && lpszPath[0] != 0)
-	{
 		lstrcpyn(m_szPath, lpszPath, sizeof(m_szPath)-1);
-	}
-	else
-	{
-	}
 
 	m_pData = NULL;
 	m_dwHandle = 0;

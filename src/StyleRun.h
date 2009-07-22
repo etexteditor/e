@@ -14,24 +14,16 @@
 #ifndef __STYLERUN_H__
 #define __STYLERUN_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
 #include "tmTheme.h"
 #include "FastDC.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
 #include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class StyleRun {
 public:
@@ -98,14 +90,14 @@ private:
 	const tmTheme& m_theme;
 	FastDC& m_dc;
 	StyleSR m_default_style;
-	vector<StyleSR> m_styles;
+	std::vector<StyleSR> m_styles;
 	wxColour m_extendBgColor;
 	bool m_enableBold;
 	bool m_enableItalic;
 	bool m_printMode;
 
 	// Font cache
-	static map<int,wxFont> s_fontCache;
+	static std::map<int,wxFont> s_fontCache;
 };
 
 

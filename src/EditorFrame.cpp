@@ -13,27 +13,33 @@
 
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
+
 #include <wx/regex.h>
 #include <wx/icon.h>
 #include <wx/filename.h>
 #include <wx/artprov.h>
 #include <wx/ffile.h>
+#include <wx/dir.h>
+#include <wx/fontmap.h>
+#include <wx/sysopt.h>
+#include <wx/mstream.h>
+#include <wx/progdlg.h>
+#include <wx/printdlg.h>
+#include <wx/recguard.h>
+#include <wx/clipbrd.h>
+
 #include "eAbout.h"
 #include "eApp.h"
-#include <wx/clipbrd.h>
 #include "SaveDlg.h"
 #include "tm_syntaxhandler.h"
-#include <wx/fontmap.h>
 #include "eDockArt.h"
 #include "CommitDlg.h"
 #include "ReloadDlg.h"
 #include "OpenDocDlg.h"
 #include "ShareDlg.h"
 #include "SettingsDlg.h"
-#include <wx/sysopt.h>
 #include "ProjectPane.h"
 #include "ThemeEditor.h"
-#include <wx/mstream.h>
 #include "BundleManager.h"
 #include "PreviewDlg.h"
 #include "BundleMenu.h"
@@ -41,12 +47,9 @@
 #include "GotoFileDlg.h"
 #include "SymbolList.h"
 #include "ChangeCheckerThread.h"
-#include <wx/progdlg.h>
 #include "RemoteProfileDlg.h"
 #include "RemoteLoginDlg.h"
-#include <wx/printdlg.h>
 #include "EditorPrintout.h"
-#include <wx/recguard.h>
 #include "EditorBundlePanel.h"
 #include "BundlePane.h"
 #include "UndoHistory.h"
@@ -58,25 +61,127 @@
 #include "FindInProjectDlg.h"
 #include "DiffPanel.h"
 #include "CompareDlg.h"
+#include "HtmlOutputPane.h"
+#include "Strings.h"
+#include "CurrentTabsPopup.h"
 
 #ifdef __WXMSW__
-// For multi-monitor-aware position restore on Windows.
-#include "Winuser.h"
-#endif
-
-#if defined (__WXMSW__)
+	// For multi-monitor-aware position restore on Windows, include WinUser.h
+	#include "Winuser.h"
     #include <wx/msw/registry.h>
-    #include "IEHtmlWin.h"
-#elif defined (__WXGTK__)
-    #ifdef FEAT_BROWSER
-        #include "WebKitHtmlWnd.h"
-    #endif
 #endif
 
 // ctrl id's
 enum {
 	CTRL_TABBAR=100
 };
+
+// Menu id's
+enum {
+	MENU_DIFF,
+	MENU_OPENPROJECT,
+	MENU_OPENREMOTE,
+	MENU_CLOSEPROJECT,
+	MENU_SAVEALL,
+	MENU_SAVEFORMAT,
+	MENU_LINEEND,
+	MENU_ENCODING,
+	MENU_BOM,
+	MENU_IMPORT,
+	MENU_CLOSE,
+	MENU_REVSEL,
+	MENU_FIND_AND_REPLACE,
+	MENU_FIND_IN_PROJECT,
+	MENU_FIND_IN_SEL,
+	MENU_FIND_NEXT,
+	MENU_FIND_PREVIOUS,
+	MENU_FIND_CURRENT,
+	MENU_SELECT,
+	MENU_SELECTWORD,
+	MENU_SELECTLINE,
+	MENU_SELECTSCOPE,
+	MENU_SELECTFOLD,
+	MENU_SYNTAX,
+	MENU_EDIT_THEME,
+	MENU_SETTINGS,
+	MENU_UNDOHIS,
+	MENU_REVHIS,
+	MENU_COMMANDOUTPUT,
+	MENU_LINENUM,
+	MENU_INDENTGUIDE,
+	MENU_WORDWRAP,
+	MENU_WRAP_NONE,
+	MENU_WRAP_NORMAL,
+	MENU_WRAP_SMART,
+	MENU_HL_USERS,
+	MENU_INCOMMING,
+	MENU_INCOMMING_TOOLBAR,
+	MENU_SHOWPROJECT,
+	MENU_SHOWSYMBOLS,
+	MENU_SYMBOLS,
+	MENU_SHIFT_PROJECT_FOCUS,
+	MENU_PREVIEW,
+	MENU_STATUSBAR,
+
+	MENU_NEXTTAB,
+	MENU_LASTTAB,
+	MENU_PREVTAB,
+
+	MENU_OPEN_EXT,
+	MENU_TABS,
+	MENU_TABS_SHOWDROPDOWN,
+	MENU_GOTOBRACKET,
+	MENU_GOTOLINE,
+	MENU_GOTOFILE,
+	MENU_FOLDTOGGLE,
+	MENU_FOLDALL,
+	MENU_FOLDOTHERS,
+	MENU_UNFOLDALL,
+	MENU_BUY,
+	MENU_REGISTER,
+	MENU_WEBSITE,
+	MENU_ABOUT,
+	MENU_EOL_DOS,
+	MENU_EOL_UNIX,
+	MENU_EOL_MAC,
+	MENU_EOL_NATIVE,
+	MENU_DOC_OPEN,
+	MENU_DOC_SHARE,
+	MENU_COMMIT,
+	MENU_REVTOOLTIP,
+	MENU_FINDCMD,
+	MENU_FILTER,
+	MENU_RUN,
+	MENU_HELP_FORUM,
+	MENU_RECENT_FILES,
+	MENU_RECENT_PROJECTS,
+	MENU_TEXTCONV,
+	MENU_UPPERCASE,
+	MENU_LOWERCASE,
+	MENU_TITLECASE,
+	MENU_REVERSECASE,
+	MENU_COMPLETE,
+	MENU_INDENTLEFT,
+	MENU_INDENTRIGHT,
+	MENU_TABSTOSPACES,
+	MENU_SPACESTOTABS,
+	MENU_BUNDLE_FUNCTIONS,
+	MENU_RELOAD_BUNDLES,
+	MENU_DEBUG_BUNDLES,
+	MENU_EDIT_BUNDLES,
+	MENU_MANAGE_BUNDLES,
+	MENU_TABS_NEW,
+	MENU_TABS_CLOSE,
+	MENU_TABS_CLOSE_OTHER,
+	MENU_TABS_CLOSE_ALL,
+	MENU_TABS_COPY_PATH,
+	MENU_KEYDIAG,
+	MENU_BOOKMARK_NEXT,
+	MENU_BOOKMARK_PREVIOUS,
+	MENU_BOOKMARK_TOGGLE,
+	MENU_BOOKMARK_CLEAR
+};
+
 
 wxString EditorFrame::DefaultFileFilters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
 						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
@@ -94,6 +199,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_DIFF, EditorFrame::OnMenuCompareFiles)
 	EVT_MENU(MENU_OPENPROJECT, EditorFrame::OnMenuOpenProject)
 	EVT_MENU(MENU_OPENREMOTE, EditorFrame::OnMenuOpenRemote)
+	EVT_MENU(MENU_CLOSEPROJECT, EditorFrame::OnMenuCloseProject)
 	EVT_MENU(wxID_SAVE, EditorFrame::OnMenuSave)
 	EVT_MENU(wxID_SAVEAS, EditorFrame::OnMenuSaveAs)
 	EVT_MENU(MENU_SAVEALL, EditorFrame::OnMenuSaveAll)
@@ -133,10 +239,11 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_REVSEL, EditorFrame::OnMenuRevSel)
 	EVT_MENU(MENU_FILTER, EditorFrame::OnMenuFilter)
 	EVT_MENU(MENU_RUN, EditorFrame::OnMenuRunCurrent)
+
 	EVT_MENU(MENU_NEXTTAB, EditorFrame::OnMenuNextTab)
-	EVT_MENU(MENU_NEXTTAB_OR_LAST, EditorFrame::OnMenuNextTabOrLast)
 	EVT_MENU(MENU_PREVTAB, EditorFrame::OnMenuPrevTab)
-	EVT_MENU(MENU_LASTTAB, EditorFrame::OnMenuGotoLastTab)
+	EVT_MENU(MENU_LASTTAB, EditorFrame::OnMenuLastTab)
+
 	EVT_MENU(MENU_OPEN_EXT, EditorFrame::OnMenuOpenExt)
 	EVT_MENU(MENU_GOTOFILE, EditorFrame::OnMenuGotoFile)
 	EVT_MENU(MENU_GOTOLINE, EditorFrame::OnMenuGotoLine)
@@ -154,6 +261,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_SHIFT_PROJECT_FOCUS, EditorFrame::OnShiftProjectFocus)
 	EVT_MENU(MENU_REVHIS, EditorFrame::OnMenuRevisionHistory)
 	EVT_MENU(MENU_UNDOHIS, EditorFrame::OnMenuUndoHistory)
+	EVT_MENU(MENU_COMMANDOUTPUT, EditorFrame::OnMenuShowCommandOutput)
 	EVT_MENU(MENU_SHOWSYMBOLS, EditorFrame::OnMenuShowSymbols)
 	EVT_MENU(MENU_SYMBOLS, EditorFrame::OnMenuSymbols)
 	EVT_MENU(MENU_LINENUM, EditorFrame::OnMenuLineNumbers)
@@ -302,7 +410,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		//incommingPane->MakeLastItemVisible();
 		//m_frameManager.AddPane(incommingPane, wxAuiPaneInfo().Name(wxT("Incoming")).Hide().Top().Caption(_("Incoming")).BestSize(wxSize(150,100)));
 
-		m_outputPane = new HtmlOutputWin(*this);
+		m_outputPane = new HtmlOutputPane(this, *this);
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
 
 		// Project dock
@@ -425,15 +533,13 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
-	const unsigned int accelcount = 7;
+	const unsigned int accelcount = 5;
 	wxAcceleratorEntry entries[accelcount];
 	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
-	entries[1].Set(wxACCEL_CTRL, (int)'9', MENU_LASTTAB);
-	entries[2].Set(wxACCEL_CTRL, (int)'0', MENU_TABS_SHOWDROPDOWN);
-	entries[3].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
-	entries[4].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
-	entries[5].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
-	entries[6].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
+	entries[1].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
+	entries[2].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
+	entries[3].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
+	entries[4].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
 	wxAcceleratorTable accel(accelcount, entries);
 	SetAcceleratorTable(accel);
 }
@@ -468,23 +574,24 @@ void EditorFrame::InitMenus() {
 	fileMenu->Append(MENU_COMMIT, _("&Make Milestone...\tCtrl+M"), _("Make Milestone of current revision"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(MENU_OPENPROJECT, _("Open &Dir as Project..."), _("Open Dir as Project"));
-	fileMenu->Append(MENU_OPENREMOTE, _("Open &Remote Folder..."), _("Open Remote Folder"));
+	fileMenu->Append(MENU_OPENREMOTE, _("Open Remote Folder (&FTP)..."), _("Open Remote Folder"));
+	fileMenu->Append(MENU_CLOSEPROJECT, _("Close Pro&ject"), _("Close Project"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(MENU_SAVEFORMAT, _("Sa&ve format"), formatMenu, _("Save format"));
 	fileMenu->Append(MENU_IMPORT, _("&Import"), importMenu, _("Import"));
 	fileMenu->AppendSeparator();
 	m_recentFilesMenu = new wxMenu;
-	fileMenu->Append(MENU_RECENT_FILES, _("Recent &Files"), m_recentFilesMenu, _("Open recent Files"));
+	fileMenu->Append(MENU_RECENT_FILES, _("&Recent Files"), m_recentFilesMenu, _("Open recent Files"));
 	m_recentProjectsMenu = new wxMenu;
-	fileMenu->Append(MENU_RECENT_PROJECTS, _("Recent Pro&jects"), m_recentProjectsMenu, _("Open recent Projects"));
+	fileMenu->Append(MENU_RECENT_PROJECTS, _("&Recent Projects"), m_recentProjectsMenu, _("Open recent Projects"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_PAGE_SETUP, _("Page Set&up..."), _("Page setup"));
 	//fileMenu->Append(wxID_PREVIEW, _("Print Pre&view"), _("Preview"));
 	fileMenu->Append(wxID_PRINT, _("&Print..."), _("Print"));
 	fileMenu->AppendSeparator();
-	fileMenu->Append(MENU_CLOSE, _("&Close File\tCtrl+W"), _("Close File"));
+	fileMenu->Append(MENU_CLOSE, _("&Close Tab\tCtrl+W"), _("Close Tab"));
 	fileMenu->Append(MENU_TABS_CLOSE_ALL, _("Close all &Tabs"), _("Close all Tabs"));
-	fileMenu->Append(MENU_TABS_CLOSE_OTHER, _("Clos&e other Tabs"), _("Close other Tabs"));
+	fileMenu->Append(MENU_TABS_CLOSE_OTHER, _("Clos&e other Tabs\tCtrl+Alt+W"), _("Close other Tabs"));
 	fileMenu->Append(wxID_EXIT, _("E&xit"), _("Exit"));
 	menuBar->Append(fileMenu, _("&File"));
 
@@ -503,22 +610,27 @@ void EditorFrame::InitMenus() {
 	editMenu->Append(wxID_COPY, _("&Copy\tCtrl+C"), _("Copy"));
 	editMenu->Append(wxID_PASTE, _("&Paste\tCtrl+V"), _("Paste"));
 	editMenu->AppendSeparator();
-	editMenu->Append(wxID_FIND, _("&Find\tCtrl+F"), _("Find"));
-	editMenu->Append(MENU_FIND_IN_SEL, _("Find &in Selection\tCtrl+Shift+F"), _("Find in Selection"));
-	editMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project\tCtrl-Alt-F"), _("Find in Project"));
-	editMenu->Append(wxID_REPLACE, _("&Replace\tCtrl+R"), _("Replace"));
-	editMenu->AppendSeparator();
+
 	wxMenu* selectMenu = new wxMenu;
+		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		selectMenu->Append(MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
 		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
-		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+
+	editMenu->AppendSeparator();
+	wxMenu* findMenu = new wxMenu;
+		findMenu->Append(wxID_FIND, _("&Find\tCtrl+F"), _("Find"));
+		findMenu->Append(MENU_FIND_IN_SEL, _("Find &in Selection\tCtrl+Shift+F"), _("Find in Selection"));
+		findMenu->Append(MENU_FIND_IN_PROJECT, _("Find in &Project\tCtrl-Alt-F"), _("Find in Project"));
+		findMenu->Append(wxID_REPLACE, _("&Replace\tCtrl+R"), _("Replace"));
+		editMenu->Append(MENU_FIND_AND_REPLACE,  _("&Find and Replace"), findMenu, _("Find and Replace"));
+
 	editMenu->AppendSeparator();
 	editMenu->Append(MENU_SYNTAX, _("S&yntax"), m_syntaxMenu, _("Syntax"));
-	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->AppendSeparator();
+	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
 	menuBar->Append(editMenu, _("&Edit"));
 
@@ -527,11 +639,15 @@ void EditorFrame::InitMenus() {
 	viewMenu->Append(MENU_SHOWPROJECT, _("&Project Pane\tCtrl-P"), _("Show Project Pane"), wxITEM_CHECK);
 	//viewMenu->Append(MENU_INCOMMING, _("&Incoming\tF2"), _("Show Incomming Documents"), wxITEM_CHECK);
 	//viewMenu->Check(MENU_INCOMMING, true);
-	viewMenu->Append(MENU_SHOWSYMBOLS, _("&Symbol List\tF5"), _("Show Symbol List"), wxITEM_CHECK);
+	viewMenu->Append(MENU_SHOWSYMBOLS, _("&Symbol List\tCtrl+Alt+L"), _("Show Symbol List"), wxITEM_CHECK);
 	viewMenu->Append(MENU_REVHIS, _("&Revision History\tF6"), _("Show Revision History"), wxITEM_CHECK);
 	viewMenu->Check(MENU_REVHIS, true);
 	viewMenu->Append(MENU_UNDOHIS, _("&Undo History\tF7"), _("Show Undo History"), wxITEM_CHECK);
 	viewMenu->Check(MENU_UNDOHIS, true);
+	viewMenu->Append(MENU_COMMANDOUTPUT, _("&Command Output\tF12"), _("Show Command Output"), wxITEM_CHECK);
+	viewMenu->Check(MENU_COMMANDOUTPUT, false);
+	viewMenu->Append(MENU_PREVIEW, _("Web Pre&view\tCtrl+Alt+P"), _("Show Web Preview"), wxITEM_CHECK);
+	viewMenu->AppendSeparator();
 	viewMenu->Append(MENU_LINENUM, _("&Line Numbers"), _("Show Line Numbers"), wxITEM_CHECK);
 	viewMenu->Check(MENU_LINENUM, m_showGutter);
 	viewMenu->Append(MENU_INDENTGUIDE, _("&Indent Guides"), _("Show Indent Guides"), wxITEM_CHECK);
@@ -548,14 +664,12 @@ void EditorFrame::InitMenus() {
 	viewMenu->AppendSeparator();
 	//viewMenu->Append(MENU_HL_USERS, _("&Highlight Authors"), _("Highlight authors"), wxITEM_CHECK);
 	//viewMenu->AppendSeparator();
-	viewMenu->Append(MENU_STATUSBAR, _("Show &Statusbar"), _("Show Statusbar"), wxITEM_CHECK);
+	viewMenu->Append(MENU_STATUSBAR, _("Show Status&bar"), _("Show Statusbar"), wxITEM_CHECK);
 	viewMenu->AppendSeparator();
 	viewMenu->Append(MENU_FOLDTOGGLE, _("&Toggle Fold\tF1"), _("Toggle Fold"));
 	viewMenu->Append(MENU_FOLDALL, _("Fold &All\tCtrl-F1"), _("Fold All"));
 	viewMenu->Append(MENU_FOLDOTHERS, _("Fold &Others\tAlt-F1"), _("Fold Others"));
 	viewMenu->Append(MENU_UNFOLDALL, _("&Unfold All\tCtrl-Alt-F1"), _("Unfold &All"));
-	viewMenu->AppendSeparator();
-	viewMenu->Append(MENU_PREVIEW, _("Web &Preview\tCtrl+Alt+P"), _("Show Web Preview"), wxITEM_CHECK);
 	menuBar->Append(viewMenu, _("&View"));
 
 	// Text menu
@@ -577,7 +691,7 @@ void EditorFrame::InitMenus() {
 	textMenu->AppendSeparator();
 	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tEscape"), _("Complete Word"));
 	textMenu->AppendSeparator();
-	textMenu->Append(MENU_FILTER, _("&Filter Through Command..."), _("Filter Through Command..."));
+	textMenu->Append(MENU_FILTER, _("&Filter Through Command...\tCtrl-H"), _("Filter Through Command..."));
 	textMenu->Append(MENU_RUN, _("&Run current line/selection\tCtrl-Alt-R"), _("Run current line/selection"));
 	menuBar->Append(textMenu, _("&Text"));
 
@@ -588,17 +702,19 @@ void EditorFrame::InitMenus() {
 	navMenu->Append(MENU_BOOKMARK_PREVIOUS, _("&Previous Bookmark\tShift-F2"), _("Go to Previous Bookmark"));
 	navMenu->Append(MENU_BOOKMARK_CLEAR, _("&Remove All Bookmarks\tCtrl-Shift-F2"), _("Remove All Bookmarks"));
 	navMenu->AppendSeparator();
-	navMenu->Append(MENU_NEXTTAB_OR_LAST, _("&Last used File Tab or Next\tCtrl-Tab"), _("Go to Next Tab"));
-	navMenu->Append(MENU_PREVTAB, _("Pre&vious File Tab\tCtrl-Shift-Tab"), _("Go to Previous Tab"));
+	navMenu->Append(MENU_NEXTTAB, _("N&ext Tab\tCtrl-Tab"), _("Next Tab"));
+	navMenu->Append(MENU_PREVTAB, _("Pre&vious Tab\tCtrl-Shift-Tab"), _("Previous Tab"));
+	navMenu->Append(MENU_TABS_SHOWDROPDOWN, _("Go to &Tab...\tCtrl-0"), _("Go to Tab..."));
+	navMenu->Append(MENU_LASTTAB, _("L&ast used Tab\tCtrl-Alt-0"), _("Last used Tab"));
+	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
+	navMenu->Append(MENU_TABS, _("Ta&bs"), m_tabMenu, _("Tabs"));
+	navMenu->AppendSeparator();
 	navMenu->Append(MENU_OPEN_EXT, _("Go to &Header/Source\tCtrl-Alt-Up"), _(""));
 	navMenu->Append(MENU_GOTOFILE, _("Go to &File...\tCtrl-Shift-T"), _("Go to File..."));
 	navMenu->Append(MENU_SYMBOLS, _("Go to &Symbol...\tCtrl-L"), _("Show Symbol List"));
-	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
-	navMenu->Append(MENU_TABS, _("Go to &Tab..."), m_tabMenu, _("Go to Tab..."));
-	navMenu->AppendSeparator();
 	navMenu->Append(MENU_GOTOBRACKET, _("Go to &Matching Bracket\tCtrl-B"), _("Go to Matching Bracket"));
-	navMenu->Append(MENU_GOTOLINE, _("Go to &Line\tCtrl-G"), _("Go to Line"));
-	menuBar->Append(navMenu, _("N&avigation"));
+	navMenu->Append(MENU_GOTOLINE, _("Go to &Line...\tCtrl-G"), _("Go to Line..."));
+	menuBar->Append(navMenu, _("&Navigation"));
 
 	// Document menu
 	/*wxMenu *docMenu = new wxMenu;
@@ -615,17 +731,17 @@ void EditorFrame::InitMenus() {
 
 	// Help menu
 	wxMenu *helpMenu = new wxMenu;
-	helpMenu->Append(wxID_HELP_CONTENTS, _("&Help Contents"), _("Help Contents"));
-	helpMenu->Append(MENU_HELP_FORUM, _("&Go to Support Forum"), _("Go to Support Forum"));
-	helpMenu->AppendSeparator();
 	if (!((eApp*)wxTheApp)->IsRegistered()) {
 		// These are deleted again in RemoveRegMenus()
 		// BEWARE of changing their IDs and positions!
 		helpMenu->Append(MENU_BUY, _("&Buy"), _("Buy"));
-		helpMenu->Append(MENU_REGISTER, _("&Enter Reg.Code"), _("Enter Reg.Code"));
+		helpMenu->Append(MENU_REGISTER, _("&Enter Registration Code"), _("Enter Registration Code"));
 		helpMenu->AppendSeparator();
 	}
-	helpMenu->Append(MENU_WEBSITE, _("&Goto Website"), _("Goto Website"));
+	helpMenu->Append(wxID_HELP_CONTENTS, _("&Help Contents"), _("Help Contents"));
+	helpMenu->Append(MENU_HELP_FORUM, _("&Go to Support &Forum"), _("Go to Support Forum"));
+	helpMenu->Append(MENU_WEBSITE, _("Go to &Website"), _("Goto Website"));
+	helpMenu->AppendSeparator();
 	helpMenu->Append(wxID_ABOUT, _("&About e"), _("About"));
 	menuBar->Append(helpMenu, _("&Help"));
 	//helpMenu->AppendSeparator();
@@ -751,9 +867,9 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"), wxITEM_CHECK);
 	funcMenu->Append(MENU_MANAGE_BUNDLES, _("&Manage Bundles"), _("Show Bundle Manager"));
 	funcMenu->AppendSeparator();
-	funcMenu->Append(MENU_DEBUG_BUNDLES, _("Enable Debug Mode"), _("Enable Debug Mode"), wxITEM_CHECK);
+	funcMenu->Append(MENU_DEBUG_BUNDLES, _("Enable &Debug Mode"), _("Enable Debug Mode"), wxITEM_CHECK);
 	funcMenu->Check(MENU_DEBUG_BUNDLES, enableDebug);
-	funcMenu->Append(MENU_RELOAD_BUNDLES, _("Reload Bundles"), _("Reload Bundles"));
+	funcMenu->Append(MENU_RELOAD_BUNDLES, _("&Reload Bundles"), _("Reload Bundles"));
 
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_BUNDLE_FUNCTIONS, _("&Edit Bundles"), funcMenu,  _("Edit Bundles"));
@@ -963,7 +1079,7 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	for (unsigned int i = 0; i < count; ++i) {
 		const wxString& path = paths[i];
 
-		// Find doc with corrent path
+		// Find doc with current path
 		const unsigned int pageCount = m_tabBar->GetPageCount();
 		for (unsigned int p = 0; p < pageCount; ++p) {
 			const EditorCtrl* page = GetEditorCtrlFromPage(p);
@@ -1357,6 +1473,12 @@ bool EditorFrame::HasProject() const {
 	return m_projectPane->HasProject();
 }
 
+bool EditorFrame::CloseProject() {
+	m_projectPane->Clear();
+	m_settings.RemoveSetting(wxT("project"));
+	return true;
+}
+
 bool EditorFrame::IsProjectRemote() const {
 	return m_projectPane->IsRemote();
 }
@@ -1636,6 +1758,41 @@ bool EditorFrame::OpenFile(const wxFileName& path, wxFontEncoding enc, const wxS
 	return DoOpenFile(filepath, enc, NULL, mate);
 }
 
+void EditorFrame::UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath) {
+	// Check if there is a mirror that matches the file
+	const wxString filepath = path.GetFullPath();
+
+	doc_id di;
+	wxDateTime modifiedDate;
+	bool isMirror;
+	cxLOCK_READ(m_catalyst)
+		isMirror = catalyst.GetFileMirror(filepath, di, modifiedDate);
+	cxENDLOCK
+
+	if(!isMirror) return;
+
+	unsigned int i;
+	EditorCtrl* existingControl = this->GetEditorCtrlFromFile(filepath, i);
+	if (!existingControl) return;
+
+	cxLOCK_WRITE(m_catalyst)
+		catalyst.SetFileMirror(newPath.GetFullPath(), di, modifiedDate);
+	cxENDLOCK
+
+	cxLOCKDOC_WRITE(existingControl->GetDocument())
+		doc.SetPropertyName(wxFileName(newPath.GetLongPath()).GetFullName());
+	cxENDLOCK
+
+	m_tabBar->SetSelection(i);
+	existingControl->SetPath(newPath.GetFullPath());
+	UpdateWindowTitle();
+	existingControl->ReDraw();
+
+	// Bring frame to front
+	BringToFront();
+	existingControl->SetFocus();
+}
+
 bool EditorFrame::OpenRemoteFile(const wxString& url, const RemoteProfile* rp) {
 	return DoOpenFile(url, wxFONTENCODING_SYSTEM, rp);
 }
@@ -1712,7 +1869,25 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	return true;
 }
 
-bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
+EditorCtrl* EditorFrame::GetEditorCtrlFromFile(const wxString& filepath, unsigned int& page_idx) {
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* editorCtrl = GetEditorCtrlFromPage(i);
+
+		// paths on windows are case-insensitive
+#ifdef __WXMSW__
+		if (filepath.CmpNoCase(editorCtrl->GetPath()) == 0) { 
+#else
+		if (filepath == editorCtrl->GetPath()) {
+#endif
+			page_idx = i;
+			return editorCtrl;
+		}
+	}
+
+	return NULL;
+}
+
+bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
 	wxBusyCursor busy;
 
 	bool isCurrent = false;
@@ -1724,7 +1899,7 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 		wxFAIL_MSG(wxT("No editorCtrl in OpenFile"));
 		AddTab();
 	}
-	EditorCtrl* ec = editorCtrl;
+	EditorCtrl* ec = this->editorCtrl;
 
 	// Check if there is a mirror that matches the file
 	doc_id di;
@@ -1735,20 +1910,12 @@ bool EditorFrame::DoOpenFile(wxString filepath, wxFontEncoding enc, const Remote
 	cxENDLOCK
 
 	if(isMirror) {
-		// Check if the file is already open
-		for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-			EditorCtrl* page = GetEditorCtrlFromPage(i);
-
-#ifdef __WXMSW__
-			if (filepath.CmpNoCase(page->GetPath()) == 0) { // paths on windows are case-insensitive
-#else
-			if (filepath == page->GetPath()) {
-#endif
-				m_tabBar->SetSelection(i);
-				ec = editorCtrl;
-				isCurrent = true;
-				break;
-			}
+		unsigned int i;
+		EditorCtrl* existingControl = this->GetEditorCtrlFromFile(filepath, i);
+		if (existingControl) {
+			m_tabBar->SetSelection(i);
+			ec = existingControl;
+			isCurrent = true;
 		}
 	}
 
@@ -2138,8 +2305,8 @@ void EditorFrame::OnNotebookContextMenu(wxAuiNotebookEvent& event) {
 	wxMenu tabPopupMenu;
 	tabPopupMenu.Append(MENU_TABS_NEW, _("&New Tab"), _("New Tab"));
 	tabPopupMenu.AppendSeparator();
-	tabPopupMenu.Append(MENU_TABS_CLOSE, _("&Close Tab"), _("Close Tab"));
-	tabPopupMenu.Append(MENU_TABS_CLOSE_OTHER, _("Close &other Tabs"), _("Close other Tabs"));
+	tabPopupMenu.Append(MENU_TABS_CLOSE, _("&Close Tab\tCtrl-W"), _("Close Tab"));
+	tabPopupMenu.Append(MENU_TABS_CLOSE_OTHER, _("Close &other Tabs\tCtrl-Alt-W"), _("Close other Tabs"));
 	tabPopupMenu.Append(MENU_TABS_CLOSE_ALL, _("Close &all Tabs"), _("Close all Tabs"));
 	tabPopupMenu.AppendSeparator();
 	tabPopupMenu.Append(MENU_TABS_COPY_PATH, _("Copy &Path to Clipboard"), _("Copy Path to Clipboard"));
@@ -2242,7 +2409,7 @@ void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
-	RemoteProfileDlg dlg(this);
+	RemoteProfileDlg dlg(this, this->m_settings);
 	if (dlg.ShowModal() != wxID_OPEN) return;
 
 	const int profile_id = dlg.GetCurrentProfile();
@@ -2251,6 +2418,10 @@ void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
 	// Get the profile from db
 	const RemoteProfile* rp = m_settings.GetRemoteProfile(profile_id);
 	if (rp) OpenRemoteProject(rp);
+}
+
+void EditorFrame::OnMenuCloseProject(wxCommandEvent& WXUNUSED(event)) {
+	CloseProject();
 }
 
 void EditorFrame::OnMenuOpenRecentFile(wxCommandEvent& event) {
@@ -2505,7 +2676,7 @@ void EditorFrame::OnMenuSpacesToTabs(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuSettings(wxCommandEvent& WXUNUSED(event)) {
-	SettingsDlg dlg(this, m_catalyst);
+	SettingsDlg dlg(this, m_catalyst, m_settings);
 	dlg.ShowModal();
 }
 
@@ -2515,28 +2686,6 @@ void EditorFrame::OnMenuFilter(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuRunCurrent(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->RunCurrentSelectionAsCommand(false);
-}
-
-void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
-#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
-	const unsigned int tabCount = m_tabBar->GetPageCount();
-	if (tabCount <= 1) return;
-
-	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
-	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
-#endif
-}
-
-void EditorFrame::OnMenuNextTabOrLast(wxCommandEvent& event) {
-	// If this is the first time pressed, we go to the last used tab
-	if (!m_ctrlHeldDown && m_lastActiveTab != -1 && m_lastActiveTab != m_tabBar->GetSelection() && m_lastActiveTab < (int)m_tabBar->GetPageCount()) {
-		wxLogDebug(wxT("Going to last active page: %d"), m_lastActiveTab);
-		m_tabBar->SetSelection(m_lastActiveTab);
-	}
-	else OnMenuNextTab(event);
-
-	// Track ctrl key state
-	m_ctrlHeldDown = true;
 }
 
 bool EditorFrame::OnPreKeyUp(wxKeyEvent& event) {
@@ -2559,6 +2708,24 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 	}
 
 	event.Skip();
+}
+
+void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
+#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
+	const unsigned int tabCount = m_tabBar->GetPageCount();
+	if (tabCount <= 1) return;
+
+	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
+	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
+#endif
+}
+
+void EditorFrame::OnMenuLastTab(wxCommandEvent& WXUNUSED(event)) {
+	// If this is the first time pressed, we go to the last used tab
+	if (m_lastActiveTab != -1 && m_lastActiveTab != m_tabBar->GetSelection() && m_lastActiveTab < (int)m_tabBar->GetPageCount()) {
+		wxLogDebug(wxT("Going to last active page: %d"), m_lastActiveTab);
+		m_tabBar->SetSelection(m_lastActiveTab);
+	}
 }
 
 void EditorFrame::OnMenuPrevTab(wxCommandEvent& WXUNUSED(event)) {
@@ -2587,7 +2754,44 @@ void EditorFrame::OnMenuGotoLastTab(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
-	m_tabBar->ShowWindowMenu();
+	vector<OpenTabInfo*> tabInfo;
+
+	wxString rootPath = wxT("");
+	if (this->HasProject()) {
+		rootPath = this->GetRootPath().GetPath();
+	}
+
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		EditorCtrl* page = GetEditorCtrlFromPage(i);
+
+		wxFileName tabPath = page->GetFilePath();
+
+		wxString relativePath = wxT("");
+
+		if (this->HasProject()) {
+			// Get relative path
+			tabPath.MakeRelativeTo(rootPath);
+
+			relativePath += wxT(".");
+			relativePath += wxFileName::GetPathSeparator();
+		}
+
+		relativePath += tabPath.GetPath();
+
+		tabInfo.push_back(new OpenTabInfo(page->GetName(), relativePath));
+	}
+
+	CurrentTabsPopup dialog(this, tabInfo);
+	if (dialog.ShowModal() == wxID_OK) {
+		int newTabIndex = dialog.GetSelectedTabIndex();
+		if (newTabIndex != -1 && newTabIndex != m_tabBar->GetSelection()) {
+			m_tabBar->SetSelection(newTabIndex);
+		}
+	}
+
+	for (vector<OpenTabInfo*>::iterator p = tabInfo.begin(); p != tabInfo.end(); ++p) {
+		delete *p;
+	}
 }
 
 void EditorFrame::UpdateTabMenu() {
@@ -2636,16 +2840,24 @@ void EditorFrame::UpdateRecentFiles() {
 	while (m_recentFilesMenu->GetMenuItemCount()) {
 		m_recentFilesMenu->Delete(m_recentFilesMenu->FindItemByPosition(0));
 	}
-	for (unsigned int i = 0; i < m_recentFiles.GetCount(); ++i) {
-		m_recentFilesMenu->Append(4000 + i, m_recentFiles[i]);
+	for (unsigned int i = 0; i < m_recentFiles.GetCount(); i++) {
+		wxString filename = m_recentFiles[i];
+		if (i < 9) {
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+		}
+		m_recentFilesMenu->Append(4000 + i, filename);
 	}
 
 	// Update RecentProjects
 	while (m_recentProjectsMenu->GetMenuItemCount()) {
 		m_recentProjectsMenu->Delete(m_recentProjectsMenu->FindItemByPosition(0));
 	}
-	for (unsigned int i2 = 0; i2 < m_recentProjects.GetCount(); ++i2) {
-		m_recentProjectsMenu->Append(4100 + i2, m_recentProjects[i2]);
+	for (unsigned int i = 0; i < m_recentProjects.GetCount(); i++) {
+		wxString filename = m_recentProjects[i];
+		if (i < 9) {
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+		}
+		m_recentProjectsMenu->Append(4100 + i, filename);
 	}
 
 	Thaw();
@@ -2807,18 +3019,22 @@ void EditorFrame::OnMenuIncommingTool(wxCommandEvent& WXUNUSED(event)) {
 	}
 }*/
 
-void EditorFrame::OnMenuRevisionHistory(wxCommandEvent& event) {
-	wxAuiPaneInfo& revHistoryPane = m_frameManager.GetPane(documentHistory);
-	if (event.IsChecked()) revHistoryPane.Show();
-	else revHistoryPane.Hide();
+void EditorFrame::TogglePane(wxWindow* targetPane, bool showPane) {
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(targetPane);
+	pane.Show(showPane);
 	m_frameManager.Update();
 }
 
+void EditorFrame::OnMenuRevisionHistory(wxCommandEvent& event) {
+	TogglePane(documentHistory, event.IsChecked());
+}
+
 void EditorFrame::OnMenuUndoHistory(wxCommandEvent& event) {
-	wxAuiPaneInfo& undoHistoryPane = m_frameManager.GetPane(undoHistory);
-	if (event.IsChecked()) undoHistoryPane.Show();
-	else undoHistoryPane.Hide();
-	m_frameManager.Update();
+	TogglePane(undoHistory, event.IsChecked());
+}
+
+void EditorFrame::OnMenuShowCommandOutput(wxCommandEvent& event) {
+	TogglePane(m_outputPane, event.IsChecked());
 }
 
 void EditorFrame::OnMenuLineNumbers(wxCommandEvent& event) {
@@ -2906,11 +3122,12 @@ void EditorFrame::OnMenuPreview(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuShowSymbols(wxCommandEvent& event) {
-	// The project pane uses the same shortcut (F5) for refresh
-	if (m_projectPane->IsFocused()) {
-		m_projectPane->RefreshDirs();
-		return;
-	}
+	// Adam V: Symbol pane is now using Ctrl-Alt-L
+	//// The project pane uses the same shortcut (F5) for refresh
+	//if (m_projectPane->IsFocused()) {
+	//	m_projectPane->RefreshDirs();
+	//	return;
+	//}
 
 	if (event.IsChecked()) ShowSymbolList();
 	else CloseSymbolList();
@@ -2924,7 +3141,7 @@ void EditorFrame::OnMenuSymbols(wxCommandEvent& WXUNUSED(event)) {
 	}
 	else {
 		// Open symbol list
-		ShowSymbolList();
+		ShowSymbolList(false);
 		m_symbolList->SetFocus();
 	}
 }
@@ -2951,11 +3168,11 @@ void EditorFrame::ShowWebPreview() {
 	m_frameManager.Update();
 }
 
-void EditorFrame::ShowSymbolList() {
+void EditorFrame::ShowSymbolList(bool keepOpen) {
 	if (m_symbolList) return; // already shown
 
 	// Create the pane
-	m_symbolList = new SymbolList(*this);
+	m_symbolList = new SymbolList(*this, keepOpen);
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxT("Symbols")).Right().Caption(_("Symbols")).BestSize(wxSize(150,50)); // defaults
 
@@ -2980,7 +3197,7 @@ void EditorFrame::CloseSymbolList() {
 	m_settings.SetSettingString(wxT("symbol_pane"), panePerspective);
 	m_settings.SetSettingBool(wxT("showsymbols"), false);
 
-	// Delete the preview pane
+	// Delete the symbol pane
 	m_frameManager.DetachPane(m_symbolList);
 	m_symbolList->Hide();
 	m_symbolList->Destroy();
@@ -3641,35 +3858,6 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 	self->CheckForModifiedFilesAsync();
 }
 
-//! URL Decode a string.
-wxString EditorFrame::URLDecode(const wxString &value) { // static
-	wxString szDecoded;
-	wxString szEncoded = value;
-
-	unsigned int nEncodedPos = 0;
-
-	// Replace + with space
-	szEncoded.Replace(wxT("+"), wxT(" "));
-
-	while( nEncodedPos < szEncoded.length() ) {
-		if(szEncoded.GetChar(nEncodedPos) != wxT('%')) szDecoded.Append(  szEncoded.GetChar(nEncodedPos++) );
-		else
-		{
-			nEncodedPos++;
-			if( isxdigit(szEncoded.GetChar(nEncodedPos)) && isxdigit(szEncoded.GetChar(nEncodedPos+1)) ) {
-				
-				wxChar n1 = Catalyst::HexToNumber(szEncoded.GetChar(nEncodedPos));
-				wxChar n2 = Catalyst::HexToNumber(szEncoded.GetChar(nEncodedPos+1));
-
-				szDecoded.Append( (wxChar) ((n1 << 4) | n2) );
-				nEncodedPos += 2;
-			}
-		}
-	}
-
-	return szDecoded;
-}
-
 // -- FrameDropTarget -----------------------------------------------------------------
 
 EditorFrame::FrameDropTarget::FrameDropTarget(EditorFrame& parent) : m_parent(parent) {}
@@ -3684,120 +3872,4 @@ bool EditorFrame::FrameDropTarget::OnDropFiles(wxCoord WXUNUSED(x), wxCoord WXUN
 
 	m_parent.SetCursor(*wxSTANDARD_CURSOR);
 	return true;
-}
-
-// -- HtmlOutputWin -----------------------------------------------------------------
-
-// control id's
-enum
-{
-	ID_MSHTML
-};
-
-BEGIN_EVENT_TABLE(EditorFrame::HtmlOutputWin, wxPanel)
-	EVT_HTMLWND_BEFORE_LOAD(ID_MSHTML, EditorFrame::HtmlOutputWin::OnBeforeLoad)
-END_EVENT_TABLE()
-
-EditorFrame::HtmlOutputWin::HtmlOutputWin(EditorFrame& parent)
-: wxPanel(&parent, wxID_ANY), m_parentFrame(parent) {
-
-	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-
-#ifdef FEAT_BROWSER
-
-#if defined (__WXMSW__)
-	// IE Control
-	m_browser = new wxIEHtmlWin(this, ID_MSHTML);
-#elif defined (__WXGTK__)
-	// WebKit control
-	m_browser = new wxBrowser(this, ID_MSHTML);
-#endif
-
-	mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND);
-#endif // FEAT_BROWSER
-
-	SetSizer(mainSizer);
-}
-
-void EditorFrame::HtmlOutputWin::SetPage(const wxString& text) {
-#ifdef FEAT_BROWSER
-
-#ifdef __WXMSW__
-	// Convert cygwin paths to windows
-	wxString html = text;
-	unsigned int pos = 0;
-	while (pos < html.size()) {
-		const size_t startpos = html.find(eDocumentPath::CygdrivePrefix(), pos);
-		if (startpos == wxString::npos) break;
-		++pos; // to advance if we continue the loop
-
-		// Find the end of path
-		unsigned int endpos = startpos+10;
-		while (endpos < html.size()) {
-			const wxChar c = html[endpos];
-			if (c == wxT('"') || c == wxT('\'') || c == wxT('>') || c == wxT('<')) break;
-			++endpos;
-		}
-
-		// Convert the path
-		wxString path = html.substr(startpos, endpos - startpos);
-		path = eDocumentPath::CygwinPathToWin(path);
-		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
-
-		html.replace(startpos, endpos - startpos, path);
-
-		pos = startpos + path.size();
-	}
-
-	m_browser->LoadString(html);
-#else
-	m_browser->LoadString(text);
-#endif
-
-#endif //FEAT_BROWSER
-}
-
-void EditorFrame::HtmlOutputWin::AppendText(const wxString& html) {
-#ifdef FEAT_BROWSER
-#ifdef __WXMSW__
-	m_browser->AppendString(html);
-#endif //__WXMSW__
-#endif //FEAT_BROWSER
-}
-
-void EditorFrame::HtmlOutputWin::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
-    const wxString url = event.GetURL();
-	if (url == wxT("about:blank")) return;
-
-	if (url.StartsWith(wxT("txmt://open"))) {
-		m_parentFrame.OpenTxmtUrl(url);
-
-		// Don't try to open it in browser
-		event.Cancel(true);
-		return;
-	}
-	
-	if (url.StartsWith(wxT("tm-file://"))) {
-		wxString path = url.substr(10);
-
-#ifdef __WXMSW__
-		path = eDocumentPath::CygwinPathToWin(path); // path may be in unix format, so we have to convert it
-#endif
-
-		DecodePath(path); // Spaces transformed to %20 in paths confuses ie
-		m_browser->LoadUrl(path);
-
-		// Don't try to open it in browser
-		event.Cancel(true);
-		return;
-	}
-}
-
-void EditorFrame::HtmlOutputWin::DecodePath(wxString& path) { // static
-	// Spaces transformed to %20 in paths confuses ie
-	for (unsigned int i2 = 0; i2 < path.size(); ++i2) {
-		if (path[i2] == wxT('%') && path.size() > i2+3 && path[i2+1] == wxT('2') && path[i2+2] == wxT('0')) {
-			path.replace(i2, 3, wxT(" "));
-		}
-	}
 }

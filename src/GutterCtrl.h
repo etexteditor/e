@@ -29,7 +29,7 @@ class EditorCtrl;
 class GutterCtrl : public wxControl {
 public:
 	GutterCtrl(EditorCtrl& parent, wxWindowID id);
-	void UpdateTheme();
+	void UpdateTheme(bool forceRecalculateDigitWidth=false);
 
 	void SetGutterRight(bool doMove=true);
 
@@ -72,7 +72,6 @@ private:
 	int m_posBeforeFoldClick;
 
 	const tmTheme& m_theme;
-	const wxColour& m_bgcolor;
 	wxColour m_numbercolor;
 	wxColour m_edgecolor;
 	wxColour m_hlightcolor;

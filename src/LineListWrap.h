@@ -39,12 +39,12 @@ public:
 	unsigned int EndFromPos(unsigned int pos);
 	unsigned int StartFromPos(unsigned int pos);
 
-	vector<unsigned int>& GetOffsets();
-	void SetOffsets(const vector<unsigned int>& offsets);
+	std::vector<unsigned int>& GetOffsets();
+	void SetOffsets(const std::vector<unsigned int>& offsets);
 	void NewOffsets();
 
 	void insert(unsigned int index, int newend);
-	void insertlines(unsigned int index, vector<unsigned int>& newlines);
+	void insertlines(unsigned int index, std::vector<unsigned int>& newlines);
 	void update(unsigned int index, unsigned int newend);
 	void update_parsed_line(unsigned int index);
 	void update_line_extent(unsigned int index, unsigned int extent);
@@ -96,8 +96,8 @@ private:
 	// Private member variables
 	FixedLine& line;
 	const DocumentWrapper& m_doc;
-	vector<unsigned int> yPositions;
-	vector<unsigned int> textOffsets;
+	std::vector<unsigned int> yPositions;
+	std::vector<unsigned int> textOffsets;
 
 	unsigned int lastValidOffset;
 	unsigned int lastValidPos;

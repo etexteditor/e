@@ -12,10 +12,49 @@
  ******************************************************************************/
 
 #include "ThemeEditor.h"
+#include <wx/grid.h>
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
+#include <wx/clipbrd.h>
+
 #include "Strings.h"
 #include "ITmThemeHandler.h"
+#include "Colours.h"
+
+void SetClipboardText(const wxString& text) {
+	if (wxTheClipboard->Open())
+	{
+		wxTheClipboard->SetData( new wxTextDataObject(text) );
+		wxTheClipboard->Close();
+	}
+}
+
+wxString GetClipboardText() {
+	wxString value = wxEmptyString;
+
+	if (wxTheClipboard->Open()) {
+		if (wxTheClipboard->IsSupported( wxDF_TEXT )) {
+			wxTextDataObject data;
+			if (wxTheClipboard->GetData(data)) {
+				value = data.GetText();
+			}
+		}
+		wxTheClipboard->Close();
+	}
+
+	return value;
+}
+
+class ColourCellRenderer : public wxGridCellRenderer {
+public:
+	ColourCellRenderer(const PListDict& themeDict) : m_themeDict(themeDict) {};
+	void Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected);
+	wxSize GetBestSize(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, int row, int col);
+	wxGridCellRenderer* Clone() const;
+private:
+	const PListDict& m_themeDict;
+};
+
 
 enum {
 	CTRL_FONTSELECT,
@@ -34,7 +73,10 @@ enum {
 	CTRL_NEWSETTING,
 	CTRL_DELSETTING,
 	CTRL_NEWTHEME,
-	CTRL_DELTHEME
+	CTRL_DELTHEME,
+
+	MENU_COPY_COLOUR,
+	MENU_PASTE_COLOUR
 };
 
 BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
@@ -53,19 +95,28 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_BUTTON(CTRL_NEWSETTING, ThemeEditor::OnNewSetting)
 	EVT_BUTTON(CTRL_DELSETTING, ThemeEditor::OnDelSetting)
 	EVT_BUTTON(CTRL_FONTSELECT, ThemeEditor::OnFontSelect)
+
 	EVT_LISTBOX(CTRL_THEMELIST, ThemeEditor::OnThemeSelected)
+
 	EVT_SIZE(ThemeEditor::OnSize)
+
 	EVT_GRID_SELECT_CELL(ThemeEditor::OnGridSelect)
 	EVT_GRID_CELL_LEFT_DCLICK(ThemeEditor::OnGridLeftDClick)
 	EVT_GRID_CELL_CHANGE(ThemeEditor::OnGridCellChange)
+	EVT_GRID_CELL_RIGHT_CLICK(ThemeEditor::OnGridRightClick)
+
 	EVT_COMBOBOX(CTRL_FONTQUALITY, ThemeEditor::OnFontQuality)
+
+	EVT_MENU(MENU_COPY_COLOUR, ThemeEditor::OnCopyColour)
+	EVT_MENU(MENU_PASTE_COLOUR, ThemeEditor::OnPasteColour)
+
 END_EVENT_TABLE()
 
-ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler)
-:  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-   m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
-   m_themeNdx(-1), m_currentRow(-1) {
-
+ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
+	m_themeNdx(-1), m_currentRow(-1) 
+{
 	SetTitle (_("Edit Themes"));
 
 	// Create the controls
@@ -329,44 +380,52 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 		wxColour colour;
 		unsigned int alpha;
 
+		wxColour themeBackground;
+		wxColour themeForeground;
+
 		// First entry is the general settings
 		PListDict general;
 		PListDict genSettings;
 		if (settings.GetDict(0, general) && general.GetDict("settings", genSettings)) {
 			const char* fg = genSettings.GetString("foreground");
-			if (fg && ParseColour(fg, colour, alpha)) m_fgButton->SetColour(colour, alpha);
+			if (fg && ParseColourAlpha(fg, themeForeground, alpha)) m_fgButton->SetColour(themeForeground, alpha);
+
 			const char* bg = genSettings.GetString("background");
-			if (bg && ParseColour(bg, colour, alpha)) m_bgButton->SetColour(colour, alpha);
+			if (bg && ParseColourAlpha(bg, themeBackground, alpha)) m_bgButton->SetColour(themeBackground, alpha);
+
 			const char* sel = genSettings.GetString("selection");
-			if (sel && ParseColour(sel, colour, alpha)) m_selButton->SetColour(colour, alpha);
+			if (sel && ParseColourAlpha(sel, colour, alpha)) m_selButton->SetColour(colour, alpha);
+
 			const char* inv = genSettings.GetString("invisibles");
-			if (inv && ParseColour(inv, colour, alpha)) m_invButton->SetColour(colour, alpha);
+			if (inv && ParseColourAlpha(inv, colour, alpha)) m_invButton->SetColour(colour, alpha);
+
 			const char* line = genSettings.GetString("lineHighlight");
-			if (line && ParseColour(line, colour, alpha)) m_lineButton->SetColour(colour, alpha);
+			if (line && ParseColourAlpha(line, colour, alpha)) m_lineButton->SetColour(colour, alpha);
+
 			//const char* caret = genSettings.GetString("caret");
-			//if (caret && ParseColour(caret, colour, alpha)) m_caretButton->SetColour(colour, alpha);
+			//if (caret && ParseColourAlpha(caret, colour, alpha)) m_caretButton->SetColour(colour, alpha);
 
 			const char* gutter = genSettings.GetString("gutter");
 			if (gutter)	{
-				if (ParseColour(gutter, colour, alpha)) m_gutterButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(gutter, colour, alpha)) m_gutterButton->SetColour(colour, alpha);
 			}
 			else m_gutterButton->SetColour(wxColour(192, 192, 255), 0); // default for gutter is Pastel purple
 
 			const char* search = genSettings.GetString("searchHighlight");
 			if (search)	{
-				if (ParseColour(search, colour, alpha)) m_searchButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(search, colour, alpha)) m_searchButton->SetColour(colour, alpha);
 			}
 			else m_searchButton->SetColour(wxColour(wxT("Yellow")), 0); // default for searchHL is Yellow
 
 			const char* multi = genSettings.GetString("multiEditHighlight");
 			if (multi)	{
-				if (ParseColour(multi, colour, alpha)) m_multiButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(multi, colour, alpha)) m_multiButton->SetColour(colour, alpha);
 			}
 			else m_multiButton->SetColour(wxColour(225, 225, 225), 0); // default for multiEdit is Grey
 
 			const char* bracket = genSettings.GetString("bracketHighlight");
 			if (bracket) {
-				if (ParseColour(bracket, colour, alpha)) m_bracketButton->SetColour(colour, alpha);
+				if (ParseColourAlpha(bracket, colour, alpha)) m_bracketButton->SetColour(colour, alpha);
 			}
 			else m_bracketButton->SetColour(wxColour(wxT("Yellow")), 0); // default for bracketHL is Yellow
 		}
@@ -393,14 +452,21 @@ void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 				PListDict fontSettings;
 				if (set.GetDict("settings", fontSettings)) {
 					const char* fg = fontSettings.GetString("foreground");
-					if (fg && ParseColour(fg, colour, alpha)) {
+					if (fg && ParseColourAlpha(fg, colour, alpha)) {
 						m_grid->SetCellTextColour(row, 0, colour);
 						m_grid->SetCellValue(row, 1, wxString(fg, wxConvUTF8));
 					}
+					else { // Else use theme-wide foreground
+						m_grid->SetCellTextColour(row, 0, themeForeground);
+					}
+
 					const char* bg = fontSettings.GetString("background");
-					if (bg && ParseColour(bg, colour, alpha)) {
+					if (bg && ParseColourAlpha(bg, colour, alpha)) {
 						m_grid->SetCellBackgroundColour(row, 0, colour);
 						m_grid->SetCellValue(row, 2, wxString(bg, wxConvUTF8));
+					}
+					else { // Else use theme-wide background
+						m_grid->SetCellBackgroundColour(row, 0, themeBackground);
 					}
 
 					const char* fontStyle = fontSettings.GetString("fontStyle");
@@ -492,7 +558,6 @@ void ThemeEditor::OnFontQuality(wxCommandEvent& event) {
 void ThemeEditor::OnThemeSelected(wxCommandEvent& event) {
 	const int ndx = event.GetSelection();
 	wxASSERT((unsigned int)ndx < m_themes.size());
-
 	SetTheme(m_themes[ndx]);
 }
 
@@ -634,8 +699,6 @@ void ThemeEditor::OnNewSetting(wxCommandEvent& WXUNUSED(event)) {
 
 void ThemeEditor::OnDelSetting(wxCommandEvent& WXUNUSED(event)) {
 	// WORKAROUND: GetSelectedRows() does not work
-	//const wxArrayInt sels = m_grid->GetSelectedRows();
-	//if (sels.IsEmpty()) return;
 	if (m_currentRow == -1) return;
 
 	// Make sure the theme is editable
@@ -646,10 +709,6 @@ void ThemeEditor::OnDelSetting(wxCommandEvent& WXUNUSED(event)) {
 	PListArray settings;
 	if (!m_themeDict.GetArray("settings", settings)) return;
 
-	//for (unsigned int i = sels.GetCount()-1; i > 0; --i) {
-	//	settings.DeleteItem(i + 1);
-	//	m_grid->DeleteRows(i);
-	//}
 	settings.DeleteItem(m_currentRow + 1);
 	m_grid->DeleteRows(m_currentRow);
 	m_currentRow = -1;
@@ -766,6 +825,80 @@ void ThemeEditor::OnGridSelect(wxGridEvent& event) {
 	m_selectorCtrl->Clear();
 }
 
+
+void ThemeEditor::OnGridRightClick(wxGridEvent& evt) {
+	// Only handle right click for colour cells
+	if (evt.GetCol() != 1 && evt.GetCol() != 2) {
+		evt.Skip();
+		return;
+	}
+
+	const wxString colourStr = m_grid->GetCellValue(evt.GetRow(), evt.GetCol());
+	wxColour colour;
+	unsigned int alpha = 0;
+	if (!colourStr.empty()) {
+		ParseColourAlpha(colourStr.mb_str(wxConvUTF8), colour, alpha);
+	}
+
+	// See if there is a color on the clipboard.
+	bool hasClipboardColour = false;
+	wxColour clipboardColour;
+	unsigned int clipboardAlpha = 0;
+
+	const wxString clipboardColourStr = GetClipboardText();
+	if (!clipboardColourStr.empty()) {
+		hasClipboardColour = ParseColourAlpha(clipboardColourStr.mb_str(wxConvUTF8), clipboardColour, clipboardAlpha);
+	}
+
+	// Need to save the potential copy/paste colors, so the event handlers can use them later.
+	if (hasClipboardColour) {
+		this->copyColours = CopyColours(evt.GetRow(), evt.GetCol(), colour, alpha, clipboardColour, clipboardAlpha);
+	} else {
+		this->copyColours = CopyColours(evt.GetRow(), evt.GetCol(), colour, alpha);
+	}
+
+	// Create the tabs menu
+	wxMenu colourMenu;
+	colourMenu.Append(MENU_COPY_COLOUR, _("Copy color"));
+	colourMenu.Append(MENU_PASTE_COLOUR, _("Paste color"));
+
+	colourMenu.Enable(MENU_PASTE_COLOUR, hasClipboardColour);
+
+	PopupMenu(&colourMenu);
+}
+
+void ThemeEditor::OnCopyColour(wxCommandEvent& WXUNUSED(event)) {
+	if(!copyColours.hasCopyColour) return;
+	wxString newcolour = WriteColourAlpha(copyColours.copyColour, copyColours.copyAlpha);
+	SetClipboardText(newcolour);
+}
+
+void ThemeEditor::OnPasteColour(wxCommandEvent& WXUNUSED(event)) {
+	if (!copyColours.hasPasteColour) return;
+	SetColour(copyColours.pasteColour, copyColours.pasteAlpha, copyColours.row, copyColours.col);
+}
+
+void ThemeEditor::SetColour(const wxColour& colour, const unsigned int alpha, const int row, const int col) {
+	// Update grid
+	wxString newcolour = WriteColourAlpha(colour, alpha);
+	if (!newcolour.empty()) m_grid->SetCellValue(row, col, newcolour);
+
+	// Refresh dlg before setting theme (which might cause a delay)
+	if (col == 1) m_grid->SetCellTextColour(row, 0, colour);
+	else if (col == 2) m_grid->SetCellBackgroundColour(row, 0, colour);
+	Refresh();
+	Update();
+
+	const unsigned int ndx = row + 1; // 0 is general settings
+
+	if (col == 1) {
+		SetSettingColour(ndx, "foreground", colour, alpha);
+	}
+	else if (col == 2) {
+		SetSettingColour(ndx, "background", colour, alpha);
+	}
+}
+
 void ThemeEditor::OnGridLeftDClick(wxGridEvent& event) {
 	// Only handle doubleClick for colour cells
 	if (event.GetCol() != 1 && event.GetCol() != 2) {
@@ -777,28 +910,11 @@ void ThemeEditor::OnGridLeftDClick(wxGridEvent& event) {
 	wxColour colour;
 	unsigned int alpha = 0;
 	if (!colourStr.empty()) {
-		ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha);
+		ParseColourAlpha(colourStr.mb_str(wxConvUTF8), colour, alpha);
 	}
 
 	if (AskForColour(colour, alpha) && colour.Ok()) {
-		// Update grid
-		const vector<char> newcolour = WriteColour(colour, alpha);
-		if (!newcolour.empty()) m_grid->SetCellValue(event.GetRow(), event.GetCol(), wxString(&*newcolour.begin(), wxConvUTF8));
-
-		// Refresh dlg before setting theme (which might cause a delay)
-		if (event.GetCol() == 1) m_grid->SetCellTextColour(event.GetRow(), 0, colour);
-		else if (event.GetCol() == 2) m_grid->SetCellBackgroundColour(event.GetRow(), 0, colour);
-		Refresh();
-		Update();
-
-		const unsigned int ndx = event.GetRow() + 1; // 0 is general settings
-
-		if (event.GetCol() == 1) {
-			SetSettingColour(ndx, "foreground", colour, alpha);
-		}
-		else if (event.GetCol() == 2) {
-			SetSettingColour(ndx, "background", colour, alpha);
-		}
+		SetColour(colour, alpha, event.GetRow(), event.GetCol());
 	}
 }
 
@@ -809,7 +925,7 @@ void ThemeEditor::OnGridCellChange(wxGridEvent& event) {
 
 	if (col == 0) {
 		// Name
-		SetSettingName(ndx, m_grid->GetCellValue(row, 0));
+		SetSelectorValue(ndx, "name", m_grid->GetCellValue(row, 0), false);
 	}
 	else if (col >= 3 && col <= 5) {
 		// Font Style
@@ -852,40 +968,8 @@ void ThemeEditor::OnSelectorKillFocus() {
 
 	const wxString newText = m_selectorCtrl->GetValue();
 	if (newText != selector) {
-		SetSettingScope(ndx, newText);
+		SetSelectorValue(ndx, "scope", newText, true);
 	}
-}
-
-bool ThemeEditor::ParseColour(const char* text, wxColour& colour, unsigned int& alpha) { // static
-	if (!text) return false;
-	if (strlen(text) < 7) return false;
-	if (text[0] != '#') return false;
-
-	int red;
-	int green;
-	int blue;
-	alpha = 0;
-	sscanf(text, "#%2x%2x%2x%2x", &red, &green, &blue, &alpha);
-
-	colour.Set(red, green, blue);
-	return true;
-}
-
-vector<char> ThemeEditor::WriteColour(const wxColour& colour, unsigned int& alpha) { // static
-	wxASSERT(colour.Ok());
-	wxASSERT(alpha <= 256);
-
-	vector<char> str;
-	if (alpha) {
-		str.resize(10); // "#xxxxxxxx\0"
-		sprintf(&*str.begin(), "#%02X%02X%02X%02X", colour.Red(), colour.Green(), colour.Blue(), alpha);
-	}
-	else {
-		str.resize(8); // "#xxxxxx\0"
-		sprintf(&*str.begin(), "#%02X%02X%02X", colour.Red(), colour.Green(), colour.Blue());
-	}
-
-	return str;
 }
 
 void ThemeEditor::SetSettingColour(unsigned int ndx, const char* id, const wxColour& colour, unsigned int alpha) {
@@ -903,8 +987,8 @@ void ThemeEditor::SetSettingColour(unsigned int ndx, const char* id, const wxCol
 		PListDict fontSettings;
 		if (settings.GetDict(ndx, set) && set.GetDict("settings", fontSettings)) {
 			if (colour.Ok()) {
-				vector<char> colourStr = WriteColour(colour, alpha);
-				if (!colourStr.empty()) fontSettings.SetString(id, &*colourStr.begin());
+				wxString colourStr = WriteColourAlpha(colour, alpha);
+				if (!colourStr.empty()) fontSettings.wxSetString(id, colourStr);
 			}
 			else {
 				fontSettings.DeleteItem(id);
@@ -939,7 +1023,7 @@ void ThemeEditor::SetSettingFontStyle(unsigned int ndx, bool bold, bool italic, 
 				const char* underlineStr = "underline";
 
 				// Build the font style
-				vector<char> styleStr;
+				std::vector<char> styleStr;
 				if (bold) styleStr.insert(styleStr.begin(), boldStr, boldStr + strlen(boldStr));
 				if (italic) {
 					if (!styleStr.empty()) styleStr.push_back(' ');
@@ -960,36 +1044,7 @@ void ThemeEditor::SetSettingFontStyle(unsigned int ndx, bool bold, bool italic, 
 	}
 }
 
-void ThemeEditor::SetSettingName(unsigned int ndx, const wxString& name) {
-	wxASSERT(m_themeNdx > 0); // zero is general settings, which do not have name
-
-	if (!m_plistHandler.IsThemeEditable(m_themeNdx)) {
-		m_plistHandler.GetEditableTheme(m_themeNdx, m_themeDict);
-	}
-
-	PListArray settings;
-	if (m_themeDict.GetArray("settings", settings) && settings.GetSize()) {
-		wxASSERT(ndx < settings.GetSize());
-
-		PListDict set;
-		PListDict fontSettings;
-		if (settings.GetDict(ndx, set)) {
-			if (!name.empty()) {
-				set.SetString("name", name.mb_str(wxConvUTF8));
-			}
-			else {
-				fontSettings.DeleteItem("name");
-			}
-
-			m_plistHandler.MarkThemeAsModified(m_themeNdx);
-
-			// No need to reload theme for namechange
-		}
-		else wxASSERT(false);
-	}
-}
-
-void ThemeEditor::SetSettingScope(unsigned int ndx, const wxString& scope) {
+void ThemeEditor::SetSelectorValue(unsigned int ndx, const char* key, const wxString& value, bool reloadTheme) {
 	wxASSERT(m_themeNdx > 0); // zero is general settings, which do not have scope
 
 	if (!m_plistHandler.IsThemeEditable(m_themeNdx)) {
@@ -1003,14 +1058,11 @@ void ThemeEditor::SetSettingScope(unsigned int ndx, const wxString& scope) {
 		PListDict set;
 		PListDict fontSettings;
 		if (settings.GetDict(ndx, set)) {
-			if (!scope.empty()) {
-				set.SetString("scope", scope.mb_str(wxConvUTF8));
-			}
-			else {
-				fontSettings.DeleteItem("scope");
-			}
+			if (value.empty()) fontSettings.DeleteItem(key);
+			else set.SetString(key, value.mb_str(wxConvUTF8));
 
-			NotifyThemeChanged();
+			if (reloadTheme) NotifyThemeChanged();
+			else m_plistHandler.MarkThemeAsModified(m_themeNdx);
 		}
 		else wxASSERT(false);
 	}
@@ -1059,7 +1111,7 @@ void ThemeEditor::ColourButton::DrawButton() {
 
 	wxSize size = GetClientSize();
 
-	// Make a margen
+	// Make a margin
 	size.x -= 5;
 	size.y -= 5;
 	wxBitmap bmp(size.x, size.y);
@@ -1089,14 +1141,14 @@ void ThemeEditor::ColourButton::DrawButton() {
 // ---- TransparencyDlg ----------------------------------------------------------------
 
 
-ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alpha)
-:  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alpha):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
 {
 	SetTitle (_("Set Transparency"));
 
 	wxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-	m_slider = new wxSlider(this, wxID_ANY, alpha, 0, 256, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_LABELS);
+	m_slider = new wxSlider(this, wxID_ANY, alpha, 0, 255, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_LABELS);
 	mainSizer->Add(m_slider, 0, wxEXPAND|wxALL, 5);
 	mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 
@@ -1106,7 +1158,7 @@ ThemeEditor::TransparencyDlg::TransparencyDlg(wxWindow *parent, unsigned int alp
 
 // ---- ColourCellRenderer ----------------------------------------------------------------
 
-void ThemeEditor::ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected) {
+void ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, wxDC& dc, const wxRect& rect, int row, int col, bool isSelected) {
 	// Draw background first
 	wxGridCellRenderer::Draw(grid, attr, dc, rect, row, col, isSelected);
 
@@ -1117,34 +1169,34 @@ void ThemeEditor::ColourCellRenderer::Draw(wxGrid& grid, wxGridCellAttr& attr, w
 	const wxString colourStr = grid.GetCellValue(row, col);
 	wxColour colour;
 	unsigned int alpha;
-	if (ThemeEditor::ParseColour(colourStr.mb_str(wxConvUTF8), colour, alpha)) {
-		dc.SetPen(*wxBLACK);
-		dc.SetBrush(colour);
+	if (!ParseColourAlpha(colourStr.mb_str(wxConvUTF8), colour, alpha)) return;
 
-		// Draw colour box
-		dc.DrawRectangle(boxRect);
+	dc.SetPen(*wxBLACK);
+	dc.SetBrush(colour);
 
-		if (alpha) {
-			const wxColour alphaColour(alpha, alpha, alpha);
+	// Draw colour box
+	dc.DrawRectangle(boxRect);
 
-			// Draw alpha triangle
-			wxPoint points[3];
-			points[0] = wxPoint(boxRect.x, boxRect.GetBottom());
-			points[1] = wxPoint(boxRect.GetRight(), boxRect.y);
-			points[2] = wxPoint(boxRect.GetRight(), boxRect.GetBottom() );
-			dc.SetPen(alphaColour);
-			dc.SetBrush(alphaColour);
-			dc.DrawPolygon(3, points);
-		}
+	if (alpha) {
+		const wxColour alphaColour(alpha, alpha, alpha);
+
+		// Draw alpha triangle
+		wxPoint points[3];
+		points[0] = wxPoint(boxRect.x, boxRect.GetBottom());
+		points[1] = wxPoint(boxRect.GetRight(), boxRect.y);
+		points[2] = wxPoint(boxRect.GetRight(), boxRect.GetBottom() );
+		dc.SetPen(alphaColour);
+		dc.SetBrush(alphaColour);
+		dc.DrawPolygon(3, points);
 	}
 }
 
 
-wxSize ThemeEditor::ColourCellRenderer::GetBestSize(wxGrid& WXUNUSED(grid), wxGridCellAttr& WXUNUSED(attr), wxDC& WXUNUSED(dc), int WXUNUSED(row), int WXUNUSED(col)) {
+wxSize ColourCellRenderer::GetBestSize(wxGrid& WXUNUSED(grid), wxGridCellAttr& WXUNUSED(attr), wxDC& WXUNUSED(dc), int WXUNUSED(row), int WXUNUSED(col)) {
 	return wxSize(-1, -1);
 }
 
-wxGridCellRenderer* ThemeEditor::ColourCellRenderer::Clone() const {
+wxGridCellRenderer* ColourCellRenderer::Clone() const {
 	return new ColourCellRenderer(m_themeDict);
 }
 
@@ -1154,16 +1206,10 @@ BEGIN_EVENT_TABLE(ThemeEditor::FocusTextCtrl, wxTextCtrl)
 	EVT_KILL_FOCUS(ThemeEditor::FocusTextCtrl::OnKillFocus)
 END_EVENT_TABLE()
 
-ThemeEditor::FocusTextCtrl::FocusTextCtrl(ThemeEditor& parent, wxWindowID id)
-: wxTextCtrl(&parent, id), m_parentDlg(parent) {
-}
+ThemeEditor::FocusTextCtrl::FocusTextCtrl(ThemeEditor& parent, wxWindowID id):
+	wxTextCtrl(&parent, id), m_parentDlg(parent) {}
 
 void ThemeEditor::FocusTextCtrl::OnKillFocus(wxFocusEvent& event) {
 	m_parentDlg.OnSelectorKillFocus();
-
 	event.Skip();
 }
-
-
-
-

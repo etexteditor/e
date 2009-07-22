@@ -18,17 +18,9 @@
 #include "RemoteThread.h"
 #include <wx/regex.h>
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
 
-eSettings::eSettings() {
-}
+eSettings::eSettings() {}
 
 void eSettings::Load(const wxString& appDataPath) {
 	m_path = appDataPath + wxT("e.cfg");
@@ -56,10 +48,33 @@ void eSettings::Load(const wxString& appDataPath) {
 		wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
 		return;
 	}
+
+	//// Now pull out any settings we don't store internally in the JSON object
+	// Environmental Variables
+	env.clear();
+
+	if (m_jsonRoot.HasMember(wxT("env"))) {
+		const wxJSONValue envNode = m_jsonRoot.ItemAt(wxT("env"));
+		const wxArrayString keys = envNode.GetMemberNames();
+		for( size_t i = 0; i < keys.Count(); i++){
+			const wxString& key = keys[i];
+			env[key] = envNode.ItemAt(key).AsString();
+		}
+	}
 }
 
 bool eSettings::Save() {
 	wxASSERT(!m_path.empty());
+
+	//// Add back to the JSON object any settings we store internally
+	// Environmental Variables
+	wxJSONValue envNode;
+	for (map<wxString,wxString>::const_iterator p = env.begin(); p != env.end(); ++p) {
+		envNode[p->first] = p->second;
+	}
+
+	m_jsonRoot[wxT("env")] = envNode;
+
 
 	// Open (or create) the settings file
 	wxFileOutputStream fstream(m_path);

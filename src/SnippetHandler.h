@@ -14,22 +14,13 @@
 #ifndef __SNIPPETHANDLER_H__
 #define __SNIPPETHANDLER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-#include "wx/wx.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/string.h>
 #endif
 
-//#include "Catalyst.h"
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
 #include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 // Pre-definitions
 class EditorCtrl;
@@ -45,7 +36,7 @@ public:
 	void Clear();
 	void GotoEndAndClear();
 
-	void StartSnippet(EditorCtrl* editor, const vector<char>& snippet, cxEnv& env, const tmBundle* bundle);
+	void StartSnippet(EditorCtrl* editor, const std::vector<char>& snippet, cxEnv& env, const tmBundle* bundle);
 
 	void NextTab();
 	void PrevTab();
@@ -62,7 +53,7 @@ private:
 
 	struct Transformation {
 		unsigned int iv;
-		vector<char> regexp;
+		std::vector<char> regexp;
 		wxString format;
 		bool isGlobal;
 	};
@@ -81,12 +72,12 @@ private:
 		bool isValid;
 		unsigned int iv;
 		//unsigned int parent;
-		vector<char> pipeCmd;
-		vector<unsigned int> mirrors;
-		vector<unsigned int> transforms;
-		vector<unsigned int> children;   // contained tabstops
-		vector<unsigned int> childrenTr; // contained transformations
-		vector<unsigned int> childrenM;  // contained mirrors
+		std::vector<char> pipeCmd;
+		std::vector<unsigned int> mirrors;
+		std::vector<unsigned int> transforms;
+		std::vector<unsigned int> children;   // contained tabstops
+		std::vector<unsigned int> childrenTr; // contained transformations
+		std::vector<unsigned int> childrenM;  // contained mirrors
 	};
 
 	wxString DoTransform(unsigned int start, unsigned int end, const Transformation& tr) const;
@@ -107,16 +98,16 @@ private:
 
 	// Member variables
 	EditorCtrl* m_editor;
-	const vector<char>* m_snippet;
-	vector<char> m_indentUnit;
+	const std::vector<char>* m_snippet;
+	std::vector<char> m_indentUnit;
 	wxString m_indent;
 	cxEnv* m_env;
 	const tmBundle* m_bundle;
 
-	map<unsigned int,TabStop> m_tabstops;
-	vector<TabInterval> m_intervals;
-	vector<Transformation> m_transforms;
-	vector<Transformation> m_varTransforms;
+	std::map<unsigned int,TabStop> m_tabstops;
+	std::vector<TabInterval> m_intervals;
+	std::vector<Transformation> m_transforms;
+	std::vector<Transformation> m_varTransforms;
 	unsigned int m_endpos;
 	unsigned int m_offset;
 	unsigned int m_curTab;
@@ -127,7 +118,7 @@ private:
 	unsigned int m_parentTabStop;
 	int m_parentIv;
 	bool m_endposSet;
-	vector<char> m_snipText;
+	std::vector<char> m_snipText;
 };
 
 #endif // __TM_SYNTAXHANDLER_H__

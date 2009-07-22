@@ -14,20 +14,14 @@
 #ifndef __SEARCHPANEL_H__
 #define __SEARCHPANEL_H__
 
-#include "FindFlags.h"
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/panel.h>
-	#include <wx/control.h>
 	#include <wx/string.h>
-	#include <wx/menu.h>
-	#include <wx/bitmap.h>
-	#include <wx/combobox.h>
 #endif
 
-// pre-definitions
+#include "FindFlags.h"
+
 class CloseButton;
 class eSettings;
 class IFrameSearchService;
@@ -35,7 +29,7 @@ class IEditorSearch;
 
 class wxBoxSizer;
 class wxButton;
-class wxBitmapButton;
+class wxComboBox;
 
 class SearchPanel : public wxPanel {
 public:
@@ -51,49 +45,22 @@ public:
 	void ReplaceAll();
 	void HidePanel();
 
-	bool HasSearchString() const {return !searchbox->GetValue().IsEmpty();};
+	bool HasSearchString() const;
 	bool IsActive() const;
 
 	IEditorSearch* GetEditorSearch();
 
-private:
-	// Embedded class: SeperatorLine
-	class SeperatorLine : public wxControl {
-	public:
-		SeperatorLine(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition);
-	private:
-		// overriden base class virtuals
-		virtual bool AcceptsFocus() const { return FALSE; }
-		// Event handlers
-		void OnPaint(wxPaintEvent& evt);
-		void OnEraseBackground(wxEraseEvent& event);
-		DECLARE_EVENT_TABLE();
-	};
-
-	// Embedded class: SearchEvtHandler
-	class SearchEvtHandler : public wxEvtHandler {
-	public:
-		SearchEvtHandler(wxWindow* parent);
-	private:
-		// Event handlers
-		void OnKeyDown(wxKeyEvent &evt);
-		void OnChar(wxKeyEvent &evt);
-		void OnFocusLost(wxFocusEvent& evt);
-		void OnMouseWheel(wxMouseEvent& evt);
-		DECLARE_EVENT_TABLE();
-		// Member variables
-		wxWindow* parent;
-	};
-
 	// Member functions
-	void SetState(cxFindResult result);
+	void SetState(cxFindResult result, int resultCount = -1);
 	void RefreshSearchHistory();
 	void UpdateSearchHistory();
 	void RefreshReplaceHistory();
 	void UpdateReplaceHistory();
 
+private:
+	void InitAcceleratorTable();
+
 	// Event handlers
-	void OnSearchPopup(wxCommandEvent& evt);
 	void OnSearchText(wxCommandEvent& evt);
 	void OnSearchTextEnter(wxCommandEvent& evt);
 	void OnSearchTextCombo(wxCommandEvent& evt);
@@ -113,22 +80,20 @@ private:
 	IFrameSearchService& m_searchService;
 
 	// Member controls
-	SearchEvtHandler* searchbox_evt_handler;
-	SearchEvtHandler* replacebox_evt_handler;
-	wxMenu m_popupMenu;
-	wxBoxSizer* box;
 	wxBoxSizer* vbox;
 	wxComboBox* searchbox;
-	SeperatorLine* sepline;
 	wxButton* nextButton;
 	wxButton* prevButton;
 	wxButton* replaceButton;
 	CloseButton* closeButton;
 	wxComboBox* replaceBox;
 	wxButton* allButton;
-	wxBitmapButton* searchButton;
-	wxBitmap m_searchBitmap;
-	wxBitmap m_searchReBitmap;
+
+	wxCheckBox* checkHighlight;
+	wxCheckBox* checkRegex;
+	wxCheckBox* checkMatchcase;
+	wxStaticText* commandResults;
+
 
 	// Member variables (user settings)
 	wxString m_searchText;

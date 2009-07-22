@@ -14,11 +14,7 @@
 #ifndef __DOCUMENT_H__
 #define __DOCUMENT_H__
 
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-#endif
-
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
@@ -26,11 +22,12 @@
 #include "Catalyst.h"
 #include "DataText.h"
 
-// pre-declarations
+
 class doc_byte_iter;
 struct real_pcre;                 // This double pre-definition is needed
 typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h
 struct pcre_extra;
+class ISettings;
 
 class Document {
 public:
@@ -79,7 +76,7 @@ public:
 
 	// Loading & Saving
 	cxFileResult LoadText(const wxFileName& path, vector<unsigned int>& offsets, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mirror=wxEmptyString);
-	cxFileResult SaveText(const wxFileName& path, bool forceNativeEOL=false, const wxString& realpath=wxEmptyString, bool keepMirrorDate=false);
+	cxFileResult SaveText(const wxFileName& path, bool forceNativeEOL=false, const wxString& realpath=wxEmptyString, bool keepMirrorDate=false, bool noAtomic=false);
 	void GetLines(vector<unsigned int>& list) const;
 
 	// Modification
@@ -123,7 +120,7 @@ public:
 	bool GetPropertyBOM() const;
 	void SetPropertyBOM(bool hasBOM);
 	void SetDocRead(bool isRead=true);
-	void SetDefaultEncoding();
+	void SetDefaultsFromSettings(const ISettings& settings);
 
 	// Properties (generic)
 	bool HasProperty(const wxString& name) const;
@@ -132,7 +129,7 @@ public:
 	void DeleteProperty(const wxString& name);
 
 	// Document ID & meta
-	void CreateNew();
+	void CreateNew(const ISettings& settings);
 	void SetDocument(const doc_id& di);
 	doc_id GetDocument() const {return m_docId;};
 	doc_id GetParent() const;
@@ -203,13 +200,7 @@ private:
 class DocumentWrapper {
 public:
 	DocumentWrapper(CatalystWrapper& cw) : m_doc(cw) {}; // unintialized doc
-	DocumentWrapper(CatalystWrapper& cw, bool createNew) : m_doc(cw) { // new doc
-		wxASSERT(createNew);
-		if (createNew) {
-			RecursiveCriticalSectionLocker cx_lock(GetReadLock());
-			m_doc.CreateNew();
-		}
-	};
+	DocumentWrapper(CatalystWrapper& cw, bool createNew); // new doc
 	DocumentWrapper(Document& doc) : m_doc(doc) {};
 	DocumentWrapper(const doc_id& di, CatalystWrapper& cw) : m_doc(di, cw) {};
 

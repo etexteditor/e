@@ -23,15 +23,7 @@
 #include "SymbolRef.h"
 #include "EditorChangeState.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 
 // Pre-definitions
@@ -88,7 +80,7 @@ private:
 	unsigned int m_changeToken;
 	unsigned int m_pos;
 
-	vector<SymbolRef> m_symbols;
+	std::vector<SymbolRef> m_symbols;
 };
 
 #endif // __STATUSBAR_H__

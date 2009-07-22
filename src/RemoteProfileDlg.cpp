@@ -35,9 +35,10 @@ BEGIN_EVENT_TABLE(RemoteProfileDlg, wxDialog)
 	EVT_CLOSE(RemoteProfileDlg::OnClose)
 END_EVENT_TABLE()
 
-RemoteProfileDlg::RemoteProfileDlg(wxWindow *parent)
-: wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_settings(eGetSettings()), m_currentProfile(-1) {
+RemoteProfileDlg::RemoteProfileDlg(wxWindow *parent, eSettings& settings):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_settings(settings), m_currentProfile(-1) 
+{
 	SetTitle (_("Remote Profiles"));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);

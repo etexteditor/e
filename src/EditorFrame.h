@@ -35,8 +35,7 @@
 #include "IFrameProjectService.h"
 #include "IFrameUndoPane.h"
 #include "IFrameSearchService.h"
-
-#include "IHtmlWnd.h"
+#include "IOpenTextmateURL.h"
 
 // Forward declarations
 class eApp;
@@ -57,120 +56,17 @@ class TmSyntaxHandler;
 class StatusBar;
 class DirWatcher;
 class FindInProjectDlg;
-
-#ifdef __WXMSW__
-class wxIEHtmlWin;
-#endif
+class HtmlOutputPane;
 
 class IEditorSearch;
 
-// Menu id's
-enum {
-	MENU_DIFF,
-	MENU_OPENPROJECT,
-	MENU_OPENREMOTE,
-	MENU_SAVEALL,
-	MENU_SAVEFORMAT,
-	MENU_LINEEND,
-	MENU_ENCODING,
-	MENU_BOM,
-	MENU_IMPORT,
-	MENU_CLOSE,
-	MENU_REVSEL,
-	MENU_FIND_IN_PROJECT,
-	MENU_FIND_IN_SEL,
-	MENU_FIND_NEXT,
-	MENU_FIND_PREVIOUS,
-	MENU_FIND_CURRENT,
-	MENU_SELECT,
-	MENU_SELECTWORD,
-	MENU_SELECTLINE,
-	MENU_SELECTSCOPE,
-	MENU_SELECTFOLD,
-	MENU_SYNTAX,
-	MENU_EDIT_THEME,
-	MENU_SETTINGS,
-	MENU_UNDOHIS,
-	MENU_REVHIS,
-	MENU_LINENUM,
-	MENU_INDENTGUIDE,
-	MENU_WORDWRAP,
-	MENU_WRAP_NONE,
-	MENU_WRAP_NORMAL,
-	MENU_WRAP_SMART,
-	MENU_HL_USERS,
-	MENU_INCOMMING,
-	MENU_INCOMMING_TOOLBAR,
-	MENU_SHOWPROJECT,
-	MENU_SHOWSYMBOLS,
-	MENU_SYMBOLS,
-	MENU_SHIFT_PROJECT_FOCUS,
-	MENU_PREVIEW,
-	MENU_STATUSBAR,
-	MENU_NEXTTAB,
-	MENU_NEXTTAB_OR_LAST,
-	MENU_PREVTAB,
-	MENU_LASTTAB,
-	MENU_OPEN_EXT,
-	MENU_TABS,
-	MENU_TABS_SHOWDROPDOWN,
-	MENU_GOTOBRACKET,
-	MENU_GOTOLINE,
-	MENU_GOTOFILE,
-	MENU_FOLDTOGGLE,
-	MENU_FOLDALL,
-	MENU_FOLDOTHERS,
-	MENU_UNFOLDALL,
-	MENU_BUY,
-	MENU_REGISTER,
-	MENU_WEBSITE,
-	MENU_ABOUT,
-	MENU_EOL_DOS,
-	MENU_EOL_UNIX,
-	MENU_EOL_MAC,
-	MENU_EOL_NATIVE,
-	MENU_DOC_OPEN,
-	MENU_DOC_SHARE,
-	MENU_COMMIT,
-	MENU_REVTOOLTIP,
-	MENU_FINDCMD,
-	MENU_FILTER,
-	MENU_RUN,
-	MENU_HELP_FORUM,
-	MENU_RECENT_FILES,
-	MENU_RECENT_PROJECTS,
-	MENU_TEXTCONV,
-	MENU_UPPERCASE,
-	MENU_LOWERCASE,
-	MENU_TITLECASE,
-	MENU_REVERSECASE,
-	MENU_COMPLETE,
-	MENU_INDENTLEFT,
-	MENU_INDENTRIGHT,
-	MENU_TABSTOSPACES,
-	MENU_SPACESTOTABS,
-	MENU_BUNDLE_FUNCTIONS,
-	MENU_RELOAD_BUNDLES,
-	MENU_DEBUG_BUNDLES,
-	MENU_EDIT_BUNDLES,
-	MENU_MANAGE_BUNDLES,
-	MENU_TABS_NEW,
-	MENU_TABS_CLOSE,
-	MENU_TABS_CLOSE_OTHER,
-	MENU_TABS_CLOSE_ALL,
-	MENU_TABS_COPY_PATH,
-	MENU_KEYDIAG,
-	MENU_BOOKMARK_NEXT,
-	MENU_BOOKMARK_PREVIOUS,
-	MENU_BOOKMARK_TOGGLE,
-	MENU_BOOKMARK_CLEAR
-};
 
 class EditorFrame : public KeyHookable<wxFrame>,
 	public IFrameSymbolService,
 	public IFrameProjectService,
 	public IFrameUndoPane,
-	public IFrameSearchService
+	public IFrameSearchService,
+	public IOpenTextmateURL
 {
 public:
 	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -203,12 +99,15 @@ public:
 	bool Open(const wxString& path, const wxString& mate=wxEmptyString); // file or project
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);
 	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
-	bool OpenTxmtUrl(const wxString& url);
+	virtual void UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath);
+
+	virtual bool OpenTxmtUrl(const wxString& url);
 	bool AskToSaveMulti(int keep_tab=-1);
 	void SaveAllFilesInProject();
 	//void CheckForModifiedFiles();
 	void CheckForModifiedFilesAsync();
 	wxString GetSaveDir() const;
+	
 
 	// RemoteFile support functions
 	const RemoteProfile* GetRemoteProfile(const wxString& url, bool withDir);
@@ -244,6 +143,7 @@ public:
 	bool OpenRemoteProjectFromUrl(const wxString& url);
 	bool OpenRemoteProject(const RemoteProfile* rp);
 	bool HasProject() const;
+	bool CloseProject();
 	bool IsProjectRemote() const;
 	const wxFileName& GetRootPath() const;
 	wxArrayString GetSelectionsInProject() const;
@@ -254,7 +154,7 @@ public:
 	void AppendToOutput(const wxString& html);
 
 	// Symbol List (pane)
-	void ShowSymbolList();
+	void ShowSymbolList(bool keepOpen=true);
 	virtual void CloseSymbolList();
 
 	// DirWatcher & RemoteThread
@@ -287,6 +187,7 @@ private:
 	void InitMemberSettings();
 
 	EditorCtrl* GetEditorCtrlFromPage(size_t page_idx);
+	EditorCtrl* GetEditorCtrlFromFile(const wxString& filepath, unsigned int& page_idx);
 
 	// Menu & statusdbar handling
 	wxMenu* GetBundleMenu();
@@ -297,7 +198,7 @@ private:
 	void UpdateRecentFiles();
 
 	// Loading files
-	bool DoOpenFile(wxString filepath, wxFontEncoding enc, const RemoteProfile* rp=NULL, const wxString& mate=wxEmptyString);
+	bool DoOpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp=NULL, const wxString& mate=wxEmptyString);
 
 	// Changed files
 	void AskToReloadMulti(const vector<unsigned int>& pathToPages, const vector<wxDateTime>& modDates);
@@ -317,9 +218,6 @@ private:
 	void ShowProjectPane(const wxString& project);
 	void ShowBundlePane();
 
-	// Utility functions
-	static wxString URLDecode(const wxString& value);
-
 	// Embedded class: FrameDropTarget
 	class FrameDropTarget : public wxFileDropTarget {
 	public:
@@ -330,35 +228,17 @@ private:
 		EditorFrame& m_parent;
 	};
 
-	class HtmlOutputWin : public wxPanel {
-	public:
-		HtmlOutputWin(EditorFrame& parent);
-		void SetPage(const wxString& html);
-		void AppendText(const wxString& html);
-
-		//void OnLinkClicked(const wxHtmlLinkInfo& link);
-	private:
-		static void DecodePath(wxString& path);
-
-		// Event handlers
-		void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
-
-		EditorFrame& m_parentFrame;
-#ifdef __WXMSW__
-		wxIEHtmlWin* m_browser;
-#else
-		IHtmlWnd* m_browser;
-#endif
-		DECLARE_EVENT_TABLE()
-	};
-
 	// Event handlers
+	void OnShiftProjectFocus(wxCommandEvent& event);
+
 	void OnOpeningMenu(wxMenuEvent& event);
+
 	void OnMenuNew(wxCommandEvent& event);
 	void OnMenuOpen(wxCommandEvent& event);
 	void OnMenuCompareFiles(wxCommandEvent& event);
 	void OnMenuOpenProject(wxCommandEvent& event);
 	void OnMenuOpenRemote(wxCommandEvent& event);
+	void OnMenuCloseProject(wxCommandEvent& event);
 	void OnMenuOpenRecentFile(wxCommandEvent& event);
 	void OnMenuOpenRecentProject(wxCommandEvent& event);
 	void OnMenuSave(wxCommandEvent& event);
@@ -400,11 +280,13 @@ private:
 	void OnMenuSettings(wxCommandEvent& event);
 	void OnMenuFilter(wxCommandEvent& event);
 	void OnMenuRunCurrent(wxCommandEvent& event);
+
 	void OnMenuNextTab(wxCommandEvent& event);
-	void OnMenuNextTabOrLast(wxCommandEvent& event);
+	void OnMenuLastTab(wxCommandEvent& event);
 	void OnMenuPrevTab(wxCommandEvent& event);
 	void OnMenuGotoTab(wxCommandEvent& event);
 	void OnMenuGotoLastTab(wxCommandEvent& event);
+
 	void OnMenuOpenExt(wxCommandEvent& event);
 	void OnMenuGotoFile(wxCommandEvent& event);
 	void OnMenuGotoLine(wxCommandEvent& event);
@@ -421,9 +303,9 @@ private:
 	void OnMenuShowProject(wxCommandEvent& event);
 	void OnMenuShowSymbols(wxCommandEvent& event);
 	void OnMenuSymbols(wxCommandEvent& event);
-	void OnShiftProjectFocus(wxCommandEvent& event);
 	void OnMenuRevisionHistory(wxCommandEvent& event);
 	void OnMenuUndoHistory(wxCommandEvent& event);
+	void OnMenuShowCommandOutput(wxCommandEvent& event);
 	void OnMenuLineNumbers(wxCommandEvent& event);
 	void OnMenuIndentGuide(wxCommandEvent& event);
 	void OnMenuWordWrap(wxCommandEvent& event);
@@ -446,6 +328,7 @@ private:
 	void OnMenuEditBundles(wxCommandEvent& event);
 	void OnMenuManageBundles(wxCommandEvent& event);
 	void OnMenuBundleAction(wxCommandEvent& event);
+
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);
 	void OnEraseBackground(wxEraseEvent& event);
@@ -486,6 +369,8 @@ private:
 	static void OnBundleActionsReloaded(EditorFrame* self, void* data, int filter);
 	static void OnBundlesReloaded(EditorFrame* self, void* data, int filter);
 
+	void TogglePane(wxWindow* targetPane, bool showPane);
+
 	// Member variables
 	CatalystWrapper m_catalyst;
 	Dispatcher& dispatcher;
@@ -523,7 +408,7 @@ private:
 	UndoHistory* undoHistory;
 	DocHistory* documentHistory;
 	//Incomming* incommingPane;
-	HtmlOutputWin* m_outputPane;
+	HtmlOutputPane* m_outputPane;
 	ProjectPane* m_projectPane;
 	BundlePane* m_bundlePane;
 	SymbolList* m_symbolList;

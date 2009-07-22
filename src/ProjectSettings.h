@@ -14,18 +14,16 @@
 #ifndef __PROJECTSETTINGS_H__
 #define __PROJECTSETTINGS_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/dialog.h>
 #endif
 
 class cxProjectInfo;
-class wxGrid;
-class wxGridEvent;
 class wxCheckBox;
 class wxTextCtrl;
 class wxCommandEvent;
+class EnvVarsPanel;
 
 class ProjectSettings : public wxDialog {
 public:
@@ -35,11 +33,7 @@ public:
 	void GetSettings(cxProjectInfo& project) const;
 
 private:
-	// Event handlers
 	void OnInheritCheck(wxCommandEvent& event);
-	void OnButtonAddEnv(wxCommandEvent& event);
-	void OnButtonDelEnv(wxCommandEvent& event);
-	void OnGridChange(wxGridEvent& event);
 	DECLARE_EVENT_TABLE()
 
 	// Member varibles
@@ -47,13 +41,13 @@ private:
 	const cxProjectInfo& m_parentProject;
 	bool m_envModified;
 
-	// ctrls
+	// Controls
 	wxCheckBox* m_inheritCheck;
 	wxTextCtrl* m_includeDirs;
 	wxTextCtrl* m_includeFiles;
 	wxTextCtrl* m_excludeDirs;
 	wxTextCtrl* m_excludeFiles;
-	wxGrid* m_envList;
+	EnvVarsPanel* m_envPage;
 };
 
 #endif // __PROJECTSETTINGS_H__

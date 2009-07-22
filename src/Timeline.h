@@ -14,21 +14,14 @@
 #ifndef __TIMELINE_H__
 #define __TIMELINE_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
+
 #include <wx/datetime.h>
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class Timeline : public wxControl {
 public:
@@ -71,7 +64,7 @@ private:
 	};
 
 	int m_itemHeight;
-	vector<item> m_items;
+	std::vector<item> m_items;
 };
 
 #endif // __TIMELINE_H__

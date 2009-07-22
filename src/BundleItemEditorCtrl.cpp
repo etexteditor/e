@@ -134,9 +134,15 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 						if (!beforeRunningCommand.empty()) itemDict.wxSetString("beforeRunningCommand", beforeRunningCommand);
 						if (!output.empty()) itemDict.wxSetString("input", input);
 						if (!output.empty()) itemDict.wxSetString("output", output);
-						if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); else itemDict.DeleteItem("keyEquivalent");
-						if (!tabTrigger.empty()) itemDict.wxSetString("tabTrigger", tabTrigger); else itemDict.DeleteItem("tabTrigger");
-						if (input == wxT("selection") && !fallbackInput.empty()) itemDict.wxSetString("fallbackInput", fallbackInput); else itemDict.DeleteItem("fallbackInput");
+
+						if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); 
+						else itemDict.DeleteItem("keyEquivalent");
+
+						if (!tabTrigger.empty()) itemDict.wxSetString("tabTrigger", tabTrigger); 
+						else itemDict.DeleteItem("tabTrigger");
+
+						if (input == wxT("selection") && !fallbackInput.empty()) itemDict.wxSetString("fallbackInput", fallbackInput); 
+						else itemDict.DeleteItem("fallbackInput");
 					}
 					else { // BUNDLE_DRAGCMD
 						PListArray extArray = itemDict.NewArray("draggedFileExtensions");
@@ -175,8 +181,12 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 					doc.GetProperty(wxT("bundle:tabTrigger"), tabTrigger);
 					doc.GetProperty(wxT("bundle:scope"), scope);
 
-					if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); else itemDict.DeleteItem("keyEquivalent");
-					if (!tabTrigger.empty()) itemDict.wxSetString("tabTrigger", tabTrigger); else itemDict.DeleteItem("tabTrigger");
+					if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); 
+					else itemDict.DeleteItem("keyEquivalent");
+
+					if (!tabTrigger.empty()) itemDict.wxSetString("tabTrigger", tabTrigger); 
+					else itemDict.DeleteItem("tabTrigger");
+
 					itemDict.wxSetString("scope", scope);
 				}
 				break;
@@ -231,7 +241,9 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 
 						wxString keyEquivalent;
 						doc.GetProperty(wxT("bundle:keyEquivalent"), keyEquivalent);
-						if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); else itemDict.DeleteItem("keyEquivalent");
+
+						if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); 
+						else itemDict.DeleteItem("keyEquivalent");
 					}
 				}
 				break;
@@ -241,7 +253,8 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 	cxENDLOCK
 
 	// Save to plist
-	if (!plistHandler.Save(m_bundleType, bundleId, itemId)) return false;
+	if (!plistHandler.Save(m_bundleType, bundleId, itemId)) 
+		return false;
 
 	// Update mirror
 	const wxDateTime modDate = itemDict.GetModDate();

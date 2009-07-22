@@ -14,26 +14,19 @@
 #ifndef __PLISTHANDLER_H__
 #define __PLISTHANDLER_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
+
 #include "mk4.h"
 #include <wx/filename.h>
 
 #include "BundleItemType.h"
 #include "BundleInfo.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
 #include <algorithm>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 // Pre-definitions
 class TiXmlElement;
@@ -64,7 +57,7 @@ public:
 	};
 
 	// Theme lists
-	void GetThemes(vector<cxItemRef>& themes) const;
+	void GetThemes(std::vector<cxItemRef>& themes) const;
 
 	// Themes
 	bool IsThemeEditable(unsigned int ndx) const;
@@ -78,8 +71,8 @@ public:
 	unsigned int NewTheme(const wxString& name);
 
 	// Bundles (General)
-	vector<unsigned int> GetBundles() const;
-	vector<cxBundleInfo> GetInstalledBundlesInfo() const;
+	std::vector<unsigned int> GetBundles() const;
+	std::vector<cxBundleInfo> GetInstalledBundlesInfo() const;
 	PListDict GetBundleInfo(unsigned int ndx) const;
 	unsigned int NewBundle(const wxString& name);
 	PListDict GetEditableBundleInfo(unsigned int bundleId);
@@ -98,7 +91,7 @@ public:
 	bool ExportBundleItem(const wxFileName& dstPath, BundleItemType type, unsigned int bundleId, unsigned int itemId) const;
 
 	// Bundle items
-	vector<unsigned int> GetList(BundleItemType type, unsigned int bundleId) const;
+	std::vector<unsigned int> GetList(BundleItemType type, unsigned int bundleId) const;
 	PListDict Get(BundleItemType type, unsigned int bundleId, unsigned int itemId) const;
 	PListDict GetEditable(BundleItemType type, unsigned int bundleId, unsigned int itemId);
 	unsigned int New(BundleItemType type, unsigned int bundleId, const wxString& name);
@@ -125,7 +118,6 @@ public:
 	void SetSyntaxAssoc(const wxString& ext, const wxString& syntax);
 
 private:
-
 	void UpdatePlists(const wxFileName& path, wxArrayString& filePaths, int loc, c4_View vList);
 	void UpdateBundles(const wxFileName& path, int loc, cxUpdateMode mode);
 	void UpdateBundleSubDirs(const wxFileName& path, int loc, unsigned int bundleId, cxUpdateMode mode);

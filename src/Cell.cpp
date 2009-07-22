@@ -14,8 +14,7 @@
 #include "Cell.h"
 
 
-Cell::Cell(const wxDC& dc) : dc(dc), width(0), height(0) {
-}
+Cell::Cell(const wxDC& dc) : dc(dc), width(0), height(0) {}
 
 void Cell::Destroy() {
 	delete this;
@@ -78,7 +77,7 @@ DiffLineCell::~DiffLineCell() {
 
 void DiffLineCell::Clear() {
 	// Delete subCells
-	for(vector<Cell*>::iterator p = subCells.begin(); p != subCells.end(); ++p) {
+	for(std::vector<Cell*>::iterator p = subCells.begin(); p != subCells.end(); ++p) {
 		(*p)->Destroy();
 	}
 	subCells.clear();
@@ -113,7 +112,7 @@ void DiffLineCell::CalcLayout(const doc_id& rev1, const doc_id& rev2) {
 		}
 		else {
 			bool change = false;
-			const vector<match> matchlist = doc.Diff(rev1, rev2);
+			const std::vector<match> matchlist = doc.Diff(rev1, rev2);
 
 			unsigned int pos1 = 0;
 			unsigned int pos2 = 0;
@@ -196,7 +195,7 @@ void DiffLineCell::CalcLayoutRange(const doc_id& rev1, const doc_id& rev2, const
 		}
 		else {
 			bool change = false;
-			const vector<match> matchlist = doc.Diff(rev1, rev2);
+			const std::vector<match> matchlist = doc.Diff(rev1, rev2);
 
 			unsigned int pos1 = 0;
 			unsigned int pos2 = 0;

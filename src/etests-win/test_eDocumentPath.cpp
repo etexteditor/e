@@ -24,6 +24,7 @@ TEST(eDocumentPathTest, convertsUncPathsToWin) {
 		eDocumentPath::CygwinPathToWin(wxT("//server/share/path/to/file.txt")) );
 }
 
+
 TEST(eDocumentPathTest, convertsUncPathsToUnix) {
 	wxFileName uncFile( wxT("\\\\server\\share\\path\\to\\file.txt") );
 	EXPECT_STREQ( L"//server/share/path/to/file.txt",

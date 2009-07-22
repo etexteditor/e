@@ -401,7 +401,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IOpenTextmateURL.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IPrintableDocument.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ISettings.h"
 				>
 			</File>
 			<File
@@ -694,6 +702,14 @@
 			</File>
 			<File
 				RelativePath="wxactivex.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wxListCtrlEx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wxListCtrlEx.h"
 				>
 			</File>
 		</Filter>
@@ -1738,6 +1754,22 @@
 			>
 		</File>
 		<File
+			RelativePath=".\AutoPairs.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\AutoPairs.h"
+			>
+		</File>
+		<File
+			RelativePath=".\BracketHighlight.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\BracketHighlight.h"
+			>
+		</File>
+		<File
 			RelativePath=".\BundleInfo.h"
 			>
 		</File>
@@ -1938,6 +1970,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Colours.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Colours.h"
+			>
+		</File>
+		<File
 			RelativePath="CompletionPopup.cpp"
 			>
 			<FileConfiguration
@@ -1983,6 +2023,22 @@
 		</File>
 		<File
 			RelativePath="CrashFileNames.h"
+			>
+		</File>
+		<File
+			RelativePath=".\CurrentTabsPopup.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CurrentTabsPopup.h"
+			>
+		</File>
+		<File
+			RelativePath=".\DetectTripleClicks.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DetectTripleClicks.h"
 			>
 		</File>
 		<File
@@ -2518,6 +2574,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\EnvVarsPanel.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\EnvVarsPanel.h"
+			>
+		</File>
+		<File
 			RelativePath=".\eSettings.cpp"
 			>
 		</File>
@@ -2699,50 +2763,6 @@
 		</File>
 		<File
 			RelativePath="FileActionThread.h"
-			>
-		</File>
-		<File
-			RelativePath="FindCmdDlg.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug Testing|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="FindCmdDlg.h"
 			>
 		</File>
 		<File
@@ -2942,6 +2962,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\HtmlOutputPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\HtmlOutputPane.h"
+			>
+		</File>
+		<File
 			RelativePath="IEHtmlWin.cpp"
 			>
 			<FileConfiguration
@@ -2983,6 +3011,10 @@
 		</File>
 		<File
 			RelativePath="IEHtmlWin.h"
+			>
+		</File>
+		<File
+			RelativePath=".\Interval.h"
 			>
 		</File>
 		<File
@@ -3514,6 +3546,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\SeparatorLine.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SeparatorLine.h"
+			>
+		</File>
+		<File
 			RelativePath="ShellContextMenu.cpp"
 			>
 			<FileConfiguration
@@ -3659,6 +3699,14 @@
 		</File>
 		<File
 			RelativePath="StatusBar.h"
+			>
+		</File>
+		<File
+			RelativePath=".\StringHistorySetting.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\StringHistorySetting.h"
 			>
 		</File>
 		<File
@@ -4015,6 +4063,14 @@
 		</File>
 		<File
 			RelativePath="UndoHistory.h"
+			>
+		</File>
+		<File
+			RelativePath=".\UpdaterThread.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\UpdaterThread.h"
 			>
 		</File>
 		<File

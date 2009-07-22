@@ -14,10 +14,11 @@
 #ifndef __PREVIEWDLG_H__
 #define __PREVIEWDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
-   #include <wx/wx.h>
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
 #endif
+
 #include "Env.h"
 
 #ifdef __WXMSW__

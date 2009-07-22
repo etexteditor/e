@@ -25,18 +25,9 @@
 
 #include <wx/filename.h>
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
 #include <deque>
 #include <map>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-
-using namespace std;
 
 #include "tmBundle.h"
 #include "tmAction.h"
@@ -94,7 +85,7 @@ struct tmPrefs {
 };
 
 struct tmCompletionCmd {
-	vector<char> cmd;
+	std::vector<char> cmd;
 	tmBundle* bundle;
 };
 
@@ -105,11 +96,11 @@ public:
 	~sNode();
 	void clear();
 
-	typedef map<wxString,sNode<T>*> NodeMap;
+	typedef std::map<wxString,sNode<T>*> NodeMap;
 
-	const vector<const T*>* GetMatch(const deque<const wxString*>& scopes) const;
-	void GetMatches(const deque<const wxString*>& scopes, vector<const T*>& result) const;
-	template<class P> void GetMatches(const deque<const wxString*>& scopes, vector<const T*>& result, P& pred) const {
+	const std::vector<const T*>* GetMatch(const std::deque<const wxString*>& scopes) const;
+	void GetMatches(const std::deque<const wxString*>& scopes, std::vector<const T*>& result) const;
+	template<class P> void GetMatches(const std::deque<const wxString*>& scopes, std::vector<const T*>& result, P& pred) const {
 		if (!scopes.empty()) {
 			if (orNodes) {
 				// We start at the bottom of the scope and we keep going a level up
@@ -134,7 +125,7 @@ public:
 
 		// match (but there may be no targets here)
 		if (targets) {
-			typename vector<const T*>::const_iterator p = targets->begin();
+			typename std::vector<const T*>::const_iterator p = targets->begin();
 			while (p != targets->end()) {
 				const T* t = *p;
 
@@ -146,9 +137,9 @@ public:
 		}
 	};
 
-	const vector<const T*>* Match(const wxString& scope, size_t scopePos, const deque<const wxString*>& scopes, size_t level) const;
-	void Matches(const wxArrayString& words, unsigned int pos, const deque<const wxString*>& scopes, size_t level, vector<const T*>& result) const;
-	template<class P> bool MatchPredicate(const wxArrayString& words, unsigned int pos, const deque<const wxString*>& scopes, size_t level, vector<const T*>& result, P& pred) const {
+	const std::vector<const T*>* Match(const wxString& scope, size_t scopePos, const std::deque<const wxString*>& scopes, size_t level) const;
+	void Matches(const wxArrayString& words, unsigned int pos, const std::deque<const wxString*>& scopes, size_t level, std::vector<const T*>& result) const;
+	template<class P> bool MatchPredicate(const wxArrayString& words, unsigned int pos, const std::deque<const wxString*>& scopes, size_t level, std::vector<const T*>& result, P& pred) const {
 		wxASSERT(word == words[pos]);
 
 		const unsigned int nextPos = pos+1;
@@ -176,7 +167,7 @@ public:
 		// match (but there may be no targes here)
 		bool isFound = false;
 		if (targets) {
-			typename vector<const T*>::const_iterator p = targets->begin();
+			typename std::vector<const T*>::const_iterator p = targets->begin();
 			while (p != targets->end()) {
 				if (pred(*p)) {
 					result.insert(result.end(), *p);
@@ -198,7 +189,7 @@ public:
 	NodeMap* postfix;
 	NodeMap* orNodes;
 	NodeMap* ancestors;
-	vector<const T*>* targets;
+	std::vector<const T*>* targets;
 
 	void Print(size_t indent=0) const;
 
@@ -215,7 +206,7 @@ public:
 	TmSyntaxHandler(Dispatcher& disp, PListHandler& plistHandler);
 	~TmSyntaxHandler();
 
-	class ShortcutMatch : public unary_function<const tmAction*, bool> {
+	class ShortcutMatch : public std::unary_function<const tmAction*, bool> {
 	public:
 		ShortcutMatch(int keyCode, int modifiers)
 			: m_keyCode(keyCode), m_modifiers(modifiers) {};
@@ -228,7 +219,7 @@ public:
 		const int m_modifiers;
 	};
 
-	class ExtMatch : public unary_function<const tmDragCommand*, bool> {
+	class ExtMatch : public std::unary_function<const tmDragCommand*, bool> {
 	public:
 		ExtMatch(const wxString& ext) : m_ext(ext) {};
 		bool operator()(const tmDragCommand* x) const {
@@ -239,7 +230,7 @@ public:
 		const wxString& m_ext;
 	};
 
-	class PrefsMatch : public unary_function<const tmPrefs*, bool> {
+	class PrefsMatch : public std::unary_function<const tmPrefs*, bool> {
 	public:
 		enum PrefType {
 			increaseIndentPattern,
@@ -278,7 +269,7 @@ public:
 	// Bundle Parsing
 	virtual void LoadBundles(cxBundleLoad mode);
 	virtual void ReParseBundles(bool onlyMenu=false);
-	void LoadSyntaxes(const vector<unsigned int>& bundles);
+	void LoadSyntaxes(const std::vector<unsigned int>& bundles);
 	void LoadBundle(unsigned int bundeId);
 	bool AllBundlesLoaded() const {return m_nextBundle == m_bundleList.size();};
 
@@ -298,50 +289,50 @@ public:
 	virtual void SetFont(const wxFont& font);
 
 	// Syntax
-	virtual const vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};
+	virtual const std::vector<cxSyntaxInfo*>& GetSyntaxes() const {return m_syntaxes;};
 	void GetSyntaxes(wxArrayString& nameArray) const;
 	const cxSyntaxInfo* GetSyntax(const wxString& syntaxName, const wxString& ext=wxEmptyString);
 	const cxSyntaxInfo* GetSyntax(const DocumentWrapper& document);
 
 	// Style
-	const style* GetStyle(const deque<const wxString*>& scopes) const;
+	const style* GetStyle(const std::deque<const wxString*>& scopes) const;
 
 	// Actions
-	void GetAllActions(const deque<const wxString*>& scopes, vector<const tmAction*>& result) const;
-	void GetActions(const deque<const wxString*>& scopes, vector<const tmAction*>& result, const ShortcutMatch& matchfun) const;
-	void GetDragActions(const deque<const wxString*>& scopes, vector<const tmDragCommand*>& result, const ExtMatch& matchfun) const;
-	const vector<const tmAction*> GetActions(const wxString& trigger, const deque<const wxString*>& scopes) const;
-	const vector<char>& GetActionContent(const tmAction& action) const;
+	void GetAllActions(const std::deque<const wxString*>& scopes, std::vector<const tmAction*>& result) const;
+	void GetActions(const std::deque<const wxString*>& scopes, std::vector<const tmAction*>& result, const ShortcutMatch& matchfun) const;
+	void GetDragActions(const std::deque<const wxString*>& scopes, std::vector<const tmDragCommand*>& result, const ExtMatch& matchfun) const;
+	const std::vector<const tmAction*> GetActions(const wxString& trigger, const std::deque<const wxString*>& scopes) const;
+	const std::vector<char>& GetActionContent(const tmAction& action) const;
 
 	// Indentation
-	const wxString& GetIndentNonePattern(const deque<const wxString*>& scopes) const;
-	const wxString& GetIndentNextPattern(const deque<const wxString*>& scopes) const;
-	const wxString& GetIndentIncreasePattern(const deque<const wxString*>& scopes) const;
-	const wxString& GetIndentDecreasePattern(const deque<const wxString*>& scopes) const;
+	const wxString& GetIndentNonePattern(const std::deque<const wxString*>& scopes) const;
+	const wxString& GetIndentNextPattern(const std::deque<const wxString*>& scopes) const;
+	const wxString& GetIndentIncreasePattern(const std::deque<const wxString*>& scopes) const;
+	const wxString& GetIndentDecreasePattern(const std::deque<const wxString*>& scopes) const;
 
 	// Shell variables
-	map<wxString, wxString> GetShellVariables(const deque<const wxString*>& scopes) const;
+	std::map<wxString, wxString> GetShellVariables(const std::deque<const wxString*>& scopes) const;
 
 	// Smart Typing Pairs
-	map<wxString, wxString> GetSmartTypingPairs(const deque<const wxString*>& scopes) const;
+	std::map<wxString, wxString> GetSmartTypingPairs(const std::deque<const wxString*>& scopes) const;
 
 	// Completion
-	const vector<wxString>* GetCompletionList(const deque<const wxString*>& scopes) const;
-	const tmCompletionCmd* GetCompletionCmd(const deque<const wxString*>& scopes) const;
-	bool DisableDefaultCompletion(const deque<const wxString*>& scopes) const;
+	const std::vector<wxString>* GetCompletionList(const std::deque<const wxString*>& scopes) const;
+	const tmCompletionCmd* GetCompletionCmd(const std::deque<const wxString*>& scopes) const;
+	bool DisableDefaultCompletion(const std::deque<const wxString*>& scopes) const;
 
 	// Symbol
-	bool ShowSymbol(const deque<const wxString*>& scopes, const wxString*& transform) const;
+	bool ShowSymbol(const std::deque<const wxString*>& scopes, const wxString*& transform) const;
 
 	// Folding
 	class cxFoldRule {
 	public:
 		cxFoldRule(unsigned int id, const char* startMarker, const char* endMarker);
 		const unsigned int ruleId;
-		const vector<char> foldingStartMarker;
-		const vector<char> foldingEndMarker;
+		const std::vector<char> foldingStartMarker;
+		const std::vector<char> foldingEndMarker;
 	};
-	const cxFoldRule* GetFoldRule(const deque<const wxString*>& scopes) const;
+	const cxFoldRule* GetFoldRule(const std::deque<const wxString*>& scopes) const;
 
 private:
 	void ClearBundleInfo();
@@ -364,7 +355,7 @@ private:
 	bool GetThemeName(const wxFileName& path, wxString& name);
 	bool LoadTheme(const char* uuid);
 	bool ParseSettings(const PListDict& dict, tmTheme& settings);
-	bool ParseStyle(const PListDict& dict, vector<style*>& styles, tmTheme& settings);
+	bool ParseStyle(const PListDict& dict, std::vector<style*>& styles, tmTheme& settings);
 	wxColour ParseColor(const wxString& color_hex, const wxColour& bgColor);
 
 	// Snippet parsing
@@ -389,7 +380,7 @@ private:
 	group_matcher* NewGroup();
 
 
-	class cp_less : public binary_function<const char*, const char*, bool> {
+	class cp_less : public std::binary_function<const char*, const char*, bool> {
 	public:
 		bool operator()(const char* x, const char* y) const {return strcmp(x,y) < 0;};
 	};
@@ -399,37 +390,37 @@ private:
 	Dispatcher& m_dispatcher;
 	tmTheme m_defaultTheme;
 	tmTheme m_currentTheme;
-	vector<tmBundle*> m_bundles;
-	vector<cxSyntaxInfo*> m_syntaxes;
-	vector<matcher*> m_matchers;
-	vector<style*> m_styles;
+	std::vector<tmBundle*> m_bundles;
+	std::vector<cxSyntaxInfo*> m_syntaxes;
+	std::vector<matcher*> m_matchers;
+	std::vector<style*> m_styles;
 	sNode<style>* m_styleNode;
 	sNode<tmAction> m_actionNode;
 	sNode<tmDragCommand> m_dragNode;
-	map<const wxString, tmAction*> m_actions;
-	map<const wxString, sNode<tmAction>*> m_actionTriggers;
-	map<unsigned int, wxString> m_menuActions;
+	std::map<const wxString, tmAction*> m_actions;
+	std::map<const wxString, sNode<tmAction>*> m_actionTriggers;
+	std::map<unsigned int, wxString> m_menuActions;
 	wxMenu* m_bundleMenu;
 	unsigned int m_nextMenuID;
 	unsigned int m_nextFoldID;
 
 	// Idle time bundle parsing
-	vector<unsigned int> m_bundleList;
+	std::vector<unsigned int> m_bundleList;
 	bool m_doUpdateBundles;
 	unsigned int m_nextBundle;
 
 	// Preferences
-	vector<tmPrefs*> m_prefs;
-	vector<map<wxString, wxString>* > m_shellVarPrefs;
-	vector<map<wxString, wxString>* > m_smartTypingPairs;
-	vector<vector<wxString>* > m_completions;
-	vector<tmCompletionCmd*> m_completionCmds;
-	vector<wxString*> m_symbolTransforms;
-	vector<cxFoldRule*> m_foldRules;
+	std::vector<tmPrefs*> m_prefs;
+	std::vector<std::map<wxString, wxString>* > m_shellVarPrefs;
+	std::vector<std::map<wxString, wxString>* > m_smartTypingPairs;
+	std::vector<std::vector<wxString>* > m_completions;
+	std::vector<tmCompletionCmd*> m_completionCmds;
+	std::vector<wxString*> m_symbolTransforms;
+	std::vector<cxFoldRule*> m_foldRules;
  	sNode<tmPrefs> m_prefsNode;
-	sNode<map<wxString, wxString> > m_shellVarNode;
-	sNode<map<wxString, wxString> > m_smartPairsNode;
-	sNode<vector<wxString> > m_completionsNode;
+	sNode<std::map<wxString, wxString> > m_shellVarNode;
+	sNode<std::map<wxString, wxString> > m_smartPairsNode;
+	sNode<std::vector<wxString> > m_completionsNode;
 	sNode<tmCompletionCmd> m_completionCmdNode;
 	sNode<void> m_disableCompletionNode;
 	sNode<wxString> m_symbolNode;
@@ -437,10 +428,10 @@ private:
 
 	// Syntax parser state
 	cxSyntaxInfo* m_currentSyntax;
-	vector<matcher*> * m_currentMatchers;
+	std::vector<matcher*> * m_currentMatchers;
 	const PListDict* m_currentRepo;
-	map<const char*,matcher*,cp_less> * m_currentParsedReps;
-	map<const char*,matcher**,cp_less> * m_repsInParsing;
+	std::map<const char*,matcher*,cp_less> * m_currentParsedReps;
+	std::map<const char*,matcher**,cp_less> * m_repsInParsing;
 
 	static const wxString s_emptyString;
 };

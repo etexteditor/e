@@ -19,18 +19,20 @@
 	#include <wx/wx.h>
 #endif
 
+#include <wx/dnd.h>
+#include <wx/caret.h>
+
 #include "Catalyst.h"
 #include "Lines.h"
-#include <wx/caret.h>
-//#include "styler_users.h"
 #include "styler_searchhl.h"
 #include "styler_syntax.h"
 #include "SnippetHandler.h"
 #include "key_hook.h"
 #include "FindFlags.h"
 #include "BundleItemType.h"
-
-#include <wx/dnd.h>
+#include "BracketHighlight.h"
+#include "DetectTripleClicks.h"
+#include "AutoPairs.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -215,7 +217,7 @@ public:
 	virtual cxFindResult FindNext(const wxString& text, int options=0);
 	virtual bool FindPrevious(const wxString& text, int options=0);
 	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
-	virtual bool ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual int ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
 	virtual void ClearSearchHighlight();
 
 	// SnippetHandler and EditorFrame use 3 of the following methods; may need some more refactoring here to capture that
@@ -345,6 +347,12 @@ public:
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
 
+	// Scroll Position
+	int GetYScrollPos() const { return scrollPos; };
+
+	// Theme
+	const tmTheme& GetTheme() const { return m_theme; };
+
 #ifdef __WXDEBUG__
 	void Print();
 #endif  //__WXDEBUG__
@@ -451,7 +459,11 @@ private:
 
 	void ClearRemoteInfo();
 
+public:
+	// Used by GutterControl
 	void DrawLayout(bool isScrolling=false) {wxClientDC dc(this);DrawLayout(dc, isScrolling);};
+
+protected:
 	void DrawLayout(wxDC& dc, bool isScrolling=false);
 	bool UpdateScrollbars(unsigned int x, unsigned int y);
 	void HandleScroll(int orientation, int position, wxEventType eventType);
@@ -642,28 +654,6 @@ private:
 	// Drag'n'Drop
 	wxPoint m_dragStartPos;
 
-	class DetectTripleClicks {
-	public:
-		DetectTripleClicks(): m_doubleClickedLine(-1) {}
-		void Reset() { 
-			m_doubleClickedLine = -1;
-			m_timer.Pause();
-		};
-
-		void Start(int doubleClickedLine){
-			m_doubleClickedLine = doubleClickedLine;
-			m_timer.Start();
-		};
-
-		bool TripleClickedLine(int line_id){
-			return m_doubleClickedLine == line_id && m_timer.Time() < 250;
-		};
-
-	private:
-		int m_doubleClickedLine;
-		wxStopWatch m_timer;
-	};
-
 	DetectTripleClicks m_tripleClicks;
 
 	enum SelMode {
@@ -696,54 +686,13 @@ private:
 
 	wxString m_indent;
 
-	// Auto-pair brackets
-	bool m_doAutoPair;
+	AutoPairs m_autopair;
+
+	// Wrapping
 	bool m_doAutoWrap;
-	vector<interval> m_pairStack;
 	bool m_wrapAtMargin;
 
-	class BracketHighlight {
-	public:
-		BracketHighlight(){};
-
-		void Set(unsigned int start, unsigned int end){ m_interval.Set(start, end); };
-		void Clear() { m_interval.start = m_interval.end = 0; };
-
-		bool IsEndPoint(const unsigned int pos) const { return (pos == m_interval.start) || (pos == m_interval.end); };
-
-		const unsigned int OtherEndPoint(const unsigned int pos) const {
-			if (pos == m_interval.start) return m_interval.end;
-			if (pos == m_interval.end) return m_interval.start;
-
-			// Not on an endpoint, but have to return something.
-			return (unsigned int)-1;
-		};
-
-		const interval& GetInterval() const {return m_interval;};
-		bool HasInterval() const {return m_interval.start != m_interval.end; };
-
-		bool HasOrderedInterval() const {
-			return m_interval.start < m_interval.end;
-		};
-
-		bool UpdateIfChanged(unsigned int changeToken, unsigned int pos) {
-			// If no change to document or position, then stop.
-			if (m_lastChangeToken == changeToken && m_lastPos == pos) return false;
-
-			// Set new change token and position.
-			m_lastChangeToken = changeToken;
-			m_lastPos = pos;
-			return true;
-		};
-
-	private:
-		interval m_interval; // Interval for the current bracket pair.
-		unsigned int m_lastChangeToken;
-		unsigned int m_lastPos;
-	};
-
 	BracketHighlight m_bracketHighlight;
-
 
 	int m_lastScopePos;
 
@@ -760,8 +709,6 @@ private:
 	// Key state
 	static unsigned long s_ctrlDownTime;
 	static bool s_altGrDown;
-
-	friend class GutterCtrl;
 };
 
 #endif // __EDITORCTRL_H__

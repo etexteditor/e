@@ -12,8 +12,75 @@
  ******************************************************************************/
 
 #include "GotoFileDlg.h"
+
+using namespace std;
+#include <map>
 #include <algorithm>
+
+#include <wx/dir.h>
+
 #include "ProjectInfoHandler.h"
+#include "SearchListBox.h"
+
+class FileEntry {
+public:
+	FileEntry() {};
+	FileEntry(const wxString& dirpath, const wxString& filename);
+	void SetPath(const wxString& path);
+	void Clear();
+
+	wxString name;
+	wxString nameLower;
+	wxString path;
+};
+
+struct DirState {
+	wxDir dir;
+	cxProjectInfo* info;
+	const cxProjectInfo* filter;
+	wxString prefix;
+	wxString nextDirName;
+};
+
+class FileActionList : public SearchListBox {
+public:
+	FileActionList(wxWindow* parent, wxWindowID id, const vector<FileEntry*>& actions);
+	~FileActionList();
+
+	void Find(const wxString& text, const map<wxString,wxString>& triggers);
+	const FileEntry* GetSelectedAction();
+
+	void UpdateList(bool reloadAll = false);
+
+private:
+	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const;
+	int FindPath(const wxString& path) const;
+	void AddActionIfMatching(const wxString& searchtext, FileEntry* action);
+
+	class aItem {
+	public:
+		aItem() : action(NULL), rank(0) {};
+		aItem(const FileEntry* a, const vector<unsigned int>& hl);
+		bool operator<(const aItem& ai) const;
+		void swap(aItem& ai);
+
+		const FileEntry* action;
+		vector<unsigned int> hlChars;
+		unsigned int rank;
+	};
+
+	void iter_swap(vector<aItem>::iterator a, vector<aItem>::iterator b) {
+		a->swap(*b);
+	};
+
+	const vector<FileEntry*>& m_actions;
+	vector<aItem> m_items;
+	wxString m_searchText;
+
+	FileEntry* m_tempEntry;
+	unsigned int m_actionCount;
+};
+
 
 // Ctrl id's
 enum {
@@ -30,13 +97,13 @@ BEGIN_EVENT_TABLE(GotoFileDlg, wxDialog)
 	EVT_IDLE(GotoFileDlg::OnIdle)
 END_EVENT_TABLE()
 
-GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project)
-:  wxDialog (parent, -1, _("Go to File"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project):
+	wxDialog (parent, -1, _("Go to File"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
    m_project(project), m_isDone(false), m_filesLoaded(false)
 {
 	// Create Ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-	m_cmdList = new ActionList(this, CTRL_ALIST, m_files);
+	m_cmdList = new FileActionList(this, CTRL_ALIST, m_files);
 	m_pathStatic = new wxStaticText(this, wxID_ANY, wxEmptyString);
 
 	// Add custom event handler
@@ -64,6 +131,9 @@ GotoFileDlg::~GotoFileDlg() {
 		delete *d;
 	}
 }
+
+const wxString& GotoFileDlg::GetSelection() const {return m_cmdList->GetSelectedAction()->path;}
+const wxString GotoFileDlg::GetTrigger() const {return m_searchCtrl->GetValue();}
 
 void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 	if (m_filesLoaded) return; // Already done loading files.
@@ -228,20 +298,20 @@ void GotoFileDlg::UpdateStatusbar() {
 
 // ---- FileEntry ----------------------------------------------------
 
-GotoFileDlg::FileEntry::FileEntry(const wxString& dirpath, const wxString& filename) {
+FileEntry::FileEntry(const wxString& dirpath, const wxString& filename) {
 	name = filename;
 	nameLower = name.Lower();
 	path = dirpath + filename;
 }
 
-void GotoFileDlg::FileEntry::SetPath(const wxString& p) {
+void FileEntry::SetPath(const wxString& p) {
 	wxFileName filepath(p);
 	name = filepath.GetFullName();
 	nameLower = name.Lower();
 	path = p;
 }
 
-void GotoFileDlg::FileEntry::Clear() {
+void FileEntry::Clear() {
 	name.clear();
 	nameLower.clear();
 	path.clear();
@@ -249,13 +319,19 @@ void GotoFileDlg::FileEntry::Clear() {
 
 // --- ActionList --------------------------------------------------------
 
-GotoFileDlg::ActionList::ActionList(wxWindow* parent, wxWindowID id, const vector<FileEntry*>& actions)
-: SearchListBox(parent, id), m_actions(actions), m_actionCount(0) {
-
+FileActionList::FileActionList(wxWindow* parent, wxWindowID id, const vector<FileEntry*>& actions):
+	SearchListBox(parent, id), 
+	m_actions(actions), m_actionCount(0) 
+{
+	m_tempEntry = new FileEntry();
 	UpdateList();
 }
 
-void GotoFileDlg::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+FileActionList::~FileActionList(){
+	delete m_tempEntry;
+}
+
+void FileActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
 	const bool isCurrent = IsCurrent(n);
 
 	if (isCurrent) dc.SetTextForeground(m_hlTextColor);
@@ -288,7 +364,7 @@ void GotoFileDlg::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n)
 	DrawItemText(dc, rect, name, hl, isCurrent);
 }
 
-void GotoFileDlg::ActionList::UpdateList(bool reloadAll) {
+void FileActionList::UpdateList(bool reloadAll) {
 	const FileEntry* selEntry = GetSelectedAction();
 	const int topLine = GetFirstVisibleLine();
 	int selection = -1;
@@ -306,7 +382,7 @@ void GotoFileDlg::ActionList::UpdateList(bool reloadAll) {
 	else {
 		// Copy matching actions to items
 		for (unsigned int i = m_actionCount; i < m_actions.size(); ++i) {
-			if (m_tempEntry.path.empty() || m_actions[i]->path != m_tempEntry.path) {
+			if (m_tempEntry->path.empty() || m_actions[i]->path != m_tempEntry->path) {
 				AddActionIfMatching(m_searchText, m_actions[i]);
 			}
 		}
@@ -341,8 +417,8 @@ void GotoFileDlg::ActionList::UpdateList(bool reloadAll) {
 	m_actionCount = m_actions.size();
 }
 
-void GotoFileDlg::ActionList::Find(const wxString& searchtext, const map<wxString,wxString>& triggers) {
-	m_tempEntry.Clear();
+void FileActionList::Find(const wxString& searchtext, const map<wxString,wxString>& triggers) {
+	m_tempEntry->Clear();
 
 	if (searchtext.empty()) {
 		// Remove highlights
@@ -381,10 +457,10 @@ void GotoFileDlg::ActionList::Find(const wxString& searchtext, const map<wxStrin
 						// Since we have a trigger but it is not in list yet
 						// Let's check if it exists and add it temporarily
 						if (wxFileExists(p->second)) {
-							m_tempEntry.SetPath(p->second);
+							m_tempEntry->SetPath(p->second);
 
 							// Add entry with highlighted search chars
-							AddActionIfMatching(m_searchText, &m_tempEntry);
+							AddActionIfMatching(m_searchText, m_tempEntry);
 
 							// Find position it will end up after sort
 							vector<aItem>::iterator insPos = lower_bound(m_items.begin(), m_items.end()-1, m_items.back());
@@ -412,7 +488,7 @@ void GotoFileDlg::ActionList::Find(const wxString& searchtext, const map<wxStrin
 	Thaw();
 }
 
-void GotoFileDlg::ActionList::AddActionIfMatching(const wxString& text, FileEntry* action) {
+void FileActionList::AddActionIfMatching(const wxString& text, FileEntry* action) {
 	wxASSERT(!text.empty());
 
 	const wxString& name = action->nameLower;
@@ -436,7 +512,7 @@ void GotoFileDlg::ActionList::AddActionIfMatching(const wxString& text, FileEntr
 	}
 }
 
-int GotoFileDlg::ActionList::FindPath(const wxString& path) const {
+int FileActionList::FindPath(const wxString& path) const {
 	for (unsigned int i = 0; i < m_items.size(); ++i) {
 		if (m_items[i].action->path == path) return i;
 	}
@@ -444,27 +520,28 @@ int GotoFileDlg::ActionList::FindPath(const wxString& path) const {
 	return wxNOT_FOUND;
 }
 
-const GotoFileDlg::FileEntry* GotoFileDlg::ActionList::GetSelectedAction() {
+const FileEntry* FileActionList::GetSelectedAction() {
 	const int sel = GetSelection();
 	return (sel == -1) ? NULL : m_items[sel].action;
 }
 
 // --- aItem --------------------------------------------------------
 
-GotoFileDlg::ActionList::aItem::aItem(const FileEntry* a, const vector<unsigned int>& hl)
-: action(a), hlChars(hl) {
+FileActionList::aItem::aItem(const FileEntry* a, const vector<unsigned int>& hl):
+	action(a), hlChars(hl) 
+{
 	// Calculate rank (total distance between chars)
-	rank = 0;
-	if (hlChars.size() > 1) {
-		unsigned int prev = hlChars[0]+1;
-		for (vector<unsigned int>::const_iterator p = hlChars.begin()+1; p != hlChars.end(); ++p) {
-			rank += *p - prev;
-			prev = *p+1;
-		}
+	this->rank = 0;
+	if (hlChars.size() <= 1) return;
+
+	unsigned int prev = hlChars[0]+1;
+	for (vector<unsigned int>::const_iterator p = hlChars.begin()+1; p != hlChars.end(); ++p) {
+		this->rank += *p - prev;
+		prev = *p+1;
 	}
 }
 
-void GotoFileDlg::ActionList::aItem::swap(aItem& ai) {
+void FileActionList::aItem::swap(aItem& ai) {
 	const FileEntry* const tempAction = action;
 	action = ai.action;
 	ai.action = tempAction;
@@ -474,4 +551,11 @@ void GotoFileDlg::ActionList::aItem::swap(aItem& ai) {
 	ai.rank = tempRank;
 
 	hlChars.swap(ai.hlChars);
+}
+
+bool FileActionList::aItem::operator<(const aItem& ai) const {
+	if (rank < ai.rank) return true;
+	if (rank > ai.rank) return false;
+	if (action && ai.action) return (action->name) < (ai.action->name);
+	return false;
 }

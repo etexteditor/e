@@ -11,7 +11,11 @@
  *
  ******************************************************************************/
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
 #include <vector>
 #include "Cell.h"
@@ -83,7 +87,7 @@ private:
 	doc_id m_sourceDoc;
 	int m_source_win_id;
 	interval m_range;
-	vector<cxDiffEntry> m_rangeHistory;
+	std::vector<cxDiffEntry> m_rangeHistory;
 
 	bool m_needRedrawing;
 	int m_selectedNode;

@@ -28,6 +28,8 @@
 
 #include "Env.h"
 
+using namespace std;
+
 BEGIN_EVENT_TABLE(cxExecute, wxEvtHandler)
 	EVT_END_PROCESS(99, cxExecute::OnEndProcess)
 END_EVENT_TABLE()

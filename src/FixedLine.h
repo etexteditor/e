@@ -14,7 +14,11 @@
 #ifndef FIXEDLINE_H
 #define FIXEDLINE_H
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+   #include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
 #include "StyleRun.h"
 #include "WrapMode.h"

@@ -14,21 +14,33 @@
 #ifndef __SETTINGSDLG_H__
 #define __SETTINGSDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
-#include <wx/spinctrl.h>
 
 // Pre-declarations
 class eSettings;
+class wxSpinCtrl;
+class wxSpinEvent;
+class EnvVarsPanel;
 
 class SettingsDlg : public wxDialog {
 public:
-	SettingsDlg(wxWindow *parent, CatalystWrapper cw);
+	SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings);
 
 private:
+	wxPanel* CreateSettingsPage(wxWindow* parent);
+	wxPanel* CreateEncodingPage(wxWindow* parent);
+	wxPanel* CreateProfilePage(wxWindow* parent);
+	wxPanel* CreateUpdatePage(wxWindow* parent);
+
 	void UpdateEncoding();
 
 #ifdef __WXMSW__
+	wxPanel* CreateUnixPage(wxWindow* parent);
 	void UpdateUnixPage();
 #endif
 
@@ -36,12 +48,14 @@ private:
 	void OnButtonOk(wxCommandEvent& event);
 	void OnButtonLoadPic(wxCommandEvent& event);
 	void OnButtonCygwinAction(wxCommandEvent& event);
+	void OnButtonCheckForUpdates(wxCommandEvent& event);
 	void OnCheckAutoPair(wxCommandEvent& event);
 	void OnCheckAutoWrap(wxCommandEvent& event);
 	void OnCheckKeepState(wxCommandEvent& event);
 	void OnCheckCheckChange(wxCommandEvent& event);
 	void OnCheckShowMargin(wxCommandEvent& event);
 	void OnCheckWrapMargin(wxCommandEvent& event);
+	void OnCheckCheckForUpdates(wxCommandEvent& event);
 	void OnMarginSpin(wxSpinEvent& event);
 	void OnComboEol(wxCommandEvent& event);
 	void OnComboEncoding(wxCommandEvent& event);
@@ -70,6 +84,9 @@ private:
 	wxSpinCtrl* m_marginSpin;
 	wxCheckBox* m_wrapMargin;
 
+	// --Environmental Variables page
+	EnvVarsPanel *m_envPage;
+
 #ifdef __WXMSW__
 	// -- UNIX-on-Windws page
 	wxPanel* m_unixPage;
@@ -79,6 +96,10 @@ private:
 	wxStaticText* m_labelCygdriveValue;
 	wxButton* m_cygwinButton;
 #endif
+
+	// Updates page
+	wxCheckBox* m_checkForUpdatesAtStartup;
+	wxButton* m_checkForUpdatesButton;
 };
 
 #endif // __SETTINGSDLG_H__

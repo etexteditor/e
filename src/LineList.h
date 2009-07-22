@@ -14,15 +14,7 @@
 #ifndef __LINELIST_H__
 #define __LINELIST_H__
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 // abstract base class
 class LineList {
@@ -44,12 +36,12 @@ public:
 	virtual unsigned int EndFromPos(unsigned int pos) = 0;
 	virtual unsigned int StartFromPos(unsigned int pos) = 0;
 
-	virtual vector<unsigned int>& GetOffsets() = 0;
-	virtual void SetOffsets(const vector<unsigned int>& offsets) = 0;
+	virtual std::vector<unsigned int>& GetOffsets() = 0;
+	virtual void SetOffsets(const std::vector<unsigned int>& offsets) = 0;
 	virtual void NewOffsets() = 0;
 
 	virtual void insert(unsigned int index, int newend) = 0;
-	virtual void insertlines(unsigned int index, vector<unsigned int>& newlines) = 0;
+	virtual void insertlines(unsigned int index, std::vector<unsigned int>& newlines) = 0;
 	virtual void update(unsigned int index, unsigned int newend) = 0;
 	virtual void update_parsed_line(unsigned int index) = 0;
 	virtual void update_line_extent(unsigned int index, unsigned int extent) = 0;

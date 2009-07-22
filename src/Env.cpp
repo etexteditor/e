@@ -15,9 +15,8 @@ void cxEnv::SetIfValue(const wxString& key,  const wxString& value) {
 	if (!value.IsEmpty()) SetEnv(key,value);
 }
 
-
-void cxEnv::SetEnv(const map<wxString, wxString>& env) {
-	for (map<wxString, wxString>::const_iterator r = env.begin(); r != env.end(); ++r) {
+void cxEnv::SetEnv(const std::map<wxString, wxString>& env) {
+	for (std::map<wxString, wxString>::const_iterator r = env.begin(); r != env.end(); ++r) {
 		m_env.insert(*r);
 	}
 }
@@ -65,7 +64,7 @@ void cxEnv::SetToCurrent() {
 }
 
 bool cxEnv::GetEnv(const wxString& key, wxString& value) {
-	map<wxString, wxString>::const_iterator p = m_env.find(key);
+	std::map<wxString, wxString>::const_iterator p = m_env.find(key);
 
 	if (p == m_env.end()) return false;
 
@@ -77,7 +76,7 @@ const char* cxEnv::GetEnvBlock() const {
 	// Add all lines together to a single string
 	m_envStr.clear();
 	m_envStr.reserve(m_env.size() * 40);
-	for (map<wxString, wxString>::const_iterator p = m_env.begin(); p != m_env.end(); ++p) {
+	for (std::map<wxString, wxString>::const_iterator p = m_env.begin(); p != m_env.end(); ++p) {
 		wxString line = p->first;
 		line += wxT('=');
 		line += p->second;
@@ -99,7 +98,7 @@ const char* cxEnv::GetEnvBlock() const {
 }
 
 void cxEnv::GetEnvBlock(wxString& env) const {
-	for (map<wxString, wxString>::const_iterator p = m_env.begin(); p != m_env.end(); ++p) {
+	for (std::map<wxString, wxString>::const_iterator p = m_env.begin(); p != m_env.end(); ++p) {
 		wxString line = p->first;
 		line += wxT('=');
 		line += p->second;
@@ -140,7 +139,7 @@ void cxEnv::GetEnvBlock(wxString& env) const {
 void cxEnv::WriteEnvToFile(wxFile& file) const {
 	wxASSERT(file.IsOpened());
 
-	for (map<wxString, wxString>::const_iterator p = m_env.begin(); p != m_env.end(); ++p) {
+	for (std::map<wxString, wxString>::const_iterator p = m_env.begin(); p != m_env.end(); ++p) {
 		wxString line = p->first;
 		line += wxT('=');
 		line += p->second;

@@ -14,19 +14,14 @@
 #ifndef __SEARCHLISTBOX_H__
 #define __SEARCHLISTBOX_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/wx.h>
+#endif
+
 #include <wx/vlbox.h>
 
-
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
 
 class SearchListBox : public wxVListBox {
 public:
@@ -36,12 +31,10 @@ public:
 	void SelectPrev();
 
 	// utility functions
-	static unsigned int CalcRank(const vector<unsigned int>& hl);
+	static unsigned int CalcRank(const std::vector<unsigned int>& hl);
 
 protected:
-	//virtual const wxString& GetItemText() const = 0;
-
-	void DrawItemText(wxDC& dc, const wxRect& rect, const wxString& name, const vector<unsigned int>& hl, bool isCurrent) const;
+	void DrawItemText(wxDC& dc, const wxRect& rect, const wxString& name, const std::vector<unsigned int>& hl, bool isCurrent) const;
 
 	wxCoord OnMeasureItem(size_t n) const;
 
@@ -54,8 +47,8 @@ protected:
 	wxFont m_boldFont;
 	wxColour m_textColor;
 	wxColour m_hlTextColor;
-	unsigned int m_topMargen;
-	unsigned int m_leftMargen;
+	unsigned int m_topMargin;
+	unsigned int m_leftMargin;
 };
 
 #endif // __SEARCHLISTBOX_H__

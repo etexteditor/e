@@ -14,27 +14,27 @@
 #include "CompletionPopup.h"
 #include "EditorCtrl.h"
 
-CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions)
-: wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER) {
-	// Create ctrl
-	CompletionList* clist = new CompletionList(*this, parent, target, completions);
+class CompletionList : public wxListBox {
+public:
+	CompletionList(wxDialog& parent, EditorCtrl& editorCtrl, const wxString& target, const wxArrayString& completions);
+	~CompletionList();
 
-	// Create Layout
-	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
-		mainSizer->Add(clist, 1, wxEXPAND);
+private:
+	void Update();
+	void SetCompletions(const wxArrayString& completions);
+	void EndCompletion() {m_parentDlg.Destroy();};
 
-	SetSizerAndFit(mainSizer);
+	void OnKillFocus(wxFocusEvent& event);
+	void OnChar(wxKeyEvent& event);
+	void OnLeftDown(wxMouseEvent& event);
+	DECLARE_EVENT_TABLE();
 
-	// Make sure that there is room for dialog
-	const int screenHeight = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
-	const wxSize size = GetSize();
-	if (pos.y + size.y > screenHeight) {
-		Move(pos.x, topPos.y - size.y);
-	}
-
-	Show();
-	clist->SetFocus();
-}
+	wxDialog& m_parentDlg;
+	EditorCtrl& m_editorCtrl;
+	wxString m_target;
+	wxArrayString m_completions;
+	wxListBox* m_listBox;
+};
 
 
 BEGIN_EVENT_TABLE(CompletionList, wxListBox)
@@ -43,9 +43,10 @@ BEGIN_EVENT_TABLE(CompletionList, wxListBox)
 	EVT_LEFT_DOWN(CompletionList::OnLeftDown)
 END_EVENT_TABLE()
 
-CompletionList::CompletionList(wxDialog& parent, EditorCtrl& editorCtrl, const wxString& target, const wxArrayString& completions)
-: wxListBox(&parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, completions, wxSIMPLE_BORDER|wxLB_SINGLE|wxWANTS_CHARS),
-  m_parentDlg(parent), m_editorCtrl(editorCtrl), m_target(target), m_completions(completions) {
+CompletionList::CompletionList(wxDialog& parent, EditorCtrl& editorCtrl, const wxString& target, const wxArrayString& completions):
+	wxListBox(&parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, completions, wxSIMPLE_BORDER|wxLB_SINGLE|wxWANTS_CHARS),
+	m_parentDlg(parent), m_editorCtrl(editorCtrl), m_target(target), m_completions(completions) 
+{
 	// editorCtrl has text cursor as default
 	SetCursor(wxCursor(wxCURSOR_ARROW));
 
@@ -121,7 +122,6 @@ void CompletionList::OnChar(wxKeyEvent& event) {
 	case WXK_ESCAPE:
 		EndCompletion();
 		return;
-
 	}
 
 	// Pass event on to editorCtrl
@@ -165,4 +165,27 @@ void CompletionList::SetCompletions(const wxArrayString& completions) {
 		InsertItems(completions, 0);
 		SetSelection(0);
 	}
+}
+
+
+CompletionPopup::CompletionPopup(EditorCtrl& parent, const wxPoint& pos, const wxPoint& topPos, const wxString& target, const wxArrayString& completions):
+	wxDialog(&parent, wxID_ANY, wxEmptyString, pos, wxDefaultSize, wxNO_BORDER)
+{
+	CompletionList* clist = new CompletionList(*this, parent, target, completions);
+
+	// Create Layout
+	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
+	mainSizer->Add(clist, 1, wxEXPAND);
+
+	SetSizerAndFit(mainSizer);
+
+	// Make sure that there is room for dialog
+	const int screenHeight = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
+	const wxSize size = GetSize();
+	if (pos.y + size.y > screenHeight) {
+		Move(pos.x, topPos.y - size.y);
+	}
+
+	Show();
+	clist->SetFocus();
 }

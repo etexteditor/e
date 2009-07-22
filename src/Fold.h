@@ -1,11 +1,6 @@
 #ifndef __FOLD_H__
 #define __FOLD_H__
 
-// This header defines an interface for editor folds.
-// This is implemented by EditorCtrl, and is used by Lines.
-// We define an interface for this to provide a "wedge" for testing Lines
-// w/o needing to pass in a real editor.
-
 enum cxFoldType {
 	cxFOLD_START,
 	cxFOLD_START_FOLDED,

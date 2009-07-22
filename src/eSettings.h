@@ -22,11 +22,12 @@
 #include "jsonval.h"
 #include "Catalyst.h"
 #include "auto_vector.h"
+#include "ISettings.h"
 
 // pre-declarations
 class RemoteProfile;
 
-class eSettings {
+class eSettings: public ISettings {
 public:
 	eSettings();
 	
@@ -43,6 +44,7 @@ public:
 	void SetSettingLong(const wxString& name, const wxLongLong& value);
 	bool GetSettingString(const wxString& name, wxString& value) const;
 	void SetSettingString(const wxString& name, const wxString& value);
+
 	void RemoveSetting(const wxString& name);
 
 	// Recent files
@@ -86,6 +88,9 @@ public:
 	size_t GetFilterCommandHistoryCount() const;
 	wxString GetFilterCommand(size_t ndx) const;
 	bool AddFilterCommand(const wxString& command);
+
+	// Environmental variables
+	map<wxString, wxString> env;
 
 private:
 	// Recent files (support functions)

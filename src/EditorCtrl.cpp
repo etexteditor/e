@@ -67,6 +67,15 @@ enum {
 	ID_LEFTSCROLL
 };
 
+// Popup menu IDs
+enum {
+	MENU_SELECT,
+	MENU_SELECTWORD,
+	MENU_SELECTLINE,
+	MENU_SELECTSCOPE,
+	MENU_SELECTFOLD
+};
+
 BEGIN_EVENT_TABLE(EditorCtrl, wxControl)
 	EVT_PAINT(EditorCtrl::OnPaint)
 	EVT_CHAR(EditorCtrl::OnChar)
@@ -203,7 +212,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 
 
 /// Create a new empty document
-	EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
+EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
 	m_catalyst(cw),
 	m_doc(cw, true), 
 	dispatcher(cw.GetDispatcher()), 
@@ -331,18 +340,20 @@ void EditorCtrl::Init() {
 	m_selMode = SEL_NORMAL;
 
 	// Settings
-	m_doAutoPair = true;
+	bool autopair = true;
 	m_doAutoWrap = true;
 	m_wrapAtMargin = false;
 	bool doShowMargin = false;
 	int marginChars = 80;
 
 	eSettings& settings = eGetSettings();
-	settings.GetSettingBool(wxT("autoPair"), m_doAutoPair);
+	settings.GetSettingBool(wxT("autoPair"), autopair);
 	settings.GetSettingBool(wxT("autoWrap"), m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	settings.GetSettingBool(wxT("wrapMargin"), m_wrapAtMargin);
 	settings.GetSettingInt(wxT("marginChars"), marginChars);
+
+	m_autopair.Enable(autopair);
 
 	m_lastScopePos = -1; // scope selection
 	if (!doShowMargin) m_wrapAtMargin = false;
@@ -400,7 +411,6 @@ void EditorCtrl::Init() {
 	SetDropTarget(dropTarget);
 
 	// Make sure we get notified if we should display another document
-	// (Unsubscription is done in OnClose())
 	dispatcher.SubscribeC(wxT("WIN_SETDOCUMENT"), (CALL_BACK)OnSetDocument, this);
 	dispatcher.SubscribeC(wxT("DOC_COMMITED"), (CALL_BACK)OnDocCommited, this);
 	dispatcher.SubscribeC(wxT("THEME_CHANGED"), (CALL_BACK)OnThemeChanged, this);
@@ -897,8 +907,8 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 			scrollPos = wxMax(0, scrollPos);
 		}
 	}
-	wxASSERT(scrollPos >= 0);
 
+	wxASSERT(scrollPos >= 0);
 	wxASSERT(scrollPos <= m_lines.GetHeight());
 
 	// Check if we need to adjust scrollbar
@@ -1812,15 +1822,12 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 	if (text.empty()) return 0;
 	wxASSERT(pos <= m_lines.GetLength());
 
-	// Reset autoPair state if inserting outside inner pair
-	if (!m_pairStack.empty() && pos != m_pairStack.back().end) {
-		m_pairStack.clear();
-	}
+	m_autopair.ClearIfInsertingOutsideInnerPair(pos);
 
 	wxString autoPair;
 	if (doSmartType) {
 		// Check if we are inserting at end of inner pair
-		if (!m_pairStack.empty()) { // we must be at end
+		if (m_autopair.HasPairs()) { // we must be at end
 			wxChar c;
 			cxLOCKDOC_READ(m_doc)
 				c = doc.GetChar(pos);
@@ -1832,7 +1839,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 					pos = doc.GetNextCharPos(pos);
 				cxENDLOCK
 				m_lines.SetPos(pos);
-				m_pairStack.pop_back();
+				m_autopair.DropInnerPair();
 				return 0;
 			}
 		}
@@ -1868,9 +1875,7 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 		}
 		else {
 			// Adjust containing pairs
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-				t->end += byte_len;
-			}
+			m_autopair.AdjustEndsUp(byte_len);
 		}
 	}
 	else {
@@ -1887,7 +1892,6 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
 	const map<wxString, wxString> smartPairs = m_syntaxHandler.GetSmartTypingPairs(scope);
-
 	const map<wxString, wxString>::const_iterator p = smartPairs.find(text);
 
 #ifdef __WXDEBUG__
@@ -1900,22 +1904,16 @@ wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 #endif
 
 	if (p == smartPairs.end()) return wxEmptyString;
-	else return p->second;
+	return p->second;
 }
 
 wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addToStack) {
 	wxASSERT(!text.empty());
 
-	if (!m_doAutoPair) return wxEmptyString;
+	if (!m_autopair.Enabled()) return wxEmptyString;
 
 	// Are we just before a pair end?
-	bool inPair = false;
-	for (vector<interval>::const_iterator k = m_pairStack.begin(); k != m_pairStack.end(); ++k) {
-		if (k->end == pos) {
-			inPair = true;
-			break;
-		}
-	}
+	bool inPair = m_autopair.AtEndOfPair(pos);
 
 	const unsigned int lineid = m_lines.GetLineFromCharPos(pos);
 	const unsigned int lineend = m_lines.GetLineEndpos(lineid);
@@ -1943,12 +1941,10 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 		const size_t byte_len = starter_len + ender_len;
 
 		// Adjust containing pairs
-		for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-			t->end += (unsigned int)byte_len;
-		}
+		m_autopair.AdjustEndsUp(byte_len);
 
 		const unsigned int pairPos = pos + starter_len;
-		m_pairStack.push_back(interval(pairPos, pairPos));
+		m_autopair.AddInnerPair(pairPos);
 	}
 
 	return pairEnd;
@@ -2114,8 +2110,8 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 
 	const unsigned int pos = m_lines.GetPos();
 
-	if (!m_pairStack.empty()) {
-		const interval& iv = m_pairStack.back();
+	if (m_autopair.HasPairs()) {
+		const interval& iv = m_autopair.InnerPair();
 
 		// Detect backspacing in active auto-pair
 		if (end == iv.start && end == iv.end) {
@@ -2126,11 +2122,11 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 
 			// Also delete pair ender
 			end = nextpos;
-			m_pairStack.pop_back();
+			m_autopair.DropInnerPair();
 		}
 		else if (iv.start > start || iv.end < end) {
 			// Reset autoPair state if deleting outside inner pair
-			m_pairStack.clear();
+			m_autopair.Clear();
 		}
 	}
 
@@ -2150,9 +2146,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	}
 
 	// Adjust containing pairs
-	for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-		t->end -= del_len;
-	}
+	m_autopair.AdjustEndsDown(del_len);
 
 	MarkAsModified();
 	return del_len;
@@ -2445,6 +2439,9 @@ void EditorCtrl::Insert(const wxString& text) {
 		// Update stylers
 		StylersInsert(pos, byte_len);
 
+		// Adjust containing pairs
+		m_autopair.AdjustEndsUp(byte_len);
+
 		// Make sure the caret is at the right position
 		pos += byte_len;
 		m_lines.SetPos(pos);
@@ -2465,7 +2462,7 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 		m_snippetHandler.Delete(start, end);
 		return;
 	}
-	m_pairStack.clear(); // invalidate auto-pair state
+	m_autopair.Clear(); // invalidate auto-pair state
 
 	const unsigned int pos = m_lines.GetPos();
 
@@ -2658,13 +2655,16 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	// Check if we need to force the native end-of-line
 	bool forceNativeEOL = false;
-	eGetSettings().GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
+	bool noAtomic = false;
+	eSettings& settings = eGetSettings();
+	settings.GetSettingBool(wxT("force_native_eol"), forceNativeEOL);
+	settings.GetSettingBool(wxT("disable_atomic_save"), noAtomic);
 
 	// Save the text
 	cxFileResult savedResult;
 	const wxString realname = m_remotePath.empty() ? wxT("") : docName;
 	cxLOCKDOC_WRITE(m_doc)
-		savedResult = doc.SaveText(filepath, forceNativeEOL, realname);
+		savedResult = doc.SaveText(filepath, forceNativeEOL, realname, false, noAtomic);
 	cxENDLOCK
 
 	const wxString pathStr = filepath.GetFullPath();
@@ -2764,7 +2764,6 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 	// Bundle items do their own mirror handling during loading
 	if (eDocumentPath::IsBundlePath(filepath)) return LoadText(filepath, enc, rp);
 
-	// Do we need to notify mate on close?
 	if (!mate.empty()) SetMate(mate);
 
 	// Check if there is a mirror that matches the file
@@ -2835,7 +2834,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 
 	topline = -1;
 	m_currentSel = -1;
-	m_pairStack.empty(); // reset autoPair state
+	m_autopair.Clear(); // reset autoPair state - adamv - changed from 'empty' to 'clear'.
 
 	bool inSameHistory = false;
 	if (oldDoc.IsOk()) {
@@ -3154,7 +3153,7 @@ void EditorCtrl::DeleteSelections() {
 		m_snippetHandler.Delete(iv.start, iv.end);
 		return;
 	}
-	m_pairStack.clear(); // invalidate auto-pair state
+	m_autopair.Clear(); // invalidate auto-pair state
 
 	cxLOCKDOC_WRITE(m_doc)
 		doc.Freeze(); // always freeze before modifying sel contents
@@ -3195,18 +3194,18 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 	wxASSERT(pos <= m_lines.GetLength());
 
 	bool inAutoPair = false;
-	if (!m_pairStack.empty()) {
-		const interval& iv = m_pairStack.back();
+	if (m_autopair.HasPairs()) {
+		const interval& iv = m_autopair.InnerPair();
 
 		// Detect backspacing in active auto-pair
 		if (!nextchar && pos == iv.start && pos == iv.end) {
 			// Also delete pair ender
 			inAutoPair = true;
-			m_pairStack.pop_back();
+			m_autopair.DropInnerPair();
 		}
 		else if ((nextchar && pos >= iv.end) || (!nextchar && pos <= iv.start)) {
 			// Reset autoPair state if deleting outside inner pair
-			m_pairStack.clear();
+			m_autopair.Clear();
 		}
 	}
 
@@ -3273,18 +3272,13 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		}
 
 		// pairStack may be moved by insertions above it
-		if (!m_pairStack.empty() && m_pairStack[0].start > del_end) {
-			for (vector<interval>::iterator p = m_pairStack.begin(); p != m_pairStack.end(); ++p) {
-				p->start -= byte_len;
-				p->end -= byte_len;
-			}
+		if (m_autopair.BeforeOuterPair(del_end)) {
+			m_autopair.AdjustIntervalsDown(byte_len);
 		}
 
 		if (atCaret) {
 			// Adjust containing pairs
-			for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-				t->end -= byte_len;
-			}
+			m_autopair.AdjustEndsDown(byte_len);
 		}
 
 		// Restore shadow selection
@@ -3306,18 +3300,15 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 	const vector<interval>& selections = m_lines.GetSelections();
 	unsigned int pos = m_lines.GetPos();
 
-	// Reset autoPair state if inserting outside inner pair
-	if (!m_pairStack.empty() && pos != m_pairStack.back().end) {
-		m_pairStack.clear();
-	}
+	m_autopair.ClearIfInsertingOutsideInnerPair(pos);
 
 	wxString autoPair;
 	if (text.length() == 1) {
 		if (m_lines.IsSelectionShadow()) {
-			if (!m_pairStack.empty()) {
-				if (pos != m_pairStack.back().end) {
+			if (m_autopair.HasPairs()) {
+				if (pos != m_autopair.InnerPair().end) {
 					// Reset autoPair state if inserting outside inner pair
-					m_pairStack.clear();
+					m_autopair.Clear();
 				}
 				else {
 					wxChar c;
@@ -3331,7 +3322,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 							pos = doc.GetNextCharPos(pos);
 						cxENDLOCK
 						m_lines.SetPos(pos);
-						m_pairStack.pop_back();
+						m_autopair.DropInnerPair();
 						return;
 					}
 				}
@@ -3439,11 +3430,8 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 			if (m_lines.IsSelectionShadow()) m_lines.AddSelection(*i+il, *i+il+shadowlength+full_len);
 
 			// pairStack may be moved by insertions above it
-			if (!m_pairStack.empty() && m_pairStack[0].start > pair_pos) {
-				for (vector<interval>::iterator p = m_pairStack.begin(); p != m_pairStack.end(); ++p) {
-					p->start += full_len;
-					p->end += full_len;
-				}
+			if (m_autopair.BeforeOuterPair(pair_pos)) {
+				m_autopair.AdjustIntervalsUp(full_len);
 			}
 
 			// Adjust caret pos
@@ -3453,9 +3441,7 @@ void EditorCtrl::InsertOverSelections(const wxString& text) {
 
 				// If we are just inserting text, adjust containing pairs
 				if (autoPair.empty()) {
-					for (vector<interval>::iterator t = m_pairStack.begin(); t != m_pairStack.end(); ++t) {
-						t->end += byte_len;
-					}
+					m_autopair.AdjustEndsUp(byte_len);
 				}
 			}
 
@@ -4580,6 +4566,10 @@ void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
 }
 
 void EditorCtrl::SelectLine(unsigned int line_id, bool multiselect) {
+	// If we have a new, empty document, and the user triple-clicks anyway,
+	// don't do anything.
+	if (m_lines.GetLineCount() == 0) return;
+
 	wxASSERT(line_id < m_lines.GetLineCount());
 	m_lastScopePos = -1; // invalidate scope selections
 
@@ -5621,7 +5611,7 @@ bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext
 	return DoFind(searchtext, m_lines.GetPos(), options);
 }
 
-bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options) {
+int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options) {
 	bool matchcase = options & FIND_MATCHCASE;
 
 	if (m_lines.GetLength() == 0 || searchtext.empty()) return false;
@@ -5645,6 +5635,8 @@ bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacet
 	vector<interval>::iterator p = m_searchRanges.begin();
 	map<unsigned int,interval> captures;
 	unsigned int byte_len = 0;
+
+	unsigned int replacements = 0;
 
 	// Replace and continue search
 	cxLOCKDOC_WRITE(m_doc)
@@ -5709,6 +5701,8 @@ bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacet
 			}
 		}
 
+		replacements++;
+
 		// If we have replaced upto end-of-line, move to next
 		// line to avoid infinite replace of ($).
 		start_pos = result.start+byte_len;
@@ -5737,7 +5731,7 @@ bool EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacet
 	MakeCaretVisible();
 	DrawLayout();
 
-	return true;
+	return replacements;
 }
 /*
 bool EditorCtrl::ReplaceAllRegex(const wxString& regex, const wxString& replacetext, int options) {
@@ -5817,11 +5811,6 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 }
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {
-	// Remove tooltips
-	/*if (m_revTooltip.IsShown()) {
-		m_revTooltip.Hide();
-	}*/
-
 	wxString modifiers;
 	if (event.ControlDown()) modifiers += wxT("CTRL-");
 	if (event.AltDown()) modifiers += wxT("ALT-");
@@ -5840,10 +5829,11 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	unsigned int pos;
 	const unsigned int oldpos = m_lines.GetPos();
 
-	// Invalidate state
-	if (!m_pairStack.empty() && (oldpos < m_pairStack.back().start || oldpos > m_pairStack.back().end)) {
-		m_pairStack.clear();
-	}
+	// If the cursor is positioned outside of the innermost bracket pair, then
+	// we toss our nested bracket pair information.
+	if (m_autopair.HasPairs() && !m_autopair.ContainedInInnerPair(oldpos))
+		m_autopair.Clear();
+
 	m_lastScopePos = -1; // scope selections
 
 	// Menu shortcuts might have set commandMode
@@ -5990,9 +5980,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 		}
 
 		if (!commandMode) {
-
 			switch (key) {
-
 	#ifdef __WXDEBUG__
 			/*case WXK_F1:
 				// Simulate crash
@@ -6068,7 +6056,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				TestMilestones();
 				break;
 	#endif //__WXDEBUG__
-
 
 			case WXK_LEFT:
 			case WXK_NUMPAD_LEFT:
@@ -6156,8 +6143,11 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					pos = m_lines.GetPos();
 
 					// Reset autoPair state if deleting outside inner pair
-					if (!m_pairStack.empty() && (m_pairStack.back().start > pos || m_pairStack.back().end <= pos)) {
-						m_pairStack.clear();
+					if (m_autopair.HasPairs())
+					{
+						const interval& inner_pair = m_autopair.InnerPair();
+						if (pos < inner_pair.start || inner_pair.end <= pos)
+							m_autopair.Clear();
 					}
 
 					// Check if we should delete entire word
@@ -6362,25 +6352,22 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_ESCAPE:
-				if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
-				else if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
-				else {
-					DoCompletion();
-				}
+				if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
+				else DoCompletion();
 				break;
 
 			default:
 				// If we process alt then menu shortcuts don't work
 				if (event.AltDown()) {
 					event.Skip();
-					return; // do nothing if we don't know the char
+					return;
 				}
 
 				// Ignore unhandled keycodes
 				if (key >= WXK_START && key <= WXK_COMMAND) break;
 				//if (key >= WXK_SPECIAL1 && key <= WXK_SPECIAL20) break;
 
-				//if (wxIsprint(c)) { // Normal chars (does not work with זרו??)
+				//if (wxIsprint(c)) { // Normal chars (does not work with 'ae', 'oslash', 'a-circle', etc.??)
 				if ((unsigned int)c > 31) { // Normal chars
 					InsertChar(c);
 				}
@@ -6424,8 +6411,8 @@ void EditorCtrl::DoCommand(int c) {
 
 void EditorCtrl::EndCommand() {
 	if (!commandStack.empty()) {
-		if (commandStack[0] == 26) cmd_Undo(0, commandStack, true);
-
+		if (commandStack[0] == 26) 
+			cmd_Undo(0, commandStack, true);
 		commandStack.clear();
 	}
 	commandMode = false;
@@ -6978,6 +6965,9 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	// Load existing enviroment
 	env.SetToCurrent();
 
+	// Add any keys configured in app settings
+	env.SetEnv(eGetSettings().env);
+
 	// Add app keys
 	env.AddSystemVars(isUnix, dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath());
 
@@ -7295,12 +7285,15 @@ void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {
 	contextMenu.Append(wxID_PASTE, _("&Paste\tCtrl+V"), _("Paste"));
 	contextMenu.AppendSeparator();
 	wxMenu* selectMenu = new wxMenu;
+		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		selectMenu->Append(MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
 		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
-		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
 		contextMenu.Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+	contextMenu.AppendSeparator();
+	contextMenu.Append(wxID_UNDO, _("&Undo\tCtrl+Z"), _("Undo"));
+	contextMenu.Append(wxID_REDO, _("&Redo\tCtrl+Y"), _("Redo"));
 
 	if (!inSelection) {
 		contextMenu.Enable(wxID_CUT, false);
@@ -7508,7 +7501,9 @@ int EditorCtrl::ShowPopupList(const vector<const tmAction*>& actionList) {
 		
 		// Add bundle title
 		if (a.bundle && a.bundle != bundle) {
-			wxMenuItem* item = listMenu.Append(-1, a.bundle->name);
+			wxString bundleName = a.bundle->name;
+			bundleName.Replace(wxT("&"), wxT("&&"));
+			wxMenuItem* item = listMenu.Append(-1, bundleName);
 			item->Enable(false);
 			bundle = a.bundle;
 		}
@@ -7516,6 +7511,7 @@ int EditorCtrl::ShowPopupList(const vector<const tmAction*>& actionList) {
 		wxString itemText;
 		if (a.bundle) itemText = wxT("  "); // slight indentation for bundle members
 		itemText += a.name;
+		itemText.Replace(wxT("&"), wxT("&&"));
 		
 		if (shortcut < 10) itemText += wxString::Format(wxT("\t&%u"), shortcut);
 		else if (shortcut == 10) itemText += wxT("\t&0");
@@ -7909,9 +7905,7 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	}
 }
 
-void EditorCtrl::OnClose(wxCloseEvent& WXUNUSED(event)) {
-	//Destroy();
-}
+void EditorCtrl::OnClose(wxCloseEvent& WXUNUSED(event)) {}
 
 void EditorCtrl::OnSetDocument(EditorCtrl* self, void* data, int filter) {
 	wxASSERT(self->IsOk());
@@ -7971,7 +7965,10 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 
 	// Update settings
 	eSettings& settings = eGetSettings();
-	settings.GetSettingBool(wxT("autoPair"), self->m_doAutoPair);
+	bool autoPair = false;
+	settings.GetSettingBool(wxT("autoPair"), autoPair);
+	self->m_autopair.Enable(autoPair);
+
 	settings.GetSettingBool(wxT("autoWrap"), self->m_doAutoWrap);
 	settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	settings.GetSettingBool(wxT("wrapMargin"), self->m_wrapAtMargin);
@@ -8859,23 +8856,23 @@ void EditorCtrl::SelectFold(unsigned int line_id) {
 	wxASSERT(line_id < m_lines.GetLineCount());
 
 	vector<cxFold*> foldStack = GetFoldStack(line_id);
-	if (!foldStack.empty()) {
-		// If current fold is folded, we want parent if possible
-		while (foldStack.size() > 1 && foldStack.back()->type == cxFOLD_START_FOLDED) foldStack.pop_back();
+	if (foldStack.empty()) return;
 
-		// Find start of fold
-		vector<cxFold>::iterator p = m_folds.begin() + (foldStack.back() - &*m_folds.begin()); // convert pointer to iterator
-		const unsigned int fold_start = m_lines.GetLineStartpos(p->line_id);
+	// If current fold is folded, we want parent if possible
+	while (foldStack.size() > 1 && foldStack.back()->type == cxFOLD_START_FOLDED) foldStack.pop_back();
 
-		// Find the end of fold
-		const unsigned int lastline = GetLastLineInFold(foldStack);
-		unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+	// Find start of fold
+	vector<cxFold>::iterator p = m_folds.begin() + (foldStack.back() - &*m_folds.begin()); // convert pointer to iterator
+	const unsigned int fold_start = m_lines.GetLineStartpos(p->line_id);
 
-		// Select the entire fold
-		m_lines.RemoveAllSelections();
-		m_currentSel = m_lines.AddSelection(fold_start, lastposinfold);
-		m_lines.SetPos(lastposinfold);
-	}
+	// Find the end of fold
+	const unsigned int lastline = GetLastLineInFold(foldStack);
+	unsigned int lastposinfold = m_lines.GetLineEndpos(lastline, false);
+
+	// Select the entire fold
+	m_lines.RemoveAllSelections();
+	m_currentSel = m_lines.AddSelection(fold_start, lastposinfold);
+	m_lines.SetPos(lastposinfold);
 }
 
 bool EditorCtrl::IsLineFolded(unsigned int line_id) const {

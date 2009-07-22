@@ -15,6 +15,8 @@ public:
 	// Opening local and remote files.
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString) = 0;
 	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL) = 0;
+	virtual bool CloseTab(unsigned int tab_id, bool removetab) = 0;
+	virtual void UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath) = 0;
 
 	// Prompting for remote credentials.
 	virtual bool AskRemoteLogin(const RemoteProfile* rp) = 0;

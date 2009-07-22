@@ -35,13 +35,13 @@ void Dispatcher::SubscribeC(const wxString& notifier_name, CALL_BACK new_callbac
 	wxASSERT(!notifier_name.empty());
 
 	call new_subscriber = {new_callback, class_pointer};
-	subscribers.insert(pair<wxString, call>(notifier_name, new_subscriber));
+	subscribers.insert(std::pair<wxString, call>(notifier_name, new_subscriber));
 }
 
 void Dispatcher::UnSubscribe(const wxString& notifier_name, CALL_BACK cb, void *class_pointer) {
 	wxASSERT(!notifier_name.empty());
-	typedef multimap<wxString, call>::iterator I;
-	pair<I,I> b; I i;
+	typedef std::multimap<wxString, call>::iterator I;
+	std::pair<I,I> b; I i;
 
 	b = subscribers.equal_range(notifier_name);
 	for (i = b.first; i != b.second; ++i) {
@@ -61,8 +61,8 @@ void Dispatcher::NotifyInt(const wxString& notifier_name, int data, int filter) 
 void Dispatcher::Notify(const wxString& notifier_name, const void* data, int filter) const {
 	wxASSERT(!notifier_name.empty());
 
-	typedef multimap<wxString, call>::const_iterator I;
-	pair<I,I> b; I i;
+	typedef std::multimap<wxString, call>::const_iterator I;
+	std::pair<I,I> b; I i;
 
 	b = subscribers.equal_range(notifier_name);
 	for (i = b.first; i != b.second; ++i) {

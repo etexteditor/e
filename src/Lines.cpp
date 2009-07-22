@@ -424,7 +424,7 @@ unsigned int Lines::GetLineFromStartPos(unsigned int char_pos) {
 	return line_id;
 }
 
-int Lines::GetLineFromYPos(int folded_ypos) {
+int Lines::GetLineFromYPos(int folded_ypos) const {
 	wxASSERT(folded_ypos >= 0);
 	const unsigned int ypos = UnFoldedYPos(folded_ypos+1); // + one pixel to make sure we enter line
 
@@ -437,7 +437,7 @@ int Lines::GetLineFromYPos(int folded_ypos) {
 	return ll->find_ypos(ypos);
 }
 
-int Lines::GetYPosFromLine(unsigned int lineid) {
+int Lines::GetYPosFromLine(unsigned int lineid) const {
 	if (lineid == 0) return 0;
 	if (lineid < ll->size()) return FoldedYPos(ll->top(lineid));
 
@@ -450,7 +450,7 @@ int Lines::GetYPosFromLine(unsigned int lineid) {
 	return FoldedYPos(ll->bottom(lineid-1));
 }
 
-int Lines::GetBottomYPosFromLine(unsigned int lineid) {
+int Lines::GetBottomYPosFromLine(unsigned int lineid) const {
 	wxASSERT(lineid > 0 || ll->size() > 0); // empty line has no bottom
 
 	if (lineid < ll->size()) return FoldedYPos(ll->bottom(lineid));
@@ -1015,7 +1015,7 @@ void Lines::Draw(int xoffset, int yoffset, wxRect& rect) {
 
 	Verify();
 
-	// Draw margen line
+	// Draw margin line
 	if (m_marginPos) {
 		dc.SetPen(wxPen(m_theme.invisiblesColor));
 		const unsigned int xpos = xoffset + m_marginPos;

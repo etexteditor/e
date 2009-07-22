@@ -1,8 +1,7 @@
 #ifndef __RECURSIVECRITICALSECTION_H__
 #define __RECURSIVECRITICALSECTION_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-
+#include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/thread.h>
 #endif

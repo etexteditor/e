@@ -252,7 +252,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\test_documentNewlines.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\test_eDocumentPath.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_hexDigit.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_parseColour.cpp"
 				>
 			</File>
 			<File
@@ -280,6 +292,14 @@
 		</Filter>
 		<File
 			RelativePath=".\declare_eApp.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Support.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Support.h"
 			>
 		</File>
 	</Files>

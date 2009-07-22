@@ -63,7 +63,8 @@ enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, so
 
 // id's
 enum {
-	TIMER_FOLDTOOLTIP = 100
+	TIMER_FOLDTOOLTIP = 100,
+	ID_LEFTSCROLL
 };
 
 BEGIN_EVENT_TABLE(EditorCtrl, wxControl)
@@ -83,6 +84,7 @@ BEGIN_EVENT_TABLE(EditorCtrl, wxControl)
 	EVT_LEAVE_WINDOW(EditorCtrl::OnLeaveWindow)
 	EVT_MOUSEWHEEL(EditorCtrl::OnMouseWheel)
 	EVT_SCROLLWIN(EditorCtrl::OnScroll)
+	EVT_COMMAND_SCROLL(ID_LEFTSCROLL, EditorCtrl::OnScrollBar)
 	EVT_IDLE(EditorCtrl::OnIdle)
 	EVT_CLOSE(EditorCtrl::OnClose)
 	EVT_MENU_RANGE(1000, 1999, EditorCtrl::OnPopupListMenu)
@@ -114,7 +116,8 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
 
-	m_modCallback(NULL), 
+	m_beforeRedrawCallback(NULL),
+	m_afterRedrawCallback(NULL), 
 	m_scrollCallback(NULL), 
 
 	m_enableDrawing(false), 
@@ -135,68 +138,9 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
 	Init();
-	wxString mirrorPath;
-	doc_id di;
-	int newpos;
-	int topline;
-	wxString syntax;
-	vector<unsigned int> folds;
-	vector<unsigned int> bookmarks;
 
-	// Retrieve the page info
 	eSettings& settings = eGetSettings();
-	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
-	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks);
-
-	if (eDocumentPath::IsRemotePath(mirrorPath)) {
-		// If the mirror points to a remote file, we have to download it first.
-		SetDocument(di, mirrorPath);
-	}
-	else {
-		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
-		if (isBundleItem) {
-			m_remotePath = mirrorPath;
-		}
-		else m_path = mirrorPath;
-
-		cxLOCKDOC_WRITE(m_doc)
-			// Set the document & settings
-			doc.SetDocument(di);
-			doc.SetDocRead();
-		cxENDLOCK
-		m_lines.ReLoadText();
-	}
-
-	// Set the syntax to match the new path
-	if (syntax.empty()) {
-		m_syntaxstyler.UpdateSyntax();
-		FoldingInvalidate(); // Init Folding
-	}
-	else SetSyntax(syntax);
-
-	SetDocumentAndScrollPosition(newpos, topline);
-
-	// Fold lines that was folded in previous session
-	if (!folds.empty()) {
-		// We have to make sure all text is syntaxed
-		// and all fold markers found
-		m_syntaxstyler.ParseAll();
-		UpdateFolds();
-
-		for (vector<unsigned int>::const_iterator p = folds.begin(); p != folds.end(); ++p) {
-			const unsigned int line_id = *p;
-			const cxFold target(line_id);
-			vector<cxFold>::iterator f = lower_bound(m_folds.begin(), m_folds.end(), target);
-			if (f != m_folds.end() && f->line_id == line_id && f->type == cxFOLD_START) {
-				Fold(*p);
-			}
-		}
-	}
-
-	// Set bookmarks
-	for (vector<unsigned int>::const_iterator p = bookmarks.begin(); p != bookmarks.end(); ++p) {
-		AddBookmark(*p);
-	}
+	RestoreSettings(page_id, settings);
 }
 
 /// Open a document
@@ -218,7 +162,8 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
 
-	m_modCallback(NULL),
+	m_beforeRedrawCallback(NULL),
+	m_afterRedrawCallback(NULL),
 	m_scrollCallback(NULL),
 
 	m_enableDrawing(false), 
@@ -276,7 +221,8 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
 	m_activeTooltip(NULL),
 
-	m_modCallback(NULL), 
+	m_beforeRedrawCallback(NULL),
+	m_afterRedrawCallback(NULL), 
 	m_scrollCallback(NULL), 
 
 	m_enableDrawing(false), 
@@ -308,6 +254,69 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	FoldingInvalidate();
 }
 
+void EditorCtrl::RestoreSettings(unsigned int page_id, eSettings& settings, unsigned int subid) {
+	wxString mirrorPath;
+	doc_id di;
+	int newpos;
+	int topline;
+	wxString syntax;
+	vector<unsigned int> folds;
+	vector<unsigned int> bookmarks;
+
+	// Retrieve the page info
+	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
+	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks, (eSettings::SubPage)subid);
+
+	if (eDocumentPath::IsRemotePath(mirrorPath)) {
+		// If the mirror points to a remote file, we have to download it first.
+		SetDocument(di, mirrorPath);
+	}
+	else {
+		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
+		if (isBundleItem) {
+			m_remotePath = mirrorPath;
+		}
+		else m_path = mirrorPath;
+
+		cxLOCKDOC_WRITE(m_doc)
+			// Set the document & settings
+			doc.SetDocument(di);
+			doc.SetDocRead();
+		cxENDLOCK
+		m_lines.ReLoadText();
+	}
+
+	// Set the syntax to match the new path
+	if (syntax.empty()) {
+		m_syntaxstyler.UpdateSyntax();
+		FoldingInvalidate(); // Init Folding
+	}
+	else SetSyntax(syntax);
+
+	SetDocumentAndScrollPosition(newpos, topline);
+
+	// Fold lines that was folded in previous session
+	if (!folds.empty()) {
+		// We have to make sure all text is syntaxed
+		// and all fold markers found
+		m_syntaxstyler.ParseAll();
+		UpdateFolds();
+
+		for (vector<unsigned int>::const_iterator p = folds.begin(); p != folds.end(); ++p) {
+			const unsigned int line_id = *p;
+			const cxFold target(line_id);
+			vector<cxFold>::iterator f = lower_bound(m_folds.begin(), m_folds.end(), target);
+			if (f != m_folds.end() && f->line_id == line_id && f->type == cxFOLD_START) {
+				Fold(*p);
+			}
+		}
+	}
+
+	// Set bookmarks
+	for (vector<unsigned int>::const_iterator p = bookmarks.begin(); p != bookmarks.end(); ++p) {
+		AddBookmark(*p);
+	}
+}
 
 void EditorCtrl::Init() {
 	// Initialize the memoryDC for dubblebuffering
@@ -345,6 +354,9 @@ void EditorCtrl::Init() {
 	m_gutterLeft = true; // left side is default
 	m_gutterWidth = 0;
 	SetShowGutter(m_parentFrame.IsGutterShown());
+
+	m_leftScrollbar = NULL; // default is using internal (right) scrollbar
+	m_leftScrollWidth = 0;
 
 	// To keep track of when we should freeze versions
 	lastpos = 0;
@@ -431,7 +443,7 @@ EditorCtrl::~EditorCtrl() {
 	ClearRemoteInfo();
 }
 
-void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings) {
+void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings, unsigned int subid) {
 	const wxString& path = GetPath();
 	const doc_id di = GetDocID();
 	const int pos = GetPos();
@@ -440,7 +452,7 @@ void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings) {
 	const vector<unsigned int> folds = GetFoldedLines();
 	const vector<cxBookmark>& bookmarks = GetBookmarks();
 
-	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks);
+	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks, (eSettings::SubPage)subid);
 	//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
 }
 
@@ -639,10 +651,7 @@ bool EditorCtrl::Show(bool show) {
 
 	// All EditorCtrl's share the same bitmap.
 	// So we have to redraw it when the control is first shown
-	if (show) {
-		mdc.SelectObject(bitmap);
-		DrawLayout();
-	}
+	if (show) DrawLayout();
 	else mdc.SelectObject(wxNullBitmap);
 
 	return result;
@@ -704,30 +713,92 @@ void EditorCtrl::SetGutterRight(bool doMove) {
 	DrawLayout();
 }
 
+bool EditorCtrl::HasScrollbar() const {
+	if (m_leftScrollbar) return m_leftScrollbar->IsShown();
+	else return (GetScrollThumb(wxVERTICAL) > 0);
+}
+
+void EditorCtrl::SetScrollbarLeft(bool doMove) {
+	if (doMove) {
+		m_leftScrollbar = new wxScrollBar(this, ID_LEFTSCROLL, wxPoint(0,0), wxDefaultSize, wxSB_VERTICAL);
+		m_leftScrollbar->SetCursor(*wxSTANDARD_CURSOR); // Set to standard cursor (otherwise it will inherit from editorCtrl)
+
+		const bool isShown = (GetScrollThumb(wxVERTICAL) > 0);
+		if (isShown) {
+			m_leftScrollWidth = m_leftScrollbar->GetSize().x;
+
+			SetScrollbar(wxVERTICAL, 0, 0, 0); // hide windows own scrollbar
+			return; // removing scrollbar will have sent draw event
+		}
+	}
+	else {
+		delete m_leftScrollbar;
+		m_leftScrollbar = NULL;
+		m_leftScrollWidth = 0;
+	}
+
+	m_isResizing = true;
+	DrawLayout();
+}
+
 //
 // Returns true if a scrollbar was added or removed, else false.
 //
 bool EditorCtrl::UpdateScrollbars(unsigned int x, unsigned int y) {
-	// Check if we need a vertical scrollbar
-	const int scroll_thumb = GetScrollThumb(wxVERTICAL);
 	const unsigned int height = m_lines.GetHeight();
-    if (height > y) {
-		const int scroll_range = GetScrollRange(wxVERTICAL);
-		if (scroll_thumb != (int)y || scroll_range != (int)height) {
-			SetScrollbar(wxVERTICAL, scrollPos, y, height);
-			if (scroll_thumb == 0) return true; // Creation of scrollbar have sent a size event
-		}
 
-		// Avoid empty space at bottom
-		if (scrollPos + y > height) {
-			scrollPos = wxMax(0, height - y);
-		}
+	// Check if we need a vertical scrollbar
+	if (m_leftScrollbar) {
+		const int scroll_thumb = m_leftScrollbar->GetThumbSize();
+		if (height > y) {
+			m_leftScrollbar->Show();
+			const int scroll_range = m_leftScrollbar->GetRange();
+			if (scroll_thumb != (int)y || scroll_range != (int)height) {
+				m_leftScrollbar->SetScrollbar(scrollPos, y, height, y);
+				if (scroll_thumb == 0) {
+					ReDraw();
+					return true; // cancel old redraw
+				}
+			}
 
-		SetScrollPos(wxVERTICAL, scrollPos);
+			// Avoid empty space at bottom
+			if (scrollPos + y > height) scrollPos = wxMax(0, height - y);
+
+			m_leftScrollbar->SetSize(-1, GetSize().y);
+			m_leftScrollbar->SetThumbPosition(scrollPos);
+			const unsigned int width = m_leftScrollbar->GetSize().x;
+			
+			if (m_leftScrollWidth != width) {
+				m_leftScrollWidth = width;
+				ReDraw();
+				return true; // cancel old redraw
+			}
+		}
+		else if (scroll_thumb > 0) {
+			m_leftScrollbar->Hide();
+			m_leftScrollWidth = 0;
+			ReDraw();
+			return true; // cancel old redraw
+		}
 	}
-	else if (scroll_thumb > 0) {
-		SetScrollbar(wxVERTICAL, 0, 0, 0);
-		return true; // Removal of scrollbar have sent a size event
+	else {
+		const int scroll_thumb = GetScrollThumb(wxVERTICAL);
+		if (height > y) {
+			const int scroll_range = GetScrollRange(wxVERTICAL);
+			if (scroll_thumb != (int)y || scroll_range != (int)height) {
+				SetScrollbar(wxVERTICAL, scrollPos, y, height);
+				if (scroll_thumb == 0) return true; // Creation of scrollbar have sent a size event
+			}
+
+			// Avoid empty space at bottom
+			if (scrollPos + y > height) scrollPos = wxMax(0, height - y);
+
+			SetScrollPos(wxVERTICAL, scrollPos);
+		}
+		else if (scroll_thumb > 0) {
+			SetScrollbar(wxVERTICAL, 0, 0, 0);
+			return true; // Removal of scrollbar have sent a size event
+		}
 	}
 
 	// Check if we need a horizontal scrollbar
@@ -753,6 +824,8 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	wxLogDebug(wxT("DrawLayout() : %d (%d,%d)"), GetId(), m_enableDrawing, IsShown());
 	//wxLogDebug(wxT("DrawLayout() : %s"), GetName());
 
+	if (m_beforeRedrawCallback) m_beforeRedrawCallback(m_callbackData);
+
 	wxASSERT(m_scrollPosX >= 0);
 
 	// Check if we should cancel a snippet
@@ -762,21 +835,14 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	const wxSize size = GetClientSize();
 	if (size.x == 0 || size.y == 0) return; // Nothing to draw
 
-	// resize the bitmap used for doublebuffering
-	if (bitmap.GetWidth() < size.x || bitmap.GetHeight() < size.y) {
-		// disassociate and release mem for old bitmap
-		mdc.SelectObjectAsSource(wxNullBitmap);
-		bitmap = wxNullBitmap;
-
-		// Resize bitmap
-		bitmap = wxBitmap(size.x, size.y);
-
-		// Select the new bitmap
-		mdc.SelectObject(bitmap);
-	}
-
 	if (m_showGutter) {
 		m_gutterWidth = m_gutterCtrl->CalcLayout(size.y);
+
+		// Move gutter to correct position
+		const unsigned int gutterxpos = m_gutterLeft ? m_leftScrollWidth : size.x - m_gutterWidth;
+		if (m_gutterCtrl->GetPosition().x != (int)gutterxpos) {
+			m_gutterCtrl->SetPosition(wxPoint(gutterxpos, 0));
+		}
 	}
 	const unsigned int editorSizeX = ClientWidthToEditor(size.x);
 
@@ -785,6 +851,20 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 		if (m_showGutter) m_gutterCtrl->DrawGutter();
 		return;
 	}
+	
+	// Resize the bitmap used for doublebuffering
+	if (bitmap.GetWidth() < (int)editorSizeX || bitmap.GetHeight() < size.y) {
+		// disassociate and release mem for old bitmap
+		mdc.SelectObjectAsSource(wxNullBitmap);
+		bitmap = wxNullBitmap;
+
+		// Resize bitmap
+		bitmap = wxBitmap(size.x, size.y);
+	}
+
+	// We always have to reselect the bitmap, otherwise the memorydc
+	// will get confused if it has been resized in another editorCtrl
+	mdc.SelectObject(bitmap);
 
 	// Verify scrollPos (might come from an un-updated scrollbar)
 	if (scrollPos < 0) {
@@ -874,7 +954,7 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	if (caret->IsVisible()) caret->Hide();
 
 	// Copy MemoryDC to Display
-	const unsigned int xpos = m_gutterLeft ? m_gutterWidth : 0;
+	const unsigned int xpos = m_leftScrollWidth + (m_gutterLeft ? m_gutterWidth : 0);
 #ifdef __WXMSW__
 	::BitBlt(GetHdcOf(dc), xpos, 0,(int)editorSizeX, (int)size.y, GetHdcOf(mdc), 0, 0, SRCCOPY);
 #else
@@ -895,26 +975,31 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	if (m_showGutter) m_gutterCtrl->DrawGutter();
 
 	// Check if we should send notification about scrolling
-	if (scrollPos != old_scrollPos) {
-		if (m_scrollCallback) m_scrollCallback(m_scrollCallbackData);
+	if (m_isResizing || scrollPos != old_scrollPos) {
+		if (m_scrollCallback) m_scrollCallback(m_callbackData);
 		old_scrollPos = scrollPos;
 	}
+	if (m_afterRedrawCallback) m_afterRedrawCallback(m_callbackData);
 
 	m_isResizing = false;
 }
 
 unsigned int EditorCtrl::ClientWidthToEditor(unsigned int width) const {
-	return (width > m_gutterWidth) ? (width - m_gutterWidth) : 0;
+	return (width > m_gutterWidth) ? (width - (m_gutterWidth + m_leftScrollWidth)) : 0;
 }
 
 wxPoint EditorCtrl::ClientPosToEditor(unsigned int xpos, unsigned int ypos) const {
-	if (m_gutterLeft) return wxPoint((xpos - m_gutterWidth) + m_scrollPosX, ypos + scrollPos);
-	else return wxPoint(xpos + m_scrollPosX, ypos + scrollPos);
+	unsigned int adjXpos = (xpos - m_leftScrollWidth) + m_scrollPosX;
+	if (m_gutterLeft) adjXpos -= m_gutterWidth;
+
+	return wxPoint(adjXpos, ypos + scrollPos);
 }
 
 wxPoint EditorCtrl::EditorPosToClient(unsigned int xpos, unsigned int ypos) const {
-	if (m_gutterLeft) return wxPoint(m_gutterWidth + (xpos - m_scrollPosX), ypos - scrollPos);
-	else return wxPoint(xpos - m_scrollPosX, ypos - scrollPos);
+	unsigned int adjXpos = (xpos - m_scrollPosX) + m_leftScrollWidth;
+	if (m_gutterLeft) adjXpos += m_gutterWidth;
+
+	return wxPoint(adjXpos, ypos - scrollPos);
 }
 
 wxPoint EditorCtrl::GetCaretPoint() const {
@@ -5692,7 +5777,12 @@ bool EditorCtrl::ReplaceAllRegex(const wxString& regex, const wxString& replacet
 
 void EditorCtrl::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxPaintDC dc(this);
-	const wxSize size = GetClientSize();
+	
+	// We have to do a full redraw, because there may be other editorCtrls
+	// shown at the save time which have written to the same backing bitmap
+	DrawLayout(dc);
+
+/*	const wxSize size = GetClientSize();
 	const int editorSizeX = ClientWidthToEditor(size.x);
 
 	// Re-Blit MemoryDC to Display
@@ -5701,7 +5791,7 @@ void EditorCtrl::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	::BitBlt(GetHdcOf(dc), xpos, 0,(int)editorSizeX, (int)size.y, GetHdcOf(mdc), 0, 0, SRCCOPY);
 #else
 	dc.Blit(xpos, 0,  editorSizeX, size.y, &mdc, 0, 0);
-#endif
+#endif*/
 }
 
 void EditorCtrl::OnSize(wxSizeEvent& WXUNUSED(event)) {
@@ -7707,7 +7797,7 @@ void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
 	}
 	else {
 		// Only handle scrollwheel if we have a scrollbar
-		if (GetScrollThumb(wxVERTICAL))
+		if (HasScrollbar())
 			DoVerticalWheelScroll(event);
 	}
 }
@@ -7721,41 +7811,57 @@ void EditorCtrl::SetScroll(unsigned int ypos) {
 }
 
 void EditorCtrl::OnScroll(wxScrollWinEvent& event) {
-	const wxSize size = GetClientSize();
-	int pos = (event.GetOrientation() == wxVERTICAL) ? scrollPos : m_scrollPosX;
-	const int page_size = (event.GetOrientation() == wxVERTICAL) ? size.y : m_lines.GetDisplayWidth();
-	const int doc_size = (event.GetOrientation() == wxVERTICAL) ? m_lines.GetHeight() : m_lines.GetWidth();
-	const int line_size = (event.GetOrientation() == wxVERTICAL) ? m_lines.GetLineHeight() : 10;
+	HandleScroll(event.GetOrientation(), event.GetPosition(), event.GetEventType());
+}
 
-	if (event.GetEventType() == wxEVT_SCROLLWIN_THUMBTRACK ||
-		event.GetEventType() == wxEVT_SCROLLWIN_THUMBRELEASE)
+void EditorCtrl::OnScrollBar(wxScrollEvent& event) {
+	HandleScroll(event.GetOrientation(), event.GetPosition(), event.GetEventType());
+}
+
+void EditorCtrl::HandleScroll(int orientation, int position, wxEventType eventType) {
+	const wxSize size = GetClientSize();
+	int pos = (orientation == wxVERTICAL) ? scrollPos : m_scrollPosX;
+	const int page_size = (orientation == wxVERTICAL) ? size.y : m_lines.GetDisplayWidth();
+	const int doc_size = (orientation == wxVERTICAL) ? m_lines.GetHeight() : m_lines.GetWidth();
+	const int line_size = (orientation == wxVERTICAL) ? m_lines.GetLineHeight() : 10;
+
+	if (eventType == wxEVT_SCROLLWIN_THUMBTRACK ||
+		eventType == wxEVT_SCROLLWIN_THUMBRELEASE ||
+		eventType == wxEVT_SCROLL_THUMBTRACK ||
+		eventType == wxEVT_SCROLL_THUMBRELEASE)
 	{
-		pos = event.GetPosition();
+		pos = position;
 	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEUP) {
+	else if (eventType == wxEVT_SCROLLWIN_PAGEUP ||
+		     eventType == wxEVT_SCROLL_PAGEUP ) {
 		pos -= page_size;
 		if (pos < 0) pos = 0;
 	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEDOWN) {
+	else if (eventType == wxEVT_SCROLLWIN_PAGEDOWN ||
+		     eventType == wxEVT_SCROLL_PAGEDOWN) {
 		pos += page_size;
 		if (pos > doc_size - page_size) pos = doc_size - page_size;
 	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEUP) {
+	else if (eventType == wxEVT_SCROLLWIN_LINEUP ||
+		     eventType == wxEVT_SCROLL_LINEUP) {
 		pos = pos - (pos % line_size) - line_size;
 		if (pos < 0) pos = 0;
 	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEDOWN) {
+	else if (eventType == wxEVT_SCROLLWIN_LINEDOWN ||
+		     eventType == wxEVT_SCROLL_LINEDOWN) {
 		pos = pos - (pos % line_size) + line_size;
 		if (pos > doc_size - size.y) pos = doc_size - page_size;
 	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_TOP) {
+	else if (eventType == wxEVT_SCROLLWIN_TOP ||
+		     eventType == wxEVT_SCROLL_TOP) {
 		pos = 0;
 	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_BOTTOM) {
+	else if (eventType == wxEVT_SCROLLWIN_BOTTOM ||
+		     eventType == wxEVT_SCROLL_BOTTOM) {
 		pos = -1; // end
 	}
 
-	if (event.GetOrientation() == wxVERTICAL) {
+	if (orientation == wxVERTICAL) {
 		if (pos != scrollPos) {
 			wxASSERT(pos >= -1);
 
@@ -7790,9 +7896,10 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	ParseFoldMarkers();
 
 	// ScrollPos may no longer be valid, calc new scrollpos
-	if (GetScrollThumb(wxVERTICAL)) {
+	if (HasScrollbar()) {
 		scrollPos = m_lines.GetYPosFromLine(topline) + lineoffset;
-		SetScrollbar(wxVERTICAL, scrollPos, GetClientSize().y, m_lines.GetHeight());
+		if (m_leftScrollbar) m_leftScrollbar->SetScrollbar(scrollPos, GetClientSize().y, m_lines.GetHeight(), GetClientSize().y);
+		else SetScrollbar(wxVERTICAL, scrollPos, GetClientSize().y, m_lines.GetHeight());
 	}
 
 	// Check if we should request more idle events

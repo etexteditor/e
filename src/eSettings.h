@@ -52,11 +52,13 @@ public:
 	void GetRecentProjects(wxArrayString& recentprojects) const;
 
 	// Pages
+	enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
 	size_t GetPageCount() const;
-	void SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks);
-	void GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks) const;
-	wxString GetPagePath(size_t page_id) const;
-	doc_id GetPageDoc(size_t page_id) const;
+	void SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks, SubPage sp=SP_MAIN);
+	void GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp=SP_MAIN) const;
+	bool IsPageDiff(size_t page_id) const;
+	wxString GetPagePath(size_t page_id, SubPage sp=SP_MAIN) const;
+	doc_id GetPageDoc(size_t page_id, SubPage sp=SP_MAIN) const;
 	void DeletePageSettings(size_t page_id);
 	void DeleteAllPageSettings();
 

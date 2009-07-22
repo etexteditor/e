@@ -214,14 +214,17 @@ size_t eSettings::GetPageCount() const {
 	return pages.Size();
 }
 
-void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks) {
+void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks, SubPage sp) {
 	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
 	if (!pages.IsArray()) pages.SetType(wxJSONTYPE_ARRAY);
 
 	wxASSERT((int)page_id <= pages.Size());
-	wxJSONValue& page = ((int)page_id == pages.Size()) ? pages.Append(wxJSONValue(wxJSONTYPE_OBJECT)) : pages[page_id];
-	page.RemoveAll();
+	wxJSONValue& toppage = ((int)page_id == pages.Size()) ? pages.Append(wxJSONValue(wxJSONTYPE_OBJECT)) : pages[page_id];
+	
+	// With diffs we may have subpages
+	wxJSONValue& page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage[wxT("left")] : toppage[wxT("right")]);
 
+	page.RemoveAll();
 	page[wxT("path")] = path;
 	page[wxT("pos")] = pos;
 	page[wxT("topline")] = topline;
@@ -247,10 +250,13 @@ void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di,
 	}
 }
 
-void eSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks) const {
+void eSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp) const {
 	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
 	wxASSERT((int)page_id < pages.Size());
-	const wxJSONValue page = pages.ItemAt(page_id);
+	const wxJSONValue toppage = pages.ItemAt(page_id);
+
+	// With diffs we may have subpages
+	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
 
 	path = page.ItemAt(wxT("path")).AsString();
 	pos = page.ItemAt(wxT("pos")).AsInt();
@@ -275,18 +281,31 @@ void eSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int&
 	}
 }
 
-wxString eSettings::GetPagePath(size_t page_id) const {
+bool eSettings::IsPageDiff(size_t page_id) const {
 	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
 	wxASSERT((int)page_id < pages.Size());
 	const wxJSONValue page = pages.ItemAt(page_id);
+	return page.HasMember(wxT("left"));
+}
+
+wxString eSettings::GetPagePath(size_t page_id, SubPage sp) const {
+	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
+	wxASSERT((int)page_id < pages.Size());
+	const wxJSONValue toppage = pages.ItemAt(page_id);
+
+	// With diffs we may have subpages
+	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
 
 	return page.ItemAt(wxT("path")).AsString();
 }
 
-doc_id eSettings::GetPageDoc(size_t page_id) const {
+doc_id eSettings::GetPageDoc(size_t page_id, SubPage sp) const {
 	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
 	wxASSERT((int)page_id < pages.Size());
-	const wxJSONValue page = pages.ItemAt(page_id);
+	const wxJSONValue toppage = pages.ItemAt(page_id);
+
+	// With diffs we may have subpages
+	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
 
 	doc_id di;
 	di.type = (doc_type)page.ItemAt(wxT("doc_type")).AsInt();

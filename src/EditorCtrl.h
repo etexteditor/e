@@ -87,6 +87,7 @@ public:
 	unsigned int GetLength() const;
 	unsigned int GetLineCount() const {return m_lines.GetLineCount();};
 	int GetTopLine();
+	Lines& GetLines() {return m_lines;};
 
 	// Text Retrieval
 	wxString GetText() const;
@@ -103,6 +104,7 @@ public:
 	unsigned int GetCurrentLineNumber();
 	unsigned int GetCurrentColumnNumber();
 	unsigned int GetLineFromPos(unsigned int pos) {return m_lines.GetLineFromCharPos(pos);};
+	bool IsLineStart(unsigned int line_id, unsigned int pos) {return m_lines.IsLineStart(line_id, pos);};
 	bool IsLineEnd(unsigned int pos) {return m_lines.IsLineEnd(pos);};
 
 	void SetDocumentAndScrollPosition(int pos, int topline);
@@ -137,6 +139,9 @@ public:
 	void SetTabWidth(unsigned int width);
 	void SetGutterRight(bool doMove=true);
 	const wxFont& GetEditorFont() const;
+	void SetScrollbarLeft(bool doMove=true);
+	unsigned int GetLeftScrollWidth() const {return m_leftScrollWidth;};
+	bool HasScrollbar() const;
 
 	// Document handling
 	void Clear();
@@ -225,7 +230,8 @@ public:
 	void ClearSearchRange(bool reset=false);
 
 	// Settings
-	void SaveSettings(unsigned int i, eSettings& m_settings);
+	void SaveSettings(unsigned int i, eSettings& m_settings, unsigned int id=0);
+	void RestoreSettings(unsigned int i, eSettings& settings, unsigned int id=0);
 
 	// Needed by IEditorSearch interface
 	wxEvtHandler* GetEventHandlerI() const {return GetEventHandler();};
@@ -287,14 +293,14 @@ public:
 	void RunCurrentSelectionAsCommand(bool doReplace);
 
 	// Track if doc has been modified
-	void MarkAsModified() {++m_changeToken; if(m_modCallback) m_modCallback(m_modCallbackData);};
+	void MarkAsModified() {++m_changeToken;};
 	unsigned int GetChangeToken() const {return m_changeToken;};
 	virtual EditorChangeState GetChangeState() const;
 
 	// Callbacks
-	void SetModifiedCallback(void(*callback)(void*), void* data) {m_modCallback = callback; m_modCallbackData = data;};
-	void SetScrollCallback(void(*callback)(void*), void* data) {m_scrollCallback = callback; m_scrollCallbackData = data;};
-
+	void SetBeforeRedrawCallback(void(*callback)(void*), void* data) {m_beforeRedrawCallback = callback; if (data) m_callbackData = data;};
+	void SetAfterRedrawCallback(void(*callback)(void*), void* data) {m_afterRedrawCallback = callback; if (data) m_callbackData = data;};
+	void SetScrollCallback(void(*callback)(void*), void* data) {m_scrollCallback = callback; if (data) m_callbackData = data;};
 
 	// Preview (in html)
 	bool IsSavedForPreview() const {return m_savedForPreview;};
@@ -423,6 +429,7 @@ private:
 	void OnMouseWheel(wxMouseEvent& event);
 	void OnLeaveWindow(wxMouseEvent& event);
 	void OnScroll(wxScrollWinEvent& event);
+	void OnScrollBar(wxScrollEvent& event);
 	void OnIdle(wxIdleEvent& event);
 	void OnClose(wxCloseEvent& event);
 	void OnPopupListMenu(wxCommandEvent& event);
@@ -447,6 +454,7 @@ private:
 	void DrawLayout(bool isScrolling=false) {wxClientDC dc(this);DrawLayout(dc, isScrolling);};
 	void DrawLayout(wxDC& dc, bool isScrolling=false);
 	bool UpdateScrollbars(unsigned int x, unsigned int y);
+	void HandleScroll(int orientation, int position, wxEventType eventType);
 
 	// Coord conversion
 	unsigned int ClientWidthToEditor(unsigned int width) const;
@@ -573,7 +581,8 @@ private:
 	wxTimer m_foldTooltipTimer;
 	TextTip* m_activeTooltip;
 
-	void (*m_modCallback)(void*);
+	void (*m_beforeRedrawCallback)(void*);
+	void (*m_afterRedrawCallback)(void*);
 	void (*m_scrollCallback)(void*);
 
 	bool m_enableDrawing;
@@ -601,6 +610,8 @@ private:
 	bool m_showGutter;
 	bool m_gutterLeft;
 	unsigned int m_gutterWidth;
+	wxScrollBar* m_leftScrollbar;
+	unsigned int m_leftScrollWidth;
 	LiveCaret* caret;
 	wxMemoryDC mdc;
 	int old_scrollPos; // set by OnScroll when scrolling
@@ -614,8 +625,7 @@ private:
 	wxString m_mate;
 
 	// Callback data
-	void* m_modCallbackData;
-	void* m_scrollCallbackData;
+	void* m_callbackData;
 
 	// Folding vars
 	vector<cxFold> m_folds;

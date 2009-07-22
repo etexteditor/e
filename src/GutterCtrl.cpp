@@ -152,15 +152,11 @@ unsigned GutterCtrl::CalcLayout(unsigned int height) {
 	}
 
 	SetSize(m_width, height);
-	if (!m_gutterLeft) {
-		SetPosition(wxPoint(m_editorCtrl.GetClientSize().x - m_width, 0));
-	}
 	return m_width;
 }
 
 void GutterCtrl::SetGutterRight(bool doMove) {
 	m_gutterLeft = !doMove;
-	if (!doMove) SetPosition(wxPoint(0,0)); // reset pos
 }
 
 void GutterCtrl::DrawGutter(wxDC& dc) {

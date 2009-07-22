@@ -109,6 +109,9 @@ public:
 	bool TextChanged(const doc_id& version1, const doc_id& version2) const;
 	bool PropertiesChanged(const doc_id& version1, const doc_id& version2) const;
 
+	// Change Tracking
+	void SetChangeCallback(void(*callback)(cxChangeType, unsigned int, unsigned int, void*), void* data) {m_trackChanges = callback; m_trackChangesData = data;};
+
 	// Properties
 	wxDateTime GetDate() const;
 	wxString GetPropertyName() const;
@@ -174,6 +177,10 @@ private:
 	mutable wxString m_regex_cache;
 	mutable int m_options_cache;
 	mutable pcre *m_re;
+
+	// Change Tracking Callback
+	void(*m_trackChanges)(cxChangeType, unsigned int, unsigned int, void*);
+	void* m_trackChangesData;
 
 	// Support functions
 	void PrepareForChange();

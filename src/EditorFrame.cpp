@@ -56,6 +56,8 @@
 #include "StatusBar.h"
 #include "DirWatcher.h"
 #include "FindInProjectDlg.h"
+#include "DiffPanel.h"
+#include "CompareDlg.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows.
@@ -89,6 +91,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU_OPEN(EditorFrame::OnOpeningMenu)
 	EVT_MENU(wxID_NEW, EditorFrame::OnMenuNew)
 	EVT_MENU(wxID_OPEN, EditorFrame::OnMenuOpen)
+	EVT_MENU(MENU_DIFF, EditorFrame::OnMenuCompareFiles)
 	EVT_MENU(MENU_OPENPROJECT, EditorFrame::OnMenuOpenProject)
 	EVT_MENU(MENU_OPENREMOTE, EditorFrame::OnMenuOpenRemote)
 	EVT_MENU(wxID_SAVE, EditorFrame::OnMenuSave)
@@ -457,6 +460,7 @@ void EditorFrame::InitMenus() {
 	wxMenu *fileMenu = new wxMenu;
 	fileMenu->Append(wxID_NEW, _("&New\tCtrl+N"), _("New File"));
 	fileMenu->Append(wxID_OPEN, _("&Open...\tCtrl+O"), _("Open File"));
+	fileMenu->Append(MENU_DIFF, _("&Compare Files..."), _("Compare Files"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_SAVE, _("&Save\tCtrl+S"), _("Save File"));
 	fileMenu->Append(wxID_SAVEAS, _("Save &As...\tCtrl-Shift-S"), _("Save File as"));
@@ -645,7 +649,7 @@ void EditorFrame::RestoreState() {
 
 	// Only show progress dialog if more than 3 pages
 	wxProgressDialog* dlg = NULL;
-	wxString msg = _("Opening documents from last session");
+	const wxString msg = _("Opening documents from last session");
 	if (pagecount > 3) dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
 
 	Freeze();
@@ -662,38 +666,58 @@ void EditorFrame::RestoreState() {
 	// Open documents from last session
 	// CheckForModifiedFiles() is called from eApp::OnInit()
 	for (unsigned int i = 0; i < pagecount; ++i) {
-		wxString mirrorPath = m_settings.GetPagePath(i);
-		const doc_id mirrorDoc = m_settings.GetPageDoc(i);
-		
-		// Check that the path is still mirrored (not needed for unsaved)
-		if (!mirrorPath.empty()) {
+		const bool isDiff = m_settings.IsPageDiff(i);
+		wxString mirrorPath;
+
+		// Check that the paths are still mirrored (not needed for unsaved)
+		bool isMirrored = true;
+		unsigned int sp = isDiff ? 1 : 0;
+		const unsigned int sp_end = isDiff ? 3 : 1; // diffs have both left and rightd
+		for (; sp < sp_end; ++sp) {
+			mirrorPath = m_settings.GetPagePath(i, (eSettings::SubPage)sp);
+			if (mirrorPath.empty()) continue;
+			const doc_id mirrorDoc = m_settings.GetPageDoc(i, (eSettings::SubPage)sp);
+			
 			cxLOCK_READ(m_catalyst)
-				if (!catalyst.VerifyMirror(mirrorPath, mirrorDoc)) continue;
+				isMirrored = catalyst.VerifyMirror(mirrorPath, mirrorDoc);
+				if (!isMirrored) break;
 			cxENDLOCK
 		}
-		else mirrorPath = _("Untitled");
+		if (!isMirrored) continue;
 
 		// Update progress dialog
-		if (dlg) dlg->Update(i, msg + wxT("\n") + mirrorPath);
+		if (dlg) {
+			if (isDiff) mirrorPath = _("Diff");
+			else if (mirrorPath.empty()) mirrorPath = _("Untitled");
 
+			dlg->Update(i, msg + wxT("\n") + mirrorPath);
+		}
+
+		// Create the page
 		wxWindow* page = NULL;
-		EditorCtrl* ec = NULL;
-		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
-		if (isBundleItem) {
-			EditorBundlePanel* bundlePanel = new EditorBundlePanel(i, m_tabBar, *this, m_catalyst, bitmap);
-			page = bundlePanel;
-			ec = bundlePanel->GetEditor();
+		if (isDiff) {
+			DiffPanel* diff = new DiffPanel(m_tabBar, *this, m_catalyst, bitmap);
+			diff->RestoreSettings(i, m_settings);
+			page = diff;
 		}
-		else page = ec = new EditorCtrl(i, m_catalyst, bitmap, m_tabBar, *this);
-		page->Hide();
+		else if (eDocumentPath::IsBundlePath(mirrorPath)) {
+			page = new EditorBundlePanel(i, m_tabBar, *this, m_catalyst, bitmap);
+		}
+		else {
+			EditorCtrl* ec = NULL;
+			page = ec = new EditorCtrl(i, m_catalyst, bitmap, m_tabBar, *this);
 
-		// Remote files may fail to be downloaded
-		if (ec->IsRemote() && !ec->GetFilePath().IsOk()) {
-			delete ec;
-			if ((int)i >= page_id) hasSelection = false;
-			// TODO: better handling of deleted pages
+			// Remote files may fail to be downloaded
+			if (ec->IsRemote() && !ec->GetFilePath().IsOk()) {
+				delete ec;
+				if ((int)i >= page_id) hasSelection = false;
+				// TODO: better handling of deleted pages
+				continue;
+			}
 		}
-		else AddTab(page);
+		
+		page->Hide();
+		AddTab(page);
 	}
 
 	// There might have been pages we could not open (remote)
@@ -1139,8 +1163,8 @@ void EditorFrame::AddTab(wxWindow* page) {
 
 	// Get the actual editorCtrl (may be embedded in panel)
 	if (!ec) {
-		//if (page->IsKindOf(CLASSINFO(DiffPanel))) ec = ((DiffPanel*)page)->GetActiveEditor();
-		if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) ec = ((EditorBundlePanel*)page)->GetEditor();
+		if (page->IsKindOf(CLASSINFO(DiffPanel))) ec = ((DiffPanel*)page)->GetActiveEditor();
+		else if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) ec = ((EditorBundlePanel*)page)->GetEditor();
 		else ec = (EditorCtrl*)page;
 	}
 
@@ -1165,7 +1189,10 @@ void EditorFrame::AddTab(wxWindow* page) {
 	//if (editorCtrl) editorCtrl->EnableRedraw(false);
 	
 	// Get tab icon
-	wxBitmap tabIcon = wxBitmap(ec->RecommendedIcon());
+	const char** iconxpm = NULL;
+	if (page->IsKindOf(CLASSINFO(DiffPanel))) iconxpm = ((DiffPanel*)page)->RecommendedIcon();
+	else iconxpm = ec->RecommendedIcon();
+	const wxBitmap tabIcon = wxBitmap(iconxpm);
 	
 	ec->EnableRedraw(true);
 	editorCtrl = ec;
@@ -1277,8 +1304,8 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromPage(size_t page_idx) {
 	wxWindow* page = m_tabBar->GetPage(page_idx);
 	if (!page) return NULL;
 
-	//if (page->IsKindOf(CLASSINFO(DiffPanel))) return ((DiffPanel*)page)->GetActiveEditor();
-	if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) return ((EditorBundlePanel*)page)->GetEditor();
+	if (page->IsKindOf(CLASSINFO(DiffPanel))) return ((DiffPanel*)page)->GetActiveEditor();
+	else if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) return ((EditorBundlePanel*)page)->GetEditor();
 	else return (EditorCtrl*)page;
 }
 
@@ -2191,6 +2218,15 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 		Update();
 	}
 	SetCursor(*wxSTANDARD_CURSOR);
+}
+
+void EditorFrame::OnMenuCompareFiles(wxCommandEvent& WXUNUSED(event)) {
+	CompareDlg dlg(this);
+	if (dlg.ShowModal() != wxID_OK) return;
+
+	DiffPanel* diff = new DiffPanel(m_tabBar, *this, m_catalyst, bitmap);
+	diff->SetDiff(dlg.GetLeftPath(), dlg.GetRightPath());
+	AddTab(diff);
 }
 
 void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
@@ -3312,8 +3348,10 @@ void EditorFrame::SaveState() {
 	const unsigned int pageCount = m_tabBar->GetPageCount();
 	if (pageCount > 1 || !editorCtrl->IsEmpty()) { // don't save state if just a single empty page
 		for (unsigned int i = 0; i < pageCount; ++i) {
-			EditorCtrl* editor = GetEditorCtrlFromPage(i);
-			editor->SaveSettings(i, m_settings);
+			wxWindow* page = m_tabBar->GetPage(i);
+			if (page->IsKindOf(CLASSINFO(DiffPanel))) ((DiffPanel*)page)->SaveSettings(i, m_settings);
+			else if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) ((EditorBundlePanel*)page)->GetEditor()->SaveSettings(i, m_settings);
+			else ((EditorCtrl*)page)->SaveSettings(i, m_settings);
 		}
 	}
 	const wxString tablayout = m_tabBar->SavePerspective();

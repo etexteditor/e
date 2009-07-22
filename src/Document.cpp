@@ -22,7 +22,7 @@
 
 // Constructor
 Document::Document(const doc_id& di, CatalystWrapper cw)
-: m_catalyst(cw.m_catalyst), dispatcher(cw.GetDispatcher()), do_notify(true), m_textData(cw.m_catalyst), m_re(NULL) {
+: m_catalyst(cw.m_catalyst), dispatcher(cw.GetDispatcher()), do_notify(true), m_textData(cw.m_catalyst), m_re(NULL), m_trackChanges(NULL) {
 	SetDocument(di);
 
 	// Make sure we get notified if the document gets deleted
@@ -31,7 +31,7 @@ Document::Document(const doc_id& di, CatalystWrapper cw)
 
 Document::Document(CatalystWrapper cw)
 : m_catalyst(cw.m_catalyst), dispatcher(cw.GetDispatcher()),
-  m_docId(DRAFT,-1,-1), do_notify(true),  m_textData(cw.m_catalyst), m_re(NULL) {
+  m_docId(DRAFT,-1,-1), do_notify(true),  m_textData(cw.m_catalyst), m_re(NULL), m_trackChanges(NULL) {
 
 	// Make sure we get notified if the document gets deleted
 	dispatcher.SubscribeC(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
@@ -1713,7 +1713,7 @@ unsigned int Document::Insert(int pos, const wxString& text) {
 	else PrepareForChange();
 
 	// Insert the text
-	unsigned int bytes_len = m_textData.Insert(pos, text);
+	const unsigned int bytes_len = m_textData.Insert(pos, text);
 	UpdateHeadnode(); // Check if the headnode has been updated
 
 	// Adjust the length
@@ -1727,9 +1727,10 @@ unsigned int Document::Insert(int pos, const wxString& text) {
 #endif  //__WXDEBUG__
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) m_trackChanges(cxINSERTION, pos, bytes_len, m_trackChangesData);
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 
@@ -1750,7 +1751,7 @@ unsigned int Document::Insert(int pos, const char* text) {
 	else PrepareForChange();
 
 	// Insert the text
-	unsigned int bytes_len = m_textData.Insert(pos, text);
+	const unsigned int bytes_len = m_textData.Insert(pos, text);
 	UpdateHeadnode(); // Check if the headnode has been updated
 
 	// Adjust the length
@@ -1764,9 +1765,10 @@ unsigned int Document::Insert(int pos, const char* text) {
 #endif  //__WXDEBUG__
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) m_trackChanges(cxINSERTION, pos, bytes_len, m_trackChangesData);
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 
@@ -1779,7 +1781,7 @@ int Document::DeleteChar(unsigned int pos, bool nextchar) {
 	PrepareForChange();
 
 	// Delete the char
-	int result = m_textData.DeleteChar(pos, nextchar);
+	const unsigned int bytes_len = m_textData.DeleteChar(pos, nextchar);
 	UpdateHeadnode(); // Check if the headnode has been updated
 
 	// Adjust the length
@@ -1794,13 +1796,14 @@ int Document::DeleteChar(unsigned int pos, bool nextchar) {
 #endif  //__WXDEBUG__
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) m_trackChanges(cxDELETION, (nextchar ? pos : pos-bytes_len), bytes_len, m_trackChangesData);
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 
-	return result;
+	return bytes_len;
 }
 
 void Document::Delete(int start_pos, int end_pos) {
@@ -1825,9 +1828,10 @@ void Document::Delete(int start_pos, int end_pos) {
 #endif  //__WXDEBUG__
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) m_trackChanges(cxDELETION, start_pos, end_pos - start_pos, m_trackChangesData);
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 }
@@ -1835,6 +1839,7 @@ void Document::Delete(int start_pos, int end_pos) {
 void Document::DeleteAll() {
 	wxASSERT(IsOk());
 	if (IsEmpty()) return; // nothing to delete
+	const unsigned int bytes_len = GetLength();
 
 	PrepareForChange();
 
@@ -1846,9 +1851,10 @@ void Document::DeleteAll() {
 	pLength(vHistory[m_docId.version_id]) = 0;
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) m_trackChanges(cxDELETION, 0, bytes_len, m_trackChangesData);
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 }
@@ -1860,6 +1866,7 @@ void Document::Move(int source_startpos, int source_endpos, int dest_pos) {
 	wxASSERT(dest_pos >= 0 && dest_pos <= pLength(vHistory[m_docId.version_id]));
 	wxASSERT(dest_pos <= source_startpos || dest_pos >= source_endpos);
 	if (source_startpos == source_endpos) return;
+	if (source_startpos <= dest_pos && dest_pos <= source_endpos) return;
 
 	PrepareForChange();
 
@@ -1870,9 +1877,14 @@ void Document::Move(int source_startpos, int source_endpos, int dest_pos) {
 	wxASSERT(pLength(vHistory[m_docId.version_id]) == (int)m_textData.GetLength());
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) {
+				const unsigned int bytes_len = source_endpos - source_startpos;
+				m_trackChanges(cxDELETION, source_startpos, bytes_len, m_trackChangesData);
+				m_trackChanges(cxINSERTION, ((dest_pos < source_startpos) ? dest_pos : dest_pos - bytes_len), bytes_len, m_trackChangesData);
+			}
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 }
@@ -1902,9 +1914,13 @@ unsigned int Document::Replace(unsigned int start_pos, unsigned int end_pos, con
 	pLength(vHistory[m_docId.version_id]) = m_textData.GetLength();
 
 	// Notify subscribers that the revision has changed
-	if (do_notify) {
+	if (do_notify || m_trackChanges) {
 		m_catalyst.UnLock();
-			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+			if (m_trackChanges) {
+				m_trackChanges(cxDELETION, start_pos, end_pos - start_pos, m_trackChangesData);
+				m_trackChanges(cxINSERTION, start_pos, byte_len, m_trackChangesData);
+			}
+			if (do_notify) dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
 		m_catalyst.ReLock();
 	}
 
@@ -1946,28 +1962,33 @@ wxDateTime Document::GetDate() const {
 
 void Document::SetDocument(const doc_id& di) {
 	//wxASSERT(m_catalyst.IsOk(di));
+	if (m_docId == di) return;
 
-	if (m_docId != di) {
-		m_docId = di;
+	m_docId = di;
 
-		vRevisions = (m_docId.IsDraft()) ? m_catalyst.GetRevView() : m_catalyst.GetDocView();
+	vRevisions = (m_docId.IsDraft()) ? m_catalyst.GetRevView() : m_catalyst.GetDocView();
 
-		const c4_RowRef rDocument = vRevisions[m_docId.document_id];
-		vNodes = pNodes(rDocument);
-		vHistory = pHistory(rDocument);
+	const c4_RowRef rDocument = vRevisions[m_docId.document_id];
+	vNodes = pNodes(rDocument);
+	vHistory = pHistory(rDocument);
 
-		if (m_docId.IsDraft() && vHistory.GetSize() == 0) {
-			// We have to create the first revision in this draft doc
-			wxASSERT(di.version_id == 0);
-			NewRevision();
-		}
-		else {
-			wxASSERT(di.version_id >= 0 && di.version_id < vHistory.GetSize());
+	if (m_docId.IsDraft() && vHistory.GetSize() == 0) {
+		// We have to create the first revision in this draft doc
+		wxASSERT(di.version_id == 0);
+		NewRevision();
+	}
+	else {
+		wxASSERT(di.version_id >= 0 && di.version_id < vHistory.GetSize());
 
-			const c4_RowRef rVersion = vHistory[m_docId.version_id];
-			const node_ref headnode(pHeadVer(rVersion), pHeadnode(rVersion));
-			m_textData.SetDocument(m_docId, headnode);
-		}
+		const c4_RowRef rVersion = vHistory[m_docId.version_id];
+		const node_ref headnode(pHeadVer(rVersion), pHeadnode(rVersion));
+		m_textData.SetDocument(m_docId, headnode);
+	}
+
+	if (m_trackChanges) {
+		m_catalyst.UnLock();
+			m_trackChanges(cxVERSIONCHANGE, 0, 0, m_trackChangesData);
+		m_catalyst.ReLock();
 	}
 }
 

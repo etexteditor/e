@@ -66,6 +66,7 @@ class IEditorSearch;
 
 // Menu id's
 enum {
+	MENU_DIFF,
 	MENU_OPENPROJECT,
 	MENU_OPENREMOTE,
 	MENU_SAVEALL,
@@ -355,6 +356,7 @@ private:
 	void OnOpeningMenu(wxMenuEvent& event);
 	void OnMenuNew(wxCommandEvent& event);
 	void OnMenuOpen(wxCommandEvent& event);
+	void OnMenuCompareFiles(wxCommandEvent& event);
 	void OnMenuOpenProject(wxCommandEvent& event);
 	void OnMenuOpenRemote(wxCommandEvent& event);
 	void OnMenuOpenRecentFile(wxCommandEvent& event);

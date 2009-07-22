@@ -37,6 +37,7 @@
 #endif
 #include <map>
 #include <vector>
+#include <list>
 #include "auto_vector.h"
 #ifdef __WXMSW__
     #pragma warning(pop)
@@ -108,7 +109,8 @@ enum cxFileResult {
 
 enum cxChangeType {
 	cxINSERTION,
-	cxDELETION
+	cxDELETION,
+	cxVERSIONCHANGE
 };
 
 struct cxBookmark {
@@ -222,6 +224,26 @@ struct cxUserMsg {
 	int flags;
 	c4_Row rUser;
 };
+
+class cxMatch {
+	public:
+		cxMatch(size_t start1, size_t end1, size_t start2, size_t WXUNUSED(end2))
+			: offset1(start1), offset2(start2), len(end1-start1) {};
+		cxMatch(size_t start1, size_t start2, size_t len)
+			: offset1(start1), offset2(start2), len(len) {};
+		void ExtendUp() {--offset1; --offset2; ++len;};
+		void ExtendDown() {++len;};
+		size_t start1() const {return offset1;};
+		size_t end1() const {return offset1+len;};
+		size_t start2() const {return offset2;};
+		size_t end2() const {return offset2+len;};
+		size_t length() const {return len;};
+		bool operator<(const cxMatch& m) const {return offset1 < m.offset1;};
+	
+		size_t offset1;
+		size_t offset2;
+		size_t len;
+	};
 
 // Constant db accessors
 static const c4_IntProp    pAuthor("author");
@@ -378,6 +400,9 @@ public:
 	bool FindRevision(unsigned int doc_id, const c4_Bytes& revSig, int& rev_id) const;
 	bool AddRevision(c4_RowRef& rSourceRev);
 	void SignRevision(const doc_id& di);
+
+	// Diff
+	void GetDiff(const Document& doc1, const Document& doc2, list<cxMatch>& matchList);
 
 	// Registration functions
 	bool IsRegistered() const;

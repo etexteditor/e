@@ -1,3 +1,58 @@
+22-july-2009 - 1.0.37
+  o Added support for Visual Diff (still experimental).
+  
+  o When clicking in gutter to select full lines, always give
+    focus to editor. [adamv]
+    
+  o Fix to show excluded files & dirs in project settings on
+    first display. [adamv]
+    
+  o Fixed bracket pair regression. [adamv]
+  
+  o Symbol pane shortcut moved to "Ctrl-Alt-L". [adamv]
+  
+  o If the Symbol List is hidden, and you 'Go To Symbol',
+    it will now close after selecting a symbol. [adamv]
+    
+  o Added menu command to Hide/Show HTML Command Output,
+    with a hotkey of F12. [adamv]
+    
+  o Added undo to right-click menu. #3 [adamv]
+  
+  o Remove 'esc cancels snippet' behavior, which isn't
+    present in TextMate and breaks the use of completions
+    within snippets. [adamv]
+    
+  o Added 'Go to Tab..' popup (shortcut Ctrl-0) [adamv]
+  
+  o Move 'go to last active tab' to a separate command, so
+    that control-(shift)-tab behave like Visual Studio. [adamv]
+    
+  o Add #s in recent files/projects menus, for keyboard
+    access to first 9 items. #191 [adamv]
+    
+  o Use 2nd row in search panel for options, instead of
+    a popup [adamv]
+    
+  o Show # of replacements made when doing 'Replace All'
+    in the find panel. #39 [adamv]
+
+26-june-2009 - 1.0.36
+  o You can now set app-wide env vars in settings [adamv]
+
+  o Added shortcut (Ctrl-H) to "Filter through command.."
+    #320 [adamv]
+
+  o Bring existing e window to front when run from command
+    line #336 [adamv]
+
+  o When editing themes, you can now Right-click colors to
+    copy-paste. [adamv]
+
+  o Added setting to toogle automatic update detection [adamv]
+
+  o Added option to disable atomic save (only from settings file).
+
 2-june-2009 - 1.0.35
   o Use selection as initial pattern for 'Find in Project'
   

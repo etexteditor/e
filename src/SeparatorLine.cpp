@@ -3,6 +3,7 @@
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 	#include <wx/dcclient.h>
+    #include <wx/settings.h>
 #endif
 
 BEGIN_EVENT_TABLE(SeperatorLine, wxControl)

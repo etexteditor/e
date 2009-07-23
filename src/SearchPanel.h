@@ -30,6 +30,8 @@ class IEditorSearch;
 class wxBoxSizer;
 class wxButton;
 class wxComboBox;
+class wxCheckBox;
+class wxStaticText;
 
 class SearchPanel : public wxPanel {
 public:

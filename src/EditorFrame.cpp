@@ -1011,8 +1011,7 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 
 	// Build a list of paths and dates in current documents
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
-		//wxWindow* win_page = m_tabBar->GetPage(i);
-		//if (win_page->IsKindOf(CLASSINFO(DiffPanel))) continue; // ignore diff for now
+		//TODO: DiffPanel has two editors (GetEditorCtrlFromPage only get active)
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
 		
 		const wxString& mirrorPath = page->GetPath();
@@ -1279,9 +1278,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 
 	// Get the actual editorCtrl (may be embedded in panel)
 	if (!ec) {
-		if (page->IsKindOf(CLASSINFO(DiffPanel))) ec = ((DiffPanel*)page)->GetActiveEditor();
-		else if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) ec = ((EditorBundlePanel*)page)->GetEditor();
-		else ec = (EditorCtrl*)page;
+		ec = (dynamic_cast<ITabPage*>(page))->GetActiveEditor();
 	}
 
 	wxString tabText = ec->GetName();
@@ -1305,9 +1302,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	//if (editorCtrl) editorCtrl->EnableRedraw(false);
 	
 	// Get tab icon
-	const char** iconxpm = NULL;
-	if (page->IsKindOf(CLASSINFO(DiffPanel))) iconxpm = ((DiffPanel*)page)->RecommendedIcon();
-	else iconxpm = ec->RecommendedIcon();
+	const char** iconxpm = (dynamic_cast<ITabPage*>(page))->RecommendedIcon();
 	const wxBitmap tabIcon = wxBitmap(iconxpm);
 	
 	ec->EnableRedraw(true);
@@ -1319,6 +1314,10 @@ void EditorFrame::AddTab(wxWindow* page) {
 	// Notify that we are editing a new document
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
 	UpdateTabMenu();
+}
+
+ITabPage* EditorFrame::GetPage(size_t idx) {
+	return dynamic_cast<ITabPage*>(m_tabBar->GetPage(idx));
 }
 
 void EditorFrame::UpdateWindowTitle() {
@@ -1420,9 +1419,7 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromPage(size_t page_idx) {
 	wxWindow* page = m_tabBar->GetPage(page_idx);
 	if (!page) return NULL;
 
-	if (page->IsKindOf(CLASSINFO(DiffPanel))) return ((DiffPanel*)page)->GetActiveEditor();
-	else if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) return ((EditorBundlePanel*)page)->GetEditor();
-	else return (EditorCtrl*)page;
+	return (dynamic_cast<ITabPage*>(page))->GetActiveEditor();
 }
 
 void EditorFrame::BringToFront() {
@@ -1925,7 +1922,7 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 		if (isBundleItem) {
 			EditorBundlePanel* bundlePanel = new EditorBundlePanel(m_tabBar, *this, m_catalyst, bitmap);
 			page = bundlePanel;
-			ec = bundlePanel->GetEditor();
+			ec = bundlePanel->GetActiveEditor();
 		}
 		else if (!editorCtrl->IsEmpty()) page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
 	}
@@ -3565,10 +3562,7 @@ void EditorFrame::SaveState() {
 	const unsigned int pageCount = m_tabBar->GetPageCount();
 	if (pageCount > 1 || !editorCtrl->IsEmpty()) { // don't save state if just a single empty page
 		for (unsigned int i = 0; i < pageCount; ++i) {
-			wxWindow* page = m_tabBar->GetPage(i);
-			if (page->IsKindOf(CLASSINFO(DiffPanel))) ((DiffPanel*)page)->SaveSettings(i, m_settings);
-			else if (page->IsKindOf(CLASSINFO(EditorBundlePanel))) ((EditorBundlePanel*)page)->GetEditor()->SaveSettings(i, m_settings);
-			else ((EditorCtrl*)page)->SaveSettings(i, m_settings);
+			GetPage(i)->SaveSettings(i, m_settings);
 		}
 	}
 	const wxString tablayout = m_tabBar->SavePerspective();

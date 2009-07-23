@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ITabPage.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ITmGetSyntaxes.h"
 				>
 			</File>

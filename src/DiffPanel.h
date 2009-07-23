@@ -20,6 +20,7 @@
 #endif
 
 #include "Catalyst.h"
+#include "ITabPage.h"
 
 // Pre-definitions
 class EditorFrame;
@@ -28,7 +29,7 @@ class DiffBar;
 class DiffMarkBar;
 class wxGridBagSizer;
 
-class DiffPanel : public wxPanel {
+class DiffPanel : public wxPanel, public ITabPage {
 public:
 	DiffPanel(); // default const
 	DiffPanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
@@ -39,11 +40,11 @@ public:
 	void SetDiff(const wxString& leftPath, const wxString& rightPath);
 	void UpdateMarkBars();
 
-	void SaveSettings(unsigned int i, eSettings& settings);
+	virtual void SaveSettings(unsigned int i, eSettings& settings);
 	void RestoreSettings(unsigned int i, eSettings& settings);
 
-	EditorCtrl* GetActiveEditor();
-	const char** RecommendedIcon() const;
+	virtual EditorCtrl* GetActiveEditor();
+	virtual const char** RecommendedIcon() const;
 
 private:
 	// Event handlers

@@ -36,6 +36,7 @@
 #include "IFrameUndoPane.h"
 #include "IFrameSearchService.h"
 #include "IOpenTextmateURL.h"
+#include "ITabPage.h"
 
 // Forward declarations
 class eApp;
@@ -76,6 +77,7 @@ public:
 
 	// Tabs
 	void AddTab(wxWindow* page=NULL);
+	ITabPage* GetPage(size_t idx);
 	void UpdateNotebook();
 
 	// Editor

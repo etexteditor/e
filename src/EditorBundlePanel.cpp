@@ -165,8 +165,16 @@ void EditorBundlePanel::Init() {
 	m_editorCtrl->SetParentPanel(this);
 }
 
-EditorCtrl* EditorBundlePanel::GetEditor() {
+EditorCtrl* EditorBundlePanel::GetActiveEditor() {
 	return m_editorCtrl;
+}
+
+const char** EditorBundlePanel::RecommendedIcon() const {
+	return m_editorCtrl->RecommendedIcon();
+}
+
+void EditorBundlePanel::SaveSettings(unsigned int i, eSettings& settings) {
+	m_editorCtrl->SaveSettings(i, settings);
 }
 
 bool EditorBundlePanel::Show(bool show) {

@@ -17,6 +17,7 @@
 #include "BundleItemType.h"
 #include "key_hook.h"
 #include "IUpdatePanel.h"
+#include "ITabPage.h"
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
@@ -33,17 +34,19 @@ class CatalystWrapper;
 class DocumentWrapper;
 class ShortcutCtrl;
 
-class EditorBundlePanel : public wxPanel, public IUpdatePanel {
+class EditorBundlePanel : public wxPanel, public IUpdatePanel, public ITabPage {
 public:
 	EditorBundlePanel() {}; // default const
 	EditorBundlePanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 	EditorBundlePanel(int page_id, wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 
-	EditorCtrl* GetEditor();
-	
 	virtual void UpdatePanel();
 
 	virtual bool Show(bool show=true);
+
+	virtual EditorCtrl* GetActiveEditor();
+	virtual const char** RecommendedIcon() const;
+	virtual void SaveSettings(unsigned int i, eSettings& settings);
 
 private:
 	void Init();

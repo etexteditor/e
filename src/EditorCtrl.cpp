@@ -453,6 +453,10 @@ EditorCtrl::~EditorCtrl() {
 	ClearRemoteInfo();
 }
 
+void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings) {
+	SaveSettings(i, settings, 0); 
+}
+
 void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings, unsigned int subid) {
 	const wxString& path = GetPath();
 	const doc_id di = GetDocID();
@@ -466,7 +470,11 @@ void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings, unsigned int 
 	//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
 }
 
-const char** EditorCtrl::RecommendedIcon() {
+EditorCtrl* EditorCtrl::GetActiveEditor() {
+	return this;
+}
+
+const char** EditorCtrl::RecommendedIcon() const {
 	return document_xpm;
 }
 

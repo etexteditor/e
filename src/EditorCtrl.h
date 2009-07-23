@@ -39,6 +39,7 @@
 #include "IPrintableDocument.h"
 #include "IEditorSymbols.h"
 #include "IEditorSearch.h"
+#include "ITabPage.h"
 
 // Pre-definitions
 class wxFileName;
@@ -61,7 +62,8 @@ class EditorCtrl : public KeyHookable<wxControl>,
 	public IEditorDoAction,
 	public IPrintableDocument,
 	public IEditorSymbols,
-	public IEditorSearch
+	public IEditorSearch,
+	public ITabPage
 {
 public:
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
@@ -161,7 +163,10 @@ public:
 	virtual wxString GetName() const;
 	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
-	virtual const char** RecommendedIcon();
+	// TabPage interface
+	virtual EditorCtrl* GetActiveEditor();
+	virtual const char** RecommendedIcon() const;
+	virtual void SaveSettings(unsigned int i, eSettings& settings);
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
@@ -232,7 +237,7 @@ public:
 	void ClearSearchRange(bool reset=false);
 
 	// Settings
-	void SaveSettings(unsigned int i, eSettings& m_settings, unsigned int id=0);
+	void SaveSettings(unsigned int i, eSettings& settings, unsigned int id);
 	void RestoreSettings(unsigned int i, eSettings& settings, unsigned int id=0);
 
 	// Needed by IEditorSearch interface

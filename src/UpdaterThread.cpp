@@ -1,6 +1,5 @@
 #include "UpdaterThread.h"
 
-#include <wx/dialup.h>
 #include <wx/protocol/http.h>
 #include <wx/tokenzr.h>
 #include <wx/txtstrm.h>
@@ -31,18 +30,13 @@ void CheckForUpdates(eSettings& settings, bool forceCheck) {
 		}
 	}
 
-	// Check if we have a internet connection
-	wxDialUpManager* dup = wxDialUpManager::Create();
-	if (dup->IsOnline()) {
-		// We have to create the http protocol in main thread
-		// it will be deleted in the updater thread
-		wxHTTP* http = new wxHTTP;
+	// We have to create the http protocol in main thread
+	// it will be deleted in the updater thread
+	wxHTTP* http = new wxHTTP;
 
-		// Start the updater thread
-		UpdaterThread *updater = new UpdaterThread(http);
-		if (updater->Create() == wxTHREAD_NO_ERROR)	updater->Run();
-	}
-	delete dup; // Clean up
+	// Start the updater thread
+	UpdaterThread *updater = new UpdaterThread(http);
+	if (updater->Create() == wxTHREAD_NO_ERROR)	updater->Run();
 }
 
 

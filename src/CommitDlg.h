@@ -24,8 +24,8 @@ public:
 	CommitDlg(wxWindow *parent);
 
 	// Access to commit info
-	wxString GetLabel() const {return m_labelCtrl->GetValue();};
-	wxString GetDescription() const {return m_descCtrl->GetValue();};
+	wxString GetLabel() const;
+	wxString GetDescription() const;
 
 private:
 	wxTextCtrl* m_descCtrl;

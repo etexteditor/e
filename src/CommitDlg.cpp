@@ -38,3 +38,13 @@ CommitDlg::CommitDlg(wxWindow *parent)
 	SetSizerAndFit(sizer);
 	SetSize(350, 200);
 }
+
+wxString CommitDlg::GetLabel() const
+{
+	return m_labelCtrl->GetValue();
+}
+
+wxString CommitDlg::GetDescription() const
+{
+	return m_descCtrl->GetValue();
+}

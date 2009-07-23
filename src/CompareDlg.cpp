@@ -12,14 +12,16 @@
  ******************************************************************************/
 
 #include "CompareDlg.h"
+#include <wx/filepicker.h>
 
 BEGIN_EVENT_TABLE(CompareDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CompareDlg::OnButtonOk)
 END_EVENT_TABLE()
 
 
-CompareDlg::CompareDlg(wxWindow *parent)
-: wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER ) {
+CompareDlg::CompareDlg(wxWindow *parent):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER )
+{
 	SetTitle (_("Compare Files..."));
 
 	// Create ctrls
@@ -56,4 +58,24 @@ void CompareDlg::OnButtonOk(wxCommandEvent& evt) {
 
 	// If we get here the paths are valid
 	evt.Skip(); 
+}
+
+wxString CompareDlg::GetLeftPath() const
+{
+	return m_leftPathCtrl->GetPath();
+}
+
+wxString CompareDlg::GetRightPath() const
+{
+	return m_rightPathCtrl->GetPath();
+}
+
+void CompareDlg::SetLeftPath( const wxString& path )
+{
+	m_leftPathCtrl->SetPath(path);
+}
+
+void CompareDlg::SetRightPath( const wxString& path )
+{
+	m_rightPathCtrl->SetPath(path);
 }

@@ -14,21 +14,22 @@
 #ifndef __COMPAREDLG_H__
 #define __COMPAREDLG_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
-#ifdef __WXGTK__
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
-#include <wx/filepicker.h>
+
+class wxFilePickerCtrl;
 
 class CompareDlg : public wxDialog {
 public:
 	CompareDlg(wxWindow *parent);
 
 	// Access to file paths
-	wxString GetLeftPath() const {return m_leftPathCtrl->GetPath();};
-	wxString GetRightPath() const {return m_rightPathCtrl->GetPath();};
-	void SetLeftPath(const wxString& path) {m_leftPathCtrl->SetPath(path);};
-	void SetRightPath(const wxString& path) {m_rightPathCtrl->SetPath(path);};
+	wxString GetLeftPath() const;
+	wxString GetRightPath() const;
+	void SetLeftPath(const wxString& path);
+	void SetRightPath(const wxString& path);
 
 private:
 	// Event handlers

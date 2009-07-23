@@ -13,7 +13,6 @@
 
 #include "GotoFileDlg.h"
 
-using namespace std;
 #include <map>
 #include <algorithm>
 
@@ -40,17 +39,23 @@ struct DirState {
 	const cxProjectInfo* filter;
 	wxString prefix;
 	wxString nextDirName;
+
+	DirState(const wxString& path) 	{
+		dir.Open(path);
+	}
+
+	bool IsOpened() const {return dir.IsOpened();}
 };
 
 class FileActionList : public SearchListBox {
 public:
-	FileActionList(wxWindow* parent, wxWindowID id, const vector<FileEntry*>& actions);
+	FileActionList(wxWindow* parent, wxWindowID id, const std::vector<FileEntry*>& actions);
 	~FileActionList();
 
-	void Find(const wxString& text, const map<wxString,wxString>& triggers);
+	void Find(const wxString& text, const std::map<wxString,wxString>& triggers);
 	const FileEntry* GetSelectedAction();
 
-	void UpdateList(bool reloadAll = false);
+	void UpdateList(const bool reloadAll = false);
 
 private:
 	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const;
@@ -60,21 +65,21 @@ private:
 	class aItem {
 	public:
 		aItem() : action(NULL), rank(0) {};
-		aItem(const FileEntry* a, const vector<unsigned int>& hl);
+		aItem(const FileEntry* a, const std::vector<unsigned int>& hl);
 		bool operator<(const aItem& ai) const;
 		void swap(aItem& ai);
 
 		const FileEntry* action;
-		vector<unsigned int> hlChars;
+		std::vector<unsigned int> hlChars;
 		unsigned int rank;
 	};
 
-	void iter_swap(vector<aItem>::iterator a, vector<aItem>::iterator b) {
+	void iter_swap(std::vector<aItem>::iterator a, std::vector<aItem>::iterator b) {
 		a->swap(*b);
 	};
 
-	const vector<FileEntry*>& m_actions;
-	vector<aItem> m_items;
+	const std::vector<FileEntry*>& m_actions;
+	std::vector<aItem> m_items;
 	wxString m_searchText;
 
 	FileEntry* m_tempEntry;
@@ -122,12 +127,12 @@ GotoFileDlg::GotoFileDlg(wxWindow *parent, ProjectInfoHandler& project):
 
 GotoFileDlg::~GotoFileDlg() {
 	// Clean up allocated file entries
-	for (vector<FileEntry*>::iterator p = m_files.begin(); p != m_files.end(); ++p) {
+	for (std::vector<FileEntry*>::iterator p = m_files.begin(); p != m_files.end(); ++p) {
 		delete *p;
 	}
 
 	// Clean up allocated dir traversing state
-	for (vector<DirState*>::iterator d = m_dirStack.begin(); d != m_dirStack.end(); ++d) {
+	for (std::vector<DirState*>::iterator d = m_dirStack.begin(); d != m_dirStack.end(); ++d) {
 		delete *d;
 	}
 }
@@ -185,15 +190,13 @@ void GotoFileDlg::OnIdle(wxIdleEvent& event) {
 }
 
 void GotoFileDlg::BuildFileList(const wxString& path) {
-	DirState* dirState = new DirState();
-
-	// Open directory
-	dirState->dir.Open(path);
-	if (dirState->dir.IsOpened()) m_dirStack.push_back(dirState);
-	else {
-		delete dirState;;
+	DirState* dirState = new DirState(path);
+	if (!dirState->IsOpened()) {
+		delete dirState;
 		return;
 	}
+	
+	m_dirStack.push_back(dirState);
 
 	// Load filters for this dir
 	dirState->info = new cxProjectInfo;
@@ -319,7 +322,7 @@ void FileEntry::Clear() {
 
 // --- ActionList --------------------------------------------------------
 
-FileActionList::FileActionList(wxWindow* parent, wxWindowID id, const vector<FileEntry*>& actions):
+FileActionList::FileActionList(wxWindow* parent, wxWindowID id, const std::vector<FileEntry*>& actions):
 	SearchListBox(parent, id), 
 	m_actions(actions), m_actionCount(0) 
 {
@@ -338,7 +341,7 @@ void FileActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
 	else dc.SetTextForeground(m_textColor);
 
 	const FileEntry& action = *m_items[n].action;
-	const vector<unsigned int>& hl = m_items[n].hlChars;
+	const std::vector<unsigned int>& hl = m_items[n].hlChars;
 	const wxString& name = action.name;
 
 	/*// Calc extension width
@@ -364,7 +367,7 @@ void FileActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
 	DrawItemText(dc, rect, name, hl, isCurrent);
 }
 
-void FileActionList::UpdateList(bool reloadAll) {
+void FileActionList::UpdateList(const bool reloadAll) {
 	const FileEntry* selEntry = GetSelectedAction();
 	const int topLine = GetFirstVisibleLine();
 	int selection = -1;
@@ -417,7 +420,7 @@ void FileActionList::UpdateList(bool reloadAll) {
 	m_actionCount = m_actions.size();
 }
 
-void FileActionList::Find(const wxString& searchtext, const map<wxString,wxString>& triggers) {
+void FileActionList::Find(const wxString& searchtext, const std::map<wxString,wxString>& triggers) {
 	m_tempEntry->Clear();
 
 	if (searchtext.empty()) {
@@ -434,7 +437,7 @@ void FileActionList::Find(const wxString& searchtext, const map<wxString,wxStrin
 
 	// Find all matching filenames
 	m_items.clear();
-	vector<unsigned int> hlChars;
+	std::vector<unsigned int> hlChars;
 	for (unsigned int i = 0; i < m_actions.size(); ++i) {
 		AddActionIfMatching(m_searchText, m_actions[i]);
 	}
@@ -443,7 +446,7 @@ void FileActionList::Find(const wxString& searchtext, const map<wxString,wxStrin
 	// Check if we have a matching trigger
 	int selection = wxNOT_FOUND;
 	if (m_items.size()) {
-		map<wxString,wxString>::const_iterator p = triggers.find(m_searchText);
+		std::map<wxString,wxString>::const_iterator p = triggers.find(m_searchText);
 		if (p != triggers.end()) {
 			selection = FindPath(p->second);
 		}
@@ -463,7 +466,7 @@ void FileActionList::Find(const wxString& searchtext, const map<wxString,wxStrin
 							AddActionIfMatching(m_searchText, m_tempEntry);
 
 							// Find position it will end up after sort
-							vector<aItem>::iterator insPos = lower_bound(m_items.begin(), m_items.end()-1, m_items.back());
+							std::vector<aItem>::iterator insPos = lower_bound(m_items.begin(), m_items.end()-1, m_items.back());
 							selection = distance(m_items.begin(), insPos);
 
 							// Move item to correct position
@@ -495,7 +498,7 @@ void FileActionList::AddActionIfMatching(const wxString& text, FileEntry* action
 	unsigned int charpos = 0;
 	wxChar c = text[charpos];
 
-	static vector<unsigned int> hlChars;
+	static std::vector<unsigned int> hlChars;
 	hlChars.clear();
 
 	for (unsigned int textpos = 0; textpos < name.size(); ++textpos) {
@@ -527,7 +530,7 @@ const FileEntry* FileActionList::GetSelectedAction() {
 
 // --- aItem --------------------------------------------------------
 
-FileActionList::aItem::aItem(const FileEntry* a, const vector<unsigned int>& hl):
+FileActionList::aItem::aItem(const FileEntry* a, const std::vector<unsigned int>& hl):
 	action(a), hlChars(hl) 
 {
 	// Calculate rank (total distance between chars)
@@ -535,7 +538,7 @@ FileActionList::aItem::aItem(const FileEntry* a, const vector<unsigned int>& hl)
 	if (hlChars.size() <= 1) return;
 
 	unsigned int prev = hlChars[0]+1;
-	for (vector<unsigned int>::const_iterator p = hlChars.begin()+1; p != hlChars.end(); ++p) {
+	for (std::vector<unsigned int>::const_iterator p = hlChars.begin()+1; p != hlChars.end(); ++p) {
 		this->rank += *p - prev;
 		prev = *p+1;
 	}

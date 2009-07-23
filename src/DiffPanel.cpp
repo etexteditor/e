@@ -32,8 +32,10 @@ BEGIN_EVENT_TABLE(DiffPanel, wxPanel)
 	EVT_CHILD_FOCUS(DiffPanel::OnChildFocus)
 END_EVENT_TABLE()
 
-DiffPanel::DiffPanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap)
-: wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), m_parentFrame(&parentFrame), m_leftEditor(NULL), m_rightEditor(NULL), m_currentEditor(NULL) {
+DiffPanel::DiffPanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap):
+	wxPanel(parent, wxID_ANY, wxPoint(-100,-100)), 
+	m_parentFrame(&parentFrame), m_leftEditor(NULL), m_rightEditor(NULL), m_currentEditor(NULL) 
+{
 	Hide(); // Hidden during construction
 
 	// Create ctrls
@@ -72,6 +74,8 @@ DiffPanel::DiffPanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper
 
 	SetSizer(m_mainSizer);
 }
+
+DiffPanel::DiffPanel(){}
 
 DiffPanel::~DiffPanel() {
 	// Make sure the editorCtrls get closed correctly
@@ -176,4 +180,9 @@ void DiffPanel::RestoreSettings(unsigned int i, eSettings& settings) {
 
 const char** DiffPanel::RecommendedIcon() const {
 	return diff_xpm;
+}
+
+EditorCtrl* DiffPanel::GetActiveEditor()
+{
+	return m_currentEditor;
 }

@@ -8,9 +8,10 @@ BEGIN_EVENT_TABLE(DiffMarkBar, wxControl)
 	EVT_ERASE_BACKGROUND(DiffMarkBar::OnEraseBackground)
 END_EVENT_TABLE()
 
-DiffMarkBar::DiffMarkBar(wxWindow* parent, const vector<DiffBar::LineMatch>& lineMatches, EditorCtrl* editor, bool isLeft)
-: wxControl(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
-  m_lineMatches(lineMatches), m_editor(editor), m_isLeft(isLeft) {
+DiffMarkBar::DiffMarkBar(wxWindow* parent, const vector<DiffBar::LineMatch>& lineMatches, EditorCtrl* editor, bool isLeft):
+	wxControl(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
+	m_lineMatches(lineMatches), m_editor(editor), m_isLeft(isLeft) 
+{
 	// Fix width
 	SetMinSize(wxSize(10, -1));
 	SetMaxSize(wxSize(10, -1));
@@ -35,7 +36,7 @@ void DiffMarkBar::DrawLayout(wxDC& dc) {
 	dc.Clear();
 	
 	// Draw the markers
-	for (vector<DiffBar::LineMatch>::const_iterator p = m_lineMatches.begin(); p != m_lineMatches.end(); ++p) {
+	for (std::vector<DiffBar::LineMatch>::const_iterator p = m_lineMatches.begin(); p != m_lineMatches.end(); ++p) {
 		const unsigned int leftTop = lines.GetYPosFromLine(m_isLeft ? p->left_start : p->right_start);
 		const unsigned int leftBottom = lines.GetBottomYPosFromLine(m_isLeft ? p->left_end-1 : p->right_end-1);
 
@@ -61,6 +62,10 @@ void DiffMarkBar::OnSize(wxSizeEvent& WXUNUSED(event)) {
 	DrawLayout(dc);
 }
 
-void DiffMarkBar::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// # no evt.skip() as we don't want the control to erase the background
+// # no evt.skip() as we don't want the control to erase the background
+void DiffMarkBar::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
+
+void DiffMarkBar::SetEditor( EditorCtrl* editor )
+{
+	m_editor = editor;
 }

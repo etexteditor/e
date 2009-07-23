@@ -27,10 +27,11 @@ END_EVENT_TABLE()
 
 const unsigned int DiffBar::s_bracketWidth = 5;
 
-DiffBar::DiffBar(wxWindow* parent, CatalystWrapper& cw, EditorCtrl* leftEditor, EditorCtrl* rightEditor)
-: wxControl(parent, wxID_ANY, wxPoint(-100,-100), wxSize(40,100), wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
-  m_catalyst(cw), m_leftEditor(leftEditor), m_rightEditor(rightEditor), m_leftStyler(m_diffs, true), m_rightStyler(m_diffs, false),
-  m_needRedraw(false), m_needTransform(false), m_highlight(-1) {
+DiffBar::DiffBar(wxWindow* parent, CatalystWrapper& cw, EditorCtrl* leftEditor, EditorCtrl* rightEditor):
+	wxControl(parent, wxID_ANY, wxPoint(-100,-100), wxSize(40,100), wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
+	m_catalyst(cw), m_leftEditor(leftEditor), m_rightEditor(rightEditor), m_leftStyler(m_diffs, true), m_rightStyler(m_diffs, false),
+	m_needRedraw(false), m_needTransform(false), m_highlight(-1) 
+{
 	SetMinSize(wxSize(40, -1));
 	SetMaxSize(wxSize(40, -1));
 }
@@ -96,7 +97,7 @@ void DiffBar::TransformMatchlist() {
 	// Find matching lines in editorCtrls
 	unsigned int leftCount = 0;
 	unsigned int rightCount = 0;
-	for (vector<Change>::const_iterator c = m_diffs.begin(); c != m_diffs.end(); ++c) {
+	for (std::vector<Change>::const_iterator c = m_diffs.begin(); c != m_diffs.end(); ++c) {
 		LineMatch m;
 
 		// Convert matches to lines
@@ -183,7 +184,7 @@ void DiffBar::DrawLayout(wxDC& dc) {
 	const unsigned int rightTopLine = m_rightEditor->GetTopLine();
 
 	// Ignore all matches above toplines
-	vector<LineMatch>::const_iterator p = m_lineMatches.begin();
+	std::vector<LineMatch>::const_iterator p = m_lineMatches.begin();
 	for (; p != m_lineMatches.end(); ++p) {
 		if (p->left_end >= leftTopLine || p->right_end >= rightTopLine) break;
 	}
@@ -244,7 +245,7 @@ void DiffBar::OnMouseLeave(wxMouseEvent& WXUNUSED(evt)) {
 	}
 }
 
-vector<DiffBar::LineMatch>::const_iterator DiffBar::OnLeftBracket(int y) {
+std::vector<DiffBar::LineMatch>::const_iterator DiffBar::OnLeftBracket(int y) {
 	const int ypos = y + m_leftEditor->GetScrollPos();
 	Lines& lines = m_leftEditor->GetLines();
 	if (ypos > lines.GetHeight()) return m_lineMatches.end();
@@ -252,7 +253,7 @@ vector<DiffBar::LineMatch>::const_iterator DiffBar::OnLeftBracket(int y) {
 	const unsigned int line_id = lines.GetLineFromYPos(ypos);
 
 	// Are we over a bracket?
-	vector<LineMatch>::const_iterator p = m_lineMatches.begin();
+	std::vector<LineMatch>::const_iterator p = m_lineMatches.begin();
 	for (; p != m_lineMatches.end(); ++p) {
 		if (p->left_end >= line_id) break;
 	}
@@ -268,7 +269,7 @@ vector<DiffBar::LineMatch>::const_iterator DiffBar::OnLeftBracket(int y) {
 	return m_lineMatches.end();
 }
 
-vector<DiffBar::LineMatch>::const_iterator DiffBar::OnRightBracket(int y) {
+std::vector<DiffBar::LineMatch>::const_iterator DiffBar::OnRightBracket(int y) {
 	const int ypos = y + m_rightEditor->GetScrollPos();
 	Lines& lines = m_rightEditor->GetLines();
 	if (ypos > lines.GetHeight()) return m_lineMatches.end();
@@ -276,7 +277,7 @@ vector<DiffBar::LineMatch>::const_iterator DiffBar::OnRightBracket(int y) {
 	const unsigned int line_id = lines.GetLineFromYPos(ypos);
 
 	// Are we over a bracket?
-	vector<LineMatch>::const_iterator p = m_lineMatches.begin();
+	std::vector<LineMatch>::const_iterator p = m_lineMatches.begin();
 	for (; p != m_lineMatches.end(); ++p) {
 		if (p->right_end >= line_id) break;
 	}
@@ -299,11 +300,11 @@ void DiffBar::OnMouseMotion(wxMouseEvent& evt) {
 	int highlight = -1;
 
 	if (mpos.x <= s_bracketWidth) {
-		vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
+		std::vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
 		if( p != m_lineMatches.end()) highlight = p->left_start;
 	}
 	else if (mpos.x >= (int)rightBracket) {
-		vector<LineMatch>::const_iterator p = OnRightBracket(mpos.y);
+		std::vector<LineMatch>::const_iterator p = OnRightBracket(mpos.y);
 		if( p != m_lineMatches.end()) highlight = p->left_start;
 	}
 
@@ -319,7 +320,7 @@ void DiffBar::OnMouseLeftUp(wxMouseEvent& evt) {
 	
 	if (mpos.x <= s_bracketWidth) {
 		// Have we clicked a bracket?
-		vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
+		std::vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
 		if (p == m_lineMatches.end()) return;
 
 		// Get positions
@@ -348,7 +349,7 @@ void DiffBar::OnMouseLeftUp(wxMouseEvent& evt) {
 	}
 	else if (mpos.x >= size.x - (int)s_bracketWidth) {
 		// Have we clicked a bracket?
-		vector<LineMatch>::const_iterator p = OnRightBracket(mpos.y);
+		std::vector<LineMatch>::const_iterator p = OnRightBracket(mpos.y);
 		if (p == m_lineMatches.end()) return;
 
 		// Get positions
@@ -375,7 +376,6 @@ void DiffBar::OnMouseLeftUp(wxMouseEvent& evt) {
 		m_leftEditor->ReDraw();
 		m_rightEditor->ReDraw();
 	}
-
 }
 
 void DiffBar::OnPaint(wxPaintEvent& WXUNUSED(event)) {
@@ -388,9 +388,8 @@ void DiffBar::OnSize(wxSizeEvent& WXUNUSED(event)) {
 	DrawLayout(dc);
 }
 
-void DiffBar::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// # no evt.skip() as we don't want the control to erase the background
-}
+// # no evt.skip() as we don't want the control to erase the background
+void DiffBar::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 void DiffBar::OnBeforeEditorRedraw(void* data) { // static
 	DiffBar* self = (DiffBar*)data;
@@ -673,8 +672,9 @@ void DiffBar::OnRightDocumentChanged(cxChangeType type, unsigned int pos, unsign
 
 // ---- DiffStyler ------------------------------
 
-DiffBar::DiffStyler::DiffStyler(const vector<Change>& diffs, bool isLeft)
-: m_isLeft(isLeft), m_diffs(diffs) {
+DiffBar::DiffStyler::DiffStyler(const std::vector<Change>& diffs, bool isLeft):
+	m_isLeft(isLeft), m_diffs(diffs)
+{
 	m_insColor.Set(192, 255, 192); // PASTEL GREEN
 	m_delColor.Set(255, 192, 192); // PASTEL RED
 }
@@ -688,7 +688,7 @@ void DiffBar::DiffStyler::Style(StyleRun& sr) {
 	const wxColor& primaryColor = m_isLeft ? m_delColor : m_insColor;
 	const wxColor& secondaryColor = m_isLeft ? m_insColor : m_delColor;
 
-	for (vector<Change>::const_iterator c = m_diffs.begin(); c != m_diffs.end(); ++c) {
+	for (std::vector<Change>::const_iterator c = m_diffs.begin(); c != m_diffs.end(); ++c) {
 		if (c->type == primaryType) {
 			if (c->end_pos > rstart && c->start_pos < rend) {
 				const unsigned int start = wxMax(rstart, c->start_pos);

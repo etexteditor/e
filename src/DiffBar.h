@@ -14,19 +14,15 @@
 #ifndef __DIFFBAR_H__
 #define __DIFFBAR_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
 #include "styler.h"
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-#pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-#pragma warning(pop)
-#endif
-using namespace std;
 
 // pre-definitions
 class EditorFrame;
@@ -51,7 +47,7 @@ public:
 		cxChangeType right_type;
 	};
 
-	const vector<LineMatch>& GetLineMatches() const {return m_lineMatches;};
+	const std::vector<LineMatch>& GetLineMatches() const {return m_lineMatches;};
 
 private:
 	class Change {
@@ -71,7 +67,7 @@ private:
 		void Style(StyleRun& sr);
 	private:
 		bool m_isLeft;
-		const vector<Change>& m_diffs;
+		const std::vector<Change>& m_diffs;
 		wxColor m_delColor;
 		wxColor m_insColor;
 	};
@@ -79,8 +75,8 @@ private:
 	void TransformMatchlist();
 	void DrawLayout(wxDC& dc);
 
-	vector<LineMatch>::const_iterator OnLeftBracket(int y);
-	vector<LineMatch>::const_iterator OnRightBracket(int y);
+	std::vector<LineMatch>::const_iterator OnLeftBracket(int y);
+	std::vector<LineMatch>::const_iterator OnRightBracket(int y);
 
 	// Event handlers
 	void OnPaint(wxPaintEvent& event);
@@ -105,13 +101,14 @@ private:
 	EditorCtrl* m_leftEditor;
 	EditorCtrl* m_rightEditor;
 	list<cxMatch> m_matchlist;
-	vector<Change> m_diffs;
-	vector<LineMatch> m_lineMatches;
+	std::vector<Change> m_diffs;
+	std::vector<LineMatch> m_lineMatches;
 	DiffStyler m_leftStyler;
 	DiffStyler m_rightStyler;
 	bool m_needRedraw;
 	bool m_needTransform;
 	int m_highlight;
+
 	static const unsigned int s_bracketWidth;
 };
 

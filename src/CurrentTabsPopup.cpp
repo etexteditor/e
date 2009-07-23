@@ -66,6 +66,9 @@ void CurrentTabsPopup::ListEventHandler::OnItemActivated(wxListEvent& WXUNUSED(e
 	}
 }
 
+CurrentTabsPopup::ListEventHandler::ListEventHandler( CurrentTabsPopup* parent ):
+	m_parent(parent) {}
+
 BEGIN_EVENT_TABLE(CurrentTabsPopup, wxDialog)
 	EVT_SHOW(CurrentTabsPopup::OnShow)
 END_EVENT_TABLE()

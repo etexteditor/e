@@ -14,14 +14,14 @@
 #ifndef __DIFFMARKBAR_H__
 #define __DIFFMARKBAR_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
+
 #include "DiffBar.h"
 
-// STL can't compile with Level 4
-#pragma warning(push, 1)
 #include <vector>
-#pragma warning(pop)
-using namespace std;
 
 // pre-definitions
 class EditorCtrl;
@@ -29,8 +29,7 @@ class EditorCtrl;
 class DiffMarkBar : public wxControl {
 public:
 	DiffMarkBar(wxWindow* parent, const vector<DiffBar::LineMatch>& m_lineMatches, EditorCtrl* editor, bool isLeft);
-	
-	void SetEditor(EditorCtrl* editor) {m_editor = editor;};
+	void SetEditor(EditorCtrl* editor);
 
 private:
 	void DrawLayout(wxDC& dc);
@@ -42,7 +41,7 @@ private:
 	DECLARE_EVENT_TABLE();
 
 	// Member variables
-	const vector<DiffBar::LineMatch>& m_lineMatches;
+	const std::vector<DiffBar::LineMatch>& m_lineMatches;
 	EditorCtrl* m_editor;
 	bool m_isLeft;
 	wxColour m_insColor;
@@ -50,6 +49,5 @@ private:
 	wxColour m_insBorder;
 	wxColour m_delBorder;
 };
-
 
 #endif // __DIFFMARKBAR_H__

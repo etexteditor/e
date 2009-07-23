@@ -38,7 +38,7 @@ private:
 
 	class ListEventHandler : public wxEvtHandler {
 	public:
-		ListEventHandler(CurrentTabsPopup* parent): m_parent(parent){};
+		ListEventHandler(CurrentTabsPopup* parent);
 
 	private:
 		DECLARE_EVENT_TABLE();

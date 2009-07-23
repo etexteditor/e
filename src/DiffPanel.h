@@ -14,7 +14,11 @@
 #ifndef __DIFFPANEL_H__
 #define __DIFFPANEL_H__
 
-#include "wx/wxprec.h" // For compilers that support precompilation, includes "wx/wx.h".
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
+
 #include "Catalyst.h"
 
 // Pre-definitions
@@ -26,7 +30,7 @@ class wxGridBagSizer;
 
 class DiffPanel : public wxPanel {
 public:
-	DiffPanel() {}; // default const
+	DiffPanel(); // default const
 	DiffPanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper& cw, wxBitmap& bitmap);
 	~DiffPanel();
 
@@ -38,7 +42,7 @@ public:
 	void SaveSettings(unsigned int i, eSettings& settings);
 	void RestoreSettings(unsigned int i, eSettings& settings);
 
-	EditorCtrl* GetActiveEditor() {return m_currentEditor;};
+	EditorCtrl* GetActiveEditor();
 	const char** RecommendedIcon() const;
 
 private:

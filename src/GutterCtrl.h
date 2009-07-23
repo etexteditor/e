@@ -34,7 +34,7 @@ public:
 	void SetGutterRight(bool doMove=true);
 
 	unsigned int CalcLayout(unsigned int height);
-	void DrawGutter() {wxClientDC dc(this);DrawGutter(dc);};
+	void DrawGutter();
 	void DrawGutter(wxDC& dc);
 
 private:

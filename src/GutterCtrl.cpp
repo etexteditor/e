@@ -316,6 +316,11 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 #endif
 }
 
+void GutterCtrl::DrawGutter()
+{
+	wxClientDC dc(this);DrawGutter(dc);
+}
+
 
 void GutterCtrl::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxPaintDC dc(this);

@@ -9,7 +9,7 @@
 
 [Setup]
 AppName=e
-AppVerName=e - v1.0.37
+AppVerName=e - v1.0.37a
 AppMutex=eApp
 OutputBaseFilename=e_setup
 AppPublisherURL=http://www.e-texteditor.com/
@@ -67,7 +67,7 @@ Name: "{userdesktop}\e - texteditor"; Filename: "{app}\e.exe"; Tasks: desktopico
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\e - texteditor"; Filename: "{app}\e.exe"; Tasks: quicklaunchicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\e"; ValueType: string; ValueName: "version"; ValueData: "1.0.37 (200)"
+Root: HKCU; Subkey: "Software\e"; ValueType: string; ValueName: "version"; ValueData: "1.0.37a (201)"
 Root: HKCU; Subkey: "Software\e"; ValueType: string; ValueName: "path"; ValueData: "{app}\e.exe"
 Root: HKCR; Subkey: "txtfile\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\e.exe,1"; Tasks: associate
 Root: HKCR; Subkey: "txtfile\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\e.exe"" ""%1"""; Tasks: associate

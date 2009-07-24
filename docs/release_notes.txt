@@ -1,3 +1,11 @@
+24-july-2009 - 1.0.37a
+  o Returned to older build method for release build (had
+    been changed to make it easier to make relase builds
+    from the source release, but was a bit slower).
+    
+  o Removed unneeded connection check that caused problems on
+    some systems.
+
 22-july-2009 - 1.0.37
   o Added support for Visual Diff (still experimental).
   

@@ -43,7 +43,7 @@ ShellContextMenu::~ShellContextMenu()
 		delete m_Menu;
 }
 
-UINT ShellContextMenu::ShowContextMenu(wxWindow* pWnd, wxPoint pt)
+UINT ShellContextMenu::ShowContextMenu(wxWindow* pWnd, wxPoint pt, bool showExtendedItems)
 {
 	int iMenuType = 0;	// to know which version of IContextMenu is supported
 	LPCONTEXTMENU pContextMenu;	// common pointer to IContextMenu and higher version interface
@@ -52,12 +52,14 @@ UINT ShellContextMenu::ShowContextMenu(wxWindow* pWnd, wxPoint pt)
 		return (0);	// something went wrong
 
 	if (!m_Menu)
-	{
 		m_Menu = new wxMenu;
-	}
 
-	// lets fill the our popupmenu  
-	pContextMenu->QueryContextMenu(GetHmenuOf(m_Menu), m_Menu->GetMenuItemCount(), MIN_ID, MAX_ID, CMF_NORMAL | CMF_EXPLORE);
+	// lets fill the our popupmenu
+	UINT flags = CMF_NORMAL | CMF_EXPLORE;
+	if (showExtendedItems)
+		flags |= CMF_EXTENDEDVERBS;
+
+	pContextMenu->QueryContextMenu(GetHmenuOf(m_Menu), m_Menu->GetMenuItemCount(), MIN_ID, MAX_ID, flags);
  
 	// set context menu
 	if (iMenuType > 1)	// only subclass if its version 2 or 3
@@ -134,7 +136,6 @@ void ShellContextMenu::SetObjects(const wxArrayString &strArray)
 		free (pidlItem);
 		if (lpMalloc) lpMalloc->Free(pidl);		// free pidl allocated by ParseDisplayName
 		if (psfFolder) psfFolder->Release();
-
 	}
 	lpMalloc->Release ();
 	psfDesktop->Release ();
@@ -148,7 +149,6 @@ void ShellContextMenu::FreePIDLArray(LPITEMIDLIST *pidlArray)
 		return;
 
 	int iSize = _msize (pidlArray) / sizeof (LPITEMIDLIST);
-
 	for (int i = 0; i < iSize; i++)
 		free (pidlArray[i]);
 	free (pidlArray);

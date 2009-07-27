@@ -8922,6 +8922,7 @@ bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigne
 vector<cxFold*> EditorCtrl::GetFoldStack(unsigned int line_id) {
 	vector<cxFold*> foldStack;
 	if (m_lines.isLineVirtual(line_id)) return foldStack;
+	if (m_foldLineCount == 0) return foldStack;
 
 	wxASSERT(line_id < m_foldLineCount);
 

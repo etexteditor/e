@@ -3371,6 +3371,7 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 	// the app has closed
 	wxTheClipboard->Flush();
 
+#ifdef __WXMSW__
 	// Show nag screen if the trial is about to expire
 	if (!((eApp*)wxTheApp)->IsRegistered() && ((eApp*)wxTheApp)->DaysLeftOfTrial() <= 5) {
 		int result = 0;
@@ -3386,6 +3387,8 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 			return;
 		}
 	}
+#endif
+
 	wxLogDebug(wxT("OnClose"));
 	// Keep State
 	if (keep_state) {

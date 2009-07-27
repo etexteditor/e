@@ -6,7 +6,7 @@
 and semantics are as close as possible to those of the Perl 5 language.
 
                        Written by Philip Hazel
-           Copyright (c) 1997-2008 University of Cambridge
+           Copyright (c) 1997-2009 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ strings. */
 #include "config.h"
 #endif
 
-#include "pcre_internal.h"
+#include "cx_pcre_internal.h"
 
 
 /*************************************************
@@ -157,6 +157,9 @@ for (p = string; length-- > 0; p++)
     if ((*(++p) & 0xc0) != 0x80) return p - string;
     }
   }
+#else
+(void)(string);  /* Keep picky compilers happy */
+(void)(length);
 #endif
 
 return -1;

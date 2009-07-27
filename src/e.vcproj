@@ -1533,6 +1533,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\cx_pcre_internal.h"
+				>
+			</File>
+			<File
 				RelativePath="cx_pcre_newline.cpp"
 				>
 				<FileConfiguration

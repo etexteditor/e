@@ -48,7 +48,7 @@ clashes with the library. */
 #include "config.h"
 #endif
 
-#include "pcre_internal.h"
+#include "cx_pcre_internal.h"
 
 
 /* Table of sizes for the fixed-length opcodes. It's defined in a macro so that

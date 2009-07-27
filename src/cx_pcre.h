@@ -9,7 +9,7 @@
 #include "config.h"
 #endif
 
-#include "pcre_internal.h"
+#include "cx_pcre_internal.h"
 
 int cx_pcre_exec(const pcre *, const pcre_extra *, PCRE_SPTR,
                    int, int, int, int *, int);

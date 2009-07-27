@@ -55,7 +55,7 @@ http://unicode.org/unicode/reports/tr18/. */
 #include "config.h"
 #endif
 
-#include "pcre_internal.h"
+#include "cx_pcre_internal.h"
 
 
 /*************************************************

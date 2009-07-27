@@ -11,7 +11,7 @@ _download()
   wget -nc http://libtomcrypt.com/files/crypt-1.11.tar.bz2
   wget -nc http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2
   wget -nc http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
-  wget -nc ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.6.tar.gz
+  wget -nc ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.9.tar.gz
   wget -nc http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
   wget -nc http://biolpc22.york.ac.uk/pub/2.8.10/wxWidgets-2.8.10.tar.bz2
   wget -nc http://builds.nightly.webkit.org/files/trunk/src/WebKit-r43163.tar.bz2
@@ -57,7 +57,6 @@ _extract_and_patch()
   echo "Applying patches..."
   echo
   patch -Np1 -d metakit < patches/metakit.patch
-  patch -d pcre < patches/pcre.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
   patch -Np1 -d webkit < patches/webkit/remove-targets.patch

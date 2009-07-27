@@ -50,7 +50,7 @@ auxiliary local function to flip the appropriate bytes. */
 #include "config.h"
 #endif
 
-#include "pcre_internal.h"
+#include "cx_pcre_internal.h"
 
 
 /*************************************************

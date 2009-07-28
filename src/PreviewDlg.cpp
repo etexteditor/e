@@ -21,6 +21,8 @@
 #include "eSettings.h"
 #include "Execute.h"
 #include "pcre.h"
+#include "WebConnect/webcontrol.h"
+#include "eApp.h"
 
 #if defined (__WXMSW__)
     #include "IEHtmlWin.h"
@@ -52,7 +54,8 @@ enum
 	ID_PIN,
 	ID_OPTIONS,
 	ID_DOPIPE,
-	ID_PIPECMD
+	ID_PIPECMD,
+	ID_WEBCHOICE
 };
 
 BEGIN_EVENT_TABLE(PreviewDlg, wxPanel)
@@ -66,6 +69,7 @@ BEGIN_EVENT_TABLE(PreviewDlg, wxPanel)
 	EVT_CHECKBOX(ID_DOPIPE, PreviewDlg::OnDoPipe)
 	EVT_TEXT_ENTER(ID_LOCATION, PreviewDlg::OnLocationEnter)
 	EVT_TEXT_ENTER(ID_PIPECMD, PreviewDlg::OnPipeCmdEnter)
+	EVT_CHOICE(ID_WEBCHOICE, PreviewDlg::OnWebChoice)
 #ifdef __WXMSW__
     EVT_ACTIVEX(ID_MSHTML, "TitleChange", PreviewDlg::OnMSHTMLTitleChange)
 //	EVT_ACTIVEX(ID_MSHTML, "BeforeNavigate2", PreviewDlg::OnMSHTMLBeforeNavigate2X)
@@ -98,8 +102,6 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 
 	m_browser = NULL; // know to skip events sent during construction
 
-#ifdef FEAT_BROWSER
-
 #if defined (__WXMSW__)
 	// IE Control
 	m_browser = new wxIEHtmlWin(this, ID_MSHTML);
@@ -108,12 +110,29 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 	m_browser = new wxBrowser(this, ID_MSHTML);
 #endif
 
-#endif //FEAT_BROWSER
+	// Do we have XULRunner installed?
+	bool xulrunner = false;
+	const wxString xulrunner_path = wxGetApp().GetAppPath() + wxFILE_SEP_PATH + wxT("xr");
+	if (wxDirExists(xulrunner_path)) {
+		xulrunner = wxWebControl::InitEngine(xulrunner_path);
+		m_webcontrol = new wxWebControl(this, wxID_ANY);
+		//m_webcontrol->Hide();
+	}
 
 	// Option ctrls
 	m_pipeCheck = new wxCheckBox(this, ID_DOPIPE, _("Pipe through command:"));
 	m_cmdText = new wxTextCtrl(this, ID_PIPECMD, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	wxButton* reloadButton = new wxButton(this, ID_RELOAD, _("Reload now"));
+	if (xulrunner) {
+		m_webChoice = new wxChoice(this, ID_WEBCHOICE);
+#ifdef __WXMSW__
+		m_webChoice->Append(_("IE"));
+#else
+		m_webChoice->Append(_("WebKit"));
+#endif
+		m_webChoice->Append(_("Gecko"));
+		m_webChoice->SetSelection(0);
+	}
 
 	// Layout
 	m_mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -124,13 +143,18 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 			addressSizer->Add(m_pinButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 			addressSizer->Add(m_showOptions, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 			m_mainSizer->Add(addressSizer, 0, wxEXPAND);
-#ifdef FEAT_BROWSER
+		
 		m_mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND);
-#endif
+		if (xulrunner) {
+			m_mainSizer->Add(m_webcontrol, 1, wxEXPAND);
+			m_mainSizer->Hide(m_webcontrol);
+		}
+
 		m_optionSizer = new wxBoxSizer(wxHORIZONTAL);
 			m_optionSizer->Add(m_pipeCheck, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 			m_optionSizer->Add(m_cmdText, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 			m_optionSizer->Add(reloadButton, 0, wxALL, 5);
+			if (xulrunner) m_optionSizer->Add(m_webChoice, 0, wxALL, 5);
 			m_mainSizer->Add(m_optionSizer, 0, wxEXPAND);
 
 	// Options are hidden as default
@@ -246,17 +270,20 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 }
 
 void PreviewDlg::RefreshBrowser(cxUpdateMode mode) {
-
-#ifdef FEAT_BROWSER
-#ifdef __WXMSW__
-	wxIEHtmlWin* ie = dynamic_cast<wxIEHtmlWin*>(m_browser);
-	ie->UIDeactivate(); // otherwise ie may steal focus
-#endif
-	if (mode == cxUPDATE_RELOAD || m_isFirst) {
-		m_browser->LoadUrl(m_tempPath);
+	if (m_webcontrol && m_webcontrol->IsShown()) {
+		m_webcontrol->OpenURI(m_tempPath, wxWEB_LOAD_NORMAL, NULL, false);
 	}
-	else m_browser->Refresh(wxHTML_REFRESH_NORMAL);
-#endif // FEAT_BROWSER
+	else {
+#ifdef __WXMSW__
+		wxIEHtmlWin* ie = dynamic_cast<wxIEHtmlWin*>(m_browser);
+		ie->UIDeactivate(); // otherwise ie may steal focus
+#endif
+
+		if (mode == cxUPDATE_RELOAD || m_isFirst) {
+			m_browser->LoadUrl(m_tempPath);
+		}
+		else m_browser->Refresh(wxHTML_REFRESH_NORMAL);
+	}
 
 	m_isFirst = false;
 	m_idleTimer.Start();
@@ -447,15 +474,21 @@ void PreviewDlg::OnPipeCmdEnter(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void PreviewDlg::OnButtonBack(wxCommandEvent& WXUNUSED(event)) {
-#ifdef FEAT_BROWSER
-	m_browser->GoBack();
-#endif
+	if (m_webcontrol && m_webcontrol->IsShown()) {
+		m_webcontrol->GoBack();
+	}
+	else {
+		m_browser->GoBack();
+	}
 }
 
 void PreviewDlg::OnButtonForward(wxCommandEvent& WXUNUSED(event)) {
-#ifdef FEAT_BROWSER
-	m_browser->GoForward();
-#endif
+	if (m_webcontrol && m_webcontrol->IsShown()) {
+		m_webcontrol->GoForward();
+	}
+	else {
+		m_browser->GoForward();
+	}
 }
 
 void PreviewDlg::OnButtonPin(wxCommandEvent& WXUNUSED(event)) {
@@ -479,6 +512,22 @@ void PreviewDlg::OnButtonPin(wxCommandEvent& WXUNUSED(event)) {
 	}
 }
 
+void PreviewDlg::OnWebChoice(wxCommandEvent& evt) {
+	const int sel = evt.GetSelection();
+
+	if (sel == 0) {
+		m_mainSizer->Hide(m_webcontrol);
+		m_mainSizer->Show(m_browser->GetWindow());
+	}
+	else {
+		m_mainSizer->Hide(m_browser->GetWindow());
+		m_mainSizer->Show(m_webcontrol);
+	}
+	m_mainSizer->Layout();
+	RefreshBrowser(cxUPDATE_REFRESH);
+
+}
+
 void PreviewDlg::PageClosed(const EditorCtrl* ec) {
 	if (m_pinnedEditor && ec == m_pinnedEditor) {
 		m_pinnedEditor = NULL;
@@ -497,9 +546,7 @@ void PreviewDlg::OnLocationEnter(wxCommandEvent& WXUNUSED(event)) {
 		UpdateBrowser(cxUPDATE_RELOAD);
 	}
 	else {
-#ifdef FEAT_BROWSER
 		m_browser->LoadUrl(location, wxEmptyString, true);
-#endif
 	}
 }
 

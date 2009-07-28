@@ -36,6 +36,7 @@ class EditorFrame;
 class EditorCtrl;
 class eSettings;
 class wxProcessEvent;
+class wxWebControl;
 
 class PreviewDlg : public wxPanel {
 public:
@@ -85,6 +86,7 @@ private:
 	void OnDoPipe(wxCommandEvent& event);
 	void OnShowOptions(wxCommandEvent& event);
 	void OnEndProcess(wxProcessEvent& event);
+	void OnWebChoice(wxCommandEvent& event);
 #ifdef __WXMSW__
 	void OnMSHTMLTitleChange(wxActiveXEvent& event);
 	void OnMSHTMLStateChanged(wxActiveXEvent& event);
@@ -117,6 +119,7 @@ private:
 #else
 	IHtmlWnd* m_browser;
 #endif
+	wxWebControl* m_webcontrol;
 
 	wxCheckBox* m_pipeCheck;
 	wxTextCtrl* m_cmdText;
@@ -125,6 +128,7 @@ private:
 	wxTextCtrl* m_locationText;
 	wxBitmapButton* m_pinButton;
 	wxCheckBox* m_showOptions;
+	wxChoice* m_webChoice;
 
 	wxBoxSizer* m_mainSizer;
 	wxBoxSizer* m_optionSizer;

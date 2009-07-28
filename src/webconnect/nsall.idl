@@ -1,0 +1,3020 @@
+///////////////////////////////////////////////////////////////////////////////
+// Name:        nsall.idl
+// Purpose:     wxwebconnect: embedded web browser control library
+// Author:      Benjamin I. Williams, Peter Fritz
+// Modified by:
+// Created:     2006-10-08
+// RCS-ID:      
+// Copyright:   (C) Copyright 2006-2009, Kirix Corporation, All Rights Reserved.
+// Licence:     wxWindows Library Licence, Version 3.1
+///////////////////////////////////////////////////////////////////////////////
+
+
+// To generate an .h file from this .idl file, run the following command
+//    xpidl -m header nsall.idl
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsrootidl
+///////////////////////////////////////////////////////////////////////////////
+
+
+%{C++
+#if 0
+%}
+
+typedef unsigned long nsresult;
+typedef unsigned long nsrefcnt;
+typedef unsigned long PRUint32;
+typedef long PRInt32;
+typedef long long PRInt64;
+typedef unsigned long long PRTime;
+
+[ref, utf8string] native AUTF8String(ignored);
+
+[ref, astring] native AString(ignored);
+[ref, cstring] native ACString(ignored);
+[ref, domstring] native DOMString(ignored);
+
+[nsid] native nsIID(nsIID);
+[ref, nsid] native nsIIDRef(nsIID);
+[ptr] native nsQIResult(void);
+[nsid] native nsCID(nsCID);
+[ref, nsid] native nsCIDRef(nsCID);
+[ptr, nsid] native nsCIDPtr(nsCID);
+
+[ptr] native voidPtr(void);
+[ref] native voidPtrRef(void*);
+[ptr] native charPtr(char);
+[ref] native PRBoolRef(PRBool);
+
+
+%{C++
+#endif
+%}
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsISupports
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(00000000-0000-0000-c000-000000000046)]
+interface nsISupports
+{
+    void QueryInterface(in nsIIDRef iid,
+                        [iid_is(iid), retval] out nsQIResult result);
+    [noscript, notxpcom] nsrefcnt AddRef();
+    [noscript, notxpcom] nsrefcnt Release();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsISimpleEnumerator
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(d1899240-f9d2-11d2-bdd6-000064657374)]
+interface nsISimpleEnumerator : nsISupports
+{
+    boolean hasMoreElements();
+    nsISupports getNext();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIFactory
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, object, uuid(00000001-0000-0000-c000-000000000046)]
+interface nsIFactory : nsISupports
+{
+    void createInstance(in nsISupports outer,
+                        in nsIIDRef iid,
+                        [iid_is(iid),retval] out nsQIResult result);
+                        
+    void lockFactory(in boolean lock);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIInterfaceRequestor
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(033a1470-8b2a-11d3-af88-00a024ffc08c)]
+interface nsIInterfaceRequestor : nsISupports
+{
+    void getInterface(in nsIIDRef iid,
+                      [iid_is(iid), retval] out nsQIResult result);
+                      
+/*
+    This error is already present on http://developer.mozilla.org/xpcom/api/.
+    On http://www.xulplanet.com the function reads:
+    void getInterface (nsIIDRef uuid, out nsQIResult* result)
+*/
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWeakReference
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(9188bc85-f92e-11d2-81ef-0060083a0bcf)]
+interface nsIWeakReference : nsISupports
+{
+    void QueryReferent(in nsIIDRef iid,
+                       [iid_is(iid), retval] out nsQIResult result);
+};
+
+[scriptable, uuid(9188bc86-f92e-11d2-81ef-0060083a0bcf)]
+interface nsISupportsWeakReference : nsISupports
+{
+    nsIWeakReference GetWeakReference();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIFile
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsISimpleEnumerator;
+
+[scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
+interface nsIFile : nsISupports
+{
+    const unsigned long NORMAL_FILE_TYPE = 0;
+    const unsigned long DIRECTORY_TYPE   = 1;
+    
+    void append(in AString node);
+    [noscript] void appendNative(in ACString node);
+    void normalize();
+    void create(in PRUint32 type, in PRUint32 permissions);
+
+    attribute AString leafName;
+    [noscript] attribute ACString nativeLeafName;
+
+    void copyTo(in nsIFile parent_dir, in AString name);
+    [noscript] void copyToNative(in nsIFile parent_dir, in ACString name);
+    void copyToFollowingLinks(in nsIFile parent_dir, in AString name);
+    [noscript] void copyToFollowingLinksNative(in nsIFile parent_dir,
+                                               in ACString name);
+    void moveTo(in nsIFile parent_dir, in AString name);
+    [noscript] void moveToNative(in nsIFile parent_dir, in ACString name);
+    void remove(in boolean recursive);
+    
+    attribute unsigned long permissions;
+    attribute unsigned long permissionsOfLink;
+    attribute PRInt64 lastModifiedTime;
+    attribute PRInt64 lastModifiedTimeOfLink;
+    attribute PRInt64 fileSize;
+    readonly attribute PRInt64 fileSizeOfLink;
+    
+    readonly attribute AString target;
+    [noscript] readonly attribute ACString nativeTarget;
+    
+    readonly attribute AString path;
+    [noscript] readonly attribute ACString nativePath;
+    
+    boolean exists();
+    boolean isWritable();
+    boolean isReadable();
+    boolean isExecutable();
+    boolean isHidden();
+    boolean isDirectory();
+    boolean isFile();
+    boolean isSymlink();
+    boolean isSpecial();
+    void createUnique(in PRUint32 type, in PRUint32 permissions);
+    nsIFile clone();
+    boolean equals(in nsIFile file);
+    boolean contains(in nsIFile file, in boolean recurse);
+    
+    readonly attribute nsIFile parent;
+    readonly attribute nsISimpleEnumerator directoryEntries;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsILocalFile
+///////////////////////////////////////////////////////////////////////////////
+
+
+%{C++
+struct PRFileDesc;
+struct PRLibrary;
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+[ptr] native PRLibraryStar(PRLibrary);
+[ptr] native FILEStar(FILE);
+
+
+[scriptable, uuid(aa610f20-a889-11d3-8c81-000064657374)]
+interface nsILocalFile : nsIFile
+{
+    void initWithPath(in AString file_path);
+    [noscript] void initWithNativePath(in ACString file_path);
+    void initWithFile(in nsILocalFile file);
+    
+    attribute boolean followLinks;
+
+    [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
+    [noscript] FILEStar openANSIFileDesc(in string mode);
+    [noscript] PRLibraryStar load();
+    void appendRelativePath(in AString rel_path);
+    [noscript] void appendRelativeNativePath(in ACString rel_path);
+    
+    attribute ACString persistentDescriptor;
+    
+    void reveal();
+    void launch();
+    
+    ACString getRelativeDescriptor(in nsILocalFile from_file);
+    void setRelativeDescriptor(in nsILocalFile from_file, in ACString rel_desc);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIAppShell
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIEventQueue;
+native int(int);
+
+
+[uuid(a0757c31-eeac-11d1-9ec1-00aa002fb821)]
+interface nsIAppShell : nsISupports
+{
+    void Create(inout int argc, inout string argv);
+    void Run();
+    void Spinup();
+    void Spindown();
+    void ListenToEventQueue(in nsIEventQueue queue, in boolean listen);
+    void GetNativeEvent(in PRBoolRef realEvent, in voidPtrRef event);
+    void DispatchNativeEvent(in boolean realEvent, in voidPtr event);
+    void Exit();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIBadCertListener
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIInterfaceRequestor;
+interface nsIX509Cert;
+
+
+[scriptable, object, uuid(86960956-edb0-11d4-998b-00b0d02354a0)]
+interface nsIBadCertListener : nsISupports
+{
+    const short UNINIT_ADD_FLAG = -1;
+    const short ADD_TRUSTED_FOR_SESSION = 1;
+    const short ADD_TRUSTED_PERMANENTLY = 2;
+
+    boolean confirmUnknownIssuer(in nsIInterfaceRequestor socketInfo, in nsIX509Cert cert, out short certAddType);
+    boolean confirmMismatchDomain(in nsIInterfaceRequestor socketInfo, in AUTF8String targetURL, in nsIX509Cert cert);
+    boolean confirmCertExpired(in nsIInterfaceRequestor socketInfo, in nsIX509Cert cert);
+    void notifyCrlNextupdate(in nsIInterfaceRequestor socketInfo, in AUTF8String targetURL, in nsIX509Cert cert);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIBaseWindow
+///////////////////////////////////////////////////////////////////////////////
+
+
+typedef voidPtr nativeWindow;
+[ptr] native nsIWidget(nsIWidget);
+
+%{ C++
+    class nsIWidget;
+%}
+
+[scriptable, uuid(046bc8a0-8015-11d3-af70-00a024ffc08c)]
+interface nsIBaseWindow : nsISupports
+{
+    [noscript] void initWindow(in nativeWindow parentNativeWindow,
+                               in nsIWidget parentWidget,
+                               in long x,
+                               in long y,
+                               in long cx,
+                               in long cy);
+    void create();
+    void destroy();
+    
+    void setPosition(in long x, in long y);
+    void getPosition(out long x, out long y);
+    
+    void setSize(in long cx, in long cy, in boolean repaint);
+    void getSize(out long cx, out long cy);
+
+    void setPositionAndSize(in long x,
+                            in long y,
+                            in long cx,
+                            in long cy,
+                            in boolean repaint);
+
+    void getPositionAndSize(out long x,
+                            out long y,
+                            out long cx,
+                            out long cy);
+
+    void repaint(in boolean force);
+
+    [noscript] attribute nsIWidget parentWidget;
+    attribute nativeWindow parentNativeWindow;
+    attribute boolean visibility;
+    attribute boolean enabled;
+    attribute boolean blurSuppression;
+    [noscript] readonly attribute nsIWidget mainWidget;
+
+    void setFocus();
+
+    attribute wstring title;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsICacheService
+///////////////////////////////////////////////////////////////////////////////
+
+
+typedef long nsCacheStoragePolicy;
+interface nsICacheSession;
+interface nsICacheVisitor;
+
+[scriptable, uuid(de114eb4-29fc-4959-b2f7-2d03eb9bc771)]
+interface nsICacheService : nsISupports
+{
+    nsICacheSession createSession(in string clientID,
+                        in nsCacheStoragePolicy storagePolicy,
+                        in boolean streamBased);
+    void visitEntries(in nsICacheVisitor visitor);
+    void evictEntries(in nsCacheStoragePolicy storagePolicy);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsICancelable
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, object, uuid(d94ac0a0-bb18-46b8-844e-84159064b0bd)]
+interface nsICancelable : nsISupports
+{
+    void cancel(in nsresult reason);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIRequest
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsILoadGroup;
+typedef unsigned long nsLoadFlags;
+
+
+[scriptable, uuid(ef6bfbd2-fd46-48d8-96b7-9f8f0fd387fe)]
+interface nsIRequest : nsISupports
+{
+    const unsigned long LOAD_NORMAL = 0;
+    const unsigned long LOAD_BACKGROUND = 1;
+    const unsigned long INHIBIT_CACHING = 128;
+    const unsigned long INHIBIT_PERSISTENT_CACHING = 256;
+    const unsigned long LOAD_BYPASS_CACHE = 512;
+    const unsigned long LOAD_FROM_CACHE = 1024;
+    const unsigned long VALIDATE_ALWAYS = 2048;
+    const unsigned long VALIDATE_NEVER = 4096;
+    const unsigned long VALIDATE_ONCE_PER_SESSION = 8192;
+
+    readonly attribute AUTF8String name;
+    
+    boolean isPending();
+    
+    readonly attribute nsresult status;
+    
+    void cancel(in nsresult status);
+    void suspend();
+    void resume();
+    
+    attribute nsILoadGroup loadGroup;
+    attribute nsLoadFlags loadFlags;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIChannel
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIURI;
+interface nsIInterfaceRequestor;
+interface nsIInputStream;
+interface nsIStreamListener;
+
+[scriptable, uuid(c63a055a-a676-4e71-bf3c-6cfa11082018)]
+interface nsIChannel : nsIRequest
+{
+    const unsigned long LOAD_DOCUMENT_URI = 65536;
+    const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 131072;
+    const unsigned long LOAD_REPLACE = 262144;
+    const unsigned long LOAD_INITIAL_DOCUMENT_URI = 524288;
+    const unsigned long LOAD_TARGETED = 1048576;
+
+    attribute nsIURI originalURI;
+    readonly attribute nsIURI URI;
+    attribute nsISupports owner;
+    attribute nsIInterfaceRequestor notificationCallbacks;
+    readonly attribute nsISupports securityInfo;
+    attribute ACString contentType;
+    attribute ACString contentCharset;
+    attribute long contentLength;
+
+
+    nsIInputStream open();
+    void asyncOpen(in nsIStreamListener listener, in nsISupports xcontext);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIClipboardCommands
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(b8100c90-73be-11d2-92a5-00105a1b0d64)]
+interface nsIClipboardCommands : nsISupports
+{
+    boolean canCutSelection();
+    boolean canCopySelection();
+    boolean canCopyLinkLocation();
+    boolean canCopyImageLocation();
+    boolean canCopyImageContents();
+    boolean canPaste();
+    void cutSelection();
+    void copySelection();
+    void copyLinkLocation();
+    void copyImageLocation();
+    void copyImageContents();
+    void paste();
+    void selectAll();
+    void selectNone();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIComponentManager
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a88e5a60-205a-4bb1-94e1-2628daf51eae)]
+interface nsIComponentManager : nsISupports
+{
+    void getClassObject(in nsCIDRef class_id,
+                        in nsIIDRef iid,
+                        [iid_is(iid),retval] out nsQIResult result);
+                        
+    void getClassObjectByContractID(
+                        in string contract_id,
+                        in nsIIDRef iid,
+                        [iid_is(iid),retval] out nsQIResult result);
+                                  
+    void createInstance(in nsCIDRef class_id,
+                        in nsISupports delegate,
+                        in nsIIDRef iid,
+                        [iid_is(iid),retval] out nsQIResult result);
+                        
+    void createInstanceByContractID(
+                        in string contract_id,
+                        in nsISupports delegate,
+                        in nsIIDRef iid,
+                        [iid_is(iid),retval] out nsQIResult result);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIComponentRegistrar
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIFactory;
+interface nsISimpleEnumerator;
+interface nsIFile;
+
+[scriptable, uuid(2417cbfe-65ad-48a6-b4b6-eb84db174392)]
+interface nsIComponentRegistrar : nsISupports
+{
+    void autoRegister(in nsIFile spec);
+    void autoUnregister(in nsIFile spec);
+    
+    void registerFactory(in nsCIDRef class_id,
+                         in string class_name,
+                         in string contract_id,
+                         in nsIFactory factory);
+                         
+    void unregisterFactory(
+                         in nsCIDRef class_id,
+                         in nsIFactory factory);
+                         
+    void registerFactoryLocation(
+                         in nsCIDRef class_id,
+                         in string class_name,
+                         in string contract_id,
+                         in nsIFile file,
+                         in string loader_str,
+                         in string type);
+                         
+    void unregisterFactoryLocation(
+                         in nsCIDRef class_id,
+                         in nsIFile file);
+                         
+    boolean isCIDRegistered(in nsCIDRef class_id);
+    boolean isContractIDRegistered(in string contract_id);
+    nsISimpleEnumerator enumerateCIDs();
+    nsISimpleEnumerator enumerateContractIDs();
+    string CIDToContractID(in nsCIDRef class_id);
+    nsCIDPtr contractIDToCID(in string contract_id);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIContextMenuListener2
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIContextMenuInfo;
+interface nsIDOMEvent;
+interface nsIDOMNode;
+interface nsIURI;
+interface imgIContainer;
+
+
+[scriptable, uuid(7fb719b3-d804-4964-9596-77cf924ee314)]
+interface nsIContextMenuListener2 : nsISupports
+{
+    void onShowContextMenu(in unsigned long context_flags,
+                           in nsIContextMenuInfo utils);
+};
+
+
+ 
+[scriptable, uuid(2f977d56-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIContextMenuInfo : nsISupports
+{
+    readonly attribute nsIDOMEvent mouseEvent;
+    readonly attribute nsIDOMNode targetNode;
+    readonly attribute AString associatedLink;
+    readonly attribute imgIContainer imageContainer;
+    readonly attribute nsIURI imageSrc;
+    readonly attribute imgIContainer backgroundImageContainer;
+    readonly attribute nsIURI backgroundImageSrc;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDirectoryService
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIFile;
+interface nsISimpleEnumerator;
+
+
+[scriptable, uuid(bbf8cab0-d43a-11d3-8cc2-00609792278c)]
+interface nsIDirectoryServiceProvider : nsISupports
+{
+    nsIFile getFile(in string property, out boolean persistent);
+};
+
+
+[scriptable, uuid(2f977d4b-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIDirectoryServiceProvider2 : nsIDirectoryServiceProvider
+{
+    nsISimpleEnumerator getFiles(in string property);
+};
+
+
+[scriptable, uuid(57a66a60-d43a-11d3-8cc2-00609792278c)]
+interface nsIDirectoryService : nsISupports
+{
+    void init();
+    void registerProvider(in nsIDirectoryServiceProvider provider);
+    void unregisterProvider(in nsIDirectoryServiceProvider provider);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDocShellTreeItem
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDocShellTreeOwner;
+interface nsIDocShellTreeItem;
+
+
+[scriptable, uuid(37f1ab73-f224-44b1-82f0-d2834ab1cec0)]
+interface nsIDocShellTreeNode : nsISupports
+{
+    readonly attribute long childCount;
+    void addChild(in nsIDocShellTreeItem child);
+    void removeChild(in nsIDocShellTreeItem child);
+    nsIDocShellTreeItem getChildAt(in long index);
+    nsIDocShellTreeItem findChildWithName(in wstring name,
+                                          in boolean recurse,
+                                          in boolean same_type,
+                                          in nsIDocShellTreeItem requestor,
+                                          in nsIDocShellTreeItem original_requestor);
+};
+
+
+[scriptable, uuid(09b54ec1-d98a-49a9-bc95-3219e8b55089)]
+interface nsIDocShellTreeItem : nsIDocShellTreeNode
+{
+    attribute wstring name;
+
+    boolean nameEquals(in wstring name);
+
+    const long typeChrome = 0;
+    const long typeContent = 1;
+    const long typeContentWrapper = 2;
+    const long typeChromeWrapper = 3;
+    const long typeAll = 2147483647;
+
+    attribute long itemType;
+
+    readonly attribute nsIDocShellTreeItem parent;
+    readonly attribute nsIDocShellTreeItem sameTypeParent;
+    readonly attribute nsIDocShellTreeItem rootTreeItem;
+    readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
+
+    nsIDocShellTreeItem findItemWithName(in wstring name,
+                                         in nsISupports requestor,
+                                         in nsIDocShellTreeItem original_requestor);
+                                         
+    readonly attribute nsIDocShellTreeOwner treeOwner;
+
+    [noscript] void setTreeOwner(in nsIDocShellTreeOwner tree_owner);
+};
+
+
+[scriptable, uuid(7d935d63-6d2a-4600-afb5-9a4f7d68b825)]
+interface ns18IDocShellTreeItem : nsISupports
+{
+    attribute wstring name;
+
+    boolean nameEquals(in wstring name);
+
+    const long typeChrome = 0;
+    const long typeContent = 1;
+    const long typeContentWrapper = 2;
+    const long typeChromeWrapper = 3;
+    const long typeAll = 2147483647;
+
+    attribute long itemType;
+
+    readonly attribute nsIDocShellTreeItem parent;
+    readonly attribute nsIDocShellTreeItem sameTypeParent;
+    readonly attribute nsIDocShellTreeItem rootTreeItem;
+    readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
+
+    nsIDocShellTreeItem findItemWithName(in wstring name,
+                                         in nsISupports requestor,
+                                         in nsIDocShellTreeItem original_requestor);
+                                         
+    readonly attribute nsIDocShellTreeOwner treeOwner;
+
+    [noscript] void setTreeOwner(in nsIDocShellTreeOwner tree_owner);
+
+    attribute long childOffset;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMNode
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMNodeList;
+interface nsIDOMNamedNodeMap;
+interface nsIDOMDocument;
+interface DOMException;
+
+[scriptable, uuid(a6cf907c-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNode : nsISupports
+{
+    const unsigned short ELEMENT_NODE = 1;
+    const unsigned short ATTRIBUTE_NODE = 2;
+    const unsigned short TEXT_NODE = 3;
+    const unsigned short CDATA_SECTION_NODE = 4;
+    const unsigned short ENTITY_REFERENCE_NODE = 5;
+    const unsigned short ENTITY_NODE = 6;
+    const unsigned short PROCESSING_INSTRUCTION_NODE = 7;
+    const unsigned short COMMENT_NODE = 8;
+    const unsigned short DOCUMENT_NODE = 9;
+    const unsigned short DOCUMENT_TYPE_NODE = 10;
+    const unsigned short DOCUMENT_FRAGMENT_NODE = 11;
+    const unsigned short NOTATION_NODE = 12;
+
+    readonly attribute DOMString nodeName;
+    attribute DOMString nodeValue;
+    readonly attribute unsigned short nodeType;
+    readonly attribute nsIDOMNode parentNode;
+    readonly attribute nsIDOMNodeList childNodes;
+    readonly attribute nsIDOMNode firstChild;
+    readonly attribute nsIDOMNode lastChild;
+    readonly attribute nsIDOMNode previousSibling;
+    readonly attribute nsIDOMNode nextSibling;
+    readonly attribute nsIDOMNamedNodeMap attributes;
+    readonly attribute nsIDOMDocument ownerDocument;
+           
+    nsIDOMNode insertBefore(in nsIDOMNode new_child, in nsIDOMNode ref_child) raises(DOMException);
+    nsIDOMNode replaceChild(in nsIDOMNode new_child, in nsIDOMNode old_child) raises(DOMException);
+    nsIDOMNode removeChild(in nsIDOMNode old_child)  raises(DOMException);
+    nsIDOMNode appendChild(in nsIDOMNode new_child) raises(DOMException);
+    boolean hasChildNodes();
+    nsIDOMNode cloneNode(in boolean deep);
+    void normalize();
+    boolean isSupported(in DOMString feature, in DOMString version);
+    
+    readonly attribute DOMString namespaceURI;
+    attribute DOMString prefix;
+    readonly attribute DOMString localName;
+    
+    boolean hasAttributes();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOM3Node
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMNode;
+interface DOMException;
+interface nsIVariant;
+interface nsIDOMUserDataHandler;
+
+[scriptable, uuid(29fb2a18-1dd2-11b2-8dd9-a6fd5d5ad12f)]
+interface nsIDOM3Node : nsISupports
+{
+    const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
+    const unsigned short DOCUMENT_POSITION_PRECEDING = 0x02;
+    const unsigned short DOCUMENT_POSITION_FOLLOWING = 0x04;
+    const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
+    const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
+    const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
+    
+    readonly attribute DOMString       baseURI;
+
+    unsigned short compareDocumentPosition(in nsIDOMNode other) raises(DOMException);
+
+    attribute DOMString       textContent;
+
+    boolean isSameNode(in nsIDOMNode other);
+    DOMString lookupPrefix(in DOMString namespaceURI);
+    boolean isDefaultNamespace(in DOMString namespaceURI);
+    DOMString lookupNamespaceURI(in DOMString prefix);
+    boolean isEqualNode(in nsIDOMNode arg);
+    nsISupports getFeature(in DOMString feature, in DOMString version);
+    nsIVariant setUserData(in DOMString key, in nsIVariant data, in nsIDOMUserDataHandler handler);
+    nsIVariant getUserData(in DOMString key);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOM3Document
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMDOMConfiguration;
+
+[scriptable, uuid(2e0e9ea1-72ab-4d9e-bdeb-ca64e1abeba4)]
+interface nsIDOM3Document : nsIDOM3Node
+{
+    readonly attribute DOMString inputEncoding;
+    readonly attribute DOMString xmlEncoding;
+    attribute boolean xmlStandalone;
+    attribute DOMString xmlVersion;
+    attribute boolean strictErrorChecking;
+    attribute DOMString documentURI;
+    nsIDOMNode adoptNode(in nsIDOMNode source) raises(DOMException);
+    readonly attribute nsIDOMDOMConfiguration domConfig;
+    void normalizeDocument();
+    nsIDOMNode renameNode(in nsIDOMNode node, in DOMString namespaceURI, in DOMString qualifiedName) raises(DOMException);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMAttr
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMElement;
+
+[scriptable, uuid(a6cf9070-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMAttr : nsIDOMNode
+{
+    readonly attribute DOMString name;
+    readonly attribute boolean specified;
+    attribute DOMString value;
+    readonly attribute nsIDOMElement ownerElement;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMAttr;
+interface DOMException;
+
+
+[scriptable, uuid(a6cf9078-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMElement : nsIDOMNode
+{
+    readonly attribute DOMString tagName;
+
+    DOMString getAttribute(in DOMString name);
+
+    void setAttribute(in DOMString name,
+                      in DOMString value) raises(DOMException);
+
+    void removeAttribute(in DOMString name) raises(DOMException);
+
+    nsIDOMAttr getAttributeNode(in DOMString name);
+    nsIDOMAttr setAttributeNode(in nsIDOMAttr new_attr) raises(DOMException);
+
+    nsIDOMAttr removeAttributeNode(in nsIDOMAttr old_attr) raises(DOMException);
+ 
+    nsIDOMNodeList getElementsByTagName(in DOMString name);
+
+    DOMString getAttributeNS(in DOMString namespace_uri,
+                             in DOMString local_name);
+
+    void setAttributeNS(in DOMString namespace_uri,
+                        in DOMString qualified_name,
+                        in DOMString value) raises(DOMException);
+      
+    void removeAttributeNS(in DOMString namespace_uri,
+                           in DOMString local_name) raises(DOMException);
+
+    nsIDOMAttr getAttributeNodeNS(in DOMString namespace_uri,
+                                  in DOMString local_name);
+         
+    nsIDOMAttr setAttributeNodeNS(in nsIDOMAttr newAttr) raises(DOMException);
+    
+    nsIDOMNodeList getElementsByTagNameNS(in DOMString namespace_uri,
+                                          in DOMString local_name);
+               
+    boolean hasAttribute(in DOMString name);
+
+    boolean hasAttributeNS(in DOMString namespace_uri,
+                           in DOMString local_name);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMCharacterData
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a6cf9072-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMCharacterData : nsIDOMNode
+{
+    attribute DOMString data;
+    readonly attribute unsigned long length;
+    
+    DOMString substringData(in unsigned long offset,
+                            in unsigned long count)
+                            raises(DOMException);
+                            
+    void appendData(in DOMString arg)
+                    raises(DOMException);
+                    
+    void insertData(in unsigned long offset,
+                    in DOMString arg)
+                    raises(DOMException);
+                    
+    void deleteData(in unsigned long offset,
+                    in unsigned long count)
+                    raises(DOMException);
+                    
+    void replaceData(in unsigned long offset,
+                     in unsigned long count,
+                     in DOMString arg)
+                     raises(DOMException);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMDocument
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMText;
+interface nsIDOMDocumentType;
+interface nsIDOMDOMImplementation;
+interface nsIDOMElement;
+interface nsIDOMDocumentFragment;
+interface nsIDOMComment;
+interface nsIDOMCDATASection;
+interface nsIDOMProcessingInstruction;
+interface nsIDOMAttr;
+interface nsIDOMEntityReference;
+
+
+[scriptable, uuid(a6cf9075-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMDocument : nsIDOMNode
+{
+    readonly attribute nsIDOMDocumentType doctype;
+    readonly attribute nsIDOMDOMImplementation implementation;
+    readonly attribute nsIDOMElement documentElement;
+  
+    nsIDOMElement createElement(in DOMString tagName) raises(DOMException);
+    nsIDOMDocumentFragment createDocumentFragment();
+    nsIDOMText createTextNode(in DOMString data);
+    nsIDOMComment createComment(in DOMString data);
+    nsIDOMCDATASection createCDATASection(in DOMString data) raises(DOMException);
+    nsIDOMProcessingInstruction createProcessingInstruction(in DOMString target, in DOMString data) raises(DOMException);
+    nsIDOMAttr createAttribute(in DOMString name) raises(DOMException);
+    nsIDOMEntityReference createEntityReference(in DOMString name) raises(DOMException);
+    nsIDOMNodeList getElementsByTagName(in DOMString tagname);
+    nsIDOMNode importNode(in nsIDOMNode importedNode, in boolean deep) raises(DOMException);
+    nsIDOMElement createElementNS(in DOMString namespaceURI, in DOMString qualifiedName) raises(DOMException);
+    nsIDOMAttr createAttributeNS(in DOMString namespaceURI, in DOMString qualifiedName) raises(DOMException);
+    nsIDOMNodeList getElementsByTagNameNS(in DOMString namespaceURI, in DOMString localName);
+    nsIDOMElement getElementById(in DOMString elementId);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMEvent
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMAbstractView;
+interface nsIDOMEventTarget;
+interface DOMTimeStamp;
+
+
+[scriptable, uuid(a66b7b80-ff46-bd97-0080-5f8ae38add32)]
+interface nsIDOMEvent : nsISupports
+{
+    const unsigned short CAPTURING_PHASE = 1;
+    const unsigned short AT_TARGET = 2;
+    const unsigned short BUBBLING_PHASE = 3;
+
+    readonly attribute DOMString type;
+    readonly attribute nsIDOMEventTarget target;
+    readonly attribute nsIDOMEventTarget currentTarget;
+    readonly attribute unsigned short eventPhase;
+    readonly attribute boolean bubbles;
+    readonly attribute boolean cancelable;
+    readonly attribute DOMTimeStamp timeStamp;
+
+    void stopPropagation();
+    
+    void preventDefault();
+    
+    void initEvent(in DOMString event_type_arg,
+                   in boolean can_bubble_arg,
+                   in boolean cancelable_arg);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMEventListener
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMEvent;
+
+
+[scriptable, function, uuid(df31c120-ded6-11d1-bd85-00805f8ae3f4)]
+interface nsIDOMEventListener : nsISupports
+{
+    void handleEvent(in nsIDOMEvent event);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMEventTarget
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMEvent;
+interface nsIDOMEventListener;
+interface DOMException;
+
+
+[scriptable, uuid(1c773b30-d1cf-11d2-bd95-00805f8ae3f4)]
+interface nsIDOMEventTarget : nsISupports
+{
+    void addEventListener(in DOMString type,
+                          in nsIDOMEventListener listener,
+                          in boolean use_capture);
+                          
+    void removeEventListener(
+                          in DOMString type,
+                          in nsIDOMEventListener listener,
+                          in boolean use_capture);
+                             
+    boolean dispatchEvent(in nsIDOMEvent evt) raises(DOMException);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a6cf9085-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLElement : nsIDOMElement
+{
+    attribute DOMString id;
+    attribute DOMString title;
+    attribute DOMString lang;
+    attribute DOMString dir;
+    attribute DOMString className;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLAnchorElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a6cf90aa-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLAnchorElement : nsIDOMHTMLElement
+{
+    attribute DOMString accessKey;
+    attribute DOMString charset;
+    attribute DOMString coords;
+    attribute DOMString href;
+    attribute DOMString hreflang;
+    attribute DOMString name;
+    attribute DOMString rel;
+    attribute DOMString rev;
+    attribute DOMString shape;
+    attribute long tabIndex;
+    attribute DOMString target;
+    attribute DOMString type;
+
+    void blur();
+    void focus();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLInputElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMHTMLFormElement;
+
+
+[scriptable, uuid(a6cf9095-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLButtonElement : nsIDOMHTMLElement
+{
+    readonly attribute nsIDOMHTMLFormElement form;
+    attribute DOMString accessKey;
+    attribute boolean disabled;
+    attribute DOMString name;
+    attribute long tabIndex;
+    [noscript] readonly attribute DOMString type;
+    attribute DOMString value;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLInputElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMHTMLFormElement;
+
+[scriptable, uuid(a6cf9093-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
+{
+    attribute DOMString defaultValue;
+    attribute boolean defaultChecked;
+    readonly attribute nsIDOMHTMLFormElement form;
+    attribute DOMString accept;
+    attribute DOMString accessKey;
+    attribute DOMString align;
+    attribute DOMString alt;
+    attribute boolean checked;
+    attribute boolean disabled;
+    attribute long maxLength;
+    attribute DOMString name;
+    attribute boolean readOnly;
+    attribute unsigned long size;
+    attribute DOMString src;
+    attribute long tabIndex;
+    attribute DOMString type;
+    attribute DOMString useMap;
+    attribute DOMString value;
+    
+    void blur();
+    void focus();
+    void select();
+    void click();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLLinkElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a6cf9088-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLLinkElement : nsIDOMHTMLElement
+{
+    attribute boolean disabled;
+    attribute DOMString charset;
+    attribute DOMString href;
+    attribute DOMString hreflang;
+    attribute DOMString media;
+    attribute DOMString rel;
+    attribute DOMString rev;
+    attribute DOMString target;
+    attribute DOMString type;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLInputElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMHTMLFormElement;
+
+
+[scriptable, uuid(a6cf9092-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLOptionElement : nsIDOMHTMLElement
+{
+    readonly attribute nsIDOMHTMLFormElement form;
+    attribute boolean defaultSelected;
+    readonly attribute DOMString text;
+    readonly attribute long index;
+    attribute boolean disabled;
+    attribute DOMString label;
+    attribute boolean selected;
+    attribute DOMString value;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLParamElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a6cf90ad-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLParamElement : nsIDOMHTMLElement
+{
+    attribute DOMString name;
+    attribute DOMString type;
+    attribute DOMString value;
+    attribute DOMString valueType;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLSelectElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMHTMLFormElement;
+interface nsIDOMHTMLOptionsCollection;
+
+[scriptable, uuid(a6cf9090-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
+{
+    readonly attribute DOMString type;
+    attribute long selectedIndex;
+    attribute DOMString value;
+    attribute unsigned long length;
+    readonly attribute nsIDOMHTMLFormElement form;
+    readonly attribute nsIDOMHTMLOptionsCollection options;
+    attribute boolean disabled;
+    attribute boolean multiple;
+    attribute DOMString name;
+    attribute long size;
+    attribute long tabIndex;
+    
+    void add(in nsIDOMHTMLElement element,
+             in nsIDOMHTMLElement before)
+             raises(DOMException);
+    
+    void remove(in long index);
+    void blur();
+    void focus();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMHTMLTextAreaElement
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMHTMLFormElement;
+
+[scriptable, uuid(a6cf9094-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLTextAreaElement : nsIDOMHTMLElement
+{
+    attribute DOMString defaultValue;
+    readonly attribute nsIDOMHTMLFormElement form;
+    attribute DOMString accessKey;
+    attribute long cols;
+    attribute boolean disabled;
+    attribute DOMString name;
+    attribute boolean readOnly;
+    attribute long rows;
+    attribute long tabIndex;
+    readonly attribute DOMString type;
+    attribute DOMString value;
+    
+    void blur();
+    void focus();
+    void select();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMUIEvent
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMAbstractView;
+
+[scriptable, uuid(a6cf90c3-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMUIEvent : nsIDOMEvent
+{
+    readonly attribute nsIDOMAbstractView view;
+    readonly attribute long detail;
+
+    void initUIEvent(in DOMString type_arg,
+                     in boolean can_bubble_arg,
+                     in boolean cancelable_arg,
+                     in nsIDOMAbstractView view_arg,
+                     in long detail_arg);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMMouseEvent
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMAbstractView;
+interface nsIDOMEventTarget;
+
+
+[scriptable, uuid(ff751edc-8b02-aae7-0010-8301838a3123)]
+interface nsIDOMMouseEvent : nsIDOMUIEvent
+{
+    readonly attribute long screenX;
+    readonly attribute long screenY;
+    readonly attribute long clientX;
+    readonly attribute long clientY;
+    readonly attribute boolean ctrlKey;
+    readonly attribute boolean shiftKey;
+    readonly attribute boolean altKey;
+    readonly attribute boolean metaKey;
+    readonly attribute unsigned short button;
+    readonly attribute nsIDOMEventTarget relatedTarget;
+  
+    void initMouseEvent(in DOMString type_arg,
+                        in boolean can_bubble_arg,
+                        in boolean cancelable_arg,
+                        in nsIDOMAbstractView view_arg,
+                        in long detail_arg,
+                        in long screen_x_arg,
+                        in long screen_y_arg,
+                        in long client_x_arg,
+                        in long client_y_arg,
+                        in boolean ctrl_key_arg,
+                        in boolean alt_key_arg,
+                        in boolean shift_key_arg,
+                        in boolean meta_key_arg,
+                        in unsigned short button_arg,
+                        in nsIDOMEventTarget related_target_arg);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMNamedNodeMap
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMNode;
+interface DOMException;
+
+
+[scriptable, uuid(a6cf907b-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNamedNodeMap : nsISupports
+{
+    nsIDOMNode getNamedItem(in DOMString name);
+    nsIDOMNode setNamedItem(in nsIDOMNode arg) raises(DOMException);
+    nsIDOMNode removeNamedItem(in DOMString name) raises(DOMException);
+    nsIDOMNode item(in unsigned long index);
+    
+    readonly attribute unsigned long length;
+    
+    nsIDOMNode getNamedItemNS(in DOMString namespace_uri,
+                              in DOMString local_name);
+                                              
+    nsIDOMNode setNamedItemNS(in nsIDOMNode arg)
+                                      raises(DOMException);
+    
+    nsIDOMNode removeNamedItemNS(
+                              in DOMString namespace_uri,
+                              in DOMString local_name)
+                                      raises(DOMException);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMNodeList
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMNode;
+
+[scriptable, uuid(a6cf907d-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMNodeList : nsISupports
+{
+    nsIDOMNode item(in unsigned long index);
+    readonly attribute unsigned long length;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMText
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(a6cf9082-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMText : nsIDOMCharacterData
+{
+    nsIDOMText splitText(in unsigned long offset)
+                         raises(DOMException);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMWindow
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMDocument;
+interface nsIDOMBarProp;
+interface nsIDOMWindowCollection;
+interface nsISelection;
+
+[scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMWindow : nsISupports
+{
+    readonly attribute nsIDOMDocument document;
+    readonly attribute nsIDOMWindow parent;
+    readonly attribute nsIDOMWindow top;
+    readonly attribute nsIDOMBarProp scrollbars;
+    [noscript] readonly attribute nsIDOMWindowCollection frames;
+    attribute DOMString name;
+    [noscript] attribute float textZoom;
+    readonly attribute long scrollX;
+    readonly attribute long scrollY;
+
+    void scrollTo(in long x_scroll, in long y_scroll);
+    void scrollBy(in long x_scroll_diff, in long y_scroll_diff);
+    nsISelection getSelection();
+    void scrollByLines(in long num_lines);
+    void scrollByPages(in long num_pages);
+    void sizeToContent();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIDOMWindow2
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMEventTarget;
+interface nsIDOMOfflineResourceList;
+
+[scriptable, uuid(65455132-b96a-40ec-adea-52fa22b1028c)]
+interface ns18IDOMWindow2 : nsIDOMWindow
+{
+    [noscript] readonly attribute nsIDOMEventTarget windowRoot;
+};
+
+
+[scriptable, uuid(73c5fa35-3add-4c87-a303-a850ccf4d65a)]
+interface nsIDOMWindow2 : nsIDOMWindow
+{
+    [noscript] readonly attribute nsIDOMEventTarget windowRoot;
+    readonly attribute nsIDOMOfflineResourceList applicationCache;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIEmbeddingSiteWindow
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(3e5432cd-9568-4bd1-8cbe-d50aba110743)]
+interface nsIEmbeddingSiteWindow : nsISupports
+{
+    const unsigned long DIM_FLAGS_POSITION = 1;
+    const unsigned long DIM_FLAGS_SIZE_INNER = 2;
+    const unsigned long DIM_FLAGS_SIZE_OUTER = 4;
+    
+    void setDimensions(in unsigned long flags,
+                       in long x,
+                       in long y,
+                       in long cx,
+                       in long cy);
+                       
+    void getDimensions(in unsigned long flags,
+                       out long x,
+                       out long y,
+                       out long cx,
+                       out long cy);
+                       
+    void setFocus();
+    
+    attribute boolean visibility;
+    attribute wstring title;
+    [noscript] readonly attribute voidPtr siteWindow;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIEmbeddingSiteWindow2
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(e932bf55-0a64-4beb-923a-1f32d3661044)]
+interface nsIEmbeddingSiteWindow2 : nsIEmbeddingSiteWindow
+{
+    void blur();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIHelperAppLauncher
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIWebProgressListener2;
+interface nsIFile;
+interface nsIURI;
+interface nsIMIMEInfo;
+
+
+
+[scriptable, object, uuid(99a0882d-2ff9-4659-9952-9ac531ba5592)]
+interface nsIHelperAppLauncher : nsICancelable
+{
+    readonly attribute nsIMIMEInfo MIMEInfo;
+    readonly attribute nsIURI source;
+    readonly attribute AString suggestedFileName;
+
+    void saveToDisk(in nsIFile new_file_location,
+                    in boolean remember_this_preference);
+                    
+    void launchWithApplication(in nsIFile application,
+                               in boolean remember_this_preference);
+                               
+    void setWebProgressListener(in nsIWebProgressListener2 web_progress_listener);
+    
+    void closeProgressWindow();
+    
+    readonly attribute nsIFile targetFile;
+    readonly attribute PRTime timeDownloadStarted;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIHelperAppLauncherDialog
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIHelperAppLauncher;
+interface nsILocalFile;
+
+[scriptable, object, uuid(64355793-988d-40a5-ba8e-fcde78cac631)]
+interface nsIHelperAppLauncherDialog : nsISupports
+{
+    const unsigned long REASON_CANTHANDLE = 0;
+    const unsigned long REASON_SERVERREQUEST = 1;
+    const unsigned long REASON_TYPESNIFFED = 2;
+    
+
+    void show(in nsIHelperAppLauncher launcher,
+              in nsISupports windowContext,
+              in unsigned long reason);
+
+    nsILocalFile promptForSaveToFile(
+              in nsIHelperAppLauncher launcher,
+              in nsISupports windowContext,
+              in wstring defaultFile,
+              in wstring suggestedFileExtension);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIInputStream
+///////////////////////////////////////////////////////////////////////////////
+
+
+%{C++
+
+typedef NS_CALLBACK(nsWriteSegmentFun)(
+        nsIInputStream* in_stream,
+        void* closure,
+        const char* from_segment,
+        PRUint32 to_offset,
+        PRUint32 count,
+        PRUint32* write_count
+);
+
+%}
+native nsWriteSegmentFun(nsWriteSegmentFun);
+
+  
+[scriptable, uuid(fa9c7f6c-61b3-11d4-9877-00c04fa0cf4a)]
+interface nsIInputStream : nsISupports
+{
+     void close();
+     unsigned long available();
+     [noscript] unsigned long read(in charPtr buf, in unsigned long count);
+     // this line wasn't compiling on VC6, so we'll use a void ptr for now
+     //[noscript] unsigned long readSegments(in nsWriteSegmentFun writer, in voidPtr closure, in unsigned long count);
+     [noscript] unsigned long readSegments(in voidPtr writer, in voidPtr closure, in unsigned long count);
+     boolean isNonBlocking();
+};
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIIOService
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIProtocolHandler;
+interface nsIURI;
+interface nsIFile;
+interface nsIChannel;
+
+
+[scriptable, object, uuid(bddeda3f-9020-4d12-8c70-984ee9f7935e)]
+interface nsIIOService : nsISupports
+{
+    nsIProtocolHandler getProtocolHandler(in string scheme);
+    unsigned long getProtocolFlags(in string scheme);
+    nsIURI newURI(in AUTF8String spec, in string origin_charset, in nsIURI base_uri);
+    nsIURI newFileURI(in nsIFile file);
+    nsIChannel newChannelFromURI(in nsIURI uri);
+    nsIChannel newChannel(in AUTF8String spec,
+                          in string origin_charset,
+                          in nsIURI base_uri);
+    
+    attribute boolean offline;
+    
+    boolean allowPort(in long port, in string scheme);
+    ACString extractScheme(in AUTF8String url_string);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIJSContextStack
+///////////////////////////////////////////////////////////////////////////////
+
+
+%{C++
+struct JSContext;
+%}
+
+[ptr] native JSContext(JSContext);
+
+
+[uuid(c67d8270-3189-11d3-9885-006008962422)]
+interface nsIJSContextStack : nsISupports
+{
+    readonly attribute PRInt32 count;
+    JSContext peek();
+    JSContext pop();
+    void push(in JSContext contxt);
+};
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIMIMEInfo
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIUTF8StringEnumerator;
+interface nsIFile;
+interface nsMIMEInfoHandleAction;
+
+
+[scriptable, uuid(cd7083f8-5fe9-4248-bb09-0b0e2982fde8)]
+interface nsIMIMEInfo : nsISupports
+{
+    nsIUTF8StringEnumerator getFileExtensions();
+    void setFileExtensions(in AUTF8String extensions);
+    boolean extensionExists(in AUTF8String extension);
+    void appendExtension(in AUTF8String extension);
+
+    attribute AUTF8String primaryExtension;
+    readonly attribute ACString MIMEType;
+    attribute AString description;
+    attribute PRUint32 macType;
+    attribute PRUint32 macCreator;
+
+    boolean equals(in nsIMIMEInfo mime_info);
+
+    attribute nsIFile preferredApplicationHandler;
+    attribute AString applicationDescription;
+    readonly attribute boolean hasDefaultHandler;
+    readonly attribute AString defaultDescription;
+
+    void launchWithFile(in nsIFile file);
+
+    const long saveToDisk = 0;
+    const long alwaysAsk = 1;
+    const long useHelperApp = 2;
+    const long handleInternally = 3;
+    const long useSystemDefault = 4;
+
+    attribute nsMIMEInfoHandleAction preferredAction;
+    attribute boolean alwaysAskBeforeHandling;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIPref
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIFileSpec;
+interface nsIFile;
+interface nsILocalFile;
+interface nsIPrefBranch;
+interface nsIObserver;
+
+native PrefChangedFunc(PrefChangedFunc);
+native PrefEnumerationFunc(PrefEnumerationFunc);
+
+
+%{ C++
+    typedef int (*PrefChangedFunc)(const char*, void*);
+    typedef void (*PrefEnumerationFunc)(const char *, void *);
+%}
+
+
+[scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
+interface nsIPref : nsISupports
+{
+    void readUserPrefs(in nsIFile file);
+    void ResetPrefs();
+    void ResetUserPrefs();
+    void savePrefFile(in nsIFile file);
+    nsIPrefBranch getBranch(in string pref_root);
+    nsIPrefBranch getDefaultBranch(in string pref_root);
+    
+    const long ePrefInvalid = 0;
+    const long ePrefLocked = 1;
+    const long ePrefUserset = 2;
+    const long ePrefConfig = 4;
+    const long ePrefRemote = 8;
+    const long ePrefLilocal = 16;
+    const long ePrefString = 32;
+    const long ePrefInt = 64;
+    const long ePrefBool = 128;
+    const long ePrefValuetypeMask = 224;
+
+    readonly attribute string root;
+
+    long GetPrefType(in string pref_name);
+    
+    boolean GetBoolPref(in string pref_name);
+    void SetBoolPref(in string pref_name, in long value);
+    
+    string GetCharPref(in string pref_name);
+    void SetCharPref(in string pref_name, in string value);
+    
+    long GetIntPref(in string pref_name);
+    void SetIntPref(in string pref_name, in long value);
+    
+    void getComplexValue(in string pref_name,
+                         in nsIIDRef type,
+                         [iid_is(type), retval] out nsQIResult value);
+                         
+    void setComplexValue(in string pref_name,
+                         in nsIIDRef type,
+                         in nsISupports value);
+                         
+    void ClearUserPref(in string pref_name);
+    
+    boolean PrefIsLocked(in string pref_name);
+    void lockPref(in string pref_name);
+    void unlockPref(in string pref_name);
+
+    void resetBranch(in string starting_at);
+    void DeleteBranch(in string starting_at);
+
+    void getChildList(in string starting_at,
+                      out unsigned long count,
+                      [array, size_is(count), retval] out string child_array);
+
+    void addObserver(in string domain, in nsIObserver observer, in boolean hold_weak);
+    void removeObserver(in string domain, in nsIObserver observer);
+    
+    string CopyCharPref(in string pref);
+    string CopyDefaultCharPref(in string pref);
+    boolean GetDefaultBoolPref(in string pref);
+    long GetDefaultIntPref(in string pref);
+    void SetDefaultBoolPref(in string pref, in boolean value);
+    void SetDefaultCharPref(in string pref, in string value);
+    void SetDefaultIntPref(in string pref, in long value);
+    
+    wstring CopyUnicharPref(in string pref);
+    wstring CopyDefaultUnicharPref(in string pref);
+    
+    void SetUnicharPref(in string pref, in wstring value);
+    void SetDefaultUnicharPref(in string pref, in wstring value);
+    
+    wstring getDefaultLocalizedUnicharPref(in string pref);
+    wstring getLocalizedUnicharPref(in string pref);
+    
+    nsIFileSpec GetFilePref(in string pref);
+    void SetFilePref(in string pref, in nsIFileSpec value, in boolean set_default);
+    nsILocalFile getFileXPref(in string pref);
+    void setFileXPref(in string pref, in nsILocalFile value);
+    
+    [noscript] void RegisterCallback(in string domain,
+                                     in PrefChangedFunc callback,
+                                     in voidPtr closure);
+                                     
+    [noscript] void UnregisterCallback(in string domain,
+                                       in PrefChangedFunc callback,
+                                       in voidPtr closure);
+    
+    [noscript] void EnumerateChildren(in string parent,
+                                      in PrefEnumerationFunc callback,
+                                      in voidPtr data);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIPrint
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIPrintSettings;
+interface nsIDOMWindow;
+interface nsIWebProgressListener;
+
+
+[scriptable, uuid(9a7ca4b0-fbba-11d4-a869-00105a183419)]
+interface nsIWebBrowserPrint : nsISupports
+{
+    const short PRINTPREVIEW_GOTO_PAGENUM = 0;
+    const short PRINTPREVIEW_PREV_PAGE = 1;
+    const short PRINTPREVIEW_NEXT_PAGE = 2;
+    const short PRINTPREVIEW_HOME = 3;
+    const short PRINTPREVIEW_END = 4;
+
+    readonly attribute nsIPrintSettings globalPrintSettings;
+    readonly attribute nsIPrintSettings currentPrintSettings;
+    readonly attribute nsIDOMWindow currentChildDOMWindow;
+    readonly attribute boolean doingPrint;
+    readonly attribute boolean doingPrintPreview;
+    readonly attribute boolean isFramesetDocument;
+    readonly attribute boolean isFramesetFrameSelected;
+    readonly attribute boolean isIFrameSelected;
+    readonly attribute boolean isRangeSelection;
+    readonly attribute long printPreviewNumPages;
+
+    void print(in nsIPrintSettings thePrintSettings,
+               in nsIWebProgressListener WPListener);
+
+    void printPreview(
+                in nsIPrintSettings thePrintSettings,
+                in nsIDOMWindow childDOMWin,
+                in nsIWebProgressListener WPListener);
+
+    void printPreviewNavigate(in short navType, in long pageNum);
+    void cancel();
+    void enumerateDocumentNames(
+                out PRUint32 count,
+                [retval, array, size_is(count)] out wstring result);
+                
+    void exitPrintPreview();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIPrintSettings
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIPrintSession;
+
+[scriptable, uuid(f1094df6-ce0e-42c9-9847-2f663172c38d)]
+interface nsIPrintSettings : nsISupports
+{
+    const unsigned long kInitSaveOddEvenPages = 0x1;
+    const unsigned long kInitSaveHeaderLeft = 0x2;
+    const unsigned long kInitSaveHeaderCenter = 0x4;
+    const unsigned long kInitSaveHeaderRight = 0x8;
+    const unsigned long kInitSaveFooterLeft = 0x10;
+    const unsigned long kInitSaveFooterCenter = 0x20;
+    const unsigned long kInitSaveFooterRight = 0x40;
+    const unsigned long kInitSaveBGColors = 0x80;
+    const unsigned long kInitSaveBGImages = 0x100;
+    const unsigned long kInitSavePaperSize = 0x200;
+    const unsigned long kInitSavePaperName = 0x400;
+    const unsigned long kInitSavePaperSizeUnit = 0x800;
+    const unsigned long kInitSavePaperSizeType = 0x1000;
+    const unsigned long kInitSavePaperData = 0x2000;
+    const unsigned long kInitSavePaperWidth = 0x4000;
+    const unsigned long kInitSavePaperHeight  = 0x8000;
+
+    const unsigned long kInitSaveReversed = 0x10000;
+    const unsigned long kInitSaveInColor = 0x20000;
+    const unsigned long kInitSaveOrientation = 0x40000;
+    const unsigned long kInitSavePrintCommand = 0x80000;
+    const unsigned long kInitSavePrinterName = 0x100000;
+    const unsigned long kInitSavePrintToFile = 0x200000;
+    const unsigned long kInitSaveToFileName = 0x400000;
+    const unsigned long kInitSavePageDelay = 0x800000;
+    const unsigned long kInitSaveMargins = 0x1000000;
+    const unsigned long kInitSaveNativeData = 0x2000000;
+    const unsigned long kInitSavePlexName = 0x4000000;
+    const unsigned long kInitSaveShrinkToFit = 0x8000000;
+    const unsigned long kInitSaveScaling = 0x10000000;
+    const unsigned long kInitSaveColorspace = 0x20000000;
+    const unsigned long kInitSaveResolutionName = 0x40000000;
+    const unsigned long kInitSaveDownloadFonts = 0x80000000;
+    const unsigned long kInitSaveAll = 0xFFFFFFFF;
+
+    const long kPrintOddPages = 0x1;
+    const long kPrintEvenPages = 0x2;
+    const long kEnableSelectionRB = 0x4;
+
+    const long kRangeAllPages = 0;
+    const long kRangeSpecifiedPageRange = 1;
+    const long kRangeSelection = 2;
+    const long kRangeFocusFrame = 3;
+
+    const long kJustLeft = 0;
+    const long kJustCenter = 1;
+    const long kJustRight = 2;
+
+    const short kUseInternalDefault = 0;
+    const short kUseSettingWhenPossible = 1;
+
+    const short kPaperSizeNativeData = 0;
+    const short kPaperSizeDefined = 1;
+
+    const short kPaperSizeInches = 0;
+    const short kPaperSizeMillimeters = 1;
+
+    const short kPortraitOrientation = 0;
+    const short kLandscapeOrientation = 1;
+
+    const short kNoFrames = 0;
+    const short kFramesAsIs = 1;
+    const short kSelectedFrame = 2;
+    const short kEachFrameSep = 3;
+
+    const short kFrameEnableNone = 0;
+    const short kFrameEnableAll = 1;
+    const short kFrameEnableAsIsAndEach = 2;
+
+    void SetPrintOptions(in long type, in boolean turnOnOff);
+    boolean GetPrintOptions(in long type);
+    long GetPrintOptionsBits();
+    void GetPageSizeInTwips(out long width, out long height);
+    nsIPrintSettings clone();
+    void assign(in nsIPrintSettings ps);
+
+    [noscript] attribute nsIPrintSession printSession;
+    attribute long startPageRange;
+    attribute long endPageRange;
+    attribute double marginTop;
+    attribute double marginLeft;
+    attribute double marginBottom;
+    attribute double marginRight;
+    attribute double scaling;
+    attribute boolean printBGColors;
+    attribute boolean printBGImages;
+    attribute short printRange;
+    attribute wstring title;
+    attribute wstring docURL;
+    attribute wstring headerStrLeft;
+    attribute wstring headerStrCenter;
+    attribute wstring headerStrRight;
+    attribute wstring footerStrLeft;
+    attribute wstring footerStrCenter;
+    attribute wstring footerStrRight;
+    attribute short howToEnableFrameUI;
+    attribute boolean isCancelled;
+    attribute short printFrameTypeUsage;
+    attribute short printFrameType;
+    attribute boolean printSilent;
+    attribute boolean shrinkToFit;
+    attribute boolean showPrintProgress;
+    attribute wstring paperName;
+    attribute short paperSizeType;
+    attribute short paperData;
+    attribute double paperWidth;
+    attribute double paperHeight;
+    attribute short paperSizeUnit;
+    attribute wstring plexName;
+    attribute wstring colorspace;
+    attribute wstring resolutionName;
+    attribute boolean downloadFonts;
+    attribute boolean printReversed;
+    attribute boolean printInColor;
+    attribute long paperSize;
+    attribute long orientation;
+    attribute wstring printCommand;
+    attribute long numCopies;
+    attribute wstring printerName;
+    attribute boolean printToFile;
+    attribute wstring toFileName;
+    attribute long printPageDelay;
+    attribute boolean isInitializedFromPrinter;
+    attribute boolean isInitializedFromPrefs;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIPromptService
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMWindow;
+
+[scriptable, uuid(1630c61a-325e-49ca-8759-a31b16c47aa5)]
+interface nsIPromptService : nsISupports
+{
+    void alert(in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text);
+               
+    void alertCheck(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               in wstring check_msg,
+               inout boolean check_state);
+               
+    boolean confirm(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text);
+               
+    boolean confirmCheck(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               in wstring check_msg,
+               inout boolean check_state);
+        
+    const unsigned long BUTTON_POS_0 = 1;
+    const unsigned long BUTTON_POS_1 = 256;
+    const unsigned long BUTTON_POS_2 = 65536;
+    const unsigned long BUTTON_TITLE_OK = 1;
+    const unsigned long BUTTON_TITLE_CANCEL = 2;
+    const unsigned long BUTTON_TITLE_YES = 3;
+    const unsigned long BUTTON_TITLE_NO = 4;
+    const unsigned long BUTTON_TITLE_SAVE = 5;
+    const unsigned long BUTTON_TITLE_DONT_SAVE = 6;
+    const unsigned long BUTTON_TITLE_REVERT = 7;
+    const unsigned long BUTTON_TITLE_IS_STRING = 127;
+    const unsigned long BUTTON_POS_0_DEFAULT = 0;
+    const unsigned long BUTTON_POS_1_DEFAULT = 16777216;
+    const unsigned long BUTTON_POS_2_DEFAULT = 33554432;
+    const unsigned long BUTTON_DELAY_ENABLE = 67108864;
+    const unsigned long STD_OK_CANCEL_BUTTONS = 513;
+    const unsigned long STD_YES_NO_BUTTONS = 1027;
+    
+    
+    PRInt32 confirmEx(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               in unsigned long button_flags,
+               in wstring button0_title,
+               in wstring button1_title,
+               in wstring button2_title,
+               in wstring check_msg,
+               inout boolean check_state);
+
+    boolean prompt(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               inout wstring value,
+               in wstring check_msg,
+               inout boolean check_state);
+
+    boolean promptUsernameAndPassword(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               inout wstring username,
+               inout wstring password,
+               in wstring check_msg,
+               inout boolean check_state);
+
+    boolean promptPassword(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               inout wstring password,
+               in wstring check_msg,
+               inout boolean check_state);
+
+    boolean select(
+               in nsIDOMWindow parent,
+               in wstring dialog_title,
+               in wstring text,
+               in PRUint32 count,
+               [array, size_is(count)] in wstring select_list,
+               out long out_selection);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIProperties
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(78650582-4e93-4b60-8e85-26ebd3eb14ca)]
+interface nsIProperties : nsISupports
+{
+    void get(in string prop_name,
+             in nsIIDRef iid,
+             [iid_is(iid), retval] out nsQIResult result);
+
+    void set(in string prop_name,
+             in nsISupports value);
+
+    boolean has(in string prop_name);
+    
+    void undefine(in string prop_name);
+
+    void getKeys(out PRUint32 count,
+                 [array, size_is(count), retval] out string keys);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIRequestObserver
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIRequest;
+
+
+[scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
+interface nsIRequestObserver : nsISupports
+{
+    void onStartRequest(in nsIRequest request,
+                        in nsISupports contxt);
+                        
+    void onStopRequest(in nsIRequest request,
+                       in nsISupports contxt,
+                       in nsresult status_code);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIServiceManager
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(8bb35ed9-e332-462d-9155-4a002ab5c958)]
+interface nsIServiceManager : nsISupports
+{
+    void getService(in nsCIDRef class_id,
+                    in nsIIDRef iid,
+                    [iid_is(iid), retval] out nsQIResult result);
+                    
+    void getServiceByContractID(
+                    in string contract_id,
+                    in nsIIDRef iid,
+                    [iid_is(iid), retval] out nsQIResult result);
+                    
+    boolean isServiceInstantiated(
+                    in nsCIDRef class_id,
+                    in nsIIDRef iid);
+                    
+    boolean isServiceInstantiatedByContractID(
+                    in string contract_id,
+                    in nsIIDRef iid);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIStreamListener
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIRequest;
+interface nsIInputStream;
+
+
+[scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
+interface nsIStreamListener : nsIRequestObserver
+{
+    void onDataAvailable(
+            in nsIRequest request,
+            in nsISupports contxt,
+            in nsIInputStream input_stream,
+            in unsigned long offset,
+            in unsigned long count);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIStringInputStream
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(450cd2d4-f0fd-424d-b365-b1251f80fd53)]
+interface nsIStringInputStream : nsIInputStream
+{
+    void setData(in string data, in long dataLen);
+    [noscript] void adoptData(in charPtr data, in long data_len);
+    [noscript] void shareData(in string data, in long data_len);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsITooltipListener
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(44b78386-1dd2-11b2-9ad2-e4eee2ca1916)]
+interface nsITooltipListener : nsISupports
+{
+    void onShowTooltip(in long x_coords,
+                       in long y_coords,
+                       in wstring tip_text);
+    void onHideTooltip();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebProgressListener
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIWebProgress;
+interface nsIRequest;
+interface nsIURI;
+
+[scriptable, uuid(570f39d1-efd0-11d3-b093-00a024ffc08c)]
+interface nsIWebProgressListener : nsISupports
+{
+    const unsigned long STATE_START = 1;
+    const unsigned long STATE_REDIRECTING = 2;
+    const unsigned long STATE_TRANSFERRING = 4;
+    const unsigned long STATE_NEGOTIATING = 8;
+    const unsigned long STATE_STOP = 16;
+
+    const unsigned long STATE_IS_REQUEST = 65536;
+    const unsigned long STATE_IS_DOCUMENT = 131072;
+    const unsigned long STATE_IS_NETWORK = 262144;
+    const unsigned long STATE_IS_WINDOW = 524288;
+    
+    const unsigned long STATE_RESTORING = 16777216;
+
+    const unsigned long STATE_IS_INSECURE = 4;
+    const unsigned long STATE_IS_BROKEN = 1;
+    const unsigned long STATE_IS_SECURE = 2;
+
+    const unsigned long STATE_SECURE_HIGH = 262144;
+    const unsigned long STATE_SECURE_MED = 65536;
+    const unsigned long STATE_SECURE_LOW = 131072;
+
+    void onStateChange(in nsIWebProgress web_progress,
+                       in nsIRequest request,
+                       in unsigned long state_flags,
+                       in nsresult status);
+                       
+    void onProgressChange(in nsIWebProgress web_progress,
+                          in nsIRequest request,
+                          in long cur_self_progress,
+                          in long max_self_progress,
+                          in long cur_total_progress,
+                          in long max_total_progress);
+                      
+    void onLocationChange(in nsIWebProgress web_progress,
+                          in nsIRequest request,
+                          in nsIURI location);
+                          
+    void onStatusChange(in nsIWebProgress web_progress,
+                        in nsIRequest request,
+                        in nsresult status,
+                        in wstring message);
+               
+    void onSecurityChange(in nsIWebProgress web_progress,
+                          in nsIRequest request,
+                          in unsigned long state);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebProgressListener2
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(3f24610d-1e1f-4151-9d2e-239884742324)]
+interface nsIWebProgressListener2 : nsIWebProgressListener
+{
+    void onProgressChange64(in nsIWebProgress web_progress,
+                            in nsIRequest request,
+                            in long long cur_self_progress,
+                            in long long max_self_progress,
+                            in long long cur_total_progress,
+                            in long long max_total_progress);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsITransfer
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIMIMEInfo;
+interface nsILocalFile;
+interface nsICancelable;
+
+
+[scriptable, uuid(23c51569-e9a1-4a92-adeb-3723db82ef7c)]
+interface nsITransfer : nsIWebProgressListener2
+{
+    void init(in nsIURI source,
+              in nsIURI target,
+              in AString display_name,
+              in nsIMIMEInfo mime_info,
+              in PRTime start_time,
+              in nsILocalFile temp_file,
+              in nsICancelable cancelable);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIURI
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
+interface nsIURI : nsISupports
+{
+    attribute AUTF8String spec;
+    readonly attribute AUTF8String prePath;
+    attribute ACString scheme;
+    attribute AUTF8String userPass;
+    attribute AUTF8String username;
+    attribute AUTF8String password;
+    attribute AUTF8String hostPort;
+    attribute AUTF8String host;
+    attribute long port;
+    attribute AUTF8String path;
+
+    boolean equals(in nsIURI other);
+    boolean schemeIs(in string scheme);
+    nsIURI clone();
+    AUTF8String resolve(in AUTF8String relative_path);
+    
+    readonly attribute ACString asciiSpec;
+    readonly attribute ACString asciiHost;
+    readonly attribute ACString originCharset;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIURIContentListener
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIURI;
+interface nsIRequest;
+interface nsIStreamListener;
+interface nsIURIContentListener;
+
+[scriptable, uuid(94928ab3-8b63-11d3-989d-001083010e9b)]
+interface nsIURIContentListener : nsISupports
+{
+    boolean onStartURIOpen(in nsIURI uri);
+    
+    boolean doContent(in string content_type,
+                      in boolean is_content_preferred,
+                      in nsIRequest request,
+                      out nsIStreamListener content_handler);
+    
+    boolean isPreferred(
+                      in string content_type,
+                      out string desired_content_type);
+                      
+    boolean canHandleContent(
+                      in string content_type,
+                      in boolean is_content_preferred,
+                      out string desired_content_type);
+               
+    attribute nsISupports loadCookie;
+    attribute nsIURIContentListener parentContentListener;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIURILoader
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIURIContentListener;
+interface nsIChannel;
+interface nsIInterfaceRequestor;
+interface nsIStreamListener;
+
+
+[scriptable, uuid(2f7e8051-f1c9-4bcc-8584-9cfd5849e343)]
+interface nsIURILoader : nsISupports
+{
+    const unsigned long IS_CONTENT_PREFERRED = 0x01;
+    const unsigned long DONT_RETARGET = 0x02;
+
+    void registerContentListener(in nsIURIContentListener content_listener);
+    void unRegisterContentListener(in nsIURIContentListener content_listener);
+    
+    void openURI(in nsIChannel channel,
+                 in boolean is_content_preferred,
+                 in nsIInterfaceRequestor window_context);
+    
+    nsIStreamListener openChannel(in nsIChannel channel,
+                                  in unsigned long flags,
+                                  in nsIInterfaceRequestor window_context);
+
+    void stop(in nsISupports load_cookie);
+};
+
+
+
+
+[scriptable, uuid(5cf6420c-74f3-4a7c-bc1d-f5756d79ea07)]
+interface ns18IURILoader : nsISupports
+{
+    void registerContentListener(in nsIURIContentListener content_listener);
+    void unRegisterContentListener(in nsIURIContentListener content_listener);
+
+    void openURI(in nsIChannel channel,
+                 in boolean is_content_preferred,
+                 in nsIInterfaceRequestor window_context);
+
+    void stop(in nsISupports load_cookie);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebBrowser
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIWebBrowserChrome;
+interface nsIURIContentListener;
+interface nsIDOMWindow;
+interface nsIWeakReference;
+
+[scriptable, uuid(69e5df00-7b8b-11d3-af61-00a024ffc08c)]
+interface nsIWebBrowser : nsISupports
+{
+    void addWebBrowserListener(in nsIWeakReference listener, in nsIIDRef iid);
+    void removeWebBrowserListener(in nsIWeakReference listener, in nsIIDRef iid);
+    
+    attribute nsIWebBrowserChrome containerWindow;
+    attribute nsIURIContentListener parentURIContentListener;
+    readonly attribute nsIDOMWindow contentDOMWindow;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebBrowserChrome
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIWebBrowser;
+
+[scriptable, uuid(ba434c60-9d52-11d3-afb0-00a024ffc08c)]
+interface nsIWebBrowserChrome : nsISupports
+{
+    void setStatus(in unsigned long status_type, in wstring status);
+    attribute nsIWebBrowser webBrowser;
+    
+    const unsigned long STATUS_SCRIPT=0x00000001;
+    const unsigned long STATUS_SCRIPT_DEFAULT=0x00000002;
+    const unsigned long STATUS_LINK=0x00000003;
+
+    const unsigned long CHROME_DEFAULT=0x00000001;
+    const unsigned long CHROME_WINDOW_BORDERS=0x00000002;
+    const unsigned long CHROME_WINDOW_CLOSE=0x00000004;
+    const unsigned long CHROME_WINDOW_RESIZE=0x00000008;
+    const unsigned long CHROME_MENUBAR=0x00000010;
+    const unsigned long CHROME_TOOLBAR=0x00000020;
+    const unsigned long CHROME_LOCATIONBAR=0x00000040;
+    const unsigned long CHROME_STATUSBAR=0x00000080;
+    const unsigned long CHROME_PERSONAL_TOOLBAR=0x00000100;
+    const unsigned long CHROME_SCROLLBARS=0x00000200;
+    const unsigned long CHROME_TITLEBAR=0x00000400;
+
+    const unsigned long CHROME_WITH_SIZE=0x00001000;
+    const unsigned long CHROME_WITH_POSITION=0x00002000;
+
+    const unsigned long CHROME_WINDOW_MIN=0x00004000;
+    const unsigned long CHROME_WINDOW_POPUP=0x00008000;
+    const unsigned long CHROME_WINDOW_RAISED=0x02000000;
+    const unsigned long CHROME_WINDOW_LOWERED=0x04000000;
+    const unsigned long CHROME_CENTER_SCREEN=0x08000000;
+    const unsigned long CHROME_DEPENDENT=0x10000000;
+    const unsigned long CHROME_MODAL=0x20000000;
+    const unsigned long CHROME_OPENAS_DIALOG=0x40000000;
+    const unsigned long CHROME_OPENAS_CHROME =0x80000000;
+    const unsigned long CHROME_ALL=0x00000ffe;
+    
+    attribute unsigned long chromeFlags;
+    
+    void destroyBrowserWindow();
+    void sizeBrowserTo(in long cx, in long cy);
+    void showAsModal();
+    boolean isWindowModal();
+    void exitModalEventLoop(in nsresult status);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebBrowserChromeFocus
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, uuid(d2206418-1dd1-11b2-8e55-acddcd2bcfb8)]
+interface nsIWebBrowserChromeFocus : nsISupports
+{
+    void focusNextElement();
+    void focusPrevElement();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebBrowserFind
+///////////////////////////////////////////////////////////////////////////////
+
+
+[scriptable, object, uuid(2f977d44-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIWebBrowserFind : nsISupports
+{
+    boolean findNext();
+
+    attribute wstring searchString;
+    attribute boolean findBackwards;
+    attribute boolean wrapFind;
+    attribute boolean entireWord;
+    attribute boolean matchCase;
+    attribute boolean searchFrames;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebBrowserFocus
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMWindow;
+interface nsIDOMElement;
+
+[scriptable, uuid(9c5d3c58-1dd1-11b2-a1c9-f3699284657a)]
+interface nsIWebBrowserFocus : nsISupports
+{
+    void activate();
+    void deactivate();
+    void setFocusAtFirstElement();
+    void setFocusAtLastElement();
+    
+    attribute nsIDOMWindow focusedWindow;
+    attribute nsIDOMElement focusedElement;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebBrowserPersist
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIURI;
+interface nsIFile;
+interface nsIChannel;
+interface nsIWebProgressListener;
+interface nsIInputStream;
+interface nsIDOMDocument;
+
+
+[scriptable, uuid(dd4e0a6a-210f-419a-ad85-40e8543b9465)]
+interface nsIWebBrowserPersist : nsICancelable
+{
+    const unsigned long PERSIST_FLAGS_NONE = 0;
+    const unsigned long PERSIST_FLAGS_FROM_CACHE = 1;
+    const unsigned long PERSIST_FLAGS_BYPASS_CACHE = 2;
+    const unsigned long PERSIST_FLAGS_IGNORE_REDIRECTED_DATA = 4;
+    const unsigned long PERSIST_FLAGS_IGNORE_IFRAMES = 8;
+    const unsigned long PERSIST_FLAGS_NO_CONVERSION = 16;
+    const unsigned long PERSIST_FLAGS_REPLACE_EXISTING_FILES = 32;
+    const unsigned long PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS = 64;
+    const unsigned long PERSIST_FLAGS_FIXUP_ORIGINAL_DOM = 128;
+    const unsigned long PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION = 256;
+    const unsigned long PERSIST_FLAGS_DONT_FIXUP_LINKS = 512;
+    const unsigned long PERSIST_FLAGS_SERIALIZE_OUTPUT = 1024;
+    const unsigned long PERSIST_FLAGS_DONT_CHANGE_FILENAMES = 2048;
+    const unsigned long PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS = 4096;
+    const unsigned long PERSIST_FLAGS_CLEANUP_ON_FAILURE = 8192;
+    const unsigned long PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION = 16384;
+    
+    const unsigned long PERSIST_STATE_READY = 1;
+    const unsigned long PERSIST_STATE_SAVING = 2;
+    const unsigned long PERSIST_STATE_FINISHED = 3;
+    
+    const unsigned long ENCODE_FLAGS_SELECTION_ONLY = 1;
+    const unsigned long ENCODE_FLAGS_FORMATTED = 2;
+    const unsigned long ENCODE_FLAGS_RAW = 4;
+    const unsigned long ENCODE_FLAGS_BODY_ONLY = 8;
+    const unsigned long ENCODE_FLAGS_PREFORMATTED = 16;
+    const unsigned long ENCODE_FLAGS_WRAP = 32;
+    const unsigned long ENCODE_FLAGS_FORMAT_FLOWED = 64;
+    const unsigned long ENCODE_FLAGS_ABSOLUTE_LINKS = 128;
+    const unsigned long ENCODE_FLAGS_ENCODE_W3C_ENTITIES = 256;
+    const unsigned long ENCODE_FLAGS_CR_LINEBREAKS = 512;
+    const unsigned long ENCODE_FLAGS_LF_LINEBREAKS = 1024;
+    const unsigned long ENCODE_FLAGS_NOSCRIPT_CONTENT = 2048;
+    const unsigned long ENCODE_FLAGS_NOFRAMES_CONTENT = 4096;
+    const unsigned long ENCODE_FLAGS_ENCODE_BASIC_ENTITIES = 8192;
+    const unsigned long ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES = 16384;
+    const unsigned long ENCODE_FLAGS_ENCODE_HTML_ENTITIES = 32768;
+
+    attribute unsigned long persistFlags;
+    readonly attribute unsigned long currentState;
+    readonly attribute unsigned long result;
+    attribute nsIWebProgressListener progressListener;
+    
+    void saveURI(in nsIURI uri,
+                 in nsISupports cache_key,
+                 in nsIURI referrer,
+                 in nsIInputStream post_data,
+                 in string extra_headers,
+                 in nsIFile file);
+                 
+    void saveChannel(in nsIChannel channel,
+                     in nsISupports file);
+        
+    void saveDocument(in nsIDOMDocument document,
+                      in nsISupports file,
+                      in nsISupports data_path,
+                      in string output_content_type,
+                      in unsigned long encoding_flags,
+                      in unsigned long wrap_column);
+
+    void cancelSave();
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWebNavigation
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIURI;
+interface nsIInputStream;
+interface nsIDOMDocument;
+interface nsISHistory;
+
+[scriptable, uuid(f5d9e7b0-d930-11d3-b057-00a024ffc08c)]
+interface nsIWebNavigation : nsISupports
+{
+    readonly attribute boolean canGoBack;
+    readonly attribute boolean canGoForward;
+    
+    void goBack();
+    void goForward();
+    void gotoIndex(in long index);
+    
+    const unsigned long LOAD_FLAGS_MASK = 65535;
+    const unsigned long LOAD_FLAGS_NONE = 0;
+    const unsigned long LOAD_FLAGS_IS_REFRESH = 16;
+    const unsigned long LOAD_FLAGS_IS_LINK = 32;
+    const unsigned long LOAD_FLAGS_BYPASS_HISTORY = 64;
+    const unsigned long LOAD_FLAGS_REPLACE_HISTORY = 128;
+    const unsigned long LOAD_FLAGS_BYPASS_CACHE = 256;
+    const unsigned long LOAD_FLAGS_BYPASS_PROXY = 512;
+    const unsigned long LOAD_FLAGS_CHARSET_CHANGE = 1024;
+    const unsigned long LOAD_FLAGS_STOP_CONTENT = 2048;
+    const unsigned long LOAD_FLAGS_FROM_EXTERNAL = 4096;
+    const unsigned long STOP_NETWORK = 1;
+    const unsigned long STOP_CONTENT = 2;
+    const unsigned long STOP_ALL = 3;
+    
+    void loadURI(in wstring uri,
+                 in unsigned long load_flags,
+                 in nsIURI referrer,
+                 in nsIInputStream post_data,
+                 in nsIInputStream headers);
+
+    void reload(in unsigned long reload_flags);
+    void stop(in unsigned long stop_flags);
+    
+    readonly attribute nsIDOMDocument document;
+    readonly attribute nsIURI currentURI;
+    readonly attribute nsIURI referringURI;
+    attribute nsISHistory sessionHistory;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWindowCreator
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIWebBrowserChrome;
+
+[scriptable, uuid(30465632-a777-44cc-90f9-8145475ef999)]
+interface nsIWindowCreator : nsISupports
+{
+    nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome parent,
+                                           in unsigned long chrome_flags);
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIWindowWatcher
+///////////////////////////////////////////////////////////////////////////////
+
+
+interface nsIDOMWindow;
+interface nsIObserver;
+interface nsISimpleEnumerator;
+interface nsIAuthPrompt;
+interface nsIWebBrowserChrome;
+interface nsIPrompt;
+interface nsIWindowCreator;
+
+[scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
+interface nsIWindowWatcher : nsISupports
+{
+    nsIDOMWindow openWindow(in nsIDOMWindow parent,
+                            in string url,
+                            in string name,
+                            in string features,
+                            in nsISupports arguments);
+                            
+    void registerNotification(in nsIObserver observer);
+    void unregisterNotification(in nsIObserver observer);
+    
+    nsISimpleEnumerator getWindowEnumerator();
+    nsIPrompt getNewPrompter(in nsIDOMWindow parent);
+    nsIAuthPrompt getNewAuthPrompter(in nsIDOMWindow parent);
+    void setWindowCreator(in nsIWindowCreator creator);
+                            
+    nsIWebBrowserChrome getChromeForWindow(in nsIDOMWindow window);
+    
+    nsIDOMWindow getWindowByName(in wstring target_name,
+                                 in nsIDOMWindow current_window);
+                                 
+    attribute nsIDOMWindow activeWindow;
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  nsIXPCSecurityManager
+///////////////////////////////////////////////////////////////////////////////
+
+
+%{C++
+struct JSObject;
+typedef long jsval;
+%}
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+native JSVal(jsval);
+
+interface nsIClassInfo;
+interface nsIXPCNativeCallContext;
+
+[uuid(31431440-f1ce-11d2-985a-006008962422)]
+interface nsIXPCSecurityManager : nsISupports
+{
+    void CanCreateWrapper(
+                   in JSContextPtr js_context,
+                   in nsIIDRef iid,
+                   in nsISupports obj,
+                   in nsIClassInfo class_info,
+                   inout voidPtr policy);
+
+    void CanCreateInstance(
+                   in JSContextPtr js_context,
+                   in nsCIDRef cid);
+
+    void CanGetService(
+                   in JSContextPtr js_context,
+                   in nsCIDRef cid);
+
+    void CanAccess(in PRUint32 action,
+                   in nsIXPCNativeCallContext call_context,
+                   in JSContextPtr js_context,
+                   in JSObjectPtr js_object,
+                   in nsISupports obj,
+                   in nsIClassInfo class_info,
+                   in JSVal name,
+                   inout voidPtr policy);
+};
+
+
+
+interface nsIURI;
+
+
+[uuid(0575ea96-4561-4dc6-a818-3c4c97c2430d)]
+interface nsIPrincipal : nsISupports //nsISerializable
+{
+    // TODO: fill out (if necessary)
+    void placeholder();
+};
+
+
+
+[uuid(f4d74511-2b2d-4a14-a3e4-a392ac5ac3ff)]
+interface nsIScriptSecurityManager : nsIXPCSecurityManager
+{
+    void checkPropertyAccess(
+                      in JSContextPtr js_context,
+                      in JSObjectPtr js_object,
+                      in string class_name,
+                      in JSVal property,
+                      in PRUint32 action);
+
+    void checkConnect(in JSContextPtr js_context,
+                      in nsIURI target_uri,
+                      in string class_name,
+                      in string property);
+
+    void checkLoadURIFromScript(
+                      in JSContextPtr cx,
+                      in nsIURI uri);
+
+    void checkLoadURIWithPrincipal(
+                      in nsIPrincipal principal,
+                      in nsIURI uri, 
+                      in unsigned long flags);
+
+    void checkLoadURI(in nsIURI from,
+                      in nsIURI uri,
+                      in unsigned long flags);
+
+    void checkLoadURIStr(
+                      in AUTF8String from,
+                      in AUTF8String uri,
+                      in unsigned long flags);
+
+    void checkFunctionAccess(
+                      in JSContextPtr cx,
+                      in voidPtr fun_obj,
+                      in voidPtr target_obj);
+
+    boolean canExecuteScripts(
+                      in JSContextPtr cx,
+                      in nsIPrincipal principal);
+
+    nsIPrincipal getSubjectPrincipal();
+
+    nsIPrincipal getSystemPrincipal();
+
+    nsIPrincipal getCertificatePrincipal(
+                      in AUTF8String cert_fingerprint,
+                      in AUTF8String subject_name,
+                      in AUTF8String pretty_name,
+                      in nsISupports cert,
+                      in nsIURI uri);
+            
+    nsIPrincipal getCodebasePrincipal(in nsIURI uri);
+
+    short requestCapability(
+                      in nsIPrincipal principal,
+                      in string capability);
+
+    boolean isCapabilityEnabled(in string capability);
+    void enableCapability(in string capability);
+    void revertCapability(in string capability);
+    void disableCapability(in string capability);
+
+    void setCanEnableCapability(
+                      in AUTF8String certificate_id,
+                      in string capability,
+                      in short can_enable);
+
+    nsIPrincipal getObjectPrincipal(
+                      in JSContextPtr cx,
+                      in JSObjectPtr obj);
+
+    boolean subjectPrincipalIsSystem();
+
+    void checkSameOrigin(
+                      in JSContextPtr js_context,
+                      in nsIURI target_uri);
+
+    void checkSameOriginURI(
+                      in nsIURI source_uri,
+                      in nsIURI target_uri);
+
+    void checkSameOriginPrincipal(
+                      in nsIPrincipal source_principal,
+                      in nsIPrincipal target_principal);
+
+    nsIPrincipal getPrincipalFromContext(in JSContextPtr cx);
+
+    boolean securityCompareURIs(
+                      in nsIURI subject_uri,
+                      in nsIURI object_uri);
+};
+

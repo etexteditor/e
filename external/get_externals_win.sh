@@ -68,8 +68,6 @@ _extract_and_patch()
   patch -Np1 -d metakit < patches/metakit.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
-  patch wxwidgets/src/aui/auibook.cpp < patches/wxwidgets/auibook.cpp.patch
-  patch wxwidgets/include/wx/aui/auibook.h < patches/wxwidgets/auibook.h.patch
 
   # Copy msvc specific project files
   echo "Copying msvc specific project files..."

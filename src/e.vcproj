@@ -2370,6 +2370,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\eauibook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\eauibook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\EditorBundlePanel.cpp"
 			>
 		</File>

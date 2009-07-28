@@ -64,6 +64,7 @@
 #include "HtmlOutputPane.h"
 #include "Strings.h"
 #include "CurrentTabsPopup.h"
+#include "eauibook.h"
 
 #ifdef __WXMSW__
 	// For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -377,7 +378,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 								| wxAUI_NB_WINDOWLIST_BUTTON
 								| wxAUI_NB_MIDDLE_CLICK_CLOSE
 								| wxNO_BORDER;
-		m_tabBar = new wxAuiNotebook(panel, CTRL_TABBAR,
+		m_tabBar = new eAuiNotebook(panel, CTRL_TABBAR,
 									wxDefaultPosition,
 									wxSize(430,200),
 									notebook_style);

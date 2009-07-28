@@ -58,6 +58,7 @@ class StatusBar;
 class DirWatcher;
 class FindInProjectDlg;
 class HtmlOutputPane;
+class eAuiNotebook;
 
 class IEditorSearch;
 
@@ -396,7 +397,7 @@ private:
 	wxBoxSizer* box;
 	wxBoxSizer*	editorbox;
 	SearchPanel* m_searchPanel;
-	wxAuiNotebook* m_tabBar;
+	eAuiNotebook* m_tabBar;
 
 	// Menus
 	wxMenu* m_tabMenu;

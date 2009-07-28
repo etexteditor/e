@@ -64,8 +64,6 @@ _extract_and_patch()
   patch -Np0 -d webkit < patches/webkit/vis_hidden.patch
   patch -Np1 -d webkit < patches/webkit/cancelledError.patch
   patch -Np1 -d webkit < patches/webkit/local_sec.patch
-  patch wxwidgets/src/aui/auibook.cpp < patches/wxwidgets/auibook.cpp.patch
-  patch wxwidgets/include/wx/aui/auibook.h < patches/wxwidgets/auibook.h.patch
 }
 
 _next_steps()

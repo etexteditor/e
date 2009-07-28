@@ -1,7 +1,7 @@
 #include "eauibook.h"
 
-// This class is a workaround for not having access to
-// wxTabFrame which is defined in auibook.cpp
+// This class redefined here as a workaround for not having
+// access to the original wxTabFrame definition in auibook.cpp
 // Doing it like this is a fragile hack, but it lets us
 // avoid patching wxWidgets.
 class wxTabFrame : public wxWindow

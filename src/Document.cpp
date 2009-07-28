@@ -2346,7 +2346,11 @@ void Document::NewRevision() {
 
 	// Notify subscribers that we have created a new revision in this document
 	const doc_id new_rev = GetDocument();
-	if (do_notify) dispatcher.Notify(wxT("DOC_NEWREVISION"), &new_rev, 0);
+	if (do_notify) {
+		m_catalyst.UnLock();
+			dispatcher.Notify(wxT("DOC_NEWREVISION"), &new_rev, 0);
+		m_catalyst.ReLock();
+	}
 }
 
 // static notification handler

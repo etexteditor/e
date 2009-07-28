@@ -23,7 +23,7 @@ public:
 	virtual ~ShellContextMenu();
 
 	void SetObjects(const wxArrayString& strArray);
-	UINT ShowContextMenu(wxWindow* pWnd, wxPoint pt);
+	UINT ShowContextMenu(wxWindow* pWnd, wxPoint pt, bool showExtendedItems = false);
 
 	bool HookWndProc(UINT message, WPARAM wParam, LPARAM lParam, LRESULT& res);
 

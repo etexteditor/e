@@ -1206,6 +1206,8 @@ void ProjectPane::OnTreeContextMenu(wxTreeEvent& event) {
 	wxTreeItemId item = event.GetItem();
 	if (!item) return;
 
+	bool showExtendedItems = wxGetKeyState(WXK_SHIFT);
+
 	// Get the path of the item clicked
 	const DirItemData *data = (DirItemData*)m_prjTree->GetItemData(item);
 	const wxString& path = data->m_path;
@@ -1284,7 +1286,7 @@ void ProjectPane::OnTreeContextMenu(wxTreeEvent& event) {
 #ifdef __WXMSW__
 	m_contextMenu = new ShellContextMenu();
 	m_contextMenu->SetObjects(paths);
-	m_contextMenu->ShowContextMenu(this, screenPoint);
+	m_contextMenu->ShowContextMenu(this, screenPoint, showExtendedItems);
 	delete m_contextMenu;
 	m_contextMenu = NULL;
 #endif

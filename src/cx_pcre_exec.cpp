@@ -56,7 +56,7 @@ possible. There are also some static supporting functions. */
 #include "cx_pcre_internal.h"
 
 /* e text editor: memcmp that handles smart pointers */
-int memcmp(USPTR eptr, const unsigned char * charptr, size_t length) {
+int memcmp(USPTR& eptr, const unsigned char * charptr, size_t length) {
 	return eptr.compare(charptr, length);
 }
 

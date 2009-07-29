@@ -55,6 +55,11 @@ possible. There are also some static supporting functions. */
 
 #include "cx_pcre_internal.h"
 
+/* e text editor: memcmp that handles smart pointers */
+int memcmp(USPTR eptr, const unsigned char * charptr, size_t length) {
+	return eptr.compare(charptr, length);
+}
+
 /* Undefine some potentially clashing cpp symbols */
 
 #undef min
@@ -2340,8 +2345,7 @@ for (;;)
 
         for (i = 1; i <= min; i++)
           {
-          //if (memcmp(eptr, charptr, length) == 0) eptr += length;
-		  if (eptr.compare(charptr, length) == 0) eptr += length;
+          if (memcmp(eptr, charptr, length) == 0) eptr += length;
 #ifdef SUPPORT_UCP
           /* Need braces because of following else */
           else if (oclength == 0) { RRETURN(MATCH_NOMATCH); }
@@ -2364,8 +2368,7 @@ for (;;)
             RMATCH(eptr, ecode, offset_top, md, ims, eptrb, 0, RM22);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (fi >= max || eptr >= md->end_subject) RRETURN(MATCH_NOMATCH);
-            //if (memcmp(eptr, charptr, length) == 0) eptr += length;
-			if (eptr.compare(charptr, length) == 0) eptr += length;
+            if (memcmp(eptr, charptr, length) == 0) eptr += length;
 #ifdef SUPPORT_UCP
             /* Need braces because of following else */
             else if (oclength == 0) { RRETURN(MATCH_NOMATCH); }
@@ -2387,8 +2390,7 @@ for (;;)
           for (i = min; i < max; i++)
             {
             if (eptr > md->end_subject - length) break;
-            //if (memcmp(eptr, charptr, length) == 0) eptr += length;
-			if (eptr.compare(charptr, length) == 0) eptr += length;
+            if (memcmp(eptr, charptr, length) == 0) eptr += length;
 #ifdef SUPPORT_UCP
             else if (oclength == 0) break;
             else

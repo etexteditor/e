@@ -21,7 +21,7 @@
 #include "eSettings.h"
 #include "Execute.h"
 #include "pcre.h"
-#include "WebConnect/webcontrol.h"
+#include "webconnect/webcontrol.h"
 #include "eApp.h"
 
 #if defined (__WXMSW__)

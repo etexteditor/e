@@ -183,6 +183,11 @@ void eSettings::AddRecentProject(const wxString& path) {
 	AddToRecent(path, recentProjects, 10);
 }
 
+void eSettings::AddRecentDiff(const wxString& path, SubPage sp) {
+	wxJSONValue& recentProjects = (sp == SP_LEFT) ? m_jsonRoot[wxT("recentDiffsLeft")] : m_jsonRoot[wxT("recentDiffsRight")];
+	AddToRecent(path, recentProjects, 10);
+}
+
 void eSettings::GetRecentFiles(wxArrayString& recentfiles) const {
 	const wxJSONValue recents = m_jsonRoot.ItemAt(wxT("recentFiles"));
 	GetRecents(recents, recentfiles);
@@ -191,6 +196,11 @@ void eSettings::GetRecentFiles(wxArrayString& recentfiles) const {
 void eSettings::GetRecentProjects(wxArrayString& recentprojects) const {
 	const wxJSONValue recents = m_jsonRoot.ItemAt(wxT("recentProjects"));
 	GetRecents(recents, recentprojects);
+}
+
+void eSettings::GetRecentDiffs(wxArrayString& recentdiffs, SubPage sp) const {
+	const wxJSONValue recents = (sp == SP_LEFT) ? m_jsonRoot.ItemAt(wxT("recentDiffsLeft")) : m_jsonRoot.ItemAt(wxT("recentDiffsRight"));
+	GetRecents(recents, recentdiffs);
 }
 
 void eSettings::AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max) {

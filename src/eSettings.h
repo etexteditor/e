@@ -64,6 +64,10 @@ public:
 	void DeletePageSettings(size_t page_id);
 	void DeleteAllPageSettings();
 
+	// Recent Diffs
+	void AddRecentDiff(const wxString& path, SubPage sp);
+	void GetRecentDiffs(wxArrayString& recentprojectsh, SubPage sp) const;
+
 	// Remote profiles
 	size_t GetRemoteProfileCount() const;
 	wxString GetRemoteProfileName(size_t profile_id) const;

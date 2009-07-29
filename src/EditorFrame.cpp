@@ -2386,7 +2386,7 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuCompareFiles(wxCommandEvent& WXUNUSED(event)) {
-	CompareDlg dlg(this);
+	CompareDlg dlg(this, m_settings);
 	if (dlg.ShowModal() != wxID_OK) return;
 
 	DiffPanel* diff = new DiffPanel(m_tabBar, *this, m_catalyst, bitmap);

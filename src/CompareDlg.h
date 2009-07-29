@@ -20,10 +20,11 @@
 #endif
 
 class wxFilePickerCtrl;
+class eSettings;
 
 class CompareDlg : public wxDialog {
 public:
-	CompareDlg(wxWindow *parent);
+	CompareDlg(wxWindow *parent, eSettings& settings);
 
 	// Access to file paths
 	wxString GetLeftPath() const;
@@ -34,10 +35,14 @@ public:
 private:
 	// Event handlers
 	void OnButtonOk(wxCommandEvent& evt);
+	void OnBrowseLeft(wxCommandEvent& evt);
+	void OnBrowseRight(wxCommandEvent& evt);
 	DECLARE_EVENT_TABLE();
 
-	wxFilePickerCtrl* m_leftPathCtrl;
-	wxFilePickerCtrl* m_rightPathCtrl;
+	wxComboBox* m_leftPathCtrl;
+	wxComboBox* m_rightPathCtrl;
+
+	eSettings& m_settings;
 };
 
 #endif // __COMPAREDLG_H__

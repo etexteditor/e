@@ -72,8 +72,8 @@ BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLo
   m_remoteThread(remoteThread), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler->GetPListHandler()),
   m_allBundlesReceived(false), m_needBundleReload(false)
 {
-	m_repositories.push_back(RepoInfo(wxT("review mm"), wxT("http://macromates.com/svn/Bundles/trunk/Review/Bundles/")));
-	m_repositories.push_back(RepoInfo(wxT("macromates"), wxT("http://macromates.com/svn/Bundles/trunk/Bundles/")));
+	m_repositories.push_back(RepoInfo(wxT("review mm"), wxT("http://svn.textmate.org/trunk/Review/Bundles/")));
+	m_repositories.push_back(RepoInfo(wxT("macromates"), wxT("http://svn.textmate.org/trunk/Bundles/")));
 	m_repositories.push_back(RepoInfo(wxT("ebundles"), wxT("http://ebundles.googlecode.com/svn/trunk/Bundles/")));
 
 	wxImageList* imageList = new wxImageList(16, 16, true, 0);

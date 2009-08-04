@@ -133,7 +133,7 @@ void FixedLine::UpdateFont() {
 
 unsigned int FixedLine::SetLine(unsigned int startpos, unsigned int endpos, bool cache) {
 	m_docLen = m_doc.GetLength();
-
+/*
 #ifdef __WXDEBUG__
 	wxASSERT(!m_inSetLine); // re-entrancy check
 	m_inSetLine = true;
@@ -156,7 +156,7 @@ unsigned int FixedLine::SetLine(unsigned int startpos, unsigned int endpos, bool
 		wxASSERT(c == wxT('\n'));
 	}
 #endif
-
+*/
 	if (!cache || startpos != textstart || endpos != textend) {
 		textstart = startpos;
 		textend = endpos;

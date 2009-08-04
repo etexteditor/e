@@ -77,8 +77,9 @@ void CurrentTabsPopup::OnShow(wxShowEvent& WXUNUSED(event)) {
 	m_list->SetFocus();
 	m_list->SetSelectedRow(0);
 
-	for (int i = 0; i < CurrentTabsPopup::ColumnCount; i++)
-		m_list->SetColumnWidth(i, wxLIST_AUTOSIZE);
+	m_list->SetColumnWidth(0, wxLIST_AUTOSIZE); // '#'
+	m_list->SetColumnWidth(1, wxLIST_AUTOSIZE); // 'Filename'
+	m_list->SetColumnWidth(2, wxLIST_AUTOSIZE_USEHEADER); // 'Path'
 }
 
 CurrentTabsPopup::CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo):

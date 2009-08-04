@@ -28,7 +28,7 @@ DiffMarkBar::DiffMarkBar(wxWindow* parent, const vector<DiffBar::LineMatch>& lin
 void DiffMarkBar::DrawLayout(wxDC& dc) {
 	const wxSize size = GetClientSize();
 	Lines& lines = m_editor->GetLines();
-	const unsigned int docY = lines.GetHeight();
+	const unsigned int lineCount = lines.GetLineCount();
 
 	// We have to adjust for the up and down buttons on the scrollbar
 	const unsigned int scrollArrowY = m_editor->HasScrollbar() ? wxSystemSettings::GetMetric(wxSYS_VSCROLL_ARROW_Y) : 0;
@@ -41,19 +41,16 @@ void DiffMarkBar::DrawLayout(wxDC& dc) {
 	for (std::vector<DiffBar::LineMatch>::const_iterator p = m_lineMatches.begin(); p != m_lineMatches.end(); ++p) {
 		const unsigned int start = m_isLeft ? p->left_start : p->right_start;
 		const unsigned int end = m_isLeft ? p->left_end : p->right_end;
-		const unsigned int top = lines.GetYPosFromLine(start);
-		const unsigned int bottom = (start != end) ? lines.GetBottomYPosFromLine(end-1) : top;
 
 		// Calculate relative positions
-		const unsigned int y = scrollArrowY + ((top * sizeY) / docY);
-		const unsigned int linesHeight = bottom - top;
-		const unsigned int height = linesHeight ? wxMax(sizeY / ( docY / linesHeight), 1) : 1;
+		const unsigned int y = (sizeY * start) / lineCount;
+		const unsigned int height = (start < end) ? (((sizeY * end) / lineCount) - y) : 1;
 
 		const cxChangeType type = m_isLeft ? p->left_type : p->right_type;
 		dc.SetBrush(type == cxDELETION ? m_delColor : m_insColor);
 		dc.SetPen(type == cxDELETION ? m_delBorder : m_insBorder);
 
-		dc.DrawRectangle(0, y, size.x, height);
+		dc.DrawRectangle(0, scrollArrowY + y, size.x, height);
 	}
 }
 

@@ -2765,8 +2765,9 @@ void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
 		wxFileName tabPath = page->GetFilePath();
 
 		wxString relativePath = wxT("");
+		const wxString path = tabPath.GetPath();
 
-		if (this->HasProject()) {
+		if (this->HasProject() && path.StartsWith(rootPath)) {
 			// Get relative path
 			tabPath.MakeRelativeTo(rootPath);
 

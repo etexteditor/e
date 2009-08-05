@@ -1326,9 +1326,11 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 	
 	// On atomic saves we just ignore any changes
 	if (path.EndsWith(wxT(".etmp"))) {
-		if (changeType == DIRWATCHER_FILE_ADDED) m_atomicPath = path.substr(0, path.size()-5);
+		if (changeType == DIRWATCHER_FILE_ADDED) {
+			m_atomicPath = path.substr(0, path.size()-5);
+			return;
+		}
 		else if (changeType == DIRWATCHER_FILE_RENAMED) m_atomicPath.clear(); // atomic save done
-		return;
 	}
 	if (changeType == DIRWATCHER_FILE_REMOVED && path == m_atomicPath) return;
 	

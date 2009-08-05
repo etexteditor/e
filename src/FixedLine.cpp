@@ -17,6 +17,7 @@
 #include "Document.h"
 #include "tmTheme.h"
 #include "styler.h"
+#include "Utf.h"
 
 // Initialize static variables
 wxString FixedLine::s_text;
@@ -204,9 +205,9 @@ unsigned int FixedLine::SetLine(unsigned int startpos, unsigned int endpos, bool
 					// Get extends for current segment
 					m_extsBuf.clear();
 					const unsigned int seg_len = style_start-lastpos;
-					const wxString text(dbi+lastpos, wxConvUTF8, seg_len);
-					dc.GetPartialTextExtents(text, m_extsBuf);
-					wxASSERT(!text.empty() && m_extsBuf.size() == text.size());
+					ConvertFromUTF8toString(dbi+lastpos, seg_len, m_textBuf);
+					dc.GetPartialTextExtents(m_textBuf, m_extsBuf);
+					wxASSERT(!m_textBuf.empty() && m_extsBuf.size() == m_textBuf.size());
 
 					// Add to main list adjusted for offset
 					unsigned int extpos = 0;
@@ -248,9 +249,9 @@ unsigned int FixedLine::SetLine(unsigned int startpos, unsigned int endpos, bool
 			// Get extends for current segment
 			m_extsBuf.clear();
 			const unsigned int seg_len = m_lineLen-lastpos;
-			const wxString text(dbi+lastpos, wxConvUTF8, seg_len);
-			dc.GetPartialTextExtents(text, m_extsBuf);
-			wxASSERT(!text.empty() && m_extsBuf.size() == text.size());
+			ConvertFromUTF8toString(dbi+lastpos, seg_len, m_textBuf);
+			dc.GetPartialTextExtents(m_textBuf, m_extsBuf);
+			wxASSERT(!m_textBuf.empty() && m_extsBuf.size() == m_textBuf.size());
 
 			// Add to main list adjusted for offset
 			unsigned int extpos = 0;
@@ -724,12 +725,12 @@ unsigned int FixedLine::DrawText(int xoffset, int x, int y, unsigned int start, 
 		const unsigned int segend = start + seglen;
 
 		const unsigned int extent = start ? m_extents[segend-1] - m_extents[start-1] : m_extents[segend-1];
-		const wxString text(buf + start, wxConvUTF8, seglen);
-		dc.FastDrawText(text, xpos, y, extent, charheight);
+		ConvertFromUTF8toString(buf + start, seglen, m_textBuf);
+		dc.FastDrawText(m_textBuf, xpos, y, extent, charheight);
 	}
 	else {
-		const wxString text(buf + start, wxConvUTF8, end-start);
-		dc.FastDrawText(text, xpos, y, full_extent, charheight);
+		ConvertFromUTF8toString(buf + start, end-start, m_textBuf);
+		dc.FastDrawText(m_textBuf, xpos, y, full_extent, charheight);
 	}
 
 	return full_extent;

@@ -97,3 +97,16 @@ size_t ConvertToUTF8(const char* source, const size_t source_len, const wxMBConv
 
 	return utf8_len;
 }
+
+size_t ConvertFromUTF8toString(const wxCharBuffer& utf8_buff, size_t utf8_buff_len, wxString& text) { // static
+	// The length can never be longer in widechars than the bytecount in the uft8
+	wxChar* buff = text.GetWriteBuf(utf8_buff_len);
+
+	// Convert to widechar
+	const size_t wchar_len = wxConvUTF8.MB2WC(buff, utf8_buff, utf8_buff_len);
+	if (wchar_len == (size_t)-1) return (size_t)-1; // invalid conversion
+
+	text.UngetWriteBuf(wchar_len);
+
+	return wchar_len;
+}

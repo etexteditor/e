@@ -97,6 +97,7 @@ private:
 	wxCharBuffer m_lineBuffer;
 	unsigned int m_lineBufferLen;
 	unsigned int m_lineWidth; // full width when no word-wrap
+	wxString m_textBuf;
 	vector<unsigned int> m_extents;
 	wxArrayInt m_extsBuf;
 	int width;

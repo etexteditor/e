@@ -1,3 +1,33 @@
+5-aug-2009 - 1.0.38
+  o When holding down shift and right-clicking the project
+    pane, it will show context menu with extended verbs [adamv]
+    
+  o Updated regex engine to PCRE 7.9
+  
+  o Added basic support for Mozilla based rendering in
+    web preview (needs XULRunner installed).
+    
+  o Added dropdown history for compared files.
+  
+  o Updated Bundle Manager to use the new (moved) macromate
+    repositories.
+    
+  o Path field in Tab Popup now extend to rest of dialog.
+  
+  o Only show relative path in tab popup if file is actually
+    in project.
+    
+  o Reinstated esc cancel snippet as completion can also be
+    triggered with Ctrl-Space.
+    
+  o Added settings to disable atomic save.
+  
+  o Added setting to make Ctrl-Tab go to last active tab.
+  
+  o Fixed detection of creation of new files in projectpane.
+  
+  o Lots of minor bugfixes and performance improvements.
+
 24-july-2009 - 1.0.37a
   o Returned to older build method for release build (had
     been changed to make it easier to make relase builds

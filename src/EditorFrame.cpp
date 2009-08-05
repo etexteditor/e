@@ -2708,14 +2708,21 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 	event.Skip();
 }
 
-void EditorFrame::OnMenuNextTab(wxCommandEvent& WXUNUSED(event)) {
-#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
+void EditorFrame::OnMenuNextTab(wxCommandEvent& evt) {
+	// The user may have configured it to go to last active tab
+	bool gotoLastTab = false;
+	m_settings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
+	if (gotoLastTab) {
+		OnMenuLastTab(evt);
+		return;
+	}
+
+	// Go to next tab
 	const unsigned int tabCount = m_tabBar->GetPageCount();
 	if (tabCount <= 1) return;
 
 	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
 	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
-#endif
 }
 
 void EditorFrame::OnMenuLastTab(wxCommandEvent& WXUNUSED(event)) {

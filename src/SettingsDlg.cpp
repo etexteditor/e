@@ -45,6 +45,8 @@ enum {
 	CTRL_SHOWMARGIN,
 	CTRL_WRAPMARGIN,
 	CTRL_MARGINSPIN,
+	CTRL_ATOMICSAVE,
+	CTRL_LASTTAB,
 	CTRL_LINEENDING,
 	CTRL_ENCODING,
 	CTRL_BOM,
@@ -65,6 +67,8 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_CHECKBOX(CTRL_SHOWMARGIN, SettingsDlg::OnCheckShowMargin)
 	EVT_CHECKBOX(CTRL_WRAPMARGIN, SettingsDlg::OnCheckWrapMargin)
 	EVT_CHECKBOX(CTRL_AUTOUPDATE, SettingsDlg::OnCheckCheckForUpdates)
+	EVT_CHECKBOX(CTRL_ATOMICSAVE, SettingsDlg::OnCheckAtomicSave)
+	EVT_CHECKBOX(CTRL_LASTTAB, SettingsDlg::OnCheckLastTab)
 	EVT_SPINCTRL(CTRL_MARGINSPIN, SettingsDlg::OnMarginSpin) 
 	EVT_COMBOBOX(CTRL_LINEENDING, SettingsDlg::OnComboEol)
 	EVT_COMBOBOX(CTRL_ENCODING, SettingsDlg::OnComboEncoding)
@@ -172,6 +176,8 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	wxCheckBox* showMargin = new wxCheckBox(settingsPage, CTRL_SHOWMARGIN, _("Show margin line"));
 	m_marginSpin = new wxSpinCtrl(settingsPage, CTRL_MARGINSPIN, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 500, 80);
 	m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
+	wxCheckBox* atomicSave = new wxCheckBox(settingsPage, CTRL_ATOMICSAVE, _("Atomic Save"));
+	wxCheckBox* lastTab = new wxCheckBox(settingsPage, CTRL_LASTTAB, _("Go to last active tab on Ctrl-Tab"));
 
 	wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
 		settingsSizer->Add(autoPair, 0, wxALL, 5);
@@ -183,6 +189,8 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 			marginSizer->Add(m_marginSpin);
 			settingsSizer->Add(marginSizer);
 		settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
+		settingsSizer->Add(atomicSave, 0, wxALL, 5);
+		settingsSizer->Add(lastTab, 0, wxALL, 5);
 	settingsPage->SetSizer(settingsSizer);
 
 	// Settings defaults.
@@ -192,6 +200,8 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	bool doCheckChange = true;
 	bool doShowMargin = false;
 	bool doWrapMargin = false;
+	bool noAtomicSave = false;
+	bool doLastTab = false;
 	int marginChars = 80;  
 
 	m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
@@ -201,6 +211,8 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	m_settings.GetSettingBool(wxT("showMargin"), doShowMargin);
 	m_settings.GetSettingBool(wxT("wrapMargin"), doWrapMargin);
 	m_settings.GetSettingInt(wxT("marginChars"), marginChars);
+	m_settings.GetSettingBool(wxT("disable_atomic_save"), noAtomicSave);
+	m_settings.GetSettingBool(wxT("gotoLastTab"), doLastTab);
 
 	// Update ctrls
 	autoPair->SetValue(doAutoPair);
@@ -214,6 +226,8 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 		m_marginSpin->Disable();
 		m_wrapMargin->Disable();
 	}
+	atomicSave->SetValue(!noAtomicSave);
+	lastTab->SetValue(doLastTab);
 
 	return settingsPage;
 }
@@ -541,4 +555,12 @@ void SettingsDlg::OnCheckCheckChange(wxCommandEvent& event) {
 
 void SettingsDlg::OnCheckCheckForUpdates(wxCommandEvent& event) {
 	m_settings.SetSettingBool(wxT("checkForUpdates"), event.IsChecked());
+}
+
+void SettingsDlg::OnCheckAtomicSave(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("disable_atomic_save"), !event.IsChecked());
+}
+
+void SettingsDlg::OnCheckLastTab(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("gotoLastTab"), event.IsChecked());
 }

@@ -80,8 +80,8 @@ private:
 	struct StyleSR {
 		unsigned int start;
 		unsigned int end;
-		wxColour foregroundcolor;
-		wxColour backgroundcolor;
+		const wxColour* foregroundcolor;
+		const wxColour* backgroundcolor;
 		int fontStyle;
 		bool show_hidden;
 	};

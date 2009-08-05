@@ -20,15 +20,15 @@ StyleRun::StyleRun(const tmTheme& theme, FastDC& dc):
 	m_theme(theme), m_dc(dc), m_enableBold(true), m_printMode(false)
 {
 	// Initialize default style
-	m_default_style.foregroundcolor = m_theme.foregroundColor;
-	m_default_style.backgroundcolor = wxNullColour;
+	m_default_style.foregroundcolor = &m_theme.foregroundColor;
+	m_default_style.backgroundcolor = NULL;
 	m_default_style.fontStyle = wxFONTFLAG_DEFAULT;
 	m_default_style.show_hidden = false;
 }
 
 void StyleRun::SetPrintMode() {
-	m_default_style.foregroundcolor = *wxBLACK;
-	m_default_style.backgroundcolor = wxNullColour;
+	m_default_style.foregroundcolor = wxBLACK;
+	m_default_style.backgroundcolor = NULL;
 	m_default_style.fontStyle = wxFONTFLAG_DEFAULT;
 	m_default_style.show_hidden = false;
 	m_printMode = true;
@@ -37,7 +37,7 @@ void StyleRun::SetPrintMode() {
 void StyleRun::Init(unsigned int start, unsigned int end) {
 	if (!m_printMode) {
 		// Update default style (theme may have changed)
-		m_default_style.foregroundcolor = m_theme.foregroundColor;
+		m_default_style.foregroundcolor = &m_theme.foregroundColor;
 	}
 
 	// Initialize run (fully spanned by default style)
@@ -65,16 +65,16 @@ void StyleRun::ApplyStyle(unsigned int style_id) const {
 	const StyleSR& s = m_styles[style_id];
 
 	// Foreground Color
-	if (s.foregroundcolor != wxNullColour) {
-		m_dc.SetTextForeground(s.foregroundcolor);
+	if (s.foregroundcolor) {
+		m_dc.SetTextForeground(*s.foregroundcolor);
 	}
 
 	// Background Color
-	if (s.backgroundcolor == m_theme.backgroundColor) {
+	if (s.backgroundcolor && *s.backgroundcolor == m_theme.backgroundColor) {
 		m_dc.SetBackgroundMode(wxTRANSPARENT);
 	}
-	else if (s.backgroundcolor != wxNullColour) {
-		m_dc.SetTextBackground(s.backgroundcolor);
+	else if (s.backgroundcolor) {
+		m_dc.SetTextBackground(*s.backgroundcolor);
 		m_dc.SetBackgroundMode(wxSOLID);
 	}
 	else {
@@ -104,7 +104,7 @@ bool StyleRun::DoExtendBgAtPos(unsigned int pos) const {
 		const StyleSR& sr = m_styles[i];
 
 		if (pos >= sr.start && pos < sr.end) {
-			const wxColour& bgcolor = sr.backgroundcolor;
+			const wxColour& bgcolor = *sr.backgroundcolor;
 			if (bgcolor.Ok() && bgcolor == m_extendBgColor) return true;
 			break;
 		}
@@ -121,7 +121,7 @@ void StyleRun::SetForegroundColor(unsigned int start, unsigned int end, const wx
 		if (start == m_styles[i].start) {
 
 			if (m_styles[i].end <= end) {
-				m_styles[i].foregroundcolor = color;
+				m_styles[i].foregroundcolor = &color;
 
 				start = m_styles[i].end;
 				if (start == end) break;
@@ -130,7 +130,7 @@ void StyleRun::SetForegroundColor(unsigned int start, unsigned int end, const wx
 				// We have to split the style (and change first part)
 				m_styles.insert(m_styles.begin()+i+1, m_styles[i]);
 				m_styles[i].end = end;
-				m_styles[i].foregroundcolor = color;
+				m_styles[i].foregroundcolor = &color;
 				m_styles[i+1].start = end;
 				break;
 			}
@@ -154,7 +154,7 @@ void StyleRun::SetBackgroundColor(unsigned int start, unsigned int end, const wx
 		wxASSERT(start == end);
 		m_styles.insert(m_styles.end(), m_styles.back());
 		m_styles.back().start = start;
-		m_styles.back().backgroundcolor = color;
+		m_styles.back().backgroundcolor = &color;
 		return;
 	}
 
@@ -165,7 +165,7 @@ void StyleRun::SetBackgroundColor(unsigned int start, unsigned int end, const wx
 
 			if (s.end <= end) {
 				// style fully spanned
-				s.backgroundcolor = color;
+				s.backgroundcolor = &color;
 
 				start = s.end;
 				if (start == end) break;
@@ -174,7 +174,7 @@ void StyleRun::SetBackgroundColor(unsigned int start, unsigned int end, const wx
 				// We have to split the style (and change first part)
 				m_styles.insert(m_styles.begin()+i+1, m_styles[i]);
 				m_styles[i].end = end;
-				m_styles[i].backgroundcolor = color;
+				m_styles[i].backgroundcolor = &color;
 				m_styles[i+1].start = end;
 				break;
 			}

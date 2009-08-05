@@ -669,7 +669,10 @@ bool EditorCtrl::Show(bool show) {
 
 	// All EditorCtrl's share the same bitmap.
 	// So we have to redraw it when the control is first shown
-	if (show) DrawLayout();
+	if (show) {
+		mdc.SelectObject(bitmap);
+		DrawLayout();
+	}
 	else mdc.SelectObject(wxNullBitmap);
 
 	return result;
@@ -878,11 +881,14 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 
 		// Resize bitmap
 		bitmap = wxBitmap(size.x, size.y);
+		mdc.SelectObject(bitmap);
 	}
 
-	// We always have to reselect the bitmap, otherwise the memorydc
-	// will get confused if it has been resized in another editorCtrl
-	mdc.SelectObject(bitmap);
+	// We always have to reselect the bitmap if it has been resized
+	// by another editorCtrl. Otherwise the memorydc will get confused.
+	if (mdc.GetSize() != wxSize(bitmap.GetWidth(), bitmap.GetHeight())) {
+		mdc.SelectObject(bitmap);
+	}
 
 	// Verify scrollPos (might come from an un-updated scrollbar)
 	if (scrollPos < 0) {

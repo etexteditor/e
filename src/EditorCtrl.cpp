@@ -6366,7 +6366,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_ESCAPE:
-				if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
+				if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
+				else if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
 				else DoCompletion();
 				break;
 

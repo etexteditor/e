@@ -176,7 +176,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	wxCheckBox* showMargin = new wxCheckBox(settingsPage, CTRL_SHOWMARGIN, _("Show margin line"));
 	m_marginSpin = new wxSpinCtrl(settingsPage, CTRL_MARGINSPIN, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 500, 80);
 	m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
-	wxCheckBox* atomicSave = new wxCheckBox(settingsPage, CTRL_ATOMICSAVE, _("Atomic Save"));
+	wxCheckBox* atomicSave = new wxCheckBox(settingsPage, CTRL_ATOMICSAVE, _("Atomic save"));
 	wxCheckBox* lastTab = new wxCheckBox(settingsPage, CTRL_LASTTAB, _("Go to last active tab on Ctrl-Tab"));
 
 	wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);

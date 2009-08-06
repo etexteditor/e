@@ -81,7 +81,7 @@ END_EVENT_TABLE()
 PreviewDlg::PreviewDlg(EditorFrame& parent)
 :  wxPanel (&parent),
    m_parent(parent), m_editorCtrl(NULL), m_thread(NULL), m_isOnPreview(true), m_isFirst(false),
-   m_pinnedEditor(NULL), m_re_style(NULL), m_re_href(NULL) {
+   m_pinnedEditor(NULL), m_re_style(NULL), m_re_href(NULL), m_webcontrol(NULL) {
 
 	// Adressbar ctrl
 	m_backButton = new wxBitmapButton(this, ID_BACK, wxBitmap(left_arrow_xpm), wxDefaultPosition, wxDefaultSize, 0);

@@ -31,4 +31,6 @@ size_t ConvertFromUTF8(const wxCharBuffer& utf8_buff, const wxMBConv& conv, wxWC
 
 size_t ConvertFromUTF8toString(const wxCharBuffer& utf8_buff, size_t utf8_buff_len, wxString& text);
 
+size_t UTF8ToWChar(wchar_t *dst, size_t dstLen, const char *src, size_t srcLen);
+
 #endif // __UTF_H__

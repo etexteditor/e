@@ -59,6 +59,8 @@ class DirWatcher;
 class FindInProjectDlg;
 class HtmlOutputPane;
 class eAuiNotebook;
+class DiffDirPane;
+class DiffPanel;
 
 class IEditorSearch;
 
@@ -103,6 +105,7 @@ public:
 	virtual bool OpenFile(const wxFileName& path, wxFontEncoding enc=wxFONTENCODING_SYSTEM, const wxString& mate=wxEmptyString);
 	virtual bool OpenRemoteFile(const wxString& url, const RemoteProfile* rp=NULL);
 	virtual void UpdateRenamedFile(const wxFileName& path, const wxFileName& newPath);
+	void Compare(const wxString& leftPath, const wxString& rightPath);
 
 	virtual bool OpenTxmtUrl(const wxString& url);
 	bool AskToSaveMulti(int keep_tab=-1);
@@ -191,6 +194,7 @@ private:
 
 	EditorCtrl* GetEditorCtrlFromPage(size_t page_idx);
 	EditorCtrl* GetEditorCtrlFromFile(const wxString& filepath, unsigned int& page_idx);
+	DiffPanel* GetDiffPaneFromFiles(const wxString& path1, const wxString& path2, unsigned int& page_idx) const;
 
 	// Menu & statusdbar handling
 	wxMenu* GetBundleMenu();
@@ -220,6 +224,7 @@ private:
 	// Projects
 	void ShowProjectPane(const wxString& project);
 	void ShowBundlePane();
+	void ShowDiffPane(const wxString& path1, const wxString& path2);
 
 	// Embedded class: FrameDropTarget
 	class FrameDropTarget : public wxFileDropTarget {
@@ -414,6 +419,7 @@ private:
 	HtmlOutputPane* m_outputPane;
 	ProjectPane* m_projectPane;
 	BundlePane* m_bundlePane;
+	DiffDirPane* m_diffPane;
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
 

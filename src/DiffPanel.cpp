@@ -118,6 +118,23 @@ void DiffPanel::SetDiff(const wxString& leftPath, const wxString& rightPath) {
 	m_diffBar->SetDiff();
 }
 
+bool DiffPanel::CmpPaths(const wxString& path1, const wxString& path2) const {
+#ifdef __WXMSW__
+	// paths on windows are case-insensitive
+	if (path1.CmpNoCase(m_leftEditor->GetPath()) == 0 &&
+		path2.CmpNoCase(m_rightEditor->GetPath()) == 0) return true;
+	if (path2.CmpNoCase(m_leftEditor->GetPath()) == 0 &&
+		path1.CmpNoCase(m_rightEditor->GetPath()) == 0) return true;
+#else
+	if (path1 == m_leftEditor->GetPath() &&
+		path2 == m_rightEditor->GetPath()) return true;
+	if (path2 == m_leftEditor->GetPath() &&
+		path1 == m_rightEditor->GetPath()) return true;
+#endif
+
+	return false;
+}
+
 void DiffPanel::UpdateMarkBars() {
 	m_leftMarkBar->Refresh();
 	m_rightMarkBar->Refresh();

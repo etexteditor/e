@@ -33,10 +33,13 @@ public:
 	void SetRightPath(const wxString& path);
 
 private:
+	void UpdateOkButton();
+
 	// Event handlers
 	void OnButtonOk(wxCommandEvent& evt);
 	void OnBrowseLeft(wxCommandEvent& evt);
 	void OnBrowseRight(wxCommandEvent& evt);
+	void OnPathChanged(wxCommandEvent& evt);
 	DECLARE_EVENT_TABLE();
 
 	wxComboBox* m_leftPathCtrl;

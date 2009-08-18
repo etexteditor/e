@@ -38,6 +38,7 @@ public:
 	bool Show(bool show=true);
 
 	void SetDiff(const wxString& leftPath, const wxString& rightPath);
+	bool CmpPaths(const wxString& path1, const wxString& path2) const;
 	void UpdateMarkBars();
 
 	virtual void SaveSettings(unsigned int i, eSettings& settings);

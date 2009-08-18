@@ -2146,6 +2146,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\DiffDirPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\DiffDirPane.h"
+			>
+		</File>
+		<File
 			RelativePath=".\DiffMarkBar.cpp"
 			>
 		</File>

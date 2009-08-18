@@ -65,6 +65,7 @@
 #include "Strings.h"
 #include "CurrentTabsPopup.h"
 #include "eauibook.h"
+#include "DiffDirPane.h"
 
 #ifdef __WXMSW__
 	// For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -334,7 +335,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	m_syntax_handler(syntax_handler),
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
-	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL),
+	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
 	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
@@ -567,7 +568,7 @@ void EditorFrame::InitMenus() {
 	wxMenu *fileMenu = new wxMenu;
 	fileMenu->Append(wxID_NEW, _("&New\tCtrl+N"), _("New File"));
 	fileMenu->Append(wxID_OPEN, _("&Open...\tCtrl+O"), _("Open File"));
-	fileMenu->Append(MENU_DIFF, _("&Compare Files..."), _("Compare Files"));
+	fileMenu->Append(MENU_DIFF, _("&Compare..."), _("Compare..."));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_SAVE, _("&Save\tCtrl+S"), _("Save File"));
 	fileMenu->Append(wxID_SAVEAS, _("Save &As...\tCtrl-Shift-S"), _("Save File as"));
@@ -1646,6 +1647,7 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 	if (projectPane.window != m_projectPane) {
 		projectPane.Window(m_projectPane);
 		if (m_bundlePane) m_bundlePane->Hide();
+		if (m_diffPane) m_diffPane->Hide();
 	}
 	projectPane.Show();
 	m_frameManager.Update();
@@ -1673,6 +1675,7 @@ void EditorFrame::ShowBundlePane() {
 		if (projectPane.window != m_bundlePane) {
 			projectPane.Window(m_bundlePane);
 			if (m_projectPane) m_projectPane->Hide();
+			if (m_diffPane) m_diffPane->Hide();
 		}
 
 		projectPane.Show();
@@ -1689,6 +1692,26 @@ void EditorFrame::ShowBundlePane() {
 	m_settings.SetSettingBool(wxT("showproject"), showPane);
 	if (showPane) m_settings.SetSettingString(wxT("project"), wxT("cx:bundles"));
 }
+
+void EditorFrame::ShowDiffPane(const wxString& path1, const wxString& path2) {
+	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
+	projectPane.Caption(_("Compare"));
+
+	if (!m_diffPane) m_diffPane = new DiffDirPane(*this);
+
+	if (projectPane.window != m_diffPane) {
+		projectPane.Window(m_diffPane);
+
+		if (m_projectPane) m_projectPane->Hide();
+		if (m_bundlePane) m_bundlePane->Hide();
+	}
+
+	m_diffPane->SetDiff(path1, path2);
+
+	projectPane.Show();
+	m_frameManager.Update();
+}
+
 
 void EditorFrame::OnMenuShowProject(wxCommandEvent& WXUNUSED(event)) {
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
@@ -1879,6 +1902,22 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromFile(const wxString& filepath, unsigne
 #endif
 			page_idx = i;
 			return editorCtrl;
+		}
+	}
+
+	return NULL;
+}
+
+DiffPanel* EditorFrame::GetDiffPaneFromFiles(const wxString& path1, const wxString& path2, unsigned int& page_idx) const {
+	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
+		wxWindow* page = m_tabBar->GetPage(i);
+		if (!page->IsKindOf(CLASSINFO(DiffPanel))) continue;
+		
+		DiffPanel* diffPage = (DiffPanel*)page;
+
+		if (diffPage->CmpPaths(path1, path2)) {
+			page_idx = i;
+			return diffPage;
 		}
 	}
 
@@ -2389,9 +2428,29 @@ void EditorFrame::OnMenuCompareFiles(wxCommandEvent& WXUNUSED(event)) {
 	CompareDlg dlg(this, m_settings);
 	if (dlg.ShowModal() != wxID_OK) return;
 
-	DiffPanel* diff = new DiffPanel(m_tabBar, *this, m_catalyst, bitmap);
-	diff->SetDiff(dlg.GetLeftPath(), dlg.GetRightPath());
-	AddTab(diff);
+	const wxString leftPath = dlg.GetLeftPath();
+	const wxString rightPath = dlg.GetRightPath();
+
+	Compare(leftPath, rightPath);
+}
+
+void EditorFrame ::Compare(const wxString& leftPath, const wxString& rightPath) {
+	if (wxDirExists(leftPath) && wxDirExists(rightPath)) {
+		ShowDiffPane(leftPath, rightPath);
+	}
+	else if (wxFileExists(leftPath) && wxFileExists(rightPath)) {
+		// Check if the diff is already open
+		unsigned int page_id;
+		DiffPanel* page = GetDiffPaneFromFiles(leftPath, rightPath, page_id);
+		if (page) {
+			m_tabBar->SetSelection(page_id);
+			return;
+		}
+
+		DiffPanel* diff = new DiffPanel(m_tabBar, *this, m_catalyst, bitmap);
+		diff->SetDiff(leftPath, rightPath);
+		AddTab(diff);
+	}
 }
 
 void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {

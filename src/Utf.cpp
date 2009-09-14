@@ -99,8 +99,8 @@ size_t ConvertToUTF8(const char* source, const size_t source_len, const wxMBConv
 }
 
 size_t ConvertFromUTF8toString(const wxCharBuffer& utf8_buff, size_t utf8_buff_len, wxString& text) { // static
-	// The length can never be longer in widechars than the bytecount in the uft8
-	wxChar* buff = text.GetWriteBuf(utf8_buff_len);
+	// The length can never be longer in widechars than the bytecount in the uft8 (plus trailing null byte)
+	wxChar* buff = text.GetWriteBuf(utf8_buff_len+1);
 
 	// Convert to widechar
 	const size_t wchar_len = UTF8ToWChar(buff, utf8_buff_len, utf8_buff, utf8_buff_len);

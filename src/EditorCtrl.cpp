@@ -2809,7 +2809,9 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 
 		// Set doc before reload to update
 		if (filepath != m_path.GetFullPath()) {
+			if (doReload) EnableRedraw(false); // avoid drawing twice
 			const bool res = SetDocument(di, filepath, rp);
+			EnableRedraw(true);
 			if (!res) return cxFILE_OPEN_ERROR;
 		}
 

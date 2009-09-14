@@ -445,7 +445,7 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 			Clear();
 			NewRevision();
 		}
-		else PrepareForChange();
+		else DeleteAll();
 
 		// Set the name
 		SetPropertyName(filename);

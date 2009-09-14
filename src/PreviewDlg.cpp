@@ -183,9 +183,11 @@ void PreviewDlg::LoadSettings(const eSettings& settings) {
 	bool showOptions = false;
 	bool doPipe = false;
 	wxString pipeCmd = wxT("markdown.pl");
+	bool xulrunner = false;
 	settings.GetSettingBool(wxT("prvw_showoptions"), showOptions);
 	settings.GetSettingBool(wxT("prvw_dopipe"), doPipe);
 	settings.GetSettingString(wxT("prvw_pipecmd"), pipeCmd);
+	settings.GetSettingBool(wxT("prvw_xulrunner"), xulrunner);
 
 	m_showOptions->SetValue(showOptions);
 	if (showOptions) m_mainSizer->Show(m_optionSizer);
@@ -195,12 +197,19 @@ void PreviewDlg::LoadSettings(const eSettings& settings) {
 	m_pipeCheck->SetValue(doPipe);
 	m_cmdText->SetValue(pipeCmd);
 	if (doPipe) m_pipeCmd = pipeCmd;
+	if (m_webcontrol && xulrunner) {
+		m_webChoice->SetSelection(1);
+		SetBrowser(1);
+	}
 }
 
 void PreviewDlg::SaveSettings(eSettings& settings) const {
 	settings.SetSettingBool(wxT("prvw_showoptions"), m_showOptions->IsChecked());
 	settings.SetSettingBool(wxT("prvw_dopipe"), m_pipeCheck->IsChecked());
 	settings.SetSettingString(wxT("prvw_pipecmd"), m_cmdText->GetValue());
+	if (m_webcontrol) {
+		settings.SetSettingBool(wxT("prvw_xulrunner"), m_webChoice->GetSelection() > 0);
+	}
 }
 
 void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
@@ -514,7 +523,10 @@ void PreviewDlg::OnButtonPin(wxCommandEvent& WXUNUSED(event)) {
 
 void PreviewDlg::OnWebChoice(wxCommandEvent& evt) {
 	const int sel = evt.GetSelection();
+	SetBrowser(sel);
+}
 
+void PreviewDlg::SetBrowser(int sel) {
 	if (sel == 0) {
 		m_mainSizer->Hide(m_webcontrol);
 		m_mainSizer->Show(m_browser->GetWindow());
@@ -525,7 +537,6 @@ void PreviewDlg::OnWebChoice(wxCommandEvent& evt) {
 	}
 	m_mainSizer->Layout();
 	RefreshBrowser(cxUPDATE_REFRESH);
-
 }
 
 void PreviewDlg::PageClosed(const EditorCtrl* ec) {

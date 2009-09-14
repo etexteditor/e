@@ -74,6 +74,7 @@ private:
 
 	void UpdateBrowser(cxUpdateMode mode=cxUPDATE_REFRESH);
 	void RefreshBrowser(cxUpdateMode mode);
+	void SetBrowser(int sel);
 
 	// Event handlers
 	void OnIdle(wxIdleEvent& event);

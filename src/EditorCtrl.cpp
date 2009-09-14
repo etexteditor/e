@@ -2807,24 +2807,23 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 			}
 		}
 
-		// Set doc before reload to update)
-		const bool res = SetDocument(di, filepath, rp); // Reuse the current editorCtrl
-		if (!res) return cxFILE_OPEN_ERROR;
+		// Set doc before reload to update
+		if (filepath != m_path.GetFullPath()) {
+			const bool res = SetDocument(di, filepath, rp);
+			if (!res) return cxFILE_OPEN_ERROR;
+		}
 
 #ifdef __WXMSW__
-		// Filename may have changed case
-		if (!isRemoteItem) {
+		// Filename may have changed case on disk
+		// It gets corrected during reload, but otherwise we have to correct it manually
+		if (!isRemoteItem && !doReload) {
 			const wxString longpath = wxFileName(filepath).GetLongPath(); // gets path with correct case
-
-			// Filename gets corrected during reload, but otherwise we have to correct it manually
-			if (!doReload) {
-				const wxString newName = wxFileName(longpath).GetFullName();
-				const wxString oldName = GetName();
-				if (newName != oldName) {
-					cxLOCKDOC_WRITE(GetDocument())
-						doc.SetPropertyName(newName);
-					cxENDLOCK
-				}
+			const wxString newName = wxFileName(longpath).GetFullName();
+			const wxString oldName = GetName();
+			if (newName != oldName) {
+				cxLOCKDOC_WRITE(GetDocument())
+					doc.SetPropertyName(newName);
+				cxENDLOCK
 			}
 		}
 #endif

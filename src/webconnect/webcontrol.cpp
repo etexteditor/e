@@ -1930,6 +1930,11 @@ bool wxWebControl::InitEngine(const wxString& path)
     return g_gecko_engine.Init();
 }
 
+bool wxWebControl::IsInitialized()
+{
+    return g_gecko_engine.IsOk();
+}
+
 wxWebPreferences wxWebControl::GetPreferences()
 {
     wxWebPreferences p;

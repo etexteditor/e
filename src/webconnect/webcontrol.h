@@ -348,6 +348,7 @@ friend class wxWebFavIconProgress;
 public:
 
     static bool InitEngine(const wxString& path);
+    static bool IsInitialized();
     static bool AddContentHandler(wxWebContentHandler* handler, bool take_ownership = false);
     static void AddPluginPath(const wxString& path);
     static wxWebPreferences GetPreferences();

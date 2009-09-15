@@ -37,6 +37,7 @@ class EditorCtrl;
 class eSettings;
 class wxProcessEvent;
 class wxWebControl;
+class wxWebEvent;
 
 class PreviewDlg : public wxPanel {
 public:
@@ -76,6 +77,9 @@ private:
 	void RefreshBrowser(cxUpdateMode mode);
 	void SetBrowser(int sel);
 
+	void OnTitleChange(const wxString& title);
+	void OnDocumentComplete(const wxString& location);
+
 	// Event handlers
 	void OnIdle(wxIdleEvent& event);
 	void OnButtonReload(wxCommandEvent& event);
@@ -93,6 +97,8 @@ private:
 	void OnMSHTMLStateChanged(wxActiveXEvent& event);
 	void OnMSHTMLDocumentComplete(wxActiveXEvent& event);
 #endif
+	void OnWebTitleChange(wxWebEvent& event);
+	void OnWebDocumentComplete(wxWebEvent& event);
 	DECLARE_EVENT_TABLE()
 
 

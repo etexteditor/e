@@ -55,7 +55,8 @@ enum
 	ID_OPTIONS,
 	ID_DOPIPE,
 	ID_PIPECMD,
-	ID_WEBCHOICE
+	ID_WEBCHOICE,
+	ID_WEBCONNECT
 };
 
 BEGIN_EVENT_TABLE(PreviewDlg, wxPanel)
@@ -76,6 +77,8 @@ BEGIN_EVENT_TABLE(PreviewDlg, wxPanel)
 	EVT_ACTIVEX(ID_MSHTML, "CommandStateChange", PreviewDlg::OnMSHTMLStateChanged)
 	EVT_ACTIVEX(ID_MSHTML, "DocumentComplete", PreviewDlg::OnMSHTMLDocumentComplete)
 #endif
+	EVT_WEB_TITLECHANGE(ID_WEBCONNECT, PreviewDlg::OnWebTitleChange)
+	EVT_WEB_DOMCONTENTLOADED(ID_WEBCONNECT, PreviewDlg::OnWebDocumentComplete)
 END_EVENT_TABLE()
 
 PreviewDlg::PreviewDlg(EditorFrame& parent)
@@ -114,9 +117,11 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 	bool xulrunner = false;
 	const wxString xulrunner_path = wxGetApp().GetAppPath() + wxFILE_SEP_PATH + wxT("xr");
 	if (wxDirExists(xulrunner_path)) {
-		xulrunner = wxWebControl::InitEngine(xulrunner_path);
-		m_webcontrol = new wxWebControl(this, wxID_ANY);
-		//m_webcontrol->Hide();
+		if (wxWebControl::IsInitialized()) xulrunner = true;
+		else xulrunner = wxWebControl::InitEngine(xulrunner_path);
+
+		m_webcontrol = new wxWebControl(this, ID_WEBCONNECT);
+		m_webcontrol->SetWindowStyle(wxBORDER_SUNKEN);
 	}
 
 	// Option ctrls
@@ -534,6 +539,11 @@ void PreviewDlg::SetBrowser(int sel) {
 	else {
 		m_mainSizer->Hide(m_browser->GetWindow());
 		m_mainSizer->Show(m_webcontrol);
+
+		// WebConnect does not yet offer a way to detect
+		// whick nav buttons should be enabled
+		m_backButton->Enable(true);
+		m_forwardButton->Enable(true);
 	}
 	m_mainSizer->Layout();
 	RefreshBrowser(cxUPDATE_REFRESH);
@@ -577,10 +587,7 @@ void PreviewDlg::OnEndProcess(wxProcessEvent& event) {
 	RefreshBrowser(cxUPDATE_REFRESH);
 }
 
-#ifdef __WXMSW__
-void PreviewDlg::OnMSHTMLTitleChange(wxActiveXEvent& event) {
-	const wxString title = event[wxT("Text")];
-
+void PreviewDlg::OnTitleChange(const wxString& title) {
 	const wxString tempFile = m_tempPath.AfterLast(wxT('\\'));
 	const wxString titleEnd = title.AfterLast(wxT('\\'));
 
@@ -593,28 +600,9 @@ void PreviewDlg::OnMSHTMLTitleChange(wxActiveXEvent& event) {
 	else {
 		m_parent.SetWebPreviewTitle(wxT("Preview: ") + m_truePath);
 	}
-
 }
 
-void PreviewDlg::OnMSHTMLStateChanged(wxActiveXEvent& event) {
-	long cmd = event[wxT("Command")];
-	bool state = event[wxT("Enable")];
-	if (cmd == -1) return;
-
-	if (cmd & CSC_NAVIGATEBACK) {
-		m_backButton->Enable(state);
-	}
-
-	if (cmd & CSC_NAVIGATEFORWARD) {
-		m_forwardButton->Enable(state);
-	}
-}
-
-void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
-	if (!m_browser) return; // event can be sent during construction
-
-	const wxString location = m_browser->GetRealLocation();
-
+void PreviewDlg::OnDocumentComplete(const wxString& location) {
 	if (location != m_locationText->GetValue()) {
 		const wxString tempFile = m_tempPath.AfterLast(wxT('\\'));
 		const wxString locFile = location.AfterLast(wxT('/'));
@@ -630,6 +618,49 @@ void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
 			m_isOnPreview = true;
 		}
 	}
+}
+
+void PreviewDlg::OnWebTitleChange(wxWebEvent& evt) {
+	const wxString title = evt.GetString();
+	OnTitleChange(title);
+}
+
+void PreviewDlg::OnWebDocumentComplete(wxWebEvent& WXUNUSED(evt)) {
+	if (!m_webcontrol || !m_webcontrol->IsShown()) return; // event can be sent during construction
+
+	const wxString location = m_webcontrol->GetCurrentURI();
+	OnDocumentComplete(location);
+}
+
+#ifdef __WXMSW__
+void PreviewDlg::OnMSHTMLTitleChange(wxActiveXEvent& event) {
+	if (!m_browser || !m_browser->IsShown()) return;
+
+	const wxString title = event[wxT("Text")];
+	OnTitleChange(title);
+}
+
+void PreviewDlg::OnMSHTMLStateChanged(wxActiveXEvent& event) {
+	if (!m_browser || !m_browser->IsShown()) return;
+
+	long cmd = event[wxT("Command")];
+	bool state = event[wxT("Enable")];
+	if (cmd == -1) return;
+
+	if (cmd & CSC_NAVIGATEBACK) {
+		m_backButton->Enable(state);
+	}
+
+	if (cmd & CSC_NAVIGATEFORWARD) {
+		m_forwardButton->Enable(state);
+	}
+}
+
+void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
+	if (!m_browser || !m_browser->IsShown()) return; // event can be sent during construction
+
+	const wxString location = m_browser->GetRealLocation();
+	OnDocumentComplete(location);
 }
 #endif // __WXMSW__
 

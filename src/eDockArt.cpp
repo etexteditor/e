@@ -177,10 +177,6 @@ void ModernDockArt::DrawPaneButton(wxDC& dc,
 ModernTabArt::ModernTabArt() {
 	m_active_close_bmp = wxBitmap(close_xpm);
     m_disabled_close_bmp = wxBitmap(close_disabled_xpm);
-#ifdef __WXMSW__
-	m_pressed_close_bmp = wxBitmap(close_down_xpm);
-	m_hot_close_bmp = wxBitmap(close_hot_xpm);
-#endif
 }
 
 wxAuiTabArt* ModernTabArt::Clone()

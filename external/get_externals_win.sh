@@ -2,25 +2,32 @@
 
 #FIXME: refactor windows/linux code
 
+downloads=downloads
+
 _download()
 {
   # Download external libraries
   echo "Downloading external libraries..."
   echo
-  pushd arch
+  pushd $downloads
 
-  tempdir=`mktemp -d back.XXXXXX` || exit 1
-  mv *.zip $tempdir
-  mv *.gz $tempdir
-  mv *.bz2 $tempdir
-
-  curl -O http://curl.haxx.se/download/curl-7.18.2.tar.gz
-  curl -O http://libtomcrypt.com/files/crypt-1.11.tar.bz2
-  curl -O http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2
-  curl -O http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz
-  curl -O ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.9.tar.gz
-  curl -O http://kent.dl.sourceforge.net/sourceforge/tinyxml/tinyxml_2_5_3.tar.gz
-  curl -O http://biolpc22.york.ac.uk/pub/2.8.10/wxWidgets-2.8.10.tar.bz2
+  # Only download files we don't already have.
+  # This lets us delete files to redownload, or get
+  # new versions automatically.
+  
+  for url in \
+    http://curl.haxx.se/download/curl-7.18.2.tar.gz \
+    http://libtomcrypt.com/files/crypt-1.11.tar.bz2 \
+    http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2 \
+    http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz \
+    ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.9.tar.gz \
+    http://downloads.sourceforge.net/project/tinyxml/tinyxml/2.5.3/tinyxml_2_5_3.tar.gz \
+    http://downloads.sourceforge.net/project/wxwindows/wxAll/2.8.10/wxWidgets-2.8.10.tar.bz2
+  do
+    if [[ ! -e `basename $url` ]]; then
+      curl -O -L $url
+    fi
+  done
 
   popd
 }
@@ -29,13 +36,13 @@ _backup_existing_patches()
 {
   # Removing previous folders
   tempdir=`mktemp -d back.XXXXXX` || exit 1
-  echo "Moving existing folders to $tempdir"
-  mv curl $tempdir/curl
-  mv libtomcrypt $tempdir/libtomcrypt
-  mv libtommath $tempdir/libtommath
-  mv metakit $tempdir/metakit
-  mv pcre $tempdir/pcre
-  mv tinyxml $tempdir/tinyxml
+  echo "Backing up patched externals..."
+  for dir in  curl libtomcrypt libtommath metakit prce tinyxml wxwidgets
+  do
+    if [[ -e $dir ]]; then 
+      mv $dir $tempdir/$dir; 
+    fi
+  done
 }
 
 _extract_and_patch()
@@ -43,17 +50,18 @@ _extract_and_patch()
   # Extract
   echo "Extracting libraries.."
   echo
-  tar -xzf arch/curl-*
-  tar -xjf arch/crypt-*
-  tar -xjf arch/ltm-*
-  tar -xzf arch/metakit-*
-  tar -xzf arch/pcre-*
-  tar -xzf arch/tinyxml_*
-  tar -xjf arch/wxWidgets-*
+  tar -xzf $downloads/curl-*
+  tar -xjf $downloads/crypt-*
+  tar -xjf $downloads/ltm-*
+  tar -xzf $downloads/metakit-*
+  tar -xzf $downloads/pcre-*
+  tar -xzf $downloads/tinyxml_*
+  tar -xjf $downloads/wxWidgets-*
 
   # Rename directories to generic names
   echo "Renaming dirs..."
   echo
+
   mv curl-* curl
   mv libtomcrypt-* libtomcrypt
   mv libtommath-* libtommath
@@ -97,8 +105,8 @@ _next_steps()
 }
 
 
-if [[ ! -e arch ]]; then
-    mkdir arch
+if [[ ! -e $downloads ]]; then
+    mkdir $downloads
 fi
 
 if [[ "$1" != "repatch" ]]; then

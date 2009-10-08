@@ -39,8 +39,9 @@ external/stuff/Support
 external/stuff/Themes
 
 ## Ignore non-source-controlled things in external
-# 'arch' contains downloaded dependency archives
+# 'arch' and 'downloads' contains downloaded dependency archives
 external/arch/
+external/downloads/
 # 'build_logs' contains logs from command-line build scripts
 external/build_logs/
 

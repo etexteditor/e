@@ -112,7 +112,16 @@ void UndoHistory::SetDocument(const doc_id& di, bool doCenter) {
 	UpdateTree(doCenter);
 }
 
+bool UndoHistory::Show(bool show) {
+	bool result = wxControl::Show(show);
+	if (show) UpdateTree(); // not updated when hidden
+
+	return result;
+}
+
 void UndoHistory::UpdateTree(bool doCenter) {
+	if (!IsShown()) return;
+
 	// Update the VersionTree
 	m_pTree->Clear();
 	if (m_sourceDoc.IsDraft()) {

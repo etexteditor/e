@@ -38,15 +38,6 @@ private:
 	void OnButtonOk(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE()
 
-	class CygwinInstallThread : public wxThread {
-	public:
-		CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath);
-		virtual void *Entry();
-	private:
-		const cxCygwinInstallMode m_mode;
-		const wxString m_appPath;
-	};
-
 	// Member variables
 	const cxCygwinDlgMode m_mode;
 	wxRadioButton* m_autoRadio;

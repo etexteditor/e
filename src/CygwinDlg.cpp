@@ -22,14 +22,25 @@
 
 #include "eApp.h"
 
+class CygwinInstallThread : public wxThread {
+public:
+  CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath);
+  virtual void *Entry();
+private:
+  const cxCygwinInstallMode m_mode;
+  const wxString m_appPath;
+};
+
+
 BEGIN_EVENT_TABLE(CygwinDlg, wxDialog)
 	EVT_BUTTON(wxID_OK, CygwinDlg::OnButtonOk)
 END_EVENT_TABLE()
 
-CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode)
-: wxDialog (parent, wxID_ANY, wxEmptyString, wxDefaultPosition), m_mode(mode) {
-	if (m_mode == cxCYGWIN_INSTALL) SetTitle(_("Cygwin not installed!"));
-	else SetTitle(_("Update Cygwin"));
+CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode): 
+	wxDialog (parent, wxID_ANY, wxEmptyString, wxDefaultPosition), 
+	m_mode(mode) 
+{
+	SetTitle( m_mode == cxCYGWIN_INSTALL ? _("Cygwin not installed!") : _("Update Cygwin"));
 
 	const wxString installMsg = _("e uses the Cygwin package to provide many of the powerful Unix-like commands not usually available on Windows. Without Cygwin, some of e's advanced features will be disabled.\n\nWould you like to install Cygwin now? (If you say no, e will ask you again when you try to use an advanced feature.)");
 	const wxString updateMsg = _("To get full benefit of the bundle commands, your cygwin installation needs to be updated.");
@@ -65,7 +76,7 @@ void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 
 // ---- CygwinInstallThread ------------------------------------------------------------
 
-CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath):
+CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, const wxString& appPath):
 	m_mode(mode), 
 	m_appPath(appPath) 
 {
@@ -73,7 +84,7 @@ CygwinDlg::CygwinInstallThread::CygwinInstallThread(cxCygwinInstallMode mode, co
     Run();
 }
 
-void* CygwinDlg::CygwinInstallThread::Entry() {
+void* CygwinInstallThread::Entry() {
 	wxString cygPath = eDocumentPath::GetCygwinDir();
 	if (cygPath.empty()) {
 		// Get the base drive letter from the Windows system path, assuming C:

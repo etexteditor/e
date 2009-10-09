@@ -12,21 +12,25 @@
  ******************************************************************************/
 
 #include "PreviewDlg.h"
-#include "EditorFrame.h"
-#include "EditorCtrl.h"
+
 #include <wx/wfstream.h>
 #include <wx/process.h>
+
+#include "EditorFrame.h"
+#include "EditorCtrl.h"
 #include "eDocumentPath.h"
 #include "ShellRunner.h"
 #include "eSettings.h"
+#include "Env.h"
 #include "Execute.h"
 #include "pcre.h"
 #include "webconnect/webcontrol.h"
 #include "eApp.h"
 
 #if defined (__WXMSW__)
-    #include "IEHtmlWin.h"
+	#include "IEHtmlWin.h"
 #elif defined (__WXGTK__)
+	#include "IHtmlWnd.h"
     #include "WebKitHtmlWnd.h"
 #endif
 
@@ -42,6 +46,22 @@
 #include "images/pin1_over.xpm"
 #include "images/pin2.xpm"
 #include "images/pin2_over.xpm"
+
+class Preview_CommandThread : public wxThread {
+public:
+	Preview_CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env);
+	void Terminate() {m_isTerminated = true;};
+	virtual void *Entry();
+private:
+	bool m_isTerminated;
+	const wxString m_command;
+	wxEvtHandler& m_parent;
+	vector<char> m_input;
+	const wxString& m_outputPath;
+	const wxString& m_truePath;
+	const cxEnv m_env;
+};
+
 
 // control id's
 enum
@@ -277,7 +297,7 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 		if (cmd.empty()) return;
 
 		// Thread will send event and delete itself when done
-		m_thread = new CommandThread(cmd, text, m_tempPath, m_truePath, *this, env);
+		m_thread = new Preview_CommandThread(cmd, text, m_tempPath, m_truePath, *this, env);
 	}
 
 	m_isOnPreview = true;
@@ -666,7 +686,7 @@ void PreviewDlg::OnMSHTMLDocumentComplete(wxActiveXEvent& WXUNUSED(event)) {
 
 // ------ CommandThread -----------------------------------------------------
 
-PreviewDlg::CommandThread::CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env)
+Preview_CommandThread::Preview_CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env)
 : m_isTerminated(false), m_command(command), m_parent(parent), m_outputPath(outputPath),
   m_truePath(truePath), m_env(env) {
 	m_input.swap(input); // copy as calling function can go out of scope
@@ -676,7 +696,7 @@ PreviewDlg::CommandThread::CommandThread(const wxString& command, vector<char>& 
 	Run();
 }
 
-void* PreviewDlg::CommandThread::Entry() {
+void* Preview_CommandThread::Entry() {
 	cxExecute exec(m_env);
 	//exec.SetDebugLogging(true);
 

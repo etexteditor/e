@@ -19,13 +19,17 @@
 	#include <wx/wx.h>
 #endif
 
-#include "Env.h"
 
+// STL can't compile with Level 4
 #ifdef __WXMSW__
-#include "IEHtmlWin.h"
-#else
-#include "IHtmlWnd.h"
+    #pragma warning(disable:4786)
+    #pragma warning(push, 1)
 #endif
+#include <vector>
+#ifdef __WXMSW__
+    #pragma warning(pop)
+#endif
+using namespace std;
 
 using namespace std;
 
@@ -38,6 +42,15 @@ class eFrameSettings;
 class wxProcessEvent;
 class wxWebControl;
 class wxWebEvent;
+
+#if defined (__WXMSW__)
+	class wxIEHtmlWin;
+	class wxActiveXEvent;
+#elif defined (__WXGTK__)
+	class IHtmlWnd;
+#endif
+
+class Preview_CommandThread;
 
 class PreviewDlg : public wxPanel {
 public:
@@ -53,21 +66,6 @@ public:
 	static void InsertBase(vector<char>& html, const wxString& path);
 
 private:
-	class CommandThread : public wxThread {
-	public:
-		CommandThread(const wxString& command, vector<char>& input, const wxString& outputPath, const wxString& truePath, wxEvtHandler& parent, const cxEnv& env);
-		void Terminate() {m_isTerminated = true;};
-		virtual void *Entry();
-	private:
-		bool m_isTerminated;
-		const wxString m_command;
-		wxEvtHandler& m_parent;
-		vector<char> m_input;
-		const wxString& m_outputPath;
-		const wxString& m_truePath;
-		const cxEnv m_env;
-	};
-
 	enum cxUpdateMode {
 		cxUPDATE_RELOAD,
 		cxUPDATE_REFRESH
@@ -110,7 +108,7 @@ private:
 	wxString m_tempCssPath;
 	wxString m_truePath;
 	wxString m_uncPath;
-	CommandThread* m_thread;
+	Preview_CommandThread* m_thread;
 	wxString m_pipeCmd;
 	bool m_isOnPreview;
 	bool m_isFirst;

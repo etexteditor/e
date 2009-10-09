@@ -1,5 +1,10 @@
 #include "UpdaterThread.h"
 
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+	#include <wx/thread.h>
+#endif
+
 #include <wx/protocol/http.h>
 #include <wx/tokenzr.h>
 #include <wx/txtstrm.h>
@@ -18,7 +23,7 @@ private:
 };
 
 
-void CheckForUpdates(eSettings& settings, bool forceCheck) {
+void CheckForUpdates(ISettings& settings, bool forceCheck) {
 	if (!forceCheck) {
 		// Check if it more than 7 days have gone since last update check
 		wxLongLong lastup;

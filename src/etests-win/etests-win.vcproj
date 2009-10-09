@@ -65,7 +65,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="gtestd.lib gtest_maind.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib wsock32.lib wxbase28ud.lib wxmsw28ud_core.lib wxbase28ud_net.lib wxmsw28ud_adv.lib wxmsw28ud_aui.lib wxpngd.lib wxjpegd.lib wxzlibd.lib wxregexud.lib mk4vc60s_d.lib libtommathd.lib libtomcryptd.lib pcred.lib tinyxmld.lib dbghelp.lib libcurld.lib winmm.lib ecored.lib e.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\external\gtest\win\debug;&quot;$(WXWIN28)\lib\vc_lib&quot;;..\..\external\pcre;..\..\external\libtomcrypt;..\..\external\libtommath;..\..\external\tinyxml\Debug;..\..\external\curl\lib\Debug;..\..\external\metakit\builds;..\..\ecore;..\Debug"
+				AdditionalLibraryDirectories="..\..\external\gtest\win\debug;..\..\external\wxwidgets\lib\vc_lib;..\..\external\pcre;..\..\external\libtomcrypt;..\..\external\libtommath;..\..\external\tinyxml\Debug;..\..\external\curl\lib\Debug;..\..\external\metakit\builds;..\..\ecore;..\Debug"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"

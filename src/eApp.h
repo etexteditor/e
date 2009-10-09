@@ -43,7 +43,6 @@ class EditorFrame;
 
 
 class eApp : public wxApp, 
-	public IGetSettings, 
 	public IAppPaths, 
 	public IExecuteAppCommand
 {
@@ -67,7 +66,7 @@ public:
 
 	// Settings functions
 	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};
-	virtual eSettings& GetSettings(){return m_settings;};
+	eSettings& GetSettings(){return m_settings;};
 
 	wxString GetAppTitle();
 

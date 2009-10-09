@@ -33,12 +33,15 @@ class eFrameSettings {
 public:
 	eFrameSettings(wxJSONValue& framesettings);
 
-	// Individual settings
+	// Get setting values
 	bool GetSettingBool(const wxString& name, bool& value) const;
-	void SetSettingBool(const wxString& name, bool value);
 	bool GetSettingInt(const wxString& name, int& value) const;
-	void SetSettingInt(const wxString& name, int value);
+	bool GetSettingLong(const wxString& name, wxLongLong& value) const;
 	bool GetSettingString(const wxString& name, wxString& value) const;
+
+	// Store setting values
+	void SetSettingBool(const wxString& name, bool value);
+	void SetSettingInt(const wxString& name, int value);
 	void SetSettingString(const wxString& name, const wxString& value);
 	void RemoveSetting(const wxString& name);
 
@@ -66,15 +69,19 @@ public:
 	bool Save();
 	bool IsEmpty() const;
 
-	// Individual settings
-	bool GetSettingBool(const wxString& name, bool& value) const;
+	// Get setting values
+	virtual bool GetSettingBool(const wxString& name, bool& value) const;
+	virtual bool GetSettingInt(const wxString& name, int& value) const;
+	virtual bool GetSettingLong(const wxString& name, wxLongLong& value) const;
+	virtual bool GetSettingString(const wxString& name, wxString& value) const;
+
+	// Store setting values
 	void SetSettingBool(const wxString& name, bool value);
-	bool GetSettingInt(const wxString& name, int& value) const;
 	void SetSettingInt(const wxString& name, int value);
-	bool GetSettingLong(const wxString& name, wxLongLong& value) const;
 	void SetSettingLong(const wxString& name, const wxLongLong& value);
-	bool GetSettingString(const wxString& name, wxString& value) const;
 	void SetSettingString(const wxString& name, const wxString& value);
+
+	// Clear setting value
 	void RemoveSetting(const wxString& name);
 
 	// Frames
@@ -137,11 +144,6 @@ private:
 	wxString m_path;
 	wxJSONValue m_jsonRoot;
 	auto_vector<RemoteProfile> m_tempRemotes; // cache for remote profiles
-};
-
-class IGetSettings {
-public:
-	virtual eSettings& GetSettings() = 0;
 };
 
 eSettings& eGetSettings(void);

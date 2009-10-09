@@ -1,3 +1,16 @@
+15-sep-2009 - 1.0.39
+  o Added folder compare.
+  
+  o Fixed doc returning to disk state when reopening.
+  
+  o Fixed possible buffer overrun in utf8 conversion .
+  
+  o Fixed issue when reloading a deleted file .
+  
+  o Remember between sessions if xulrunner is enabled.
+  
+  o Improved xulrunner support in webpreview.
+
 5-aug-2009 - 1.0.38
   o When holding down shift and right-clicking the project
     pane, it will show context menu with extended verbs [adamv]

@@ -157,9 +157,9 @@ public:
     virtual bool CanHandleContent(const wxString& url,
                                   const wxString& mime_type) = 0;
 
-    virtual void OnStartRequest(const wxString& url) { }
+    virtual void OnStartRequest(const wxString& WXUNUSED(url)) { }
     virtual void OnStopRequest() { }
-    virtual void OnData(const unsigned char* buf, size_t size) { }
+    virtual void OnData(const unsigned char* WXUNUSED(buf), size_t WXUNUSED(size)) { }
 };
 
 WX_DEFINE_ARRAY_PTR(wxWebContentHandler*, wxWebContentHandlerPtrArray);
@@ -215,17 +215,17 @@ public:
     
     virtual ~wxWebProgressBase() { }
     
-    virtual void Init(const wxString& url,
-                      const wxString& suggested_filename) { }
+    virtual void Init(const wxString& WXUNUSED(url),
+                      const wxString& WXUNUSED(suggested_filename)) { }
     
     virtual void Cancel() { m_cancelled = true; }
     virtual bool IsCancelled() const { return m_cancelled; }
     virtual void OnStart() { }
     virtual void OnFinish() { }
-    virtual void OnError(const wxString& message) { }
+    virtual void OnError(const wxString& WXUNUSED(message)) { }
     
-    virtual void OnProgressChange(wxLongLong cur_progress,
-                                  wxLongLong max_progress) { }
+    virtual void OnProgressChange(wxLongLong WXUNUSED(cur_progress),
+                                  wxLongLong WXUNUSED(max_progress)) { }
     
 protected:
 

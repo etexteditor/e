@@ -67,10 +67,14 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
 
-BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLoadBundles* syntaxHandler)
-: wxDialog (parent, -1, _("Manage Bundles"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_remoteThread(remoteThread), m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler->GetPListHandler()),
-  m_allBundlesReceived(false), m_needBundleReload(false)
+BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLoadBundles* syntaxHandler):
+	wxDialog (parent, -1, _("Manage Bundles"), 
+	wxDefaultPosition, wxDefaultSize, 
+	wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_remoteThread(remoteThread),
+	m_syntaxHandler(syntaxHandler),
+	m_plistHandler(m_syntaxHandler->GetPListHandler()),
+	m_allBundlesReceived(false), m_needBundleReload(false)
 {
 	m_repositories.push_back(RepoInfo(wxT("review mm"), wxT("http://svn.textmate.org/trunk/Review/Bundles/")));
 	m_repositories.push_back(RepoInfo(wxT("macromates"), wxT("http://svn.textmate.org/trunk/Bundles/")));
@@ -193,20 +197,20 @@ void BundleManager::AddItems(const wxString& repoName, const vector<cxFileInfo>&
 
 		// Check if bundle is installed
 		for (vector<cxBundleInfo>::const_iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
-			if (b->dirName == p.m_name) {
-				if (!b->isDisabled) {
-					// We can't count on the filesystem preserving milliseconds
-					wxDateTime installedDate = b->modDate;
-					wxDateTime remoteDate = p.m_modDate;
-					installedDate.SetSecond(0);
-					installedDate.SetMillisecond(0);
-					remoteDate.SetSecond(0);
-					remoteDate.SetMillisecond(0);
+			if (b->dirName != p.m_name) continue;
 
-					m_bundleList->SetItemImage(itemId, (installedDate == remoteDate) ? 1 : 2);
-				}
-				break;
+			if (!b->isDisabled) {
+				// We can't count on the filesystem preserving milliseconds
+				wxDateTime installedDate = b->modDate;
+				wxDateTime remoteDate = p.m_modDate;
+				installedDate.SetSecond(0);
+				installedDate.SetMillisecond(0);
+				remoteDate.SetSecond(0);
+				remoteDate.SetMillisecond(0);
+
+				m_bundleList->SetItemImage(itemId, (installedDate == remoteDate) ? 1 : 2);
 			}
+			break;
 		}
 	}
 }
@@ -629,8 +633,7 @@ void BundleManager::SetDirModDate(wxFileName& path, const wxDateTime& modDate) {
 void BundleManager::DelTree(const wxString& path) {
 #ifdef __WXMSW__
 	// Paths have to be double-null terminated
-	wxString filePaths = path + wxT('\0');
-	filePaths += wxT('\0');
+	wxString filePaths = path + wxT('\0') +wxT('\0');
 
 	// The File Operation Structure
 	SHFILEOPSTRUCT SHFileOp;

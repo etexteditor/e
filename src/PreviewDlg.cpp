@@ -136,9 +136,7 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 	bool xulrunner = false;
 	const wxString xulrunner_path = wxGetApp().GetAppPath() + wxFILE_SEP_PATH + wxT("xr");
 	if (wxDirExists(xulrunner_path)) {
-		if (wxWebControl::IsInitialized()) xulrunner = true;
-		else xulrunner = wxWebControl::InitEngine(xulrunner_path);
-
+		xulrunner = wxWebControl::IsInitialized() || wxWebControl::InitEngine(xulrunner_path);
 		m_webcontrol = new wxWebControl(this, ID_WEBCONNECT);
 		m_webcontrol->SetWindowStyle(wxBORDER_SUNKEN);
 	}
@@ -248,13 +246,10 @@ void PreviewDlg::UpdateBrowser(cxUpdateMode mode) {
 
 	// Load the text of entire doc
 	vector<char> text;
-	if (m_pinnedEditor) {
-		m_pinnedEditor->GetText(text);
-		m_truePath = m_pinnedEditor->GetPath();
-	}
-	else {
-		m_editorCtrl->GetText(text);
-		m_truePath = m_editorCtrl->GetPath();
+	{
+		EditorCtrl* editor = m_pinnedEditor ? m_pinnedEditor : m_editorCtrl;
+		editor->GetText(text);
+		m_truePath = editor->GetPath();
 	}
 
 	m_uncPath = eDocumentPath::ConvertPathToUncFileUrl(m_truePath);

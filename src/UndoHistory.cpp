@@ -41,13 +41,12 @@ END_EVENT_TABLE()
 UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 	: wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
 	  m_catalyst(cw), m_doc(cw), m_dispatcher(cw.GetDispatcher()), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
-	  m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame)
+	  m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame), m_source_win_id(win_id)
 {
 	SetBackgroundStyle(wxBG_STYLE_CUSTOM); // Avoid flicker
 
 	// Initialize variables
 	m_needRedrawing = true; // Make sure the ctrl gets drawn on first idle event
-	m_source_win_id = win_id;
 	m_scrollPos = 0;
 	m_isScrolling = false;
 	m_lineHeight = 18;
@@ -62,6 +61,7 @@ UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int w
 	m_mdc.SetFont(wxFont(9, wxMODERN, wxNORMAL, wxNORMAL, false));
 
 	// Make sure we recieve notifications of new versions and updates
+	m_dispatcher.SubscribeC(wxT("WIN_CLOSEPAGE"), (CALL_BACK)OnClosePage, this);
 	m_dispatcher.SubscribeC(wxT("WIN_CHANGEDOC"), (CALL_BACK)OnChangeDoc, this);
 	m_dispatcher.SubscribeC(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
 	m_dispatcher.SubscribeC(wxT("DOC_NEWREVISION"), (CALL_BACK)OnNewRevision, this);
@@ -71,6 +71,7 @@ UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int w
 }
 
 UndoHistory::~UndoHistory() {
+	m_dispatcher.UnSubscribe(wxT("WIN_CLOSEPAGE"), (CALL_BACK)OnClosePage, this);
 	m_dispatcher.UnSubscribe(wxT("WIN_CHANGEDOC"), (CALL_BACK)OnChangeDoc, this);
 	m_dispatcher.UnSubscribe(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
 	m_dispatcher.UnSubscribe(wxT("DOC_NEWREVISION"), (CALL_BACK)OnNewRevision, this);
@@ -80,6 +81,7 @@ UndoHistory::~UndoHistory() {
 }
 
 void UndoHistory::Clear() {
+	m_editorCtrl = NULL;
 	m_sourceDoc.Invalidate();
 	m_pTree->Clear();
 	m_scrollPos = 0;
@@ -428,7 +430,7 @@ void UndoHistory::OnChar(wxKeyEvent& event) {
 			cxENDLOCK
 
 			if (!di.IsOk()) return; // We are in top document (has no parent)
-			m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &di, m_source_win_id);
+			m_editorCtrl->SetDocument(di);
 		}
 		break;
 
@@ -441,7 +443,7 @@ void UndoHistory::OnChar(wxKeyEvent& event) {
 
 			if (!childlist.empty()) {
 				const doc_id di(DRAFT, m_sourceDoc.document_id, childlist[0]);
-				m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &di, m_source_win_id);
+				m_editorCtrl->SetDocument(di);
 			}
 		}
 		break;
@@ -457,7 +459,7 @@ void UndoHistory::OnChar(wxKeyEvent& event) {
 			vector<int>::const_iterator idx = find(childlist.begin(), childlist.end(), m_sourceDoc.version_id);
 			if (idx > childlist.begin()) {
 				const doc_id di(DRAFT, m_sourceDoc.document_id, *(idx-1));
-				m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &di, m_source_win_id);
+				m_editorCtrl->SetDocument(di);
 			}
 		}
 		break;
@@ -473,7 +475,7 @@ void UndoHistory::OnChar(wxKeyEvent& event) {
 			vector<int>::const_iterator idx = find(childlist.begin(), childlist.end(), m_sourceDoc.version_id);
 			if (idx < childlist.end()-1) {
 				const doc_id di(DRAFT, m_sourceDoc.document_id, *(idx+1));
-				m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &di, m_source_win_id);
+				m_editorCtrl->SetDocument(di);
 			}
 		}
 	}
@@ -506,7 +508,7 @@ void UndoHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 		// a WIN_CHANGEDOC notifer if the documents actually gets
 		// set on a page.
 
-		m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &clicked_doc, m_source_win_id);
+		m_editorCtrl->SetDocument(clicked_doc);
 
 		// Check if we were double-clicked
 		if (event.GetInt() == 1) {
@@ -576,11 +578,16 @@ void UndoHistory::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
 }
 
 // static notification handler
+void UndoHistory::OnClosePage(UndoHistory* self, void* data, int WXUNUSED(filter)) {
+	if (self->m_editorCtrl == (EditorCtrl*)data) self->Clear();
+}
+
+// static notification handler
 void UndoHistory::OnChangeDoc(UndoHistory* self, void* data, int filter) {
+	if (filter != self->m_source_win_id) return;
 	//wxLogTrace("OnChangeDoc %d %d - %d", di.document_id, di.revision_id, filter);
 
 	self->m_editorCtrl = (EditorCtrl*)data;
-	self->m_source_win_id = filter;
 	const doc_id di = self->m_editorCtrl->GetDocID();
 	self->m_range.Set(0, 0); // reset to no selection (will update in idle)
 	self->SetDocument(di);
@@ -605,38 +612,46 @@ void UndoHistory::OnDocDeleted(UndoHistory* self, void* data, int WXUNUSED(filte
 
 // static notification handler
 void UndoHistory::OnNewRevision(UndoHistory* self, void* data, int WXUNUSED(filter)) {
-	const doc_id* const di = (doc_id*)data;
-	wxASSERT(di->IsDraft());
+	if (!self->m_editorCtrl) return; // may be called before first editor
 
-	self->SetDocument(*di);
+	const doc_id& di = *(const doc_id*)data;
+	wxASSERT(di.IsDraft());
+	
+	if (di == self->m_editorCtrl->GetDocID()) {
+		self->SetDocument(di);
+	}
+	else if (self->m_sourceDoc.SameDoc(di)) {
+		// Doc has been changed in another editor, so we just redraw
+		self->UpdateTree();
+	}
 }
 
 // static notification handler
 void UndoHistory::OnUpdateRevision(UndoHistory* self, void* data, int WXUNUSED(filter)) {
 	if (!self->m_sourceDoc.IsOk()) return;
-	const doc_id* const di = (doc_id*)data;
-	wxASSERT(di->IsDraft());
+	const doc_id& di = *(const doc_id*)data;
+	wxASSERT(di.IsDraft());
 
-	if (self->m_sourceDoc.SameDoc(*di)) {
-		self->SetDocument(*di);
+	if (di == self->m_editorCtrl->GetDocID()) {
+		self->SetDocument(di);
+	}
+	else if (self->m_sourceDoc.SameDoc(di)) {
+		// Doc has been changed in another editor, so we just redraw
+		self->UpdateTree();
 	}
 }
 
 // static notification handler
 void UndoHistory::OnDocUpdated(UndoHistory* self, void* data, int WXUNUSED(filter)) {
 	if (!self->m_sourceDoc.IsOk()) return;
-
 	const doc_id& di = *(const doc_id*)data;
 
-	bool isSameDoc;
-	cxLOCK_READ(self->m_catalyst)
-		isSameDoc = catalyst.InSameHistory(di, self->m_sourceDoc);
-	cxENDLOCK
-
-	if (isSameDoc) {
-		wxClientDC dc(self);
-		self->m_pTree->UpdateTree();
-		self->DrawLayout(dc);
+	if (di == self->m_editorCtrl->GetDocID()) {
+		self->SetDocument(di);
+	}
+	else if (self->m_sourceDoc.SameDoc(di)) {
+		// Doc has been changed in another editor, so we just redraw
+		self->UpdateTree();
 	}
 }
 

@@ -80,6 +80,8 @@ enum {
 
 // Menu id's
 enum {
+	MENU_NEWWINDOW,
+	MENU_CLOSEWINDOW,
 	MENU_DIFF,
 	MENU_OPENPROJECT,
 	MENU_OPENREMOTE,
@@ -184,7 +186,6 @@ enum {
 	MENU_BOOKMARK_CLEAR
 };
 
-
 wxString EditorFrame::DefaultFileFilters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
 						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
 						wxT("C/C++ Files (*.c, *.cpp, *.cxx)|*.c;*.cpp;*.cxx|") \
@@ -193,10 +194,14 @@ wxString EditorFrame::DefaultFileFilters = wxT("All files (*.*)|*.*|Text files (
 						wxT("Perl Files (*.pl, *.pm, *.pod)|*.pl;*.pm;*.pod|") \
 						wxT("Python Files (*.py, *.pyw)|*.py;*.pyw");
 
+// This sets RTTI info but without the dynamic part
+wxIMPLEMENT_CLASS_COMMON1(EditorFrame, wxFrame, NULL)
+
 BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_SIZE(EditorFrame::OnSize)
 	EVT_MENU_OPEN(EditorFrame::OnOpeningMenu)
 	EVT_MENU(wxID_NEW, EditorFrame::OnMenuNew)
+	EVT_MENU(MENU_NEWWINDOW, EditorFrame::OnMenuNewWindow)
 	EVT_MENU(wxID_OPEN, EditorFrame::OnMenuOpen)
 	EVT_MENU(MENU_DIFF, EditorFrame::OnMenuCompareFiles)
 	EVT_MENU(MENU_OPENPROJECT, EditorFrame::OnMenuOpenProject)
@@ -209,6 +214,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(wxID_PREVIEW, EditorFrame::OnMenuPrintPreview)
 	EVT_MENU(wxID_PRINT, EditorFrame::OnMenuPrint)
 	EVT_MENU(MENU_CLOSE, EditorFrame::OnMenuClose)
+	EVT_MENU(MENU_CLOSEWINDOW, EditorFrame::OnMenuCloseWindow)
 	EVT_MENU(wxID_EXIT, EditorFrame::OnMenuExit)
 	EVT_MENU(wxID_UNDO, EditorFrame::OnMenuUndo)
 	EVT_MENU(wxID_REDO, EditorFrame::OnMenuRedo)
@@ -328,10 +334,11 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
 END_EVENT_TABLE()
 
-EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
+EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
 	m_catalyst(cat),
 	dispatcher(cat.GetDispatcher()),
-	m_settings(eGetSettings()),
+	m_generalSettings(eGetSettings()),
+	m_settings(m_generalSettings.GetFrameSettings(frameId)),
 	m_syntax_handler(syntax_handler),
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
@@ -341,7 +348,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 	bitmap(1,1)
 	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm)
 {
-	Create(NULL, id, title, rect.GetPosition(), rect.GetSize(), wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS, wxT("eMainFrame"));
+	Create(NULL, wxID_ANY, title, rect.GetPosition(), rect.GetSize(), wxDEFAULT_FRAME_STYLE|wxNO_FULL_REPAINT_ON_RESIZE|wxWANTS_CHARS, wxT("eMainFrame"));
 
 	m_remoteThread = new RemoteThread();
 
@@ -388,7 +395,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		box->Add(m_tabBar, 1, wxEXPAND);
 
 		// Create and add the searchpanel
-		m_searchPanel = new SearchPanel(*this, panel, -1, wxDefaultPosition, wxSize(10,25));
+		m_searchPanel = new SearchPanel(*this, panel, wxID_ANY, wxDefaultPosition, wxSize(10,25));
 		box->Add(m_searchPanel, 0, wxEXPAND);
 		box->Show(m_searchPanel, false);
 
@@ -401,16 +408,12 @@ EditorFrame::EditorFrame(CatalystWrapper cat, int id,  const wxString& title, co
 		m_frameManager.AddPane(panel, wxAuiPaneInfo().Name(wxT("Center")).CenterPane().PaneBorder(false));
 
 		// Add the Document History Pane
-		documentHistory = new DocHistory(m_catalyst, id, this, 1); 
+		documentHistory = new DocHistory(m_catalyst, GetId(), this, wxID_ANY); 
 		m_frameManager.AddPane(documentHistory, wxAuiPaneInfo().Name(wxT("History")).Hide().Right().Caption(_("History")).BestSize(wxSize(150,200)));
 
 		// Add the Undo History Pane
-		undoHistory = new UndoHistory(m_catalyst, this, id, this, 1);
+		undoHistory = new UndoHistory(m_catalyst, this, GetId(), this, wxID_ANY);
 		m_frameManager.AddPane(undoHistory, wxAuiPaneInfo().Name(wxT("Undo")).Hide().Right().Caption(_("Undo")).BestSize(wxSize(150,50)));
-
-		//incommingPane = new Incomming(m_catalyst, this, 1); // Add the Incomming Pane
-		//incommingPane->MakeLastItemVisible();
-		//m_frameManager.AddPane(incommingPane, wxAuiPaneInfo().Name(wxT("Incoming")).Hide().Top().Caption(_("Incoming")).BestSize(wxSize(150,100)));
 
 		m_outputPane = new HtmlOutputPane(this, *this);
 		m_frameManager.AddPane(m_outputPane, wxAuiPaneInfo().Name(wxT("Output")).Hide().Bottom().Caption(_("Output")).BestSize(wxSize(150,100)));
@@ -505,10 +508,10 @@ EditorFrame::~EditorFrame() {
 
 // Loads settings that end up as member variables
 void EditorFrame::InitMemberSettings() {
-	if (!m_settings.GetSettingInt(wxT("wrapmode"), (int&)m_wrapMode)) {
+	if (!m_generalSettings.GetSettingInt(wxT("wrapmode"), (int&)m_wrapMode)) {
 		// fallback to old settings format
 		bool wordwrap = cxWRAP_NORMAL;
-		if (m_settings.GetSettingBool(wxT("wordwrap"), wordwrap)) {
+		if (m_generalSettings.GetSettingBool(wxT("wordwrap"), wordwrap)) {
 			m_wrapMode = wordwrap ? cxWRAP_NORMAL : cxWRAP_NONE;
 		}
 	}
@@ -521,16 +524,16 @@ void EditorFrame::InitMemberSettings() {
 	regKey.SetValue(wxT("ww"), ww);
 #endif // __WXMSW__
 
-	if (!m_settings.GetSettingBool(wxT("showgutter"), m_showGutter)) m_showGutter = true;
-	if (!m_settings.GetSettingBool(wxT("hl_users"), m_userHighlight)) m_userHighlight = true;
-	if (!m_settings.GetSettingBool(wxT("softtabs"), m_softTabs)) m_softTabs = false;
-	if (!m_settings.GetSettingInt(wxT("tabwidth"), m_tabWidth)) m_tabWidth = 4;
-	if (!m_settings.GetSettingBool(wxT("showindent"), m_showIndent)) m_showIndent = false;
+	if (!m_generalSettings.GetSettingBool(wxT("showgutter"), m_showGutter)) m_showGutter = true;
+	if (!m_generalSettings.GetSettingBool(wxT("hl_users"), m_userHighlight)) m_userHighlight = true;
+	if (!m_generalSettings.GetSettingBool(wxT("softtabs"), m_softTabs)) m_softTabs = false;
+	if (!m_generalSettings.GetSettingInt(wxT("tabwidth"), m_tabWidth)) m_tabWidth = 4;
+	if (!m_generalSettings.GetSettingBool(wxT("showindent"), m_showIndent)) m_showIndent = false;
 }
 
 void EditorFrame::InitStatusbar() {
 	bool showStatusbar = true;
-	m_settings.GetSettingBool(wxT("statusbar"), showStatusbar);
+	m_generalSettings.GetSettingBool(wxT("statusbar"), showStatusbar);
 	if (showStatusbar) CreateAndSetStatusbar();
 }
 
@@ -569,6 +572,7 @@ void EditorFrame::InitMenus() {
 	fileMenu->Append(wxID_NEW, _("&New\tCtrl+N"), _("New File"));
 	fileMenu->Append(wxID_OPEN, _("&Open...\tCtrl+O"), _("Open File"));
 	fileMenu->Append(MENU_DIFF, _("&Compare..."), _("Compare..."));
+	fileMenu->Append(MENU_NEWWINDOW, _("New Window"), _("Open New Window"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_SAVE, _("&Save\tCtrl+S"), _("Save File"));
 	fileMenu->Append(wxID_SAVEAS, _("Save &As...\tCtrl-Shift-S"), _("Save File as"));
@@ -594,6 +598,7 @@ void EditorFrame::InitMenus() {
 	fileMenu->Append(MENU_CLOSE, _("&Close Tab\tCtrl+W"), _("Close Tab"));
 	fileMenu->Append(MENU_TABS_CLOSE_ALL, _("Close all &Tabs"), _("Close all Tabs"));
 	fileMenu->Append(MENU_TABS_CLOSE_OTHER, _("Clos&e other Tabs\tCtrl+Alt+W"), _("Close other Tabs"));
+	fileMenu->Append(MENU_CLOSEWINDOW, _("Close &Window"), _("Close Window"));
 	fileMenu->Append(wxID_EXIT, _("E&xit"), _("Exit"));
 	menuBar->Append(fileMenu, _("&File"));
 
@@ -792,9 +797,9 @@ void EditorFrame::RestoreState() {
 		unsigned int sp = isDiff ? 1 : 0;
 		const unsigned int sp_end = isDiff ? 3 : 1; // diffs have both left and rightd
 		for (; sp < sp_end; ++sp) {
-			mirrorPath = m_settings.GetPagePath(i, (eSettings::SubPage)sp);
+			mirrorPath = m_settings.GetPagePath(i, (SubPage)sp);
 			if (mirrorPath.empty()) continue;
-			const doc_id mirrorDoc = m_settings.GetPageDoc(i, (eSettings::SubPage)sp);
+			const doc_id mirrorDoc = m_settings.GetPageDoc(i, (SubPage)sp);
 			
 			cxLOCK_READ(m_catalyst)
 				isMirrored = catalyst.VerifyMirror(mirrorPath, mirrorDoc);
@@ -1314,7 +1319,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	Thaw();
 
 	// Notify that we are editing a new document
-	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 	UpdateTabMenu();
 }
 
@@ -1655,7 +1660,7 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 	if (!project.empty()) {
 		m_settings.SetSettingBool(wxT("showproject"), true);
 		m_settings.SetSettingString(wxT("project"), project);
-		m_settings.AddRecentProject(project);
+		m_generalSettings.AddRecentProject(project);
 		UpdateRecentFiles();
 	}
 
@@ -1876,7 +1881,7 @@ const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool wit
 	wxASSERT(eDocumentPath::IsRemotePath(url));
 
 	// Get (or create) matching profile
-	return m_settings.GetRemoteProfileFromUrl(url, withDir);
+	return m_generalSettings.GetRemoteProfileFromUrl(url, withDir);
 }
 
 bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
@@ -1885,7 +1890,7 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 		return false;
 
 	// this also updates rp with the new login
-	m_settings.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
+	m_generalSettings.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
 
 	return true;
 }
@@ -1985,7 +1990,7 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 	}
 
 	// Add to recent files list
-	m_settings.AddRecentFile(filepath);
+	m_generalSettings.AddRecentFile(filepath);
 	UpdateRecentFiles();
 
 	// Create and draw the new page
@@ -2329,6 +2334,10 @@ void EditorFrame::OnMenuNew(wxCommandEvent& WXUNUSED(event)) {
 	AddTab();
 }
 
+void EditorFrame::OnMenuNewWindow(wxCommandEvent& WXUNUSED(event)) {
+	((eApp*)wxTheApp)->NewFrame();
+}
+
 void EditorFrame::OnNotebookDClick(wxAuiNotebookEvent& WXUNUSED(event)) {
 	AddTab();
 }
@@ -2425,7 +2434,7 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuCompareFiles(wxCommandEvent& WXUNUSED(event)) {
-	CompareDlg dlg(this, m_settings);
+	CompareDlg dlg(this, m_generalSettings);
 	if (dlg.ShowModal() != wxID_OK) return;
 
 	const wxString leftPath = dlg.GetLeftPath();
@@ -2466,14 +2475,14 @@ void EditorFrame::OnMenuOpenProject(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuOpenRemote(wxCommandEvent& WXUNUSED(event)) {
-	RemoteProfileDlg dlg(this, this->m_settings);
+	RemoteProfileDlg dlg(this, this->m_generalSettings);
 	if (dlg.ShowModal() != wxID_OPEN) return;
 
 	const int profile_id = dlg.GetCurrentProfile();
 	if (profile_id == -1) return;
 
 	// Get the profile from db
-	const RemoteProfile* rp = m_settings.GetRemoteProfile(profile_id);
+	const RemoteProfile* rp = m_generalSettings.GetRemoteProfile(profile_id);
 	if (rp) OpenRemoteProject(rp);
 }
 
@@ -2507,7 +2516,7 @@ void EditorFrame::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event)) {
 	// Add to recent files list
 	const wxString path = editorCtrl->GetPath();
 	if (!path.empty()) {
-		m_settings.AddRecentFile(path);
+		m_generalSettings.AddRecentFile(path);
 		UpdateRecentFiles();
 	}
 }
@@ -2575,8 +2584,12 @@ void EditorFrame::OnMenuClose(wxCommandEvent& WXUNUSED(event)) {
 	CloseTab(tab_id);
 }
 
-void EditorFrame::OnMenuExit(wxCommandEvent& WXUNUSED(event)) {
+void EditorFrame::OnMenuCloseWindow(wxCommandEvent& WXUNUSED(event)) {
 	Close();
+}
+
+void EditorFrame::OnMenuExit(wxCommandEvent& WXUNUSED(event)) {
+	((eApp*)wxTheApp)->CloseAllFrames();
 }
 
 void EditorFrame::OnMenuUndo(wxCommandEvent& WXUNUSED(event)) {
@@ -2733,7 +2746,7 @@ void EditorFrame::OnMenuSpacesToTabs(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuSettings(wxCommandEvent& WXUNUSED(event)) {
-	SettingsDlg dlg(this, m_catalyst, m_settings);
+	SettingsDlg dlg(this, m_catalyst, m_generalSettings);
 	dlg.ShowModal();
 }
 
@@ -2896,8 +2909,8 @@ void EditorFrame::UpdateRecentFiles() {
 
 	m_recentFiles.clear();
 	m_recentProjects.clear();
-	m_settings.GetRecentFiles(m_recentFiles);
-	m_settings.GetRecentProjects(m_recentProjects);
+	m_generalSettings.GetRecentFiles(m_recentFiles);
+	m_generalSettings.GetRecentProjects(m_recentProjects);
 
 	Freeze();
 
@@ -3059,7 +3072,7 @@ void EditorFrame::OnMenuCommit(wxCommandEvent& WXUNUSED(event)) {
 	cxENDLOCK
 
 	// Notify that we are editing a new document
-	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 }
 /*
 void EditorFrame::OnMenuRevTooltip(wxCommandEvent& WXUNUSED(event)) {
@@ -3403,7 +3416,7 @@ void EditorFrame::OnNotebook(wxAuiNotebookEvent& event) {
 	UpdateWindowTitle();
 
 	// Notify that we are editing a new document
-	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 }
 
 void EditorFrame::UpdateNotebook() {
@@ -3414,7 +3427,7 @@ void EditorFrame::UpdateNotebook() {
 	UpdateWindowTitle();
 
 	// Notify that we are editing a new document
-	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, editorCtrl->GetId());
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 }
 
 void EditorFrame::OnNotebookDragDone(wxAuiNotebookEvent& WXUNUSED(event)) {
@@ -3427,17 +3440,12 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 	m_settings.GetSettingBool(wxT("keepState"), keep_state);
 	if (wxGetKeyState(WXK_SHIFT)) keep_state = true; // override
 
-
 	// Check if we have any unsaved documents
 	// and ask the user if he wants to save them
 	if (AskToSaveMulti() == false) {
 		event.Veto(); // Cancel if user aborted
 		return;
 	}
-
-	// Make sure any data copied to the clipboard stays there after
-	// the app has closed
-	wxTheClipboard->Flush();
 
 #ifdef __WXMSW__
 	// Show nag screen if the trial is about to expire
@@ -3485,15 +3493,11 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 	}
 	editorCtrl = NULL; // avoid dangling pointer
 
-	// Commit the documents & settings before closing
+	// Clean up state info
 	if (!keep_state) {
-		m_settings.DeleteAllPageSettings(); // remove old state
 		m_settings.SetSettingBool(wxT("showproject"), false);
+		m_generalSettings.RemoveFrame(m_settings);
 	}
-	m_settings.Save();
-	cxLOCK_WRITE(m_catalyst)
-		catalyst.Commit();
-	cxENDLOCK
 
 	Destroy();
 }
@@ -3806,6 +3810,9 @@ bool EditorFrame::DeletePage(unsigned int page_id, bool removetab) {
 
 	// Notify PreviewDlg that the tab is closing (it might be pinned)
 	if (m_previewDlg) m_previewDlg->PageClosed(ec);
+
+	// Notify that we are closing the page (there might be subscribers with refs)
+	dispatcher.Notify(wxT("WIN_CLOSEPAGE"), editorCtrl, GetId());
 
 	if (ec == editorCtrl) editorCtrl = NULL; // Make sure we don't accidentally use deleted ctrl
 

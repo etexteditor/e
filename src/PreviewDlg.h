@@ -34,7 +34,7 @@ struct real_pcre;                 // This double pre-definition is needed
 typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h
 class EditorFrame;
 class EditorCtrl;
-class eSettings;
+class eFrameSettings;
 class wxProcessEvent;
 class wxWebControl;
 class wxWebEvent;
@@ -44,8 +44,8 @@ public:
 	PreviewDlg(EditorFrame& parent);
 	~PreviewDlg();
 
-	void LoadSettings(const eSettings& settings);
-	void SaveSettings(eSettings& settings) const;
+	void LoadSettings(const eFrameSettings& settings);
+	void SaveSettings(eFrameSettings& settings) const;
 	void PageClosed(const EditorCtrl* ec);
 
 	// Utility functions

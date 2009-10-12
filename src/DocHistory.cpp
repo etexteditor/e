@@ -40,7 +40,7 @@ END_EVENT_TABLE()
 DocHistory::DocHistory(CatalystWrapper& cw, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
 	: wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
 	  m_catalyst(cw), m_dispatcher(cw.GetDispatcher()), m_doc(cw), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), m_hotNode(-1),
-	  m_revTooltip(cw)
+	  m_revTooltip(cw), m_editorCtrl(NULL), m_source_win_id(win_id)
 {
 	m_revTooltip.Create(this);
 	m_tooltipTimer.SetOwner(this, ID_TOOLTIP_TIMER);
@@ -49,7 +49,6 @@ DocHistory::DocHistory(CatalystWrapper& cw, int win_id, wxWindow* parent, wxWind
 	// Initialize variables
 	m_needRedrawing = true; // Make sure the ctrl gets drawn on first idle event
 	m_document_id = -1;
-	m_source_win_id = win_id;
 	m_scrollPos = 0;
 	m_isScrolling = false;
 	m_lineHeight = 18;
@@ -65,6 +64,7 @@ DocHistory::DocHistory(CatalystWrapper& cw, int win_id, wxWindow* parent, wxWind
 	m_mdc.SetFont(wxFont(9, wxMODERN, wxNORMAL, wxNORMAL, false));
 
 	// Make sure we recieve notifications of new versions and updates
+	m_dispatcher.SubscribeC(wxT("WIN_CLOSEPAGE"), (CALL_BACK)OnClosePage, this);
 	m_dispatcher.SubscribeC(wxT("WIN_CHANGEDOC"), (CALL_BACK)OnChangeDoc, this);
 	m_dispatcher.SubscribeC(wxT("DOC_UPDATED"), (CALL_BACK)OnDocUpdated, this);
 	m_dispatcher.SubscribeC(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
@@ -74,6 +74,7 @@ DocHistory::DocHistory(CatalystWrapper& cw, int win_id, wxWindow* parent, wxWind
 }
 
 DocHistory::~DocHistory() {
+	m_dispatcher.UnSubscribe(wxT("WIN_CLOSEPAGE"), (CALL_BACK)OnClosePage, this);
 	m_dispatcher.UnSubscribe(wxT("WIN_CHANGEDOC"), (CALL_BACK)OnChangeDoc, this);
 	m_dispatcher.UnSubscribe(wxT("DOC_UPDATED"), (CALL_BACK)OnDocUpdated, this);
 	m_dispatcher.UnSubscribe(wxT("DOC_DELETED"), (CALL_BACK)OnDocDeleted, this);
@@ -85,6 +86,7 @@ DocHistory::~DocHistory() {
 void DocHistory::Clear() {
 	// Invalidate doc ref
 	m_sourceDoc.Invalidate();
+	m_editorCtrl = NULL;
 
 	// Clear data structures
 	m_items.clear();
@@ -475,9 +477,9 @@ void DocHistory::OnMouseLeftDown(wxMouseEvent& event) {
 			cxLOCK_READ(m_catalyst)
 				draft_head = catalyst.GetDraftHead(hot_doc.document_id);
 			cxENDLOCK
-			m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &draft_head, m_source_win_id);
+			m_editorCtrl->SetDocument(draft_head);
 		}
-		else m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &hot_doc, m_source_win_id);
+		else m_editorCtrl->SetDocument(hot_doc);
 	}
 }
 
@@ -597,9 +599,9 @@ void DocHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 		cxLOCK_READ(m_catalyst)
 			draft_head = catalyst.GetDraftHead(hot_doc.document_id);
 		cxENDLOCK
-		m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &draft_head, m_source_win_id);
+		m_editorCtrl->SetDocument(draft_head);
 	}
-	else m_dispatcher.Notify(wxT("WIN_SETDOCUMENT"), &hot_doc, m_source_win_id);
+	else m_editorCtrl->SetDocument(hot_doc);
 }
 
 void DocHistory::OnVersionTreeTooltip(VersionTreeEvent& event) {
@@ -651,12 +653,38 @@ void DocHistory::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
 	// # no evt.skip() as we don't want the control to erase the background
 }
 
+void DocHistory::HandleDocUpdate(const doc_id& di) {
+	if (di == m_editorCtrl->GetDocID()) {
+		SetDocument(di);
+	}
+	else {
+		bool isSameDoc;
+		cxLOCK_READ(m_catalyst)
+			isSameDoc = catalyst.InSameHistory(di, m_sourceDoc);
+		cxENDLOCK
+
+		// Doc has been changed in another editor, so we just redraw
+		if (isSameDoc) {
+			ReBuildTree();
+			m_isScrolling = false; // avoid moving old image if scrolling during update
+			wxClientDC dc(this);
+			DrawLayout(dc);
+		}
+	}
+}
+
+// static notification handler
+void DocHistory::OnClosePage(DocHistory* self, void* data, int WXUNUSED(filter)) {
+	if (self->m_editorCtrl == (EditorCtrl*)data) self->Clear();
+}
+
 // static notification handler
 void DocHistory::OnChangeDoc(DocHistory* self, void* data, int filter) {
-	const doc_id di = ((EditorCtrl*)data)->GetDocID();
+	if (filter != self->m_source_win_id) return;
 	//wxLogTrace("OnChangeDoc %d %d - %d", di.document_id, di.revision_id, filter);
 
-	self->m_source_win_id = filter;
+	self->m_editorCtrl = (EditorCtrl*)data;
+	const doc_id di = self->m_editorCtrl->GetDocID();
 	self->SetDocument(di);
 }
 
@@ -665,18 +693,7 @@ void DocHistory::OnDocUpdated(DocHistory* self, void* data, int WXUNUSED(filter)
 	if (!self->m_sourceDoc.IsOk()) return;
 
 	const doc_id& di = *(const doc_id*)data;
-
-	bool isSameDoc;
-	cxLOCK_READ(self->m_catalyst)
-		isSameDoc = catalyst.InSameHistory(di, self->m_sourceDoc);
-	cxENDLOCK
-
-	if (isSameDoc) {
-		self->ReBuildTree();
-		self->m_isScrolling = false; // avoid moving old image if scrolling during update
-		wxClientDC dc(self);
-		self->DrawLayout(dc);
-	}
+	self->HandleDocUpdate(di);
 }
 
 // static notification handler
@@ -700,43 +717,24 @@ void DocHistory::OnDocCommited(DocHistory* self, void* data, int WXUNUSED(filter
 	if (self->m_sourceDoc.SameDoc(diPair->doc1)) {
 		self->m_isScrolling = false; // avoid moving old image if scrolling during update
 		self->SetDocument(diPair->doc2);
-	/*self->m_sourceDoc = diPair->doc2;
-
-		self->ReBuildTree();
-		self->m_isScrolling = false; // avoid moving old image if scrolling during update
-		wxClientDC dc(self);
-		self->DrawLayout(dc);*/
+	}
+	else {
+		self->HandleDocUpdate(diPair->doc2);
 	}
 }
 
 // static notification handler
 void DocHistory::OnNewRevision(DocHistory* self, void* data, int WXUNUSED(filter)) {
 	if (!self->m_sourceDoc.IsOk()) return;
-	const doc_id* const di = (doc_id*)data;
-	wxASSERT(di->IsDraft());
 
-	bool inSame;
-	cxLOCK_READ(self->m_catalyst)
-		inSame = catalyst.InSameHistory(self->m_sourceDoc, *di);
-	cxENDLOCK
-
-	if (inSame) {
-		self->SetDocument(*di);
-	}
+	const doc_id& di = *(const doc_id*)data;
+	self->HandleDocUpdate(di);
 }
 
 // static notification handler
 void DocHistory::OnUpdateRevision(DocHistory* self, void* data, int WXUNUSED(filter)) {
 	if (!self->m_sourceDoc.IsOk()) return;
-	const doc_id* const di = (doc_id*)data;
-	wxASSERT(di->IsDraft());
 
-	bool inSame;
-	cxLOCK_READ(self->m_catalyst)
-		inSame = catalyst.InSameHistory(self->m_sourceDoc, *di);
-	cxENDLOCK
-
-	if (inSame) {
-		self->SetDocument(*di);
-	}
+	const doc_id& di = *(const doc_id*)data;
+	self->HandleDocUpdate(di);
 }

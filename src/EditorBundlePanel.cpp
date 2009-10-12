@@ -173,7 +173,7 @@ const char** EditorBundlePanel::RecommendedIcon() const {
 	return m_editorCtrl->RecommendedIcon();
 }
 
-void EditorBundlePanel::SaveSettings(unsigned int i, eSettings& settings) {
+void EditorBundlePanel::SaveSettings(unsigned int i, eFrameSettings& settings) {
 	m_editorCtrl->SaveSettings(i, settings);
 }
 

@@ -27,6 +27,37 @@
 // pre-declarations
 class RemoteProfile;
 
+enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
+
+class eFrameSettings {
+public:
+	eFrameSettings(wxJSONValue& framesettings);
+
+	// Individual settings
+	bool GetSettingBool(const wxString& name, bool& value) const;
+	void SetSettingBool(const wxString& name, bool value);
+	bool GetSettingInt(const wxString& name, int& value) const;
+	void SetSettingInt(const wxString& name, int value);
+	bool GetSettingString(const wxString& name, wxString& value) const;
+	void SetSettingString(const wxString& name, const wxString& value);
+	void RemoveSetting(const wxString& name);
+
+	// Pages
+	size_t GetPageCount() const;
+	void SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks, SubPage sp=SP_MAIN);
+	void GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp=SP_MAIN) const;
+	bool IsPageDiff(size_t page_id) const;
+	wxString GetPagePath(size_t page_id, SubPage sp=SP_MAIN) const;
+	doc_id GetPageDoc(size_t page_id, SubPage sp=SP_MAIN) const;
+	void DeletePageSettings(size_t page_id);
+	void DeleteAllPageSettings();
+
+	wxJSONRefData* GetRefData() const {return m_jsonRoot.GetRefData();};
+
+private:
+	wxJSONValue& m_jsonRoot;
+};
+
 class eSettings: public ISettings {
 public:
 	eSettings();
@@ -44,25 +75,22 @@ public:
 	void SetSettingLong(const wxString& name, const wxLongLong& value);
 	bool GetSettingString(const wxString& name, wxString& value) const;
 	void SetSettingString(const wxString& name, const wxString& value);
-
 	void RemoveSetting(const wxString& name);
+
+	// Frames
+	unsigned int GetFrameCount() const;
+	eFrameSettings GetFrameSettings(unsigned int frameId);
+	unsigned int AddFrame(unsigned int top);
+	void RemoveFrame(unsigned int frameId);
+	void RemoveFrame(const eFrameSettings& fs);
+	void DeleteAllFrameSettings(int top);
+	int GetIndexFromFrameSettings(const eFrameSettings& fs) const;
 
 	// Recent files
 	void AddRecentFile(const wxString& path);
 	void AddRecentProject(const wxString& path);
 	void GetRecentFiles(wxArrayString& recentfiles) const;
 	void GetRecentProjects(wxArrayString& recentprojects) const;
-
-	// Pages
-	enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
-	size_t GetPageCount() const;
-	void SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks, SubPage sp=SP_MAIN);
-	void GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp=SP_MAIN) const;
-	bool IsPageDiff(size_t page_id) const;
-	wxString GetPagePath(size_t page_id, SubPage sp=SP_MAIN) const;
-	doc_id GetPageDoc(size_t page_id, SubPage sp=SP_MAIN) const;
-	void DeletePageSettings(size_t page_id);
-	void DeleteAllPageSettings();
 
 	// Recent Diffs
 	void AddRecentDiff(const wxString& path, SubPage sp);

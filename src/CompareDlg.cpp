@@ -46,13 +46,13 @@ CompareDlg::CompareDlg(wxWindow *parent, eSettings& settings):
 
 	// Add recents
 	wxArrayString recentPaths;
-	m_settings.GetRecentDiffs(recentPaths, eSettings::SP_LEFT);
+	m_settings.GetRecentDiffs(recentPaths, SP_LEFT);
 	if (!recentPaths.empty()) {
 		m_leftPathCtrl->Append(recentPaths);
 		m_leftPathCtrl->SetSelection(0);
 	}
 	recentPaths.clear();
-	m_settings.GetRecentDiffs(recentPaths, eSettings::SP_RIGHT);
+	m_settings.GetRecentDiffs(recentPaths, SP_RIGHT);
 	if (!recentPaths.empty()) {
 		m_rightPathCtrl->Append(recentPaths);
 		m_rightPathCtrl->SetSelection(0);
@@ -81,8 +81,8 @@ void CompareDlg::OnButtonOk(wxCommandEvent& evt) {
 	const wxString leftPath = m_leftPathCtrl->GetValue();
 	const wxString rightPath = m_rightPathCtrl->GetValue();
 
-	m_settings.AddRecentDiff(leftPath, eSettings::SP_LEFT);
-	m_settings.AddRecentDiff(rightPath, eSettings::SP_RIGHT);
+	m_settings.AddRecentDiff(leftPath, SP_LEFT);
+	m_settings.AddRecentDiff(rightPath, SP_RIGHT);
 
 	// If we get here the paths are valid
 	evt.Skip(); 

@@ -183,7 +183,7 @@ PreviewDlg::~PreviewDlg() {
 	if (m_re_href) free(m_re_href);
 }
 
-void PreviewDlg::LoadSettings(const eSettings& settings) {
+void PreviewDlg::LoadSettings(const eFrameSettings& settings) {
 	// Get saved position
 	bool showOptions = false;
 	bool doPipe = false;
@@ -208,7 +208,7 @@ void PreviewDlg::LoadSettings(const eSettings& settings) {
 	}
 }
 
-void PreviewDlg::SaveSettings(eSettings& settings) const {
+void PreviewDlg::SaveSettings(eFrameSettings& settings) const {
 	settings.SetSettingBool(wxT("prvw_showoptions"), m_showOptions->IsChecked());
 	settings.SetSettingBool(wxT("prvw_dopipe"), m_pipeCheck->IsChecked());
 	settings.SetSettingString(wxT("prvw_pipecmd"), m_cmdText->GetValue());

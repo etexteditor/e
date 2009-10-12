@@ -59,6 +59,7 @@ private:
 	DECLARE_EVENT_TABLE();
 
 	// Notifier handlers
+	static void OnClosePage(UndoHistory* self, void* data, int filter);
 	static void OnChangeDoc(UndoHistory* self, void* data, int filter);
 	static void OnDocDeleted(UndoHistory* self, void* data, int filter);
 	static void OnNewRevision(UndoHistory* self, void* data, int filter);
@@ -74,20 +75,20 @@ private:
 
 	wxMemoryDC m_mdc;
 	wxBitmap m_bitmap;
+	DiffLineCell m_cell;
 
 	bool m_ignoreUpdates;
 
 	EditorCtrl* m_editorCtrl;
 	IFrameUndoPane* m_parentFrame;
 
-	DiffLineCell m_cell;
 	VersionTree* m_pTree;
 
 	wxBrush bgBrush;
 	wxPen linePen;
 
 	doc_id m_sourceDoc;
-	int m_source_win_id;
+	const int m_source_win_id;
 	interval m_range;
 	std::vector<cxDiffEntry> m_rangeHistory;
 

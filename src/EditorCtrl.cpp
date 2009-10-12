@@ -107,7 +107,7 @@ unsigned long EditorCtrl::s_ctrlDownTime = 0;
 bool EditorCtrl::s_altGrDown = false;
 
 /// Open a page saved from a previous session
-EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size)	: 
+EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame) : 
 	m_catalyst(cw),
 	m_doc(cw),
 	dispatcher(cw.GetDispatcher()),
@@ -144,11 +144,11 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_re(NULL), 
 	m_symbolCacheToken(0)
 {
-	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
+	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
 	Init();
 
-	eSettings& settings = eGetSettings();
+	eFrameSettings& settings = parentFrame.GetFrameSettings();
 	RestoreSettings(page_id, settings);
 }
 
@@ -263,7 +263,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	FoldingInvalidate();
 }
 
-void EditorCtrl::RestoreSettings(unsigned int page_id, eSettings& settings, unsigned int subid) {
+void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings, unsigned int subid) {
 	wxString mirrorPath;
 	doc_id di;
 	int newpos;
@@ -274,7 +274,7 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eSettings& settings, unsi
 
 	// Retrieve the page info
 	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
-	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks, (eSettings::SubPage)subid);
+	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks, (SubPage)subid);
 
 	if (eDocumentPath::IsRemotePath(mirrorPath)) {
 		// If the mirror points to a remote file, we have to download it first.
@@ -453,11 +453,11 @@ EditorCtrl::~EditorCtrl() {
 	ClearRemoteInfo();
 }
 
-void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings) {
+void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings) {
 	SaveSettings(i, settings, 0); 
 }
 
-void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings, unsigned int subid) {
+void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings, unsigned int subid) {
 	const wxString& path = GetPath();
 	const doc_id di = GetDocID();
 	const int pos = GetPos();
@@ -466,7 +466,7 @@ void EditorCtrl::SaveSettings(unsigned int i, eSettings& settings, unsigned int 
 	const vector<unsigned int> folds = GetFoldedLines();
 	const vector<cxBookmark>& bookmarks = GetBookmarks();
 
-	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks, (eSettings::SubPage)subid);
+	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks, (SubPage)subid);
 	//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
 }
 
@@ -2933,7 +2933,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 
 	// Notify that we have changed document
 	const doc_id docId = di; // AdamV: Does this exist just to be on the stack in bug reports?
-	dispatcher.Notify(wxT("WIN_CHANGEDOC"), this, GetId());
+	dispatcher.Notify(wxT("WIN_CHANGEDOC"), this, m_parentFrame.GetId());
 
 	return true;
 }

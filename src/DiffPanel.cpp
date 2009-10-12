@@ -179,12 +179,12 @@ void DiffPanel::OnChildFocus(wxChildFocusEvent& event) {
 	}
 }
 
-void DiffPanel::SaveSettings(unsigned int i, eSettings& settings) {
+void DiffPanel::SaveSettings(unsigned int i, eFrameSettings& settings) {
 	m_leftEditor->SaveSettings(i, settings, 1);
 	m_rightEditor->SaveSettings(i, settings, 2);
 }
 
-void DiffPanel::RestoreSettings(unsigned int i, eSettings& settings) {
+void DiffPanel::RestoreSettings(unsigned int i, eFrameSettings& settings) {
 	m_leftEditor->RestoreSettings(i, settings, 1);
 	m_rightEditor->RestoreSettings(i, settings, 2);
 

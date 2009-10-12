@@ -28,6 +28,7 @@ class EditorCtrl;
 class DiffBar;
 class DiffMarkBar;
 class wxGridBagSizer;
+class eFrameSettings;
 
 class DiffPanel : public wxPanel, public ITabPage {
 public:
@@ -41,8 +42,8 @@ public:
 	bool CmpPaths(const wxString& path1, const wxString& path2) const;
 	void UpdateMarkBars();
 
-	virtual void SaveSettings(unsigned int i, eSettings& settings);
-	void RestoreSettings(unsigned int i, eSettings& settings);
+	virtual void SaveSettings(unsigned int i, eFrameSettings& settings);
+	void RestoreSettings(unsigned int i, eFrameSettings& settings);
 
 	virtual EditorCtrl* GetActiveEditor();
 	virtual const char** RecommendedIcon() const;

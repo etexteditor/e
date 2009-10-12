@@ -21,8 +21,8 @@
 #include "images/tmLanguage.xpm"
 
 /// Open a page saved from a previous session
-BundleItemEditorCtrl::BundleItemEditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos, const wxSize& size):
-	EditorCtrl(page_id, cw, bitmap,parent,parentFrame,pos,size)	
+BundleItemEditorCtrl::BundleItemEditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame):
+	EditorCtrl(page_id, cw, bitmap, parent, parentFrame)	
 {
 	const PListHandler& plistHandler = m_syntaxHandler.GetPListHandler();
 	m_bundleType = plistHandler.GetBundleTypeFromUri(m_remotePath);

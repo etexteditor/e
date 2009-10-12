@@ -24,6 +24,7 @@
 class VersionTree;
 class VersionTreeEvent;
 class Timeline;
+class EditorCtrl;
 
 class DocHistory : public wxControl {
 public:
@@ -38,6 +39,7 @@ private:
 	void MakeItemVisible(unsigned int item_id);
 	void DrawLayout(wxDC& dc);
 	void AddChildren(int parent_pos, const doc_id& doc, const doc_id& sel_doc, const Catalyst& catalyst);
+	void HandleDocUpdate(const doc_id& di);
 
 	// Event handlers
 	void OnPaint(wxPaintEvent& event);
@@ -56,6 +58,7 @@ private:
 	DECLARE_EVENT_TABLE();
 
 	// Notifier handlers
+	static void OnClosePage(DocHistory* self, void* data, int filter);
 	static void OnChangeDoc(DocHistory* self, void* data, int filter);
 	static void OnDocUpdated(DocHistory* self, void* data, int filter);
 	static void OnDocDeleted(DocHistory* self, void* data, int filter);
@@ -75,6 +78,7 @@ private:
 	wxTimer m_tooltipTimer;
 	int m_hotNode;
 	RevTooltip m_revTooltip;
+	EditorCtrl* m_editorCtrl;
 
 	wxBrush bgBrush;
 	wxPen linePen;
@@ -92,7 +96,7 @@ private:
 	int m_document_id;
 	doc_id m_sourceDoc;
 	int m_selectedNode;
-	int m_source_win_id;
+	const int m_source_win_id;
 	int m_lineHeight;
 	int m_treeHeight;
 	int m_scrollPos;

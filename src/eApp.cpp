@@ -28,6 +28,7 @@
 #include <wx/file.h>
 #include <wx/image.h>
 #include <wx/stdpaths.h>
+#include <wx/clipbrd.h>
 
 #include "UpdaterThread.h"
 #include "Dispatcher.h"
@@ -58,7 +59,6 @@ END_EVENT_TABLE()
 
 bool eApp::OnInit() {
 	// Initialize variables
-	frame = NULL;
 	m_pCatalyst = NULL;
 	m_catalyst = NULL;
 	m_pSyntaxHandler = NULL;
@@ -165,7 +165,6 @@ bool eApp::OnInit() {
 
 	// Load Settings
 	m_settings.Load(m_appDataPath);
-	if (m_settings.IsEmpty()) m_pCatalyst->MoveOldSettings(m_settings);
 
 	// Apply options
 	if (clearState) ClearState();
@@ -180,21 +179,19 @@ bool eApp::OnInit() {
 	m_pListHandler = new PListHandler(GetAppPath(), GetAppDataPath(), clearBundleCache);
 	m_pSyntaxHandler = new TmSyntaxHandler(m_pCatalyst->GetDispatcher(), *m_pListHandler);
 
-    // Create the main window
-	wxLogDebug(wxT("Creating main frame"));
-	frame = new EditorFrame( *m_catalyst, -1, wxT("e"), DetermineFrameSize(), *m_pSyntaxHandler);
-	SetTopWindow(frame);
-
-	// Show the main window, bringing it to the top.
-	frame->Show(true);
-	frame->Raise();
-	frame->Update();
-
-	// Open files from saved state
-	frame->RestoreState();
+    // Create the main windows
+	wxLogDebug(wxT("Creating main frames"));
+	const size_t framecount = m_settings.GetFrameCount();
+	if (framecount == 0) NewFrame();
+	else {
+		for (size_t i = 0; i < framecount; ++i) {
+			OpenFrame(i);
+		}
+	}
 
 	// Open files from command-line options
 	if (argc > 1) {
+		EditorFrame* frame = GetTopFrame();
 		for (unsigned int i = 0; i < m_files.Count(); ++i) {
 			const wxString& arg = m_files[i];
 			frame->Open(arg, mate);
@@ -218,9 +215,7 @@ bool eApp::OnInit() {
 	eDocumentPath::InitCygwinOnce();
 #endif
 
-	wxLogDebug(wxT("Checking for modified files"));
-	frame->CheckForModifiedFilesAsync();
-	wxLogDebug(wxT("Done Checking for modified files"));
+	CheckForModifiedFiles();
 
 	// If the command-line option didn't prevent checking for updates,
 	// read the corresponding setting.
@@ -234,34 +229,107 @@ bool eApp::OnInit() {
     return true;
 }
 
+EditorFrame* eApp::OpenFrame(size_t frameId) {
+	const wxRect frameSize = DetermineFrameSize();
+	EditorFrame* frame = new EditorFrame( *m_catalyst, frameId, wxT("e"), frameSize, *m_pSyntaxHandler);
+
+	// Show the main window, bringing it to the top.
+	frame->Show(true);
+	frame->Raise();
+	frame->Update();
+
+	// Open files from saved state
+	frame->RestoreState();
+
+	return frame;
+}
+
+EditorFrame* eApp::NewFrame() {
+	// We want to copy settings from currently active frame
+	size_t activeId = 0;
+	EditorFrame* frame = GetTopFrame();
+	if (frame) {
+		activeId = m_settings.GetIndexFromFrameSettings(frame->GetFrameSettings());
+	}
+
+	// Create settings for new frame and open
+	const size_t frameId = m_settings.AddFrame(activeId);
+	return OpenFrame(frameId);
+}
+
+void eApp::CloseAllFrames() {
+	wxWindowList::const_iterator i;
+    const wxWindowList::const_iterator end = wxTopLevelWindows.end();
+
+	// The app will exit when all frames are closed
+	for ( i = wxTopLevelWindows.begin(); i != end; ++i )
+    {
+        if (!(*i)->IsKindOf(CLASSINFO(EditorFrame))) continue;
+
+		EditorFrame* win = wx_static_cast(EditorFrame*, *i);
+		if (!win->Close()) return;
+	}
+}
+
+EditorFrame* eApp::GetTopFrame() {
+	EditorFrame* win = NULL;
+	wxWindowList::const_iterator i;
+    const wxWindowList::const_iterator end = wxTopLevelWindows.end();
+
+    for ( i = wxTopLevelWindows.begin(); i != end; ++i )
+    {
+        if (!(*i)->IsKindOf(CLASSINFO(EditorFrame))) continue;
+
+		win = wx_static_cast(EditorFrame*, *i);
+		if (win->IsActive()) return win;
+	}
+
+	// If no frame is active, just return last
+	return win;
+}
+
+void eApp::CheckForModifiedFiles() {
+	wxWindowList::const_iterator i;
+    const wxWindowList::const_iterator end = wxTopLevelWindows.end();
+
+    wxLogDebug(wxT("Checking for modified files"));
+	for ( i = wxTopLevelWindows.begin(); i != end; ++i )
+    {
+        if (!(*i)->IsKindOf(CLASSINFO(EditorFrame))) continue;
+
+		EditorFrame* win = wx_static_cast(EditorFrame*, *i);
+		win->CheckForModifiedFilesAsync();
+	}
+	wxLogDebug(wxT("Done Checking for modified files"));
+}
+
 void eApp::ClearState() {
-	// Pages
-	m_settings.DeleteAllPageSettings();
-
-	// Tab layout
-	m_settings.RemoveSetting(wxT("topwin/tablayout"));
-	m_settings.RemoveSetting(wxT("topwin/page_id"));
-
+	m_settings.DeleteAllFrameSettings(0);
 	m_settings.Save();
 }
 
 void eApp::ClearLayout() {
+	m_settings.DeleteAllFrameSettings(0);
+	if (m_settings.GetFrameCount() == 0) return;
+
+	eFrameSettings settings = m_settings.GetFrameSettings(0);
+
 	// Window size and position
-	m_settings.RemoveSetting(wxT("topwin/x"));
-	m_settings.RemoveSetting(wxT("topwin/y"));
-	m_settings.RemoveSetting(wxT("topwin/width"));
-	m_settings.RemoveSetting(wxT("topwin/height"));
-	m_settings.RemoveSetting(wxT("topwin/ismax"));
+	settings.RemoveSetting(wxT("topwin/x"));
+	settings.RemoveSetting(wxT("topwin/y"));
+	settings.RemoveSetting(wxT("topwin/width"));
+	settings.RemoveSetting(wxT("topwin/height"));
+	settings.RemoveSetting(wxT("topwin/ismax"));
 
 	// wxAUI perspective
-	m_settings.RemoveSetting(wxT("topwin/panes"));
+	settings.RemoveSetting(wxT("topwin/panes"));
 
 	// pane settings
-	m_settings.RemoveSetting(wxT("symbol_pane"));
-	m_settings.RemoveSetting(wxT("showsymbols"));
-	m_settings.RemoveSetting(wxT("prvw_pane"));
-	m_settings.RemoveSetting(wxT("showpreview"));
-	m_settings.RemoveSetting(wxT("showproject"));
+	settings.RemoveSetting(wxT("symbol_pane"));
+	settings.RemoveSetting(wxT("showsymbols"));
+	settings.RemoveSetting(wxT("prvw_pane"));
+	settings.RemoveSetting(wxT("showpreview"));
+	settings.RemoveSetting(wxT("showproject"));
 
 	m_settings.Save();
 }
@@ -407,7 +475,8 @@ void eApp::OnIdle(wxIdleEvent& event) {
 	if (!m_openStack.IsEmpty()) {
 		const wxString cmd = m_openStack[0];
 		m_openStack.RemoveAt(0);
-		frame->Open(cmd);
+
+		GetTopFrame()->Open(cmd);
 	}
 
 	if (m_pSyntaxHandler) {
@@ -425,6 +494,7 @@ bool eApp::ExecuteCmd(const wxString& cmd) {
 
 bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 	wxASSERT(!cmd.empty());
+	EditorFrame* frame = GetTopFrame();
 	if (!frame) return false; // May not be created yet
 
 	wxString exec_cmd = cmd;
@@ -590,6 +660,15 @@ wxRect eApp::DetermineFrameSize() {
 }
 
 int eApp::OnExit() {
+	// Make sure any data copied to the clipboard stays there after
+	// the app has closed
+	wxTheClipboard->Flush();
+
+	m_settings.Save();
+	cxLOCK_WRITE((*m_catalyst))
+		catalyst.Commit();
+	cxENDLOCK
+
 	// Release allocated memory
 #ifndef __WXMSW__
 	if (m_server) delete m_server;
@@ -630,7 +709,7 @@ wxString eApp::GetAppTitle() {
 
 void eApp::OnUpdatesAvailable(wxCommandEvent& WXUNUSED(event)) {
 	// Ask user if he wants to download new release
-	const int answer = wxMessageBox(_("A new release of e is available.\nDo you wish to go the the website to download it now?"), wxT("Program update!"), wxYES_NO|wxICON_EXCLAMATION, frame);
+	const int answer = wxMessageBox(_("A new release of e is available.\nDo you wish to go the the website to download it now?"), wxT("Program update!"), wxYES_NO|wxICON_EXCLAMATION, GetTopFrame());
 	if (answer == wxYES) {
 		// Go to website
 		wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com"));

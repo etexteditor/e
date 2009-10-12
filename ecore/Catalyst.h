@@ -345,7 +345,6 @@ public:
 
 	// Settings functions
 	const wxLongLong& GetId() const;
-	void MoveOldSettings(eSettings& settings);
 
 	// List of documents
 	void GetDocList(vector<doc_id>& doclist) const;

@@ -26,6 +26,7 @@
 #include "Catalyst.h"
 #include "RemoteThread.h"
 #include "key_hook.h"
+#include "eSettings.h"
 
 #include "WrapMode.h"
 
@@ -51,7 +52,6 @@ class ChangeCheckerThread;
 class BundlePane;
 class DocHistory;
 class UndoHistory;
-class eSettings;
 class SearchPanel;
 class TmSyntaxHandler;
 class StatusBar;
@@ -73,7 +73,7 @@ class EditorFrame : public KeyHookable<wxFrame>,
 	public IOpenTextmateURL
 {
 public:
-	EditorFrame(CatalystWrapper cat, int id, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
+	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
 	~EditorFrame();
 
 	void RestoreState();
@@ -139,6 +139,7 @@ public:
 	cxWrapMode GetWrapMode() const {return m_wrapMode;};
 	bool IsGutterShown() const {return m_showGutter;};
 	bool IsIndentShown() const {return m_showIndent;};
+	eFrameSettings& GetFrameSettings() {return m_settings;};
 
 	// Registration
 	void RemoveRegMenus();
@@ -242,6 +243,7 @@ private:
 	void OnOpeningMenu(wxMenuEvent& event);
 
 	void OnMenuNew(wxCommandEvent& event);
+	void OnMenuNewWindow(wxCommandEvent& event);
 	void OnMenuOpen(wxCommandEvent& event);
 	void OnMenuCompareFiles(wxCommandEvent& event);
 	void OnMenuOpenProject(wxCommandEvent& event);
@@ -256,6 +258,7 @@ private:
 	//void OnMenuPrintPreview(wxCommandEvent& event);
 	void OnMenuPrint(wxCommandEvent& event);
 	void OnMenuClose(wxCommandEvent& event);
+	void OnMenuCloseWindow(wxCommandEvent& event);
 	void OnMenuExit(wxCommandEvent& event);
 	void OnMenuUndo(wxCommandEvent& event);
 	void OnMenuRedo(wxCommandEvent& event);
@@ -382,7 +385,8 @@ private:
 	// Member variables
 	CatalystWrapper m_catalyst;
 	Dispatcher& dispatcher;
-	eSettings& m_settings;
+	eSettings& m_generalSettings;
+	eFrameSettings m_settings;
 	TmSyntaxHandler& m_syntax_handler;
 
 	wxImageList imageList;
@@ -455,6 +459,8 @@ private:
 	wxPageSetupDialogData m_printData;
 
 	wxBitmap bitmap; // shared by EditorCtrl's
+
+	DECLARE_DYNAMIC_CLASS_NO_COPY(EditorFrame)
 };
 
 #endif // __EDITORFRAME_H__

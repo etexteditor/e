@@ -46,7 +46,7 @@ public:
 
 	virtual EditorCtrl* GetActiveEditor();
 	virtual const char** RecommendedIcon() const;
-	virtual void SaveSettings(unsigned int i, eSettings& settings);
+	virtual void SaveSettings(unsigned int i, eFrameSettings& settings);
 
 private:
 	void Init();

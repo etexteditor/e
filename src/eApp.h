@@ -54,6 +54,10 @@ public:
 	const wxString& VersionName() const { return m_version_name; }
 	const unsigned int VersionId() const { return m_version_id; }
 
+	// Frames
+	EditorFrame* NewFrame();
+	void CloseAllFrames();
+
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);
 	virtual bool ExecuteCmd(const wxString& cmd, wxString& result);
@@ -86,8 +90,12 @@ public:
 #endif  //__WXDEBUG__
 
 private:
+	// Frames
+	EditorFrame* OpenFrame(size_t frameId);
+	EditorFrame* GetTopFrame();
+	void CheckForModifiedFiles();
+
 	// Member variables
-	EditorFrame* frame;
 	wxString m_version_name;
 	unsigned int m_version_id;
 

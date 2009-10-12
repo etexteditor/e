@@ -61,6 +61,24 @@ void eSettings::Load(const wxString& appDataPath) {
 			env[key] = envNode.ItemAt(key).AsString();
 		}
 	}
+
+	// If this is an old config file, move frame related settings into it's own section
+	if (!m_jsonRoot.HasMember(wxT("frames"))) {
+		wxJSONValue& frames = m_jsonRoot[wxT("frames")];
+		wxJSONValue& frame = frames[0]; // there should always be at least one frame
+
+		// Move page settings
+		if (m_jsonRoot.HasMember(wxT("pages"))) {
+			wxJSONValue& pages = m_jsonRoot[wxT("pages")];
+			frame[wxT("pages")] = pages;
+			m_jsonRoot.Remove(wxT("pages"));
+		}
+
+		// Copy general settings
+		if (m_jsonRoot.HasMember(wxT("settings"))) {
+			frame[wxT("settings")] = m_jsonRoot[wxT("settings")];
+		}
+	}
 }
 
 bool eSettings::Save() {
@@ -91,6 +109,94 @@ bool eSettings::Save() {
 
 bool eSettings::IsEmpty() const {
 	return !m_jsonRoot.IsObject();
+}
+
+unsigned int eSettings::GetFrameCount() const {
+	if (!m_jsonRoot.HasMember(wxT("frames"))) return 0;
+
+	const wxJSONValue frames = m_jsonRoot.ItemAt(wxT("frames"));
+	return frames.Size();
+}
+
+eFrameSettings eSettings::GetFrameSettings(unsigned int frameId) {
+	wxASSERT(m_jsonRoot.HasMember(wxT("frames")));
+
+	wxJSONValue& frames = m_jsonRoot[wxT("frames")];
+	wxASSERT((int)frameId < frames.Size());
+
+	wxJSONValue& frame = frames[frameId];
+	return eFrameSettings(frame);
+}
+
+unsigned int eSettings::AddFrame(unsigned int top) {
+	// Create new frame
+	wxJSONValue& frames = m_jsonRoot[wxT("frames")];
+	wxJSONValue& frame = frames.IsArray() ? frames[frames.Size()] : frames[0];
+
+	// Copy settings from active frame
+	if (frames.Size() > 1) {
+		frame[wxT("settings")] = frames[top][wxT("settings")];
+	}
+
+	return frames.Size()-1;
+}
+
+void eSettings::RemoveFrame(unsigned int frameId) {
+	wxASSERT(m_jsonRoot.HasMember(wxT("frames")));
+
+	wxJSONValue frames = m_jsonRoot.ItemAt(wxT("frames"));
+	wxASSERT((int)frameId < frames.Size());
+
+	// we need to leave at least one frame
+	if (frames.Size() == 1) {
+		// just clear page info
+		wxJSONValue& frame = frames[0];
+		frame.Remove(wxT("pages"));
+	}
+	else frames.Remove(frameId);
+}
+
+void eSettings::RemoveFrame(const eFrameSettings& fs) {
+	const int frameId = GetIndexFromFrameSettings(fs);
+	if (frameId == -1) return;
+
+	RemoveFrame(frameId);
+}
+
+void eSettings::DeleteAllFrameSettings(int top) {
+	if (!m_jsonRoot.HasMember(wxT("frames"))) return;
+
+	wxJSONValue& frames = m_jsonRoot[wxT("frames")];
+	if (frames.Size() == 0) return;
+
+	// Remove all frames, but keep settings from the active one
+	for (int i = frames.Size()-1; i >= 0; --i) {
+		if (i == top) {
+			// just clear page info
+			wxJSONValue& frame = frames[i];
+			frame.Remove(wxT("pages"));
+			continue;
+		}
+		frames.Remove(i);
+	}
+
+	// Remove page related settings
+	eFrameSettings frmSettings = GetFrameSettings(0);
+	frmSettings.RemoveSetting(wxT("topwin/tablayout"));
+	frmSettings.RemoveSetting(wxT("topwin/page_id"));
+}
+
+int eSettings::GetIndexFromFrameSettings(const eFrameSettings& fs) const {
+	if (!m_jsonRoot.HasMember(wxT("frames"))) return -1;
+
+	wxJSONValue frames = m_jsonRoot.ItemAt(wxT("frames"));
+	if (frames.Size() == 0) return -1;
+
+	for (int i = 0; i < frames.Size(); ++i) {
+		if (frames[i].GetRefData() == fs.GetRefData()) return i;
+	}
+
+	return -1; // not found
 }
 
 bool eSettings::GetSettingBool(const wxString& name, bool& value) const {
@@ -230,125 +336,6 @@ void eSettings::GetRecents(const wxJSONValue& jarray, wxArrayString& recents) co
 	for (int i = 0; i < jarray.Size(); ++i) {
 		recents.Add(jarray.ItemAt(i).AsString());
 	}
-}
-
-size_t eSettings::GetPageCount() const {
-	if (!m_jsonRoot.HasMember(wxT("pages"))) return 0;
-
-	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
-	return pages.Size();
-}
-
-void eSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks, SubPage sp) {
-	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
-	if (!pages.IsArray()) pages.SetType(wxJSONTYPE_ARRAY);
-
-	wxASSERT((int)page_id <= pages.Size());
-	wxJSONValue& toppage = ((int)page_id == pages.Size()) ? pages.Append(wxJSONValue(wxJSONTYPE_OBJECT)) : pages[page_id];
-	
-	// With diffs we may have subpages
-	wxJSONValue& page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage[wxT("left")] : toppage[wxT("right")]);
-
-	page.RemoveAll();
-	page[wxT("path")] = path;
-	page[wxT("pos")] = pos;
-	page[wxT("topline")] = topline;
-	page[wxT("syntax")] = syntax;
-
-	// doc_id
-	page[wxT("doc_type")] = di.type;
-	page[wxT("doc_doc")] = di.document_id;
-	page[wxT("doc_version")] = di.version_id;
-
-	// Set folds
-	wxJSONValue& foldsArray = page[wxT("folds")];
-	if (!foldsArray.IsArray()) foldsArray.SetType(wxJSONTYPE_ARRAY);
-	for (vector<unsigned int>::const_iterator p = folds.begin(); p != folds.end(); ++p) {
-		foldsArray.Append(*p);
-	}
-
-	// Set bookmarks
-	wxJSONValue& bookmarksArray = page[wxT("bookmarks")];
-	if (!bookmarksArray.IsArray()) bookmarksArray.SetType(wxJSONTYPE_ARRAY);
-	for (vector<cxBookmark>::const_iterator b = bookmarks.begin(); b != bookmarks.end(); ++b) {
-		bookmarksArray.Append(b->line_id);
-	}
-}
-
-void eSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp) const {
-	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
-	wxASSERT((int)page_id < pages.Size());
-	const wxJSONValue toppage = pages.ItemAt(page_id);
-
-	// With diffs we may have subpages
-	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
-
-	path = page.ItemAt(wxT("path")).AsString();
-	pos = page.ItemAt(wxT("pos")).AsInt();
-	topline = page.ItemAt(wxT("topline")).AsInt();
-	syntax = page.ItemAt(wxT("syntax")).AsString();
-
-	// doc_id
-	di.type = (doc_type)page.ItemAt(wxT("doc_type")).AsInt();
-	di.document_id = page.ItemAt(wxT("doc_doc")).AsInt();
-	di.version_id = page.ItemAt(wxT("doc_version")).AsInt();
-
-	// Set folds
-	const wxJSONValue foldsArray = page.ItemAt(wxT("folds"));
-	for (int f = 0; f < foldsArray.Size(); ++f) {
-		folds.push_back(foldsArray.ItemAt(f).AsInt());
-	}
-
-	// Set bookmarks
-	const wxJSONValue bookmarksArray = page.ItemAt(wxT("bookmarks"));
-	for (int b = 0; b < bookmarksArray.Size(); ++b) {
-		bookmarks.push_back(bookmarksArray.ItemAt(b).AsInt());
-	}
-}
-
-bool eSettings::IsPageDiff(size_t page_id) const {
-	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
-	wxASSERT((int)page_id < pages.Size());
-	const wxJSONValue page = pages.ItemAt(page_id);
-	return page.HasMember(wxT("left"));
-}
-
-wxString eSettings::GetPagePath(size_t page_id, SubPage sp) const {
-	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
-	wxASSERT((int)page_id < pages.Size());
-	const wxJSONValue toppage = pages.ItemAt(page_id);
-
-	// With diffs we may have subpages
-	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
-
-	return page.ItemAt(wxT("path")).AsString();
-}
-
-doc_id eSettings::GetPageDoc(size_t page_id, SubPage sp) const {
-	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
-	wxASSERT((int)page_id < pages.Size());
-	const wxJSONValue toppage = pages.ItemAt(page_id);
-
-	// With diffs we may have subpages
-	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
-
-	doc_id di;
-	di.type = (doc_type)page.ItemAt(wxT("doc_type")).AsInt();
-	di.document_id = page.ItemAt(wxT("doc_doc")).AsInt();
-	di.version_id = page.ItemAt(wxT("doc_version")).AsInt();
-
-	return di;
-}
-
-void eSettings::DeleteAllPageSettings() {
-	m_jsonRoot.Remove(wxT("pages"));
-}
-
-void eSettings::DeletePageSettings(size_t page_id) {
-	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
-	wxASSERT((int)page_id < pages.Size());
-
-	pages.Remove(page_id);
 }
 
 RemoteProfile* eSettings::DoGetRemoteProfile(size_t profile_id)  {
@@ -687,4 +674,190 @@ bool eSettings::AddFilterCommand(const wxString& command) {
 	if (values.Size() > 20) values.Remove(values.Size()-1);
 
 	return true;
+}
+
+// ---- eFrameSettings ---------------------------------------------------------
+
+eFrameSettings::eFrameSettings(wxJSONValue& framesettings) : m_jsonRoot(framesettings) {
+}
+
+void eFrameSettings::RemoveSetting(const wxString& name) {
+	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
+	settings.Remove(name);
+}
+
+bool eFrameSettings::GetSettingBool(const wxString& name, bool& value) const {
+	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
+	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
+	if (!settings.HasMember(name)) return false;
+
+	// old bool values may have been stored as ints
+	const wxJSONValue val = settings.ItemAt(name);
+	if (val.IsInt()) return (val.AsInt() > 0);
+
+	if (!val.IsBool()) return false;
+
+	value = val.AsBool();
+	return true;
+}
+
+void eFrameSettings::SetSettingBool(const wxString& name, bool value) {
+	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
+	settings[name] = value;
+}
+
+bool eFrameSettings::GetSettingInt(const wxString& name, int& value) const {
+	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
+	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
+	if (!settings.HasMember(name)) return false;
+
+	const wxJSONValue val = settings.ItemAt(name);
+	if (!val.IsInt()) return false;
+
+	value = val.AsInt();
+	return true;
+}
+
+void eFrameSettings::SetSettingInt(const wxString& name, int value) {
+	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
+	settings[name] = value;
+}
+
+bool eFrameSettings::GetSettingString(const wxString& name, wxString& value) const {
+	if (!m_jsonRoot.HasMember(wxT("settings"))) return false;
+
+	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("settings"));
+	if (!settings.HasMember(name)) return false;
+
+	const wxJSONValue val = settings.ItemAt(name);
+	if (!val.IsString()) return false;
+
+	value = val.AsString();
+	return true;
+}
+
+void eFrameSettings::SetSettingString(const wxString& name, const wxString& value) {
+	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
+	settings[name] = value;
+}
+
+size_t eFrameSettings::GetPageCount() const {
+	if (!m_jsonRoot.HasMember(wxT("pages"))) return 0;
+
+	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
+	return pages.Size();
+}
+
+void eFrameSettings::SetPageSettings(size_t page_id, const wxString& path, doc_id di, int pos, int topline, const wxString& syntax, const vector<unsigned int>& folds, const vector<cxBookmark>& bookmarks, SubPage sp) {
+	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
+	if (!pages.IsArray()) pages.SetType(wxJSONTYPE_ARRAY);
+
+	wxASSERT((int)page_id <= pages.Size());
+	wxJSONValue& toppage = ((int)page_id == pages.Size()) ? pages.Append(wxJSONValue(wxJSONTYPE_OBJECT)) : pages[page_id];
+	
+	// With diffs we may have subpages
+	wxJSONValue& page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage[wxT("left")] : toppage[wxT("right")]);
+
+	page.RemoveAll();
+	page[wxT("path")] = path;
+	page[wxT("pos")] = pos;
+	page[wxT("topline")] = topline;
+	page[wxT("syntax")] = syntax;
+
+	// doc_id
+	page[wxT("doc_type")] = di.type;
+	page[wxT("doc_doc")] = di.document_id;
+	page[wxT("doc_version")] = di.version_id;
+
+	// Set folds
+	wxJSONValue& foldsArray = page[wxT("folds")];
+	if (!foldsArray.IsArray()) foldsArray.SetType(wxJSONTYPE_ARRAY);
+	for (vector<unsigned int>::const_iterator p = folds.begin(); p != folds.end(); ++p) {
+		foldsArray.Append(*p);
+	}
+
+	// Set bookmarks
+	wxJSONValue& bookmarksArray = page[wxT("bookmarks")];
+	if (!bookmarksArray.IsArray()) bookmarksArray.SetType(wxJSONTYPE_ARRAY);
+	for (vector<cxBookmark>::const_iterator b = bookmarks.begin(); b != bookmarks.end(); ++b) {
+		bookmarksArray.Append(b->line_id);
+	}
+}
+
+void eFrameSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp) const {
+	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
+	wxASSERT((int)page_id < pages.Size());
+	const wxJSONValue toppage = pages.ItemAt(page_id);
+
+	// With diffs we may have subpages
+	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
+
+	path = page.ItemAt(wxT("path")).AsString();
+	pos = page.ItemAt(wxT("pos")).AsInt();
+	topline = page.ItemAt(wxT("topline")).AsInt();
+	syntax = page.ItemAt(wxT("syntax")).AsString();
+
+	// doc_id
+	di.type = (doc_type)page.ItemAt(wxT("doc_type")).AsInt();
+	di.document_id = page.ItemAt(wxT("doc_doc")).AsInt();
+	di.version_id = page.ItemAt(wxT("doc_version")).AsInt();
+
+	// Set folds
+	const wxJSONValue foldsArray = page.ItemAt(wxT("folds"));
+	for (int f = 0; f < foldsArray.Size(); ++f) {
+		folds.push_back(foldsArray.ItemAt(f).AsInt());
+	}
+
+	// Set bookmarks
+	const wxJSONValue bookmarksArray = page.ItemAt(wxT("bookmarks"));
+	for (int b = 0; b < bookmarksArray.Size(); ++b) {
+		bookmarks.push_back(bookmarksArray.ItemAt(b).AsInt());
+	}
+}
+
+bool eFrameSettings::IsPageDiff(size_t page_id) const {
+	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
+	wxASSERT((int)page_id < pages.Size());
+	const wxJSONValue page = pages.ItemAt(page_id);
+	return page.HasMember(wxT("left"));
+}
+
+wxString eFrameSettings::GetPagePath(size_t page_id, SubPage sp) const {
+	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
+	wxASSERT((int)page_id < pages.Size());
+	const wxJSONValue toppage = pages.ItemAt(page_id);
+
+	// With diffs we may have subpages
+	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
+
+	return page.ItemAt(wxT("path")).AsString();
+}
+
+doc_id eFrameSettings::GetPageDoc(size_t page_id, SubPage sp) const {
+	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
+	wxASSERT((int)page_id < pages.Size());
+	const wxJSONValue toppage = pages.ItemAt(page_id);
+
+	// With diffs we may have subpages
+	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
+
+	doc_id di;
+	di.type = (doc_type)page.ItemAt(wxT("doc_type")).AsInt();
+	di.document_id = page.ItemAt(wxT("doc_doc")).AsInt();
+	di.version_id = page.ItemAt(wxT("doc_version")).AsInt();
+
+	return di;
+}
+
+void eFrameSettings::DeleteAllPageSettings() {
+	m_jsonRoot.Remove(wxT("pages"));
+}
+
+void eFrameSettings::DeletePageSettings(size_t page_id) {
+	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
+	wxASSERT((int)page_id < pages.Size());
+
+	pages.Remove(page_id);
 }

@@ -51,6 +51,7 @@ class PreviewDlg;
 class cxRemoteAction;
 class MultilineDataObject;
 class TextTip;
+class eFrameSettings;
 
 struct thTheme;
 class tmAction;
@@ -68,7 +69,7 @@ class EditorCtrl : public KeyHookable<wxControl>,
 public:
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 
-	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
+	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame);
 
 	EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 
@@ -166,7 +167,7 @@ public:
 	// TabPage interface
 	virtual EditorCtrl* GetActiveEditor();
 	virtual const char** RecommendedIcon() const;
-	virtual void SaveSettings(unsigned int i, eSettings& settings);
+	virtual void SaveSettings(unsigned int i, eFrameSettings& settings);
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
@@ -237,8 +238,8 @@ public:
 	void ClearSearchRange(bool reset=false);
 
 	// Settings
-	void SaveSettings(unsigned int i, eSettings& settings, unsigned int id);
-	void RestoreSettings(unsigned int i, eSettings& settings, unsigned int id=0);
+	void SaveSettings(unsigned int i, eFrameSettings& settings, unsigned int id);
+	void RestoreSettings(unsigned int i, eFrameSettings& settings, unsigned int id=0);
 
 	// Needed by IEditorSearch interface
 	wxEvtHandler* GetEventHandlerI() const {return GetEventHandler();};

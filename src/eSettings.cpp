@@ -163,9 +163,8 @@ void eSettings::RemoveFrame(unsigned int frameId) {
 
 void eSettings::RemoveFrame(const eFrameSettings& fs) {
 	const int frameId = GetIndexFromFrameSettings(fs);
-	if (frameId == -1) return;
-
-	RemoveFrame(frameId);
+	if (frameId > -1)
+		RemoveFrame(frameId);
 }
 
 void eSettings::DeleteAllFrameSettings(int top) {
@@ -602,7 +601,6 @@ bool eSettings::AddSearch(const wxString& pattern, bool isRegex, bool matchCase)
 
 size_t eSettings::GetReplaceCount() const {
 	if (!m_jsonRoot.HasMember(wxT("replaceHistory"))) return 0;
-
 	const wxJSONValue replacements = m_jsonRoot.ItemAt(wxT("replaceHistory"));
 	return replacements.Size();
 }
@@ -610,7 +608,6 @@ size_t eSettings::GetReplaceCount() const {
 wxString eSettings::GetReplace(size_t ndx) const {
 	const wxJSONValue replacements = m_jsonRoot.ItemAt(wxT("replaceHistory"));
 	wxASSERT((int)ndx < replacements.Size());
-
 	return replacements.ItemAt(ndx).AsString();
 }
 
@@ -643,7 +640,6 @@ bool eSettings::AddReplace(const wxString& pattern) {
 
 size_t eSettings::GetFilterCommandHistoryCount() const {
 	if (!m_jsonRoot.HasMember(wxT("filterCommandHistory"))) return 0;
-
 	const wxJSONValue values = m_jsonRoot.ItemAt(wxT("filterCommandHistory"));
 	return values.Size();
 }
@@ -651,7 +647,6 @@ size_t eSettings::GetFilterCommandHistoryCount() const {
 wxString eSettings::GetFilterCommand(size_t ndx) const {
 	const wxJSONValue values = m_jsonRoot.ItemAt(wxT("filterCommandHistory"));
 	wxASSERT((int)ndx < values.Size());
-
 	return values.ItemAt(ndx).AsString();
 }
 
@@ -683,8 +678,7 @@ bool eSettings::AddFilterCommand(const wxString& command) {
 
 // ---- eFrameSettings ---------------------------------------------------------
 
-eFrameSettings::eFrameSettings(wxJSONValue& framesettings) : m_jsonRoot(framesettings) {
-}
+eFrameSettings::eFrameSettings(wxJSONValue& framesettings): m_jsonRoot(framesettings) {}
 
 void eFrameSettings::RemoveSetting(const wxString& name) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
@@ -750,7 +744,6 @@ void eFrameSettings::SetSettingString(const wxString& name, const wxString& valu
 
 size_t eFrameSettings::GetPageCount() const {
 	if (!m_jsonRoot.HasMember(wxT("pages"))) return 0;
-
 	const wxJSONValue pages = m_jsonRoot.ItemAt(wxT("pages"));
 	return pages.Size();
 }
@@ -836,7 +829,6 @@ wxString eFrameSettings::GetPagePath(size_t page_id, SubPage sp) const {
 
 	// With diffs we may have subpages
 	const wxJSONValue page = (sp == SP_MAIN) ? toppage : ((sp == SP_LEFT) ? toppage.ItemAt(wxT("left")) : toppage.ItemAt(wxT("right")));
-
 	return page.ItemAt(wxT("path")).AsString();
 }
 
@@ -863,6 +855,5 @@ void eFrameSettings::DeleteAllPageSettings() {
 void eFrameSettings::DeletePageSettings(size_t page_id) {
 	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
 	wxASSERT((int)page_id < pages.Size());
-
 	pages.Remove(page_id);
 }

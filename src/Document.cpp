@@ -20,6 +20,9 @@
 #include "Utf.h"
 #include "eSettings.h"
 
+// Needed for file permission functions.
+#include "eDocumentPath.h"
+
 // Constructor
 Document::Document(const doc_id& di, CatalystWrapper cw):
 	m_catalyst(cw.m_catalyst),
@@ -977,8 +980,19 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 
 	// Atomic save.
 	if (!noAtomic) {
-		if (path.FileExists()) wxRemoveFile(fullPath);
+		FILE_PERMISSIONS permissions = 0;
+		bool previous_file_exists = path.FileExists();
+
+		if (previous_file_exists) {
+			permissions = eDocumentPath::GetPermissions(fullPath);
+			wxRemoveFile(fullPath);
+		}
+		
 		wxRenameFile(tmpPath, fullPath);
+
+		if (previous_file_exists) {
+			eDocumentPath::SetPermissions(fullPath, permissions);
+		}
 	}
 
 	{

@@ -8,6 +8,14 @@
 
 #include <wx/filename.h>
 
+#ifdef __WXMSW__
+typedef DWORD FILE_PERMISSIONS;
+#else
+typedef mode_t FILE_PERMISSIONS;
+#endif
+
+class cxEnv;
+
 class eDocumentPath
 {
 public:
@@ -26,6 +34,8 @@ public:
 	static wxString GetAppDataTempPath();
 
 	static bool MakeWritable(const wxString& path);
+	static FILE_PERMISSIONS GetPermissions(const wxString& path);
+	static bool SetPermissions(const wxString& path, FILE_PERMISSIONS permissions);
 
 #ifdef __WXMSW__
 

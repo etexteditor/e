@@ -29,6 +29,26 @@ bool eDocumentPath::MakeWritable(const wxString& path) {
 #endif
 }
 
+FILE_PERMISSIONS eDocumentPath::GetPermissions(const wxString& path) {
+#ifdef __WXMSW__
+		return ::GetFileAttributes(path);
+#else
+        // Get protection
+		struct stat s;
+		int res = stat(path.mb_str(wxConvUTF8), &s);
+		return s.st_mode;
+#endif
+}
+
+bool eDocumentPath::SetPermissions(const wxString& path, FILE_PERMISSIONS permissions) {
+#ifdef __WXMSW__
+		return SetFileAttributes(path, permissions) != 0;
+#else
+		int res = chmod(path.mb_str(wxConvUTF8), permissions);
+		return res == 0;
+#endif
+}
+
 bool eDocumentPath::IsDotDirectory(const wxString& path) {
 	return path == wxT(".") || path == wxT("..");
 }

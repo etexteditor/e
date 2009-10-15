@@ -56,6 +56,7 @@ public:
 	// Frames
 	EditorFrame* NewFrame();
 	void CloseAllFrames();
+	bool IsLastFrame() const;
 
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);

@@ -3505,7 +3505,7 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 	editorCtrl = NULL; // avoid dangling pointer
 
 	// Clean up state info
-	if (!keep_state) {
+	if (!keep_state || !((eApp*)wxTheApp)->IsLastFrame()) {
 		m_settings.SetSettingBool(wxT("showproject"), false);
 		m_generalSettings.RemoveFrame(m_settings);
 	}

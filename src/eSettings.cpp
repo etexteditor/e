@@ -144,7 +144,7 @@ unsigned int eSettings::AddFrame(unsigned int top) {
 void eSettings::RemoveFrame(unsigned int frameId) {
 	wxASSERT(m_jsonRoot.HasMember(wxT("frames")));
 
-	wxJSONValue frames = m_jsonRoot.ItemAt(wxT("frames"));
+	wxJSONValue& frames = m_jsonRoot[wxT("frames")];
 	wxASSERT((int)frameId < frames.Size());
 
 	// we need to leave at least one frame

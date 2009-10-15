@@ -296,6 +296,19 @@ void eApp::CheckForModifiedFiles() {
 	wxLogDebug(wxT("Done Checking for modified files"));
 }
 
+bool eApp::IsLastFrame() const {
+	wxWindowList::const_iterator i;
+    const wxWindowList::const_iterator end = wxTopLevelWindows.end();
+
+    unsigned int frameCount = 0;
+	for ( i = wxTopLevelWindows.begin(); i != end; ++i )
+    {
+        if ((*i)->IsKindOf(CLASSINFO(EditorFrame))) ++frameCount;
+	}
+
+	return (frameCount == 1);
+}
+
 void eApp::ClearState() {
 	m_settings.DeleteAllFrameSettings(0);
 	m_settings.Save();

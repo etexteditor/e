@@ -324,7 +324,7 @@ bool eDocumentPath::InitCygwin(const bool silent) {
 	}
 
 	// Get last cygwin update, and see if we need to reinstall
-	const wxString supportPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath() + wxT("support\\bin\\cygwin-post-install.sh");
+	const wxString supportPath = GetAppPaths().AppPath() + wxT("support\\bin\\cygwin-post-install.sh");
 	const wxFileName supportFile(supportPath);
 
 	wxDateTime stampTime = get_last_cygwin_update();
@@ -368,11 +368,4 @@ bool eDocumentPath::IsRemotePath(const wxString& path) {
 
 bool eDocumentPath::IsBundlePath(const wxString& path) {
 	return (path.StartsWith(wxT("bundle://")));
-}
-
-wxString eDocumentPath::GetAppDataTempPath() {
-	// Create temp buffer file
-	const wxString tempPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath() + wxT("temp") + wxFILE_SEP_PATH;
-	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
-	return wxFileName::CreateTempFileName(tempPath);
 }

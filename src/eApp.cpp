@@ -178,7 +178,7 @@ bool eApp::OnInit() {
 
 	// Parse syntax files
 	wxLogDebug(wxT("Loading bundles"));
-	m_pListHandler = new PListHandler(GetAppPath(), GetAppDataPath(), clearBundleCache);
+	m_pListHandler = new PListHandler(m_appPath, m_appDataPath, clearBundleCache);
 	m_pSyntaxHandler = new TmSyntaxHandler(m_pCatalyst->GetDispatcher(), *m_pListHandler);
 
     // Create the main windows
@@ -713,6 +713,16 @@ wxString eApp::GetAppTitle() {
 	return title;
 }
 
+const wxString& eApp::AppPath() const {return m_appPath;}
+const wxString& eApp::AppDataPath() const {return m_appDataPath;}
+
+
+wxString eApp::CreateTempAppDataFile() {
+	const wxString tempPath = m_appPath + wxT("temp") + wxFILE_SEP_PATH;
+	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
+	return wxFileName::CreateTempFileName(tempPath);
+}
+
 void eApp::OnUpdatesAvailable(wxCommandEvent& WXUNUSED(event)) {
 	// Ask user if he wants to download new release
 	const int answer = wxMessageBox(_("A new release of e is available.\nDo you wish to go the the website to download it now?"), wxT("Program update!"), wxYES_NO|wxICON_EXCLAMATION, GetTopFrame());
@@ -751,4 +761,9 @@ void eApp::OnAssertFailure(const wxChar *file, int line, const wxChar *cond, con
 // Gloal method for getting eApp's settings object, without needing to include all of eApp.h
 eSettings& eGetSettings(void) {
 	return wxGetApp().GetSettings();
+}
+
+// Global function to get eApp's App Path data.
+ IAppPaths& GetAppPaths(void) {
+	return wxGetApp();
 }

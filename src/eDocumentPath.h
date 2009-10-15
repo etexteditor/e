@@ -31,8 +31,6 @@ public:
 
 	static bool IsDotDirectory(const wxString& path);
 
-	static wxString GetAppDataTempPath();
-
 	static bool MakeWritable(const wxString& path);
 	static FILE_PERMISSIONS GetPermissions(const wxString& path);
 	static bool SetPermissions(const wxString& path, FILE_PERMISSIONS permissions);

@@ -134,7 +134,7 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 
 	// Do we have XULRunner installed?
 	bool xulrunner = false;
-	const wxString xulrunner_path = wxGetApp().GetAppPath() + wxFILE_SEP_PATH + wxT("xr");
+	const wxString xulrunner_path = wxGetApp().AppPath() + wxFILE_SEP_PATH + wxT("xr");
 	if (wxDirExists(xulrunner_path)) {
 		xulrunner = wxWebControl::IsInitialized() || wxWebControl::InitEngine(xulrunner_path);
 		m_webcontrol = new wxWebControl(this, ID_WEBCONNECT);

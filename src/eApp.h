@@ -62,8 +62,9 @@ public:
 	virtual bool ExecuteCmd(const wxString& cmd);
 	virtual bool ExecuteCmd(const wxString& cmd, wxString& result);
 
-	virtual const wxString& GetAppPath() const {return m_appPath;};
-	virtual const wxString& GetAppDataPath() const {return m_appDataPath;};
+	virtual const wxString& AppPath() const;
+	virtual const wxString& AppDataPath() const;
+	virtual wxString CreateTempAppDataFile();
 
 	// Settings functions
 	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};

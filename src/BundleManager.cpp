@@ -412,7 +412,7 @@ void BundleManager::OnDeleteButton(wxCommandEvent& WXUNUSED(event)) {
 
 	if (m_currentBundleInfo->id == -1) {
 		// We have just installed it, so just delete dir
-		const wxString installPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath() + wxT("InstalledBundles") + wxFILE_SEP_PATH + m_currentBundle->m_name;
+		const wxString installPath = GetAppPaths().AppDataPath() + wxT("InstalledBundles") + wxFILE_SEP_PATH + m_currentBundle->m_name;
 		DelTree(installPath);
 
 		m_installedBundles.erase(p);
@@ -479,7 +479,7 @@ bool BundleManager::InstallBundle() {
 	path.SetTimes(NULL, &m_currentBundle->m_modDate, NULL);
 
 	// Delete installed version (if any)
-	wxString installPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath() + wxT("InstalledBundles") + wxFILE_SEP_PATH;
+	wxString installPath = GetAppPaths().AppDataPath() + wxT("InstalledBundles") + wxFILE_SEP_PATH;
 	if (!wxDirExists(installPath)) wxMkdir(installPath);
 	installPath += m_currentBundle->m_name;
 	if (wxDirExists(installPath)) DelTree(installPath);

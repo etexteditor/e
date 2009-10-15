@@ -1838,7 +1838,7 @@ wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp)
 	wxASSERT(rp && rp->IsValid());
 
 	// Create temp buffer file
-	const wxString buffPath = eDocumentPath::GetAppDataTempPath();
+	const wxString buffPath = GetAppPaths().CreateTempAppDataFile();
 
 	// Download file
 	while(1) {

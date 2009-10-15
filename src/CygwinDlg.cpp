@@ -67,7 +67,7 @@ CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode):
 }
 
 void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
-	const wxString appPath = wxGetApp().GetAppPath();
+	const wxString appPath = wxGetApp().AppPath();
 	const cxCygwinInstallMode install_mode = m_autoRadio->GetValue() ? cxCYGWIN_AUTO : cxCYGWIN_MANUAL;
 	new CygwinInstallThread(install_mode, appPath);
 

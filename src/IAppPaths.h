@@ -3,8 +3,11 @@
 
 class IAppPaths {
 public:
-	virtual const wxString& GetAppPath() const = 0;
-	virtual const wxString& GetAppDataPath() const = 0;
+	virtual const wxString& AppPath() const = 0;
+	virtual const wxString& AppDataPath() const = 0;
+	virtual wxString CreateTempAppDataFile() = 0;
 };
+
+IAppPaths& GetAppPaths(void);
 
 #endif // __IAPPPATHS_H__

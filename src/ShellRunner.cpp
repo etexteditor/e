@@ -26,7 +26,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 #endif
 
 	// Create temp file with command
-	wxFileName tmpfilePath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppDataPath();
+	wxFileName tmpfilePath = GetAppPaths().AppDataPath();
 	tmpfilePath.SetFullName(isUnix ? wxT("tmcmd") : wxT("tmcmd.bat"));
 	wxFile tmpfile(tmpfilePath.GetFullPath(), wxFile::write);
 	if (!tmpfile.IsOpened()) return -1;
@@ -69,7 +69,7 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
             s_bashCmd = wxT("bash \"") + tmpfilePath.GetFullPath() + wxT("\"");
 #endif
 
-			wxFileName initPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath();
+			wxFileName initPath = GetAppPaths().AppPath();
 			initPath.AppendDir(wxT("Support"));
 			initPath.AppendDir(wxT("lib"));
 			initPath.SetFullName(wxT("bash_init.sh"));
@@ -114,7 +114,7 @@ wxString ShellRunner::GetBashCommand(const wxString& cmd, cxEnv& env) {
 #endif
 
 	if (s_bashEnv.empty()) {
-		wxFileName initPath = dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath();
+		wxFileName initPath = GetAppPaths().AppPath();
 		initPath.AppendDir(wxT("Support"));
 		initPath.AppendDir(wxT("lib"));
 		initPath.SetFullName(wxT("bash_init.sh"));

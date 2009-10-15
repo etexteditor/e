@@ -2880,7 +2880,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 		// If the path points to a remote file, we have to save it to a temp bufferfile first.
 		if (eDocumentPath::IsRemotePath(path)) {
 			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(path, false);
-			m_path = eDocumentPath::GetAppDataTempPath();
+			m_path = GetAppPaths().CreateTempAppDataFile();
 			m_remotePath = path;
 
 			cxLOCKDOC_WRITE(m_doc)
@@ -6980,7 +6980,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(eGetSettings().env);
 
 	// Add app keys
-	env.AddSystemVars(isUnix, dynamic_cast<IAppPaths*>(wxTheApp)->GetAppPath());
+	env.AddSystemVars(isUnix, GetAppPaths().AppPath());
 
 	// Add document/editor keys
 

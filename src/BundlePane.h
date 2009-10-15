@@ -16,11 +16,12 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #include <wx/treectrl.h>
 #include <wx/imaglist.h>
+
 #include "plistHandler.h"
 
 #include <map>
@@ -77,6 +78,7 @@ private:
 	void OnMenuNew(wxCommandEvent& event);
 	void OnMenuExport(wxCommandEvent& event);
 	void OnMenuOpenItem(wxCommandEvent& event);
+	void OnMenuOpenBundleFolder(wxCommandEvent& event);
 	//void OnMouseMotion(wxMouseEvent& event);
 	void OnIdle(wxIdleEvent& event);
 	DECLARE_EVENT_TABLE()

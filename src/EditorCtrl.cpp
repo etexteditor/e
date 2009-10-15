@@ -1522,10 +1522,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	// Set up the process environment
 	cxEnv env;
 	SetEnv(env, action.isUnix, action.bundle);
-
-	if (envVars) {
-		env.SetEnv(*envVars);
-	}
+	if (envVars) env.SetEnv(*envVars);
 
 	if (!isRaw) Freeze();
 

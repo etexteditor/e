@@ -291,9 +291,7 @@ bool cxExecute::cxExecuteThread::CreateChildProcess()
 	siStartInfo.hStdInput = m_hChildStdinRd;
 	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 	siStartInfo.dwFlags |= STARTF_USESHOWWINDOW;
-
-	if (m_showWindow) siStartInfo.wShowWindow = SW_SHOW;
-	else siStartInfo.wShowWindow = SW_HIDE;
+	siStartInfo.wShowWindow = m_showWindow ? SW_SHOW : SW_HIDE;
 
 	// Create the child process.
 	BOOL bFuncRetn = CreateProcess(NULL,

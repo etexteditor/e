@@ -15,6 +15,9 @@
 #include "EditorFrame.h"
 #include "ITmLoadBundles.h"
 
+#include "Env.h"
+#include "Execute.h"
+
 #include "images/tmBundle.xpm"
 #include "images/tmCommand.xpm"
 #include "images/tmSnippet.xpm"
@@ -77,7 +80,8 @@ enum {
 	MENU_NEW_SUBMENU,
 	MENU_DELETE,
 	MENU_EXPORT,
-	MENU_OPEN_ITEM
+	MENU_OPEN_ITEM,
+	MENU_OPEN_BUNDLE_FOLDER,
 };
 
 BEGIN_EVENT_TABLE(BundlePane, wxPanel)
@@ -101,6 +105,7 @@ BEGIN_EVENT_TABLE(BundlePane, wxPanel)
 	EVT_MENU(MENU_DELETE, BundlePane::OnButtonMinus)
 	EVT_MENU(MENU_EXPORT, BundlePane::OnMenuExport)
 	EVT_MENU(MENU_OPEN_ITEM, BundlePane::OnMenuOpenItem)
+	EVT_MENU(MENU_OPEN_BUNDLE_FOLDER, BundlePane::OnMenuOpenBundleFolder)
 	EVT_IDLE(BundlePane::OnIdle)
 END_EVENT_TABLE()
 
@@ -511,6 +516,7 @@ void BundlePane::OnTreeMenu(wxTreeEvent& event) {
 		popupMenu.AppendSeparator();
 		popupMenu.Append(MENU_DELETE, _("&Delete"));
 		popupMenu.Append(MENU_EXPORT, _("E&xport..."));
+		popupMenu.Append(MENU_OPEN_BUNDLE_FOLDER, _("View Bundle &Folder"));
 	}
 
 	PopupMenu(&popupMenu);
@@ -557,7 +563,7 @@ void BundlePane::OnButtonPlus(wxCommandEvent& WXUNUSED(event)) {
 	popupPos.y += m_bundlePlus->GetSize().y;
 
 	PopupMenu(&popupMenu, popupPos);
-};
+}
 
 void BundlePane::OnMenuExport(wxCommandEvent& WXUNUSED(event)) {
 	const wxTreeItemId selItem = m_bundleTree->GetSelection();
@@ -677,11 +683,23 @@ void BundlePane::OnMenuNew(wxCommandEvent& event) {
 			break;
 		default: wxASSERT(false);
 	}
-};
+}
+
+void BundlePane::OnMenuOpenBundleFolder(wxCommandEvent& WXUNUSED(event)) {
+	const wxTreeItemId item = m_bundleTree->GetSelection();
+	if (!item.IsOk()) return;
+
+	const BundleItemData* data = (BundleItemData*)m_bundleTree->GetItemData(item);
+	wxFileName bundlePath = m_plistHandler.GetBundlePath(data->m_bundleId);
+
+#ifdef __WXMSW__
+	ShellExecute(NULL, L"explore", bundlePath.GetFullPath().c_str(), NULL, NULL,SW_SHOW);
+#endif
+}
 
 void BundlePane::OnButtonManage(wxCommandEvent& WXUNUSED(event)) {
 	m_parentFrame.ShowBundleManager();
-};
+}
 
 void BundlePane::RemoveMenuItem(const wxTreeItemId item, bool deep, PListDict& infoDict) {
 	// Get the parent

@@ -136,6 +136,11 @@ unsigned int eSettings::AddFrame(unsigned int top) {
 	// Copy settings from active frame
 	if (frames.Size() > 1) {
 		frame[wxT("settings")] = frames[top][wxT("settings")];
+
+		// Move it a bit
+		wxJSONValue& s = frame[wxT("settings")];
+		if (s.HasMember(wxT("topwin/x"))) s[wxT("topwin/x")] = s[wxT("topwin/x")].AsInt()+50;
+		if (s.HasMember(wxT("topwin/y"))) s[wxT("topwin/y")] = s[wxT("topwin/y")].AsInt()+50;
 	}
 
 	return frames.Size()-1;

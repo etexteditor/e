@@ -21,18 +21,16 @@
 
 #include <wx/ipc.h>
 
-// pre-definitions
+
 class IExecuteAppCommand;
-class eApp;
 
 #ifdef __WXMSW__
 class eIpcWin : public wxFrame {
 public:
 	eIpcWin(IExecuteAppCommand& app);
-
 	wxString SetMateName();
-
 	bool ShouldPreventAppExit() const {return false;};
+
 private:
 	WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);
 	IExecuteAppCommand& m_app;

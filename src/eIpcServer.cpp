@@ -13,7 +13,6 @@
 
 #include "eIpcServer.h"
 #include "IExecuteAppCommand.h"
-#include "eApp.h"
 
 #ifdef __WXMSW__
 

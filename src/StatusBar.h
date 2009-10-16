@@ -16,8 +16,7 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-        #include <wx/statusbr.h>
-        #include <wx/dialog.h>
+#include <wx/statusbr.h>
 #endif
 
 #include "SymbolRef.h"
@@ -53,15 +52,6 @@ private:
 	void OnMenuTabsSoft(wxCommandEvent& event);
 	void OnMenuGotoSymbol(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
-
-	class OtherTabDlg : public wxDialog {
-	public:
-		OtherTabDlg(EditorFrame& parent);
-	private:
-		void OnSlider(wxScrollEvent& event);
-		DECLARE_EVENT_TABLE();
-		EditorFrame& m_parentFrame;
-	};
 
 	// Member variables
 	EditorFrame& m_parentFrame;

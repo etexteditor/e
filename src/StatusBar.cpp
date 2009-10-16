@@ -13,12 +13,59 @@
 
 #include "StatusBar.h"
 
+#ifndef WX_PRECOMP
+#include <wx/dialog.h>
+#endif
+
 #include <wx/fontmap.h>
 
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include "BundleMenu.h"
 #include "ITmGetSyntaxes.h"
+
+class OtherTabDlg : public wxDialog {
+public:
+	OtherTabDlg(EditorFrame& parent);
+private:
+	enum { CTRL_SLIDER };
+
+	void OnSlider(wxScrollEvent& event);
+	DECLARE_EVENT_TABLE();
+	EditorFrame& m_parentFrame;
+};
+
+BEGIN_EVENT_TABLE(OtherTabDlg, wxDialog)
+	EVT_COMMAND_SCROLL(CTRL_SLIDER, OtherTabDlg::OnSlider)
+END_EVENT_TABLE()
+
+OtherTabDlg::OtherTabDlg(EditorFrame& parent):
+	wxDialog(&parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_parentFrame(parent)
+{
+	const unsigned int width = parent.GetTabWidth();
+
+	SetTitle (_("Other Tab Size"));
+
+	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+
+	wxSlider* slider = new wxSlider(this, CTRL_SLIDER, width, 1, 32, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_LABELS|wxSL_AUTOTICKS);
+	sizer->Add(slider, 1, wxEXPAND|wxALL, 10);
+
+	sizer->Add(CreateButtonSizer(wxOK), 0, wxEXPAND|wxALL, 10);
+
+	slider->SetFocus();
+	SetSizerAndFit(sizer);
+	SetSize(400, 50);
+	Centre();
+
+	ShowModal();
+}
+
+void OtherTabDlg::OnSlider(wxScrollEvent& event) {
+	m_parentFrame.SetTabWidth(event.GetPosition());
+}
+
 
 // Menu id's
 enum {
@@ -145,12 +192,10 @@ void StatusBar::UpdateTabs() {
 	const bool isSoftTabs = m_parentFrame.IsSoftTabs();
 	if (tabWidth == m_tabWidth && isSoftTabs == m_isSoftTabs) return;
 		
-	if (m_parentFrame.IsSoftTabs()) {
+	if (m_parentFrame.IsSoftTabs())
 		SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
-	}
-	else {
+	else
 		SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
-	}
 
 	m_tabWidth = tabWidth;
 	m_isSoftTabs = isSoftTabs;
@@ -161,22 +206,22 @@ void StatusBar::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 }
 
 void StatusBar::PopupSyntaxMenu(wxRect& menuPos) {
-		const wxString& current = m_editorCtrl->GetSyntaxName();
+	const wxString& current = m_editorCtrl->GetSyntaxName();
 
-		// Get syntaxes and sort
-		std::vector<cxSyntaxInfo*> syntaxes = m_syntax_handler->GetSyntaxes();
-		sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
+	// Get syntaxes and sort
+	std::vector<cxSyntaxInfo*> syntaxes = m_syntax_handler->GetSyntaxes();
+	sort(syntaxes.begin(), syntaxes.end(), tmActionCmp());
 
-		// Syntax submenu
-		wxMenu syntaxMenu;
-		for (unsigned int i = 0; i < syntaxes.size(); ++i) {
-			const cxSyntaxInfo& si = *syntaxes[i];
+	// Syntax submenu
+	wxMenu syntaxMenu;
+	for (unsigned int i = 0; i < syntaxes.size(); ++i) {
+		const cxSyntaxInfo& si = *syntaxes[i];
 
-			wxMenuItem* item = syntaxMenu.Append(new BundleMenuItem(&syntaxMenu, 1000+i, si, wxITEM_CHECK));
-			if (si.name == current) item->Check();
-		}
+		wxMenuItem* item = syntaxMenu.Append(new BundleMenuItem(&syntaxMenu, 1000+i, si, wxITEM_CHECK));
+		if (si.name == current) item->Check();
+	}
 
-		PopupMenu(&syntaxMenu, menuPos.x, menuPos.y);
+	PopupMenu(&syntaxMenu, menuPos.x, menuPos.y);
 }
 
 void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
@@ -299,47 +344,9 @@ void StatusBar::OnMenuTabsSoft(wxCommandEvent& WXUNUSED(event)) {
 
 void StatusBar::OnMenuGotoSymbol(wxCommandEvent& event) {
 	const unsigned int ndx = event.GetId() - 5000;
-
 	if (m_editorCtrl && ndx < m_symbols.size()) {
 		m_editorCtrl->SetPos(m_symbols[ndx].start);
 		m_editorCtrl->MakeCaretVisibleCenter();
 		m_editorCtrl->ReDraw();
 	}
-}
-
-// ---- OtherTabDlg --------------------------------------------------------------------------------
-
-// Ctrl Ids
-enum {
-	CTRL_SLIDER
-};
-
-BEGIN_EVENT_TABLE(StatusBar::OtherTabDlg, wxDialog)
-	EVT_COMMAND_SCROLL(CTRL_SLIDER, OtherTabDlg::OnSlider)
-END_EVENT_TABLE()
-
-StatusBar::OtherTabDlg::OtherTabDlg(EditorFrame& parent)
-: wxDialog (&parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_parentFrame(parent) {
-	const unsigned int width = parent.GetTabWidth();
-
-	SetTitle (_("Other Tab Size"));
-
-	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-
-	wxSlider* slider = new wxSlider(this, CTRL_SLIDER, width, 1, 32, wxDefaultPosition, wxDefaultSize, wxSL_HORIZONTAL|wxSL_LABELS|wxSL_AUTOTICKS);
-	sizer->Add(slider, 1, wxEXPAND|wxALL, 10);
-
-	sizer->Add(CreateButtonSizer(wxOK), 0, wxEXPAND|wxALL, 10);
-
-	slider->SetFocus();
-	SetSizerAndFit(sizer);
-	SetSize(400, 50);
-	Centre();
-
-	ShowModal();
-}
-
-void StatusBar::OtherTabDlg::OnSlider(wxScrollEvent& event) {
-	m_parentFrame.SetTabWidth(event.GetPosition());
 }

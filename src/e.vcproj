@@ -905,6 +905,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FindInProjectDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FindInProjectDlg.h"
+				>
+			</File>
+			<File
 				RelativePath="GotoFileDlg.cpp"
 				>
 				<FileConfiguration
@@ -2867,14 +2875,6 @@
 		</File>
 		<File
 			RelativePath=".\FindFlags.h"
-			>
-		</File>
-		<File
-			RelativePath=".\FindInProjectDlg.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\FindInProjectDlg.h"
 			>
 		</File>
 		<File

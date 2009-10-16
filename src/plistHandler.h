@@ -26,7 +26,6 @@
 #include "BundleInfo.h"
 
 #include <vector>
-#include <algorithm>
 
 // Pre-definitions
 class TiXmlElement;

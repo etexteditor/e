@@ -12,13 +12,14 @@
  ******************************************************************************/
 
 #include "plistHandler.h"
-#include "FileActionThread.h"
+
 #include <wx/dir.h>
+#include <wx/ffile.h>
+
+#include "FileActionThread.h"
 #include "Catalyst.h"
 #include "jsonwriter.h"
 #include "jsonreader.h"
-#include "FileActionThread.h"
-#include <wx/ffile.h>
 
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__

@@ -890,6 +890,34 @@
 			</File>
 		</Filter>
 		<Filter
+			Name="Execute"
+			>
+			<File
+				RelativePath=".\Env.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Env.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Execute.cpp"
+				>
+			</File>
+			<File
+				RelativePath="Execute.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ShellRunner.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ShellRunner.h"
+				>
+			</File>
+		</Filter>
+		<Filter
 			Name="Editor"
 			>
 			<File
@@ -1067,6 +1095,10 @@
 		</Filter>
 		<File
 			RelativePath="application.ico"
+			>
+		</File>
+		<File
+			RelativePath=".\application.ico"
 			>
 		</File>
 		<File
@@ -1258,14 +1290,6 @@
 			>
 		</File>
 		<File
-			RelativePath="Env.cpp"
-			>
-		</File>
-		<File
-			RelativePath="Env.h"
-			>
-		</File>
-		<File
 			RelativePath="EnvVarsPanel.cpp"
 			>
 		</File>
@@ -1287,14 +1311,6 @@
 		</File>
 		<File
 			RelativePath="ExceptionHandler.h"
-			>
-		</File>
-		<File
-			RelativePath="Execute.cpp"
-			>
-		</File>
-		<File
-			RelativePath="Execute.h"
 			>
 		</File>
 		<File
@@ -1479,14 +1495,6 @@
 		</File>
 		<File
 			RelativePath="ShellContextMenu.h"
-			>
-		</File>
-		<File
-			RelativePath="ShellRunner.cpp"
-			>
-		</File>
-		<File
-			RelativePath="ShellRunner.h"
 			>
 		</File>
 		<File

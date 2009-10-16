@@ -3186,6 +3186,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\GotoLineDlg.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\GotoLineDlg.h"
+			>
+		</File>
+		<File
 			RelativePath="GutterCtrl.cpp"
 			>
 			<FileConfiguration

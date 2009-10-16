@@ -1,3 +1,12 @@
+16-oct-2009 - 1.0.40
+  o Added Multi Window support.
+  
+  o Fixed performance issue when working with documents
+    with long histories.
+  
+  o Add 'open folder in explorer' context menu item to
+    BundlePane [adamv]
+
 15-sep-2009 - 1.0.39
   o Added folder compare.
   

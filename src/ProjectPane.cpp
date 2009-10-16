@@ -42,6 +42,50 @@
     #pragma warning(pop)
 #endif
 
+class DirItemData : public wxTreeItemData
+{
+public:
+	DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& freeImages);
+	virtual ~DirItemData();
+
+	void SetNewPath(const wxString& path);
+	void SetImage(unsigned int image_id);
+
+	wxString m_path, m_name;
+	bool m_isDir;
+	bool m_isHidden;
+	bool m_isExpanded;
+	int m_imageId;
+	std::vector<unsigned int>& m_freeImages;
+};
+
+DirItemData::DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& fi):
+	m_path(path), m_name(name),
+	m_isDir(isDir),
+	m_isHidden(false), m_isExpanded(false),
+	m_imageId(image_id),
+	m_freeImages(fi) {}
+
+DirItemData::~DirItemData() {
+	//const wxString msg = wxString::Format(wxT("delItem: %s (%d)\n"), m_path.c_str(), m_imageId);
+	//OutputDebugString(msg);
+	if (m_imageId != -1 && m_imageId != 0) m_freeImages.push_back(m_imageId); // zero is always generic folder
+}
+
+void DirItemData::SetImage(unsigned int image_id) {
+	//const wxString msg = wxString::Format(wxT("setImage: %s (%d -> %d)\n"), m_path.c_str(), m_imageId, image_id);
+	//OutputDebugString(msg);
+    if (m_imageId != -1 && m_imageId != 0) m_freeImages.push_back(m_imageId); // zero is always generic folder
+    m_imageId = image_id;
+}
+
+void DirItemData::SetNewPath(const wxString& path) {
+    m_path = path;
+    m_name = wxFileNameFromPath(path);
+}
+
+
+
 // ctrl ids
 enum {
 	ID_PRJTREE,
@@ -2002,36 +2046,6 @@ WXLRESULT ProjectPane::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lPar
 }
 #endif //__WXMSW__
 
-
-//-----------------------------------------------------------------------------
-// DirItemData
-//-----------------------------------------------------------------------------
-
-ProjectPane::DirItemData::DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& fi)
-: m_path(path), m_name(name), m_isDir(isDir), m_isHidden(false), m_isExpanded(false),
-  m_imageId(image_id), m_freeImages(fi) {
-}
-
-ProjectPane::DirItemData::~DirItemData() {
-	//const wxString msg = wxString::Format(wxT("delItem: %s (%d)\n"), m_path.c_str(), m_imageId);
-	//OutputDebugString(msg);
-
-	if (m_imageId != -1 && m_imageId != 0) m_freeImages.push_back(m_imageId); // zero is always generic folder
-}
-
-void ProjectPane::DirItemData::SetImage(unsigned int image_id) {
-	//const wxString msg = wxString::Format(wxT("setImage: %s (%d -> %d)\n"), m_path.c_str(), m_imageId, image_id);
-	//OutputDebugString(msg);
-
-    if (m_imageId != -1 && m_imageId != 0) m_freeImages.push_back(m_imageId); // zero is always generic folder
-    m_imageId = image_id;
-}
-
-void ProjectPane::DirItemData::SetNewPath(const wxString& path)
-{
-    m_path = path;
-    m_name = wxFileNameFromPath(path);
-}
 
 // -- DropTarget -----------------------------------------------------------------
 

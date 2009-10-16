@@ -42,6 +42,7 @@ class RemoteThread;
 class RemoteProfile;
 class cxRemoteListEvent;
 class cxRemoteAction;
+class DirItemData; // Defined in ProjectPane.cpp
 
 class ProjectPane : public wxPanel, public wxThreadHelper {
 public:
@@ -78,23 +79,6 @@ public:
 #endif
 
 private:
-	class DirItemData : public wxTreeItemData
-	{
-	public:
-		DirItemData(const wxString& path, const wxString& name, bool isDir, unsigned int image_id, std::vector<unsigned int>& freeImages);
-		~DirItemData();
-
-		void SetNewPath(const wxString& path);
-		void SetImage(unsigned int image_id);
-
-		wxString m_path, m_name;
-		bool m_isDir;
-		bool m_isHidden;
-		bool m_isExpanded;
-		int m_imageId;
-		std::vector<unsigned int>& m_freeImages;
-	};
-
 #ifdef __WXGTK__
 	static bool GetIconFromFilePath(const wxString& path, wxIcon &icon);
 	static bool GetDefaultIcon(wxIcon &icon);

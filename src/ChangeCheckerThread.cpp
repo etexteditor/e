@@ -13,6 +13,7 @@
 
 #include "ChangeCheckerThread.h"
 #include <wx/filename.h>
+#include "RemoteThread.h"
 
 using namespace std;
 

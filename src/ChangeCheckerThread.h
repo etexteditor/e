@@ -19,9 +19,10 @@
 	#include <wx/wx.h>
 #endif
 
-#include "RemoteThread.h"
-
 #include <vector>
+
+class RemoteThread;
+class RemoteProfile;
 
 class ChangeCheckerThread : public wxThread {
 public:

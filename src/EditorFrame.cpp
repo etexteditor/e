@@ -48,6 +48,7 @@
 #include "GotoFileDlg.h"
 #include "SymbolList.h"
 #include "ChangeCheckerThread.h"
+#include "RemoteThread.h"
 #include "RemoteProfileDlg.h"
 #include "RemoteLoginDlg.h"
 #include "EditorPrintout.h"

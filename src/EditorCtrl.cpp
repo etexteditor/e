@@ -38,6 +38,7 @@
 #include "Env.h"
 #include "Fold.h"
 #include "TextTip.h"
+#include "RemoteThread.h"
 
 #include "eSettings.h"
 #include "IAppPaths.h"

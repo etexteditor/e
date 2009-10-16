@@ -23,7 +23,6 @@
 #include <wx/imaglist.h>
 
 #include "Catalyst.h"
-#include "RemoteThread.h"
 #include "key_hook.h"
 #include "eSettings.h"
 
@@ -59,6 +58,7 @@ class eAuiNotebook;
 class DiffDirPane;
 class DiffPanel;
 class IEditorSearch;
+class RemoteThread;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -379,7 +379,7 @@ private:
 	TmSyntaxHandler& m_syntax_handler;
 
 	wxImageList imageList;
-	RemoteThread *m_remoteThread;
+	RemoteThread* m_remoteThread;
 	DirWatcher* m_dirWatcher;
 
 	// State

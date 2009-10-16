@@ -9,21 +9,22 @@
 #include <wx/tokenzr.h>
 #include <wx/txtstrm.h>
 
-#include "eApp.h"
 #include "eSettings.h"
-
+#include "AppVersion.h"
 
 class UpdaterThread : public wxThread {
 public:
-	UpdaterThread(wxHTTP* http) : m_http(http) {};
+	UpdaterThread(wxHTTP* http, AppVersion* info):
+		m_http(http), m_info(info) {};
 	virtual void *Entry();
 
 private:
 	wxHTTP* m_http;
+	AppVersion* m_info;
 };
 
 
-void CheckForUpdates(ISettings& settings, bool forceCheck) {
+void CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck) {
 	if (!forceCheck) {
 		// Check if it more than 7 days have gone since last update check
 		wxLongLong lastup;
@@ -40,7 +41,7 @@ void CheckForUpdates(ISettings& settings, bool forceCheck) {
 	wxHTTP* http = new wxHTTP;
 
 	// Start the updater thread
-	UpdaterThread *updater = new UpdaterThread(http);
+	UpdaterThread *updater = new UpdaterThread(http, info);
 	if (updater->Create() == wxTHREAD_NO_ERROR)	updater->Run();
 }
 
@@ -52,13 +53,13 @@ void CheckForUpdates(ISettings& settings, bool forceCheck) {
 void* UpdaterThread::Entry() {
 	wxASSERT(m_http);
 
-	const eApp& app = wxGetApp();
-	const unsigned int thisVersion = app.VersionId();
-
 	// Set a cookie so the server can count unique requests
 	wxString cookie;
-	if (app.IsRegistered()) cookie = wxString::Format(wxT("%s.%u.*"), app.GetId().ToString().c_str(), thisVersion);
-	else cookie = wxString::Format(wxT("%s.%u.%d"), app.GetId().ToString().c_str(), thisVersion, app.DaysLeftOfTrial());
+	if (m_info->IsRegistered)
+		cookie = wxString::Format(wxT("%s.%u.*"), m_info->AppId.c_str(), m_info->Version);
+	else
+		cookie = wxString::Format(wxT("%s.%u.%d"), m_info->AppId.c_str(), m_info->Version, m_info->DaysLeftOfTrial);
+
 	m_http->SetHeader(wxT("Cookie"), cookie);
 
 	bool newrelease = false;
@@ -76,7 +77,7 @@ void* UpdaterThread::Entry() {
 					id_str = id_str.BeforeFirst(wxT(' '));
 					unsigned long id;
 					id_str.ToULong(&id);
-					if (id > thisVersion) {
+					if (id > m_info->Version) {
 						newrelease = true;
 						break;
 					}
@@ -87,7 +88,7 @@ void* UpdaterThread::Entry() {
 					id_str = id_str.BeforeFirst(wxT(' '));
 					unsigned long id;
 					id_str.ToULong(&id);
-					if (id > thisVersion) {
+					if (id > m_info->Version) {
 						newrelease = true;
 						break;
 					}
@@ -104,11 +105,12 @@ void* UpdaterThread::Entry() {
 
 	// Clean up
 	delete m_http;
+	delete m_info;
 
 	if (newrelease) {
 		// Notify main thread that there are new updates available
 		wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, ID_UPDATES_AVAILABLE);
-		wxGetApp().AddPendingEvent(event);
+		wxTheApp->AddPendingEvent(event);
 	}
 
 	return NULL;

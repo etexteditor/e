@@ -38,9 +38,7 @@ class TmSyntaxHandler;
 class PListHandler;
 class EditorFrame;
 
-// Constants
-#define ID_UPDATES_AVAILABLE 100
-
+class AppVersion;
 
 class eApp : public wxApp, 
 	public IAppPaths, 

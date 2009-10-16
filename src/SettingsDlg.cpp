@@ -22,6 +22,7 @@
 
 #include "UpdaterThread.h"
 #include "eSettings.h"
+#include "AppVersion.h"
 
 #ifdef __WXMSW__
 	#include "eDocumentPath.h"
@@ -448,7 +449,7 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void SettingsDlg::OnButtonCheckForUpdates(wxCommandEvent& WXUNUSED(event)) {
-	CheckForUpdates(m_settings, true);
+	CheckForUpdates(m_settings, GetAppVersion(), true);
 }
 
 void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {

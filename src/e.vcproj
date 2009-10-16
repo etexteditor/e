@@ -1070,6 +1070,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\AppVersion.h"
+			>
+		</File>
+		<File
 			RelativePath="auto_vector.h"
 			>
 		</File>

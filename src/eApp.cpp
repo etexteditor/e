@@ -37,6 +37,7 @@
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include "eDocumentPath.h"
+#include "AppVersion.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -214,7 +215,7 @@ bool eApp::OnInit() {
 	if (checkForUpdate) {
 		m_settings.GetSettingBool(wxT("checkForUpdates"), checkForUpdate);
 		if (checkForUpdate) {
-			CheckForUpdates(m_settings);
+			CheckForUpdates(m_settings, GetAppVersion());
 		}
 	}
 
@@ -765,4 +766,9 @@ eSettings& eGetSettings(void) {
 // Global function to get eApp's App Path data.
  IAppPaths& GetAppPaths(void) {
 	return wxGetApp();
+}
+
+ AppVersion* GetAppVersion(void) {
+	eApp& app = wxGetApp();
+	return new AppVersion(app.GetId().ToString(), app.VersionId(), app.IsRegistered(), app.DaysLeftOfTrial());
 }

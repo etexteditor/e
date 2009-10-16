@@ -25,7 +25,7 @@
 #include "Execute.h"
 #include "pcre.h"
 #include "webconnect/webcontrol.h"
-#include "eApp.h"
+#include "IAppPaths.h"
 
 #if defined (__WXMSW__)
 	#include "IEHtmlWin.h"
@@ -134,7 +134,7 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 
 	// Do we have XULRunner installed?
 	bool xulrunner = false;
-	const wxString xulrunner_path = wxGetApp().AppPath() + wxFILE_SEP_PATH + wxT("xr");
+	const wxString xulrunner_path = GetAppPaths().AppPath() + wxFILE_SEP_PATH + wxT("xr");
 	if (wxDirExists(xulrunner_path)) {
 		xulrunner = wxWebControl::IsInitialized() || wxWebControl::InitEngine(xulrunner_path);
 		m_webcontrol = new wxWebControl(this, ID_WEBCONNECT);
@@ -502,21 +502,17 @@ void PreviewDlg::OnPipeCmdEnter(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void PreviewDlg::OnButtonBack(wxCommandEvent& WXUNUSED(event)) {
-	if (m_webcontrol && m_webcontrol->IsShown()) {
+	if (m_webcontrol && m_webcontrol->IsShown())
 		m_webcontrol->GoBack();
-	}
-	else {
+	else
 		m_browser->GoBack();
-	}
 }
 
 void PreviewDlg::OnButtonForward(wxCommandEvent& WXUNUSED(event)) {
-	if (m_webcontrol && m_webcontrol->IsShown()) {
+	if (m_webcontrol && m_webcontrol->IsShown())
 		m_webcontrol->GoForward();
-	}
-	else {
+	else
 		m_browser->GoForward();
-	}
 }
 
 void PreviewDlg::OnButtonPin(wxCommandEvent& WXUNUSED(event)) {
@@ -577,12 +573,10 @@ void PreviewDlg::OnLocationEnter(wxCommandEvent& WXUNUSED(event)) {
 	const wxString location = m_locationText->GetValue();
 	if (location.empty()) return;
 
-	if (location == m_uncPath) {
+	if (location == m_uncPath)
 		UpdateBrowser(cxUPDATE_RELOAD);
-	}
-	else {
+	else
 		m_browser->LoadUrl(location, wxEmptyString, true);
-	}
 }
 
 void PreviewDlg::OnButtonReload(wxCommandEvent& WXUNUSED(event)) {
@@ -608,12 +602,10 @@ void PreviewDlg::OnTitleChange(const wxString& title) {
 	// This is a bit of a hack, but the easiest way to see if
 	// it does not have a title and returns path is to compare
 	// filenames (very litle chance for match with other)
-	if (tempFile != titleEnd) {
+	if (tempFile != titleEnd)
 		m_parent.SetWebPreviewTitle(wxT("Preview: ") + title);
-	}
-	else {
+	else
 		m_parent.SetWebPreviewTitle(wxT("Preview: ") + m_truePath);
-	}
 }
 
 void PreviewDlg::OnDocumentComplete(const wxString& location) {

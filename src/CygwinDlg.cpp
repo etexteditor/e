@@ -20,7 +20,6 @@
 #include "IAppPaths.h"
 #include "eSettings.h"
 
-#include "eApp.h"
 
 class CygwinInstallThread : public wxThread {
 public:
@@ -67,7 +66,7 @@ CygwinDlg::CygwinDlg(wxWindow *parent, cxCygwinDlgMode mode):
 }
 
 void CygwinDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
-	const wxString appPath = wxGetApp().AppPath();
+	const wxString appPath = GetAppPaths().AppPath();
 	const cxCygwinInstallMode install_mode = m_autoRadio->GetValue() ? cxCYGWIN_AUTO : cxCYGWIN_MANUAL;
 	new CygwinInstallThread(install_mode, appPath);
 

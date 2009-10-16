@@ -12,12 +12,14 @@
  ******************************************************************************/
 
 #include "Execute.h"
-#include "eApp.h"
+#include "Env.h"
+#include "IAppPaths.h"
+
 #include <wx/process.h>
+#include <wx/filename.h>
 
 #ifndef WX_PRECOMP
-	#include <wx/filename.h>
-	#include <wx/log.h>
+#include <wx/log.h>
 #endif
 
 #ifndef __WXMSW__
@@ -26,9 +28,49 @@
 #include <errno.h>
 #endif
 
-#include "Env.h"
-
 using namespace std;
+
+class cxExecuteThread : public wxThread {
+public:
+	cxExecuteThread(const wxString& command, const std::vector<char>& input, std::vector<char>& output, std::vector<char>& errout, cxExecute& evtHandler, const cxEnv& env, const wxString& cwd, bool doShow);
+	int Execute();
+	void Terminate() {m_isTerminated = true;};
+
+	virtual void *Entry();
+
+private:
+	bool CreateChildProcess();
+	void WriteToPipe();
+	void ReadFromPipe();
+
+	bool m_isTerminated;
+	const wxString& m_command;
+	cxExecute& m_evtHandler;
+	const std::vector<char>& m_input;
+	std::vector<char>& m_output;
+	std::vector<char>& m_errout;
+	const cxEnv& m_env;
+	const wxString& m_cwd;
+	bool m_showWindow;
+	int m_pid;
+
+#ifdef __WXMSW__
+	// Win32 handles
+	DWORD  m_dwExitCode;
+	PROCESS_INFORMATION m_pi;
+	HANDLE m_hChildStdinRd;
+	HANDLE m_hChildStdinWr;
+	HANDLE m_hChildStdoutRd;
+	HANDLE m_hChildStdoutWr;
+	HANDLE m_hInputFile;
+#else
+	// POSIX pipes
+	int m_dwExitCode;
+	int m_stdin[2];
+	int m_stdout[2];
+#endif
+};
+
 
 BEGIN_EVENT_TABLE(cxExecute, wxEvtHandler)
 	EVT_END_PROCESS(99, cxExecute::OnEndProcess)
@@ -47,7 +89,7 @@ int cxExecute::Execute(const wxString& command, const vector<char>& input) {
 	wxFile logFile;
 	if (m_debugLog) {
 		// Create temp file with command
-		wxFileName logfilePath = wxGetApp().AppDataPath();
+		wxFileName logfilePath = GetAppPaths().AppDataPath();
 		logfilePath.SetFullName(wxT("tmcmd.log"));
 		logFile.Open(logfilePath.GetFullPath(), wxFile::write);
 		if (logFile.IsOpened()) {
@@ -150,12 +192,16 @@ void cxExecute::OnEndProcess(wxProcessEvent& event) {
 
 #define BUFSIZE 4096
 
-cxExecute::cxExecuteThread::cxExecuteThread(const wxString& command, const vector<char>& input, vector<char>& output, vector<char>& errout, cxExecute& evtHandler, const cxEnv& env, const wxString& cwd, bool doShow)
-: m_isTerminated(false), m_command(command), m_evtHandler(evtHandler), m_input(input),  m_output(output),
-  m_errout(errout), m_env(env), m_cwd(cwd), m_showWindow(doShow) {
-}
+cxExecuteThread::cxExecuteThread(const wxString& command, const vector<char>& input, vector<char>& output, vector<char>& errout, cxExecute& evtHandler, const cxEnv& env, const wxString& cwd, bool doShow):
+	m_isTerminated(false),
+	m_command(command),
+	m_evtHandler(evtHandler),
+	m_input(input),  m_output(output), m_errout(errout),
+	m_env(env),
+	m_cwd(cwd),
+	m_showWindow(doShow) {}
 
-int cxExecute::cxExecuteThread::Execute() {
+int cxExecuteThread::Execute() {
 #ifdef __WXMSW__
 	SECURITY_ATTRIBUTES saAttr;
 
@@ -206,7 +252,7 @@ int cxExecute::cxExecuteThread::Execute() {
 	return m_pid;
 }
 
-void* cxExecute::cxExecuteThread::Entry() {
+void* cxExecuteThread::Entry() {
 #ifdef __WXDEBUG__
 //	wxStopWatch sw;
 #endif  //__WXDEBUG__
@@ -234,9 +280,7 @@ void* cxExecute::cxExecuteThread::Entry() {
 
 	// Get the return code
 	if (!GetExitCodeProcess(m_pi.hProcess, &m_dwExitCode) )
-	{
 		wxLogDebug(wxT("GetExitCodeProcess failed"));
-	}
 #else
 	int status;
 	int result;
@@ -251,11 +295,10 @@ void* cxExecute::cxExecuteThread::Entry() {
 	}
 
 	// Save the return code
-	if (! WIFEXITED(status)) {
+	if (! WIFEXITED(status))
 		wxLogDebug(wxT("Process did not exited normally"));
-	} else {
+	else
 		m_dwExitCode = WEXITSTATUS(status);
-	}
 #endif
 
 	wxLogDebug(wxT("  terminated with exitcode: %d"), m_dwExitCode);
@@ -273,7 +316,7 @@ void* cxExecute::cxExecuteThread::Entry() {
 }
 
 #ifdef __WXMSW__
-bool cxExecute::cxExecuteThread::CreateChildProcess()
+bool cxExecuteThread::CreateChildProcess()
 {
 	// Create the env block
 	wxString env;
@@ -311,18 +354,17 @@ bool cxExecute::cxExecuteThread::CreateChildProcess()
 		if (lastError == 2) wxLogDebug(wxT("Command not found."));
 		return false;
 	}
-	else {
-	  m_pid = m_pi.dwProcessId;
-	  wxLogDebug(wxT("  started process %d"), m_pid);
 
-	  // Close any unnecessary handles.
-	  CloseHandle(m_pi.hThread);
+	m_pid = m_pi.dwProcessId;
+	wxLogDebug(wxT("  started process %d"), m_pid);
 
-	  return true;
-	}
+	// Close any unnecessary handles.
+	CloseHandle(m_pi.hThread);
+
+	return true;
 }
 
-void cxExecute::cxExecuteThread::WriteToPipe()
+void cxExecuteThread::WriteToPipe()
 {
 	// Write input to to the process's stdIn pipe.
 	if (!m_input.empty()) {
@@ -348,7 +390,7 @@ void cxExecute::cxExecuteThread::WriteToPipe()
 	}
 }
 
-void cxExecute::cxExecuteThread::ReadFromPipe()
+void cxExecuteThread::ReadFromPipe()
 {
 	DWORD dwRead;
 	char chBuf[BUFSIZE];
@@ -373,7 +415,7 @@ void cxExecute::cxExecuteThread::ReadFromPipe()
 }
 
 #else
-bool cxExecute::cxExecuteThread::CreateChildProcess()
+bool cxExecuteThread::CreateChildProcess()
 {
 	const char *env = m_env.GetEnvBlock();
 
@@ -417,7 +459,7 @@ bool cxExecute::cxExecuteThread::CreateChildProcess()
 	return true;
 }
 
-void cxExecute::cxExecuteThread::WriteToPipe()
+void cxExecuteThread::WriteToPipe()
 {
 	// Write input to to the process's stdIn pipe.
 	if (!m_input.empty()) {
@@ -441,7 +483,7 @@ void cxExecute::cxExecuteThread::WriteToPipe()
 	close(m_stdin[1]);
 }
 
-void cxExecute::cxExecuteThread::ReadFromPipe()
+void cxExecuteThread::ReadFromPipe()
 {
 	char chBuf[BUFSIZE];
 

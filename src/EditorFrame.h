@@ -19,7 +19,6 @@
 	#include <wx/wx.h>
 #endif
 
-#include <wx/dnd.h>
 #include <wx/aui/aui.h>
 #include <wx/imaglist.h>
 
@@ -39,11 +38,9 @@
 #include "IOpenTextmateURL.h"
 #include "ITabPage.h"
 
-// Forward declarations
-class eApp;
+
 class EditorCtrl;
 struct EditorChangeState;
-//class Incomming;
 class ProjectPane;
 class PreviewDlg;
 class SymbolList;
@@ -61,7 +58,6 @@ class HtmlOutputPane;
 class eAuiNotebook;
 class DiffDirPane;
 class DiffPanel;
-
 class IEditorSearch;
 
 
@@ -229,16 +225,6 @@ private:
 	void ShowProjectPane(const wxString& project);
 	void ShowBundlePane();
 	void ShowDiffPane(const wxString& path1, const wxString& path2);
-
-	// Embedded class: FrameDropTarget
-	class FrameDropTarget : public wxFileDropTarget {
-	public:
-		FrameDropTarget(EditorFrame& parent);
-		bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames);
-
-	private:
-		EditorFrame& m_parent;
-	};
 
 	// Event handlers
 	void OnShiftProjectFocus(wxCommandEvent& event);

@@ -27,6 +27,7 @@
 #include <wx/printdlg.h>
 #include <wx/recguard.h>
 #include <wx/clipbrd.h>
+#include <wx/dnd.h>
 
 #include "eAbout.h"
 #include "eApp.h"
@@ -72,6 +73,29 @@
 	#include "Winuser.h"
     #include <wx/msw/registry.h>
 #endif
+
+
+class FrameDropTarget : public wxFileDropTarget {
+public:
+	FrameDropTarget(EditorFrame& parent): m_parent(parent) {};
+	virtual bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames);
+
+private:
+	EditorFrame& m_parent;
+};
+
+bool FrameDropTarget::OnDropFiles(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), const wxArrayString& filenames) {
+	m_parent.SetCursor(wxCURSOR_WAIT);
+
+	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
+		const wxString& path = filenames[i];
+		m_parent.Open(path);
+	}
+
+	m_parent.SetCursor(*wxSTANDARD_CURSOR);
+	return true;
+}
+
 
 // ctrl id's
 enum {
@@ -370,8 +394,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		InitMemberSettings();
 
 		// Set drop target so files can be dragged from explorer
-		FrameDropTarget *dropTarget = new FrameDropTarget(*this);
-		SetDropTarget(dropTarget);
+		SetDropTarget(new FrameDropTarget(*this));
 
 		box = new wxBoxSizer(wxVERTICAL);
 		panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
@@ -3939,20 +3962,4 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 	self->ResetSyntaxMenu();
 	self->ResetBundleMenu();
 	self->CheckForModifiedFilesAsync();
-}
-
-// -- FrameDropTarget -----------------------------------------------------------------
-
-EditorFrame::FrameDropTarget::FrameDropTarget(EditorFrame& parent) : m_parent(parent) {}
-
-bool EditorFrame::FrameDropTarget::OnDropFiles(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), const wxArrayString& filenames) {
-	m_parent.SetCursor(wxCURSOR_WAIT);
-
-	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
-		const wxString& path = filenames[i];
-		m_parent.Open(path);
-	}
-
-	m_parent.SetCursor(*wxSTANDARD_CURSOR);
-	return true;
 }

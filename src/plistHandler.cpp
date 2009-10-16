@@ -2688,6 +2688,11 @@ void PListDict::wxSetString(const char* key, const wxString& text) {
 	SetString(key, text.mb_str(wxConvUTF8));
 }
 
+void PListDict::wxUpdateString(const char *key, const wxString& value) {
+	if (value.empty()) this->DeleteItem(key);
+	else this->wxSetString(key, value);
+}
+
 PListDict PListDict::NewDict(const char* key) {
 	wxASSERT(m_rPlist);
 	wxASSERT(key);

@@ -577,6 +577,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ShortcutCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ShortcutCtrl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TextTip.cpp"
 				>
 			</File>
@@ -3835,14 +3843,6 @@
 		</File>
 		<File
 			RelativePath=".\ShellRunner.h"
-			>
-		</File>
-		<File
-			RelativePath=".\ShortcutCtrl.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\ShortcutCtrl.h"
 			>
 		</File>
 		<File

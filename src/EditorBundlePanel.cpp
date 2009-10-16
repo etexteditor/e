@@ -12,9 +12,9 @@
  ******************************************************************************/
 
 #include "EditorBundlePanel.h"
-#include "BundleItemEditorCtrl.h"
 #include <wx/gbsizer.h>
 #include <wx/statline.h>
+#include "BundleItemEditorCtrl.h"
 #include "ShortcutCtrl.h"
 
 IMPLEMENT_DYNAMIC_CLASS(EditorBundlePanel, wxPanel)
@@ -573,7 +573,7 @@ void EditorBundlePanel::OnChoice(wxCommandEvent& event) {
 }
  
 void EditorBundlePanel::OnTriggerChoice(wxCommandEvent& event) {
-	if (event.GetSelection() == 0) {
+	if (event.GetSelection() == 0) { // Tab Trigger
 		m_triggerSizer->Show(m_tabText, true);
 		m_triggerSizer->Show(m_shortcutCtrl, false);
 		m_triggerSizer->Show(m_clearButton, false);
@@ -591,7 +591,7 @@ void EditorBundlePanel::OnTriggerChoice(wxCommandEvent& event) {
 			if (modified) doc.Freeze();
 		cxENDLOCK
 	}
-	else {
+	else { // Key Equivalent
 		m_triggerSizer->Show(m_tabText, false);
 		m_triggerSizer->Show(m_shortcutCtrl, true);
 		m_triggerSizer->Show(m_clearButton, true);
@@ -602,13 +602,16 @@ void EditorBundlePanel::OnTriggerChoice(wxCommandEvent& event) {
 				doc.DeleteProperty(wxT("bundle:tabTrigger"));
 				modified = true;
 			}
-			if (!m_shortcutCtrl->IsEmpty()) {
-				doc.SetProperty(wxT("bundle:keyEquivalent"), m_shortcutCtrl->GetBinding());
+			bool shortCutIsEmpty = m_shortcutCtrl->IsEmpty();
+			if (!shortCutIsEmpty) {
+				const wxString& binding = m_shortcutCtrl->GetBinding();
+				doc.SetProperty(wxT("bundle:keyEquivalent"), binding);
 				modified = true;
 			}
 			if (modified) doc.Freeze();
 		cxENDLOCK
 	}
+
 	m_triggerSizer->Layout();
 }
 
@@ -630,7 +633,8 @@ void EditorBundlePanel::OnTextChanged(wxCommandEvent& event) {
 			doc.SetProperty(wxT("bundle:draggedFileExtensions"), m_extText->GetValue());
 		}
 		else if (eventObject == m_shortcutCtrl) {
-			doc.SetProperty(wxT("bundle:keyEquivalent"), m_shortcutCtrl->GetBinding());
+			const wxString& binding = m_shortcutCtrl->GetBinding();
+			doc.SetProperty(wxT("bundle:keyEquivalent"), binding);
 		}
 		else if (eventObject == m_tabText) {
 			doc.SetProperty(wxT("bundle:tabTrigger"), m_tabText->GetValue());

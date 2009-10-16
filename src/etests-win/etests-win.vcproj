@@ -252,10 +252,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\test_documentNewlines.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\test_eDocumentPath.cpp"
 				>
 			</File>
@@ -265,6 +261,10 @@
 			</File>
 			<File
 				RelativePath=".\test_parseColour.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_tmKey.cpp"
 				>
 			</File>
 			<File

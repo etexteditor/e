@@ -1203,7 +1203,8 @@ void Document::SetProperty(const wxString& name, const wxString& value) {
 
 	// No need to make a change if the property is already set
 	wxString oldValue;
-	if (GetProperty(name, oldValue) && value == oldValue) return;
+	bool got_property = GetProperty(name, oldValue);
+	if (got_property && value == oldValue) return;
 
 	const node_ref propNode = GetPropnode();
 

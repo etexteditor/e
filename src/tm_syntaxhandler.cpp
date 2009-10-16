@@ -38,16 +38,13 @@
     #pragma warning(pop)
 #endif
 
-class DirTraverserSimple : public wxDirTraverser
-{
+class DirTraverserSimple : public wxDirTraverser {
 public:
-    DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) { }
-    virtual wxDirTraverseResult OnFile(const wxString& WXUNUSED(filename))
-    {
+    DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) {}
+    virtual wxDirTraverseResult OnFile(const wxString& WXUNUSED(filename)) {
         return wxDIR_IGNORE;
     }
-    virtual wxDirTraverseResult OnDir(const wxString& dirname)
-    {
+    virtual wxDirTraverseResult OnDir(const wxString& dirname) {
         m_dirs.Add(dirname);
 		return wxDIR_IGNORE;
     }
@@ -1356,7 +1353,7 @@ wxColour TmSyntaxHandler::ParseColor(const wxString& color_hex, const wxColour& 
 		if (!color_hex.Mid(7, 2).ToULong(&alpha, 16)) return wxNullColour;
 
 		// Manually apply alpha transparency
-		// TODO: consider using wxGCDC for rendering so it can do nativa alpha
+		// TODO: consider using wxGCDC for rendering so it can do native alpha
 		red = (red * alpha + bgColor.Red() * (255 - alpha)) >> 8;
 		green = (green * alpha + bgColor.Green() * (255 - alpha)) >> 8;
 		blue = (blue * alpha + bgColor.Blue() * (255 - alpha))  >> 8;
@@ -1858,18 +1855,18 @@ wxMenu* TmSyntaxHandler::ParseMenu(const PListArray& itemsArray, const PListDict
 
 // ---- cxFoldRule ------------------------------------------------
 
-TmSyntaxHandler::cxFoldRule::cxFoldRule(unsigned int id, const char* startMarker, const char* endMarker)
-: ruleId(id), foldingStartMarker(startMarker, startMarker + strlen(startMarker)+1),
-foldingEndMarker(endMarker, endMarker + strlen(endMarker)+1) {
-}
+TmSyntaxHandler::cxFoldRule::cxFoldRule(unsigned int id, const char* startMarker, const char* endMarker):
+	ruleId(id),
+	foldingStartMarker(startMarker, startMarker + strlen(startMarker)+1),
+	foldingEndMarker(endMarker, endMarker + strlen(endMarker)+1) {}
 
 // ---- SelectorParser ------------------------------------------------
 
-template<class T> SelectorParser<T>::SelectorParser(const wxString& selector, const T* target)
-: m_target(target), m_selector(selector), m_len(selector.size()), m_pos(0) {
+template<class T> SelectorParser<T>::SelectorParser(const wxString& selector, const T* target):
+	m_target(target), m_selector(selector), m_len(selector.size()), m_pos(0)
+{
 	 m_currentNode = m_scopeNode = m_rootNode = new sNode<T>;
-};
-
+}
 
 template<class T> sNode<T>* SelectorParser<T>::ParseExpr() {
 	GetNextToken(); // Sets m_currentToken
@@ -1998,19 +1995,16 @@ template<class T> bool SelectorParser<T>::ParseScope() {
 	m_currentNode = m_scopeNode = new sNode<T>(m_tokenValue);
 
 	while(GetNextToken() == TOKEN_DOT) {
-		if (GetNextToken() == TOKEN_WORD) {
-			// Add the new word to current scope
-			sNode<T>* newNode = new sNode<T>(m_tokenValue);
-			if (!m_currentNode->postfix) {
-				m_currentNode->postfix = new map<wxString,sNode<T>*>;
-			}
-			(*m_currentNode->postfix)[m_tokenValue] = newNode;
-			m_currentNode = newNode;
-		}
-		else {
-			// Invalid scope
-			return false;
-		}
+		if (GetNextToken() != TOKEN_WORD)
+			return false; // Invalid scope
+
+		// Add the new word to current scope
+		sNode<T>* newNode = new sNode<T>(m_tokenValue);
+		if (!m_currentNode->postfix)
+			m_currentNode->postfix = new map<wxString,sNode<T>*>;
+
+		(*m_currentNode->postfix)[m_tokenValue] = newNode;
+		m_currentNode = newNode;
 	}
 
 	return true;
@@ -2018,15 +2012,13 @@ template<class T> bool SelectorParser<T>::ParseScope() {
 
 // ---- sNode ------------------------------------------------
 
-template<class T> sNode<T>::sNode()
-: word(wxEmptyString), postfix(NULL), orNodes(NULL), ancestors(NULL), targets(NULL) {};
+template<class T> sNode<T>::sNode():
+	word(wxEmptyString), postfix(NULL), orNodes(NULL), ancestors(NULL), targets(NULL) {};
 
-template<class T> sNode<T>::sNode(const wxString& word)
-: word(word), postfix(NULL), orNodes(NULL), ancestors(NULL), targets(NULL) {};
+template<class T> sNode<T>::sNode(const wxString& word):
+	word(word), postfix(NULL), orNodes(NULL), ancestors(NULL), targets(NULL) {};
 
-template<class T> sNode<T>::~sNode() {
-	clear();
-}
+template<class T> sNode<T>::~sNode() {clear();}
 
 template<class T> void sNode<T>::clear() {
 	// Delete all postfix nodes
@@ -2116,7 +2108,6 @@ template<class T> const vector<const T*>* sNode<T>::GetMatch(const deque<const w
 			// If no match, go one level up in scope and try again
 		}
 	}
-
 
 	return targets;
 }

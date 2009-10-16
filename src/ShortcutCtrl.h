@@ -12,10 +12,10 @@ class ShortcutCtrl : public KeyHookable<wxTextCtrl> {
 public:
 	ShortcutCtrl(wxWindow* parent, wxWindowID id=wxID_ANY);
 	void Clear();
-	bool IsEmpty() const {return m_binding.empty();};
+	bool IsEmpty() const;
 
 	void SetKey(const wxString& binding);
-	const wxString& GetBinding() const {return m_binding;};
+	const wxString& GetBinding() const;
 
 	virtual bool OnPreKeyDown(wxKeyEvent& event);
 

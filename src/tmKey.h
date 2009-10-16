@@ -3,15 +3,13 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/string.h>
+#include <wx/string.h>
 #endif
 
 class tmKey {
 public:
-	tmKey()
-		: modifiers(0), keyCode(0) {};
-	tmKey(int key, int mod)
-		: modifiers(mod), keyCode(key) {UpdateShortcut();};
+	tmKey();
+	tmKey(int key, int mod);
 	tmKey(const wxString& binding);
 
 	wxString getBinding();

@@ -243,6 +243,10 @@ public:
 	void DeleteItem(const char* key);
 	void SetString(const char* key, const char* text);
 	void wxSetString(const char* key, const wxString& text);
+
+	// Sets the key if value is non-empty; else clears the key from the dict.
+	void wxUpdateString(const char *key, const wxString& value);
+
 	PListDict NewDict(const char* key);
 	PListArray NewArray(const char* key);
 

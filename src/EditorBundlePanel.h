@@ -24,7 +24,7 @@
 	#include <wx/wx.h>
 #endif
 
-// Pre-definitions
+
 class wxStaticLine;
 
 class EditorFrame;

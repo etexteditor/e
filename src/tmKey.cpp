@@ -1,11 +1,12 @@
 #include "tmKey.h"
-
 #include <map>
 
 #ifndef WX_PRECOMP
 	#include <wx/intl.h>
 	#include <wx/log.h>
+#ifdef __WXDEBUG__
 	#include <wx/msgdlg.h>
+#endif
 #endif
 
 #ifdef __WXGTK__
@@ -21,10 +22,12 @@ static std::map<int, wxChar> tmKey_s_keyBind;
 // an instance of this class will be created at startup time, and initializer will take care of maps
 static class tmKeyInitializer : private tmKey {
 public:
-    tmKeyInitializer() : tmKey() {
-        tmKey::BuildMaps();
-    }
+    tmKeyInitializer() : tmKey() {tmKey::BuildMaps();}
 } __key_maps_initializer;
+
+
+tmKey::tmKey(): modifiers(0), keyCode(0) {}
+tmKey::tmKey(int key, int mod): modifiers(mod), keyCode(key) {UpdateShortcut();}
 
 void tmKey::BuildMaps() { // static
 	tmKey_s_keyMap[wxT('\x0003')] = WXK_CANCEL;
@@ -247,9 +250,8 @@ tmKey::tmKey(const wxString& binding) : modifiers(0), keyCode(0) {
 
 					// Numpadded keycode
 					std::map<wxChar, wxKeyCode>::const_iterator p = tmKey_s_numMap.find(c);
-					if (p != tmKey_s_numMap.end()) {
+					if (p != tmKey_s_numMap.end())
 						keyCode = p->second;
-					}
 					else goto error;
 				}
 				break;
@@ -262,12 +264,10 @@ tmKey::tmKey(const wxString& binding) : modifiers(0), keyCode(0) {
 		else {
 			// check keymap
 			std::map<wxChar, wxKeyCode>::const_iterator p = tmKey_s_keyMap.find(c);
-			if (p != tmKey_s_keyMap.end()) {
+			if (p != tmKey_s_keyMap.end())
 				keyCode= p->second;
-			}
-			else {
+			else
 				tmKey::uniToWxk(c, keyCode, modifiers);
-			}
 		}
 	}
 	
@@ -296,23 +296,22 @@ void tmKey::UpdateShortcut() {
 	if (modifiers & 0x0001) shortcut += _("Alt-");
 	if (modifiers & 0x0008) shortcut += _("Win-");
 	if (modifiers & 0x0004) shortcut += _("Shift-");
-	//if (numpad) key.shortcut += _("Numpad-");
 
-	if (keyCode) {
-		std::map<int, wxString>::const_iterator k = tmKey_s_keyText.find(keyCode);
-		if (k != tmKey_s_keyText.end()) {
-			if (keyCode == WXK_NUMPAD_ENTER) shortcut += _("Numpad-");
-			shortcut += k->second;
-		}
-		else  {
-			wxChar uniKey;
+	if (!keyCode) return;
 
-			if (tmKey::wxkToUni(keyCode, false, uniKey)) shortcut += CharToUpper(uniKey);
-			else {
-				// If we cannot get a valid shortcut (it might need a dead key combi
-				// on this keyboard layout). We remove the shortcut
-				shortcut.clear();
-			}
+	std::map<int, wxString>::const_iterator k = tmKey_s_keyText.find(keyCode);
+	if (k != tmKey_s_keyText.end()) {
+		if (keyCode == WXK_NUMPAD_ENTER) shortcut += _("Numpad-");
+		shortcut += k->second;
+	}
+	else  {
+		wxChar uniKey;
+
+		if (tmKey::wxkToUni(keyCode, false, uniKey)) shortcut += CharToUpper(uniKey);
+		else {
+			// If we cannot get a valid shortcut (it might need a dead key combi
+			// on this keyboard layout). We remove the shortcut
+			shortcut.clear();
 		}
 	}
 
@@ -331,18 +330,31 @@ wxString tmKey::getBinding() {
 		if (k != tmKey_s_keyBind.end()) binding += k->second;
 		else {
 			wxChar uniKey;
-			if (!tmKey::wxkToUni(keyCode, false, uniKey)) return wxEmptyString;
+			bool shifted = modifiers & wxMOD_SHIFT;
+			if (!tmKey::wxkToUni(keyCode, shifted, uniKey))
+				return wxEmptyString;
 
-			if (modifiers & wxMOD_SHIFT) {
-				wxChar uniKey_shifted;
-				if (tmKey::wxkToUni(keyCode, false, uniKey_shifted) && uniKey_shifted != uniKey) {
-					binding += uniKey_shifted;
-				}
-				else {
-					binding += wxT('$'); // shift
-					binding += uniKey;
-				}
-			}
+			binding += uniKey;
+
+			//wxChar uniKey;
+			//if (!tmKey::wxkToUni(keyCode, true, uniKey))
+			//	return wxEmptyString;
+
+			//wxChar uniKey_shifted;
+			//bool found_key = tmKey::wxkToUni(keyCode, false, uniKey_shifted);
+
+			//if (modifiers & wxMOD_SHIFT) {
+			//	if (found_key &&(uniKey_shifted != uniKey)) {
+			//		binding += uniKey_shifted;
+			//	}
+			//	else {
+			//		binding += wxT('$'); // shift
+			//		binding += uniKey;
+			//	}
+			//}
+			//else {
+			//	binding += uniKey_shifted;
+			//}
 		}
 	}
 

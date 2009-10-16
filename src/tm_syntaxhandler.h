@@ -159,7 +159,7 @@ public:
 			}
 		}
 
-		// match (but there may be no targes here)
+		// match (but there may be no targets here)
 		bool isFound = false;
 		if (targets) {
 			typename std::vector<const T*>::const_iterator p = targets->begin();

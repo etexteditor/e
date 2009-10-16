@@ -7,8 +7,7 @@
 #include "plistHandler.h"
 #include "jsonreader.h"
 #include "tm_syntaxhandler.h"
-#include "EditorFrame.h" // For ShowOutput() method; refator after other bundle-specific editing is pulled up to this class.
-
+#include "EditorFrame.h"
 #include "IUpdatePanel.h"
 
 
@@ -119,30 +118,33 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 					// Get Properties
 					if (m_bundleType == BUNDLE_COMMAND) {
 						wxString beforeRunningCommand;
-						wxString input;
-						wxString fallbackInput;
-						wxString output;
-						wxString keyEquivalent;
-						wxString tabTrigger;
 						doc.GetProperty(wxT("bundle:beforeRunningCommand"), beforeRunningCommand);
+						if (!beforeRunningCommand.empty())
+							itemDict.wxSetString("beforeRunningCommand", beforeRunningCommand);
+
+						wxString input;
 						doc.GetProperty(wxT("bundle:input"), input);
+						if (!input.empty())
+							itemDict.wxSetString("input", input);
+
+						wxString fallbackInput;
 						doc.GetProperty(wxT("bundle:fallbackInput"), fallbackInput);
+						if (input == wxT("selection"))
+							itemDict.wxUpdateString("fallbackInput", fallbackInput);
+
+						wxString output;
 						doc.GetProperty(wxT("bundle:output"), output);
+						if (!output.empty())
+							itemDict.wxSetString("output", output);
+
+						wxString keyEquivalent;
 						doc.GetProperty(wxT("bundle:keyEquivalent"), keyEquivalent);
+						itemDict.wxUpdateString("keyEquivalent", keyEquivalent); 
+
+						wxString tabTrigger;
 						doc.GetProperty(wxT("bundle:tabTrigger"), tabTrigger);
+						itemDict.wxUpdateString("tabTrigger", tabTrigger); 
 
-						if (!beforeRunningCommand.empty()) itemDict.wxSetString("beforeRunningCommand", beforeRunningCommand);
-						if (!output.empty()) itemDict.wxSetString("input", input);
-						if (!output.empty()) itemDict.wxSetString("output", output);
-
-						if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); 
-						else itemDict.DeleteItem("keyEquivalent");
-
-						if (!tabTrigger.empty()) itemDict.wxSetString("tabTrigger", tabTrigger); 
-						else itemDict.DeleteItem("tabTrigger");
-
-						if (input == wxT("selection") && !fallbackInput.empty()) itemDict.wxSetString("fallbackInput", fallbackInput); 
-						else itemDict.DeleteItem("fallbackInput");
 					}
 					else { // BUNDLE_DRAGCMD
 						PListArray extArray = itemDict.NewArray("draggedFileExtensions");
@@ -175,18 +177,15 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 					else itemDict.SetString("content", "");
 
 					wxString keyEquivalent;
-					wxString tabTrigger;
-					wxString scope;
 					doc.GetProperty(wxT("bundle:keyEquivalent"), keyEquivalent);
+					itemDict.wxUpdateString("keyEquivalent", keyEquivalent); 
+
+					wxString tabTrigger;
 					doc.GetProperty(wxT("bundle:tabTrigger"), tabTrigger);
+					itemDict.wxUpdateString("tabTrigger", tabTrigger); 
+
+					wxString scope;
 					doc.GetProperty(wxT("bundle:scope"), scope);
-
-					if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); 
-					else itemDict.DeleteItem("keyEquivalent");
-
-					if (!tabTrigger.empty()) itemDict.wxSetString("tabTrigger", tabTrigger); 
-					else itemDict.DeleteItem("tabTrigger");
-
 					itemDict.wxSetString("scope", scope);
 				}
 				break;
@@ -228,7 +227,8 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 
 					if (m_bundleType == BUNDLE_PREF) {
 						PListDict settingsDict;
-						if (!itemDict.GetDict("settings", settingsDict)) settingsDict = itemDict.NewDict("settings");
+						if (!itemDict.GetDict("settings", settingsDict))
+							settingsDict = itemDict.NewDict("settings");
 
 						settingsDict.SetJSON(root);
 
@@ -241,9 +241,7 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 
 						wxString keyEquivalent;
 						doc.GetProperty(wxT("bundle:keyEquivalent"), keyEquivalent);
-
-						if (!keyEquivalent.empty()) itemDict.wxSetString("keyEquivalent", keyEquivalent); 
-						else itemDict.DeleteItem("keyEquivalent");
+						itemDict.wxUpdateString("keyEquivalent", keyEquivalent);
 					}
 				}
 				break;
@@ -264,7 +262,7 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 	cxENDLOCK
 
 	// Reload bundles
-	wxBusyCursor wait; // Show user that we are reloading
+	wxBusyCursor wait;
 	if (m_bundleType == BUNDLE_PREF || m_bundleType == BUNDLE_LANGUAGE) {
 		// we have to call LoadBundles since all syntaxes will have to be reloaded
 		m_syntaxHandler.LoadBundles(cxRELOAD);

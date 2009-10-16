@@ -16,6 +16,11 @@
 #include "tmTheme.h"
 #include "EditorCtrl.h"
 
+#ifndef WX_PRECOMP
+#include <wx/dc.h>
+#include <wx/dcclient.h>
+#endif
+
 unsigned int _gutter_digits_in_number(unsigned int number) {
 	unsigned int count = 1; // minimum is one
 	while ((number /= 10) != 0) ++count;

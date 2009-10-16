@@ -16,15 +16,14 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-        #include <wx/control.h>
-        #include <wx/dc.h>
-        #include <wx/dcclient.h>
-        #include <wx/dcmemory.h>
+#include <wx/control.h>
+#include <wx/dcmemory.h>
 #endif
 
 struct tmTheme;
 struct cxFold;
 class EditorCtrl;
+class dc;
 
 class GutterCtrl : public wxControl {
 public:

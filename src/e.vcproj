@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="e"
 	ProjectGUID="{34A9B5C4-22D3-4F14-A896-0F12FDF194C5}"
 	RootNamespace="e"
@@ -1901,10 +1901,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\plistHandler.h"
-				>
-			</File>
-			<File
 				RelativePath="SnippetHandler.cpp"
 				>
 				<FileConfiguration
@@ -1946,6 +1942,10 @@
 			</File>
 			<File
 				RelativePath="SnippetHandler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SyntaxInfo.h"
 				>
 			</File>
 			<File
@@ -4087,10 +4087,6 @@
 		</File>
 		<File
 			RelativePath=".\SymbolRef.h"
-			>
-		</File>
-		<File
-			RelativePath=".\SyntaxInfo.h"
 			>
 		</File>
 		<File

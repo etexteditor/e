@@ -430,36 +430,4 @@ private:
 
 	static const wxString s_emptyString;
 };
-
-template <class T> class SelectorParser {
-public:
-	SelectorParser(const wxString& selector, const T* target);
-
-	sNode<T>* ParseExpr();
-
-private:
-	enum selToken {TOKEN_EOF, TOKEN_WORD, TOKEN_DOT, TOKEN_OR, TOKEN_PARAN_START, TOKEN_PARAN_END, TOKEN_MINUS};
-
-	// Lexer
-	selToken GetNextToken();
-
-	// Parser
-	bool ParseScope();
-	bool ParseWord();
-
-	// Member variables
-	const T* m_target;
-	const wxString& m_selector;
-	const size_t m_len;
-	unsigned int m_pos;
-	selToken m_currentToken;
-	wxString m_tokenValue;
-	unsigned int m_errorPos;
-	wxString m_error;
-
-	sNode<T>* m_rootNode;
-	sNode<T>* m_scopeNode;
-	sNode<T>* m_currentNode;
-};
-
 #endif // __TM_SYNTAXHANDLER_H__

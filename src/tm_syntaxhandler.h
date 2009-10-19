@@ -11,10 +11,6 @@
  *
  ******************************************************************************/
 
-#ifdef __WXMSW__
-    #pragma warning(disable: 4786)
-#endif
-
 #ifndef __TM_SYNTAXHANDLER_H__
 #define __TM_SYNTAXHANDLER_H__
 
@@ -32,10 +28,9 @@
 #include "tmBundle.h"
 #include "tmAction.h"
 #include "tmCommand.h"
-#include "SyntaxInfo.h"
-
 #include "tmTheme.h"
 #include "tmKey.h"
+#include "SyntaxInfo.h"
 
 #include "IGetPListHandlerRef.h"
 #include "ITmThemeHandler.h"

@@ -15,14 +15,13 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+
+#include "eApp.h"
+
 // Needed to enable XP-Style common controls
 #if defined(__WXMSW__) && !defined(__WXWINCE__)
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='X86' publicKeyToken='6595b64144ccf1df'\"")
 #endif
-
-#include "tomcrypt.h" // has to be first to avoid conflict with STL
-
-#include "eApp.h"
 
 #include <wx/filename.h>
 #include <wx/file.h>

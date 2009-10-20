@@ -68,14 +68,6 @@ enum {
 	ID_LEFTSCROLL
 };
 
-// Popup menu IDs
-enum {
-	MENU_SELECT,
-	MENU_SELECTWORD,
-	MENU_SELECTLINE,
-	MENU_SELECTSCOPE,
-	MENU_SELECTFOLD
-};
 
 BEGIN_EVENT_TABLE(EditorCtrl, wxControl)
 	EVT_PAINT(EditorCtrl::OnPaint)
@@ -7298,11 +7290,11 @@ void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {
 	contextMenu.AppendSeparator();
 	wxMenu* selectMenu = new wxMenu;
 		selectMenu->Append(wxID_SELECTALL, _("&All\tCtrl+A"), _("Select All"));
-		selectMenu->Append(MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
-		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
-		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
-		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
-		contextMenu.Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+		selectMenu->Append(EditorFrame::MENU_SELECTWORD, _("&Word\tCtrl+Shift+W"), _("Select Word"));
+		selectMenu->Append(EditorFrame::MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
+		selectMenu->Append(EditorFrame::MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
+		selectMenu->Append(EditorFrame::MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
+		contextMenu.Append(EditorFrame::MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
 	contextMenu.AppendSeparator();
 	contextMenu.Append(wxID_UNDO, _("&Undo\tCtrl+Z"), _("Undo"));
 	contextMenu.Append(wxID_REDO, _("&Redo\tCtrl+Y"), _("Redo"));

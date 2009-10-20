@@ -1,4 +1,7 @@
 #include "ShellRunner.h"
+
+#include <wx/file.h>
+
 #include "eSettings.h"
 #include "eDocumentPath.h"
 #include "Env.h"

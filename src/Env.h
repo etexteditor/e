@@ -2,10 +2,11 @@
 #define __ENV_H__
 
 #include <wx/string.h>
-#include <wx/file.h>
 
 #include <vector>
 #include <map>
+
+class wxFile;
 
 class cxEnv {
 public:

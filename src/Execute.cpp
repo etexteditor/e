@@ -17,6 +17,7 @@
 
 #include <wx/process.h>
 #include <wx/filename.h>
+#include <wx/file.h>
 
 #ifndef WX_PRECOMP
 #include <wx/log.h>

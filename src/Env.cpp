@@ -4,7 +4,6 @@
 
 #include <wx/filename.h>
 #include <wx/file.h>
-#include <wx/utils.h>
 
 void cxEnv::SetEnv(const wxString& key, const wxString& value) {
 	wxASSERT(!key.empty());

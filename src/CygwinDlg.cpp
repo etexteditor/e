@@ -13,6 +13,7 @@
 
 #include "CygwinDlg.h"
 #include "shlobj.h"
+#include <wx/file.h>
 
 #include "Execute.h"
 #include "Env.h"

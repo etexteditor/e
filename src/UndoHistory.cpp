@@ -572,10 +572,8 @@ void UndoHistory::OnVersionTreeDrawitem(VersionTreeEvent& event) {
 	cxENDLOCK
 }
 
-
-void UndoHistory::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// # no evt.skip() as we don't want the control to erase the background
-}
+// no evt.skip() as we don't want the control to erase the background
+void UndoHistory::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 // static notification handler
 void UndoHistory::OnClosePage(UndoHistory* self, void* data, int WXUNUSED(filter)) {

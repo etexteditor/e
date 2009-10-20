@@ -330,7 +330,7 @@ wxString tmKey::getBinding() {
 		if (k != tmKey_s_keyBind.end()) binding += k->second;
 		else {
 			wxChar uniKey;
-			bool shifted = modifiers & wxMOD_SHIFT;
+			bool shifted = (modifiers & wxMOD_SHIFT) == wxMOD_SHIFT;
 			if (!tmKey::wxkToUni(keyCode, shifted, uniKey))
 				return wxEmptyString;
 

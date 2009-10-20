@@ -16,7 +16,7 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-   #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #include <curl/curl.h>
@@ -24,20 +24,22 @@
 #include <deque>
 #include <vector>
 
-// pre-definitions
 class cxRemoteAction;
 class cxRemoteListEvent;
 class TiXmlElement;
 
+
 class RemoteProfile {
 public:
-	RemoteProfile() : m_id(-1) {};
+	enum { PROFILE_TEMP = -1, PROFILE_INACTIVE = -2 };
+
+	RemoteProfile() : m_id(PROFILE_TEMP) {};
 	RemoteProfile(const RemoteProfile& rp);
 
 	bool IsValid() const {return !m_address.empty();};
-	bool IsTemp() const {return m_id == -1;};
-	bool IsActive() const {return m_id != -2;};
-	void DisActivate() {m_id = -2;};
+	bool IsTemp() const {return m_id == PROFILE_TEMP;};
+	bool IsActive() const {return m_id != PROFILE_INACTIVE;};
+	void Deactivate() {m_id = PROFILE_INACTIVE;};
 
 	wxString GetUrl() const;
 	wxString GetUsernamePwd() const;

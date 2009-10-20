@@ -516,7 +516,7 @@ void eSettings::DeleteRemoteProfile(size_t profile_id) {
 
 	// In cache; deactivate profile and adjust id's of rest
 	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p) {
-		if ((*p)->m_id == (int)profile_id) (*p)->DisActivate();
+		if ((*p)->m_id == (int)profile_id) (*p)->Deactivate();
 		else if ((*p)->m_id > (int)profile_id) --((*p)->m_id);
 	}
 }

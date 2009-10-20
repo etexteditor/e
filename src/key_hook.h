@@ -79,9 +79,10 @@ protected:
 	virtual bool OnPreKeyUp(wxKeyEvent& WXUNUSED(event)){return false;}
 #ifdef __WXMSW__
 	virtual bool MSWTranslateMessage(WXMSG* pMsg) {
-		if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_KEYUP || pMsg->message == WM_SYSKEYUP) {
-			// Don't allow input if we are in busy state
-			// (otherwise we might get recursive Yield in cxExecute)
+		if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || 
+			pMsg->message == WM_KEYUP || pMsg->message == WM_SYSKEYUP)
+		{
+			// Don't allow input if we are in busy state, otherwise we might get recursive Yield in cxExecute
 			if (wxIsBusy()) return true;
 
 			if (_key_binder.OnMSWTranslateMessage(pMsg))

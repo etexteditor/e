@@ -4789,6 +4789,12 @@ void EditorCtrl::DoCompletion() {
 	const wxArrayString completions = GetCompletionList();
 	if (completions.empty()) return;
 
+	// If only one item, then auto-complete
+	if (completions.GetCount() == 1) {
+		this->ReplaceCurrentWord(completions[0]);
+		return;
+	}
+
 	// Get current word
 	const interval iv = GetWordIv(GetPos());
 

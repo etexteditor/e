@@ -4519,14 +4519,11 @@ interval EditorCtrl::GetWordIv(unsigned int pos) const {
 
 wxString EditorCtrl::GetCurrentWord() const {
 	const interval iv = GetWordIv(GetPos());
+	if (iv.empty()) return wxEmptyString;
 
-	if (iv.start < iv.end) {
-		cxLOCKDOC_READ(m_doc)
-			return doc.GetTextPart(iv.start, iv.end);
-		cxENDLOCK
-	}
-	
-	return wxEmptyString;
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(iv.start, iv.end);
+	cxENDLOCK
 }
 
 wxString EditorCtrl::GetCurrentLine() {
@@ -4558,7 +4555,7 @@ void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
 	}
 	else iv = GetWordIv(pos);
 
-	if (iv.start < iv.end) {
+	if (!iv.empty()) {
 		m_selMode = SEL_WORD;
 		m_sel_start = iv.start;
 		m_sel_end = iv.end;

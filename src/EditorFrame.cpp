@@ -2760,7 +2760,7 @@ void EditorFrame::OnMenuGotoLastTab(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
 	vector<OpenTabInfo*> tabInfo;
 
-	wxString rootPath = wxT("");
+	wxString rootPath = wxEmptyString;
 	if (this->HasProject()) {
 		rootPath = this->GetRootPath().GetPath();
 	}
@@ -2770,7 +2770,7 @@ void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
 
 		wxFileName tabPath = page->GetFilePath();
 
-		wxString relativePath = wxT("");
+		wxString relativePath = wxEmptyString;
 		const wxString path = tabPath.GetPath();
 
 		if (this->HasProject() && path.StartsWith(rootPath)) {

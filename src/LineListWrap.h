@@ -110,6 +110,9 @@ private:
 	unsigned int approxBottom;
 	unsigned int avr_lineheight;
 	int approxDiff;
+
+private:
+	LineListWrap& operator = (const LineListWrap& other);
 };
 
 #endif // __LINELISTWRAP_H__

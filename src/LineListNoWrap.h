@@ -73,6 +73,9 @@ private:
 	unsigned int m_maxWidth;
 	std::vector<unsigned int> m_textOffsets;
 	std::vector<unsigned int> m_lineWidths;
+
+private:
+	LineListNoWrap& operator = (const LineListNoWrap& other);
 };
 
 #endif //__LINELISTNOWRAP_H__

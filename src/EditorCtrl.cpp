@@ -497,17 +497,33 @@ unsigned int EditorCtrl::GetCurrentLineNumber() {
 	return m_lines.GetCurrentLine() +1 ;
 }
 
+// Gets the current tab-expanded cursor position, counting from 1.
 unsigned int EditorCtrl::GetCurrentColumnNumber() {
-	const unsigned int pos = m_lines.GetPos();
+	// Start of current line
 	const unsigned int line = m_lines.GetCurrentLine();
 	const unsigned int linestart = m_lines.GetLineStartpos(line);
 
-	// Column index start from 1
-	//return (pos - linestart) + 1;
+	// Cursor position within line
+	const unsigned int pos = m_lines.GetPos();
 
+	// Calculate pos with tabs expanded.
+	const unsigned int tab_size = this->m_parentFrame.GetTabWidth();
+	unsigned int tabpos = 0;
 	cxLOCKDOC_READ(m_doc)
-		return doc.GetLengthInChars(linestart, pos) + 1;
+		for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < pos; ++dbi) {
+			// Only count first byte of UTF-8 multibyte chars
+			if ((*dbi & 0xC0) == 0x80) continue;
+			if (*dbi == '\t') {
+				// Figure out how far to advance to next tab stop
+				const int over = tabpos % tab_size;
+				tabpos += (tab_size - over);
+			}
+			else tabpos++;
+		}
 	cxENDLOCK;
+
+	// Columns are 1-indexed.
+	return tabpos + 1;
 }
 
 int EditorCtrl::GetTopLine() {

@@ -133,7 +133,6 @@ void StatusBar::UpdateBarFromActiveEditor() {
 
 		if (line != m_line || column != m_column) {
 			SetStatusText(wxString::Format(wxT("Line: %u  Column: %u"), line, column), 0);
-
 			m_line = line;
 			m_column = column;
 		}

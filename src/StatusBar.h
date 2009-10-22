@@ -25,7 +25,6 @@
 #include <vector>
 
 
-// Pre-definitions
 class EditorFrame;
 class EditorCtrl;
 class ITmGetSyntaxes;

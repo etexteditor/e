@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>filters</key>
+        <dict>
+            <key>excludeDirs</key>
+            <array>
+                <string>.git</string>
+            </array>
+            <key>excludeFiles</key>
+            <array />
+            <key>includeDirs</key>
+            <array />
+            <key>includeFiles</key>
+            <array />
+        </dict>
+    </dict>
+</plist>

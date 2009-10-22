@@ -16,16 +16,16 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-   #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #include <vector>
 
 class ProjectInfoHandler;
 class cxProjectInfo;
-class FileActionList;
+class GotoFileList;
 class FileEntry;
-struct DirState;
+class DirState;
 
 class GotoFileDlg : public wxDialog {
 public:
@@ -60,7 +60,7 @@ private:
 
 	// Ctrls
 	wxTextCtrl* m_searchCtrl;
-	FileActionList* m_cmdList;
+	GotoFileList* m_cmdList;
 	wxStaticText* m_pathStatic;
 };
 

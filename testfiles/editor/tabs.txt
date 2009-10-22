@@ -1,0 +1,5 @@
+This file should be read with Tab Size = 4.
+This line starts on column 1.
+	This line starts on column 5, with a single tab.
+    This line starts on column 5, with 4 spaces.
+  	This line starts on column 5, with 2 spaces + tab.

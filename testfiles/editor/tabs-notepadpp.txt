@@ -1,0 +1,4 @@
+This line starts in column 1.
+	This line starts in column 5 (single tab.)
+    This line starts in column 5 (four spaces.)
+	This line starts in column 5 (2 spaces and 1 tab)

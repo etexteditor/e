@@ -1362,81 +1362,88 @@ void EditorCtrl::Tab() {
 	if (m_snippetHandler.IsActive()) {
 		if (shiftDown) m_snippetHandler.PrevTab();
 		else m_snippetHandler.NextTab();
+
+		return;
 	}
-	else if (shiftDown || isMultiSel) {
+
+	if (shiftDown || isMultiSel) {
 		if (lastaction != ACTION_NONE || lastpos != GetPos()) Freeze();
 
 		IndentSelectedLines(!shiftDown);
 
 		lastpos = GetPos();
 		lastaction = ACTION_NONE;
-	}
-	else {
-		// If the tab is preceded by a word it can trigger a snippet
-		const unsigned int pos = GetPos();
-		unsigned int wordstart = pos;
 
-		// First check if we can get a trigger before first non-alnum char
+		return;
+	}
+
+	// If the tab is preceded by a word it can trigger a snippet
+	const unsigned int pos = GetPos();
+	unsigned int wordstart = pos;
+
+	// First check if we can get a trigger before first non-alnum char
+	cxLOCKDOC_READ(m_doc)
+		while (wordstart) {
+			const unsigned int prevchar = doc.GetPrevCharPos(wordstart);
+			const wxChar c = doc.GetChar(prevchar);
+			if (!Isalnum(c)) break;
+			wordstart = prevchar;
+		}
+	cxENDLOCK
+	if (wordstart < pos && DoTabTrigger(wordstart, pos)) return;
+
+	// If that did not give a trigger, try to first whitespace
+	cxLOCKDOC_READ(m_doc)
+		while (wordstart) {
+			const unsigned int prevchar = doc.GetPrevCharPos(wordstart);
+			const wxChar c = doc.GetChar(prevchar);
+			if (wxIsspace(c)) break;
+			wordstart = prevchar;
+		}
+	cxENDLOCK
+	if (wordstart < pos) {
+		if (DoTabTrigger(wordstart, pos)) return;
+
+		// If we still don't have a trigger, check if we are in quotes or parans
+		// (needed for the rare case when trigger is non-alnum)
+		unsigned int qstart = pos;
 		cxLOCKDOC_READ(m_doc)
-			while (wordstart) {
-				const unsigned int prevchar = doc.GetPrevCharPos(wordstart);
+			while (qstart > wordstart) {
+				const unsigned int prevchar = doc.GetPrevCharPos(qstart);
 				const wxChar c = doc.GetChar(prevchar);
-				if (!Isalnum(c)) break;
-				wordstart = prevchar;
+				if (c == wxT('"') || c == wxT('\'') || c == wxT('(') || c == wxT('{') || c == wxT('[')) break;
+				qstart = prevchar;
 			}
 		cxENDLOCK
-		if (wordstart < pos && DoTabTrigger(wordstart, pos)) return;
-
-		// If that did not give a trigger, try to first whitespace
-		cxLOCKDOC_READ(m_doc)
-			while (wordstart) {
-				const unsigned int prevchar = doc.GetPrevCharPos(wordstart);
-				const wxChar c = doc.GetChar(prevchar);
-				if (wxIsspace(c)) break;
-				wordstart = prevchar;
-			}
-		cxENDLOCK
-		if (wordstart < pos) {
-			if (DoTabTrigger(wordstart, pos)) return;
-
-			// If we still don't have a trigger, check if we are in quotes or parans
-			// (needed for the rare case when trigger is non-alnum)
-			unsigned int qstart = pos;
-			cxLOCKDOC_READ(m_doc)
-				while (qstart > wordstart) {
-					const unsigned int prevchar = doc.GetPrevCharPos(qstart);
-					const wxChar c = doc.GetChar(prevchar);
-					if (c == wxT('"') || c == wxT('\'') || c == wxT('(') || c == wxT('{') || c == wxT('[')) break;
-					qstart = prevchar;
-				}
-			cxENDLOCK
-			if (qstart < pos && qstart != wordstart && DoTabTrigger(qstart, pos)) return;
-		}
-
-		// If we get to here we have to insert a real tab
-		if (!m_parentFrame.IsSoftTabs()) InsertChar(wxChar('\t'));
-		else {
-			const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-
-			// Calculate pos with tabs expanded
-			unsigned int tabpos = 0;
-			cxLOCKDOC_READ(m_doc)
-				for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < pos; ++dbi) {
-					// Only count first byte of UTF-8 multibyte chars
-					if ((*dbi & 0xC0) == 0x80) continue;
-					if (*dbi == '\t') tabpos += tabWidth;
-					else tabpos += 1;
-				}
-			cxENDLOCK;
-
-			// Insert as many spaces as it takes to get to next tabstop
-			const unsigned int spaces = tabpos % tabWidth;
-			const wxString indent(wxT(' '), (spaces == 0 || spaces == tabWidth) ? tabWidth : tabWidth - spaces);
-
-			Insert(indent);
-		}
+		if (qstart < pos && qstart != wordstart && DoTabTrigger(qstart, pos)) return;
 	}
+
+	// If we get to here we have to insert a real tab
+	if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab
+		InsertChar(wxChar('\t'));
+		return;
+	}
+
+	// Soft Tab (incremental number of spaces)
+	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+
+	// Calculate pos with tabs expanded
+	unsigned int tabpos = 0;
+	cxLOCKDOC_READ(m_doc)
+		for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < pos; ++dbi) {
+			// Only count first byte of UTF-8 multibyte chars
+			if ((*dbi & 0xC0) == 0x80) continue;
+			if (*dbi == '\t') tabpos += tabWidth;
+			else tabpos += 1;
+		}
+	cxENDLOCK;
+
+	// Insert as many spaces as it takes to get to next tabstop
+	const unsigned int spaces = tabpos % tabWidth;
+	const wxString indent(wxT(' '), (spaces == 0 || spaces == tabWidth) ? tabWidth : tabWidth - spaces);
+
+	Insert(indent);
 }
 
 bool EditorCtrl::DoTabTrigger(unsigned int wordstart, unsigned int wordend) {

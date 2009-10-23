@@ -27,12 +27,8 @@
 #include "webconnect/webcontrol.h"
 #include "IAppPaths.h"
 
-#if defined (__WXMSW__)
-	#include "IEHtmlWin.h"
-#elif defined (__WXGTK__)
-	#include "IHtmlWnd.h"
-    #include "WebKitHtmlWnd.h"
-#endif
+#include "eBrowser.h"
+
 
 #include "images/left_arrow.xpm"
 #include "images/left_arrow_gray.xpm"
@@ -46,6 +42,8 @@
 #include "images/pin1_over.xpm"
 #include "images/pin2.xpm"
 #include "images/pin2_over.xpm"
+
+using namespace std;
 
 class Preview_CommandThread : public wxThread {
 public:
@@ -65,7 +63,7 @@ private:
 // control id's
 enum
 {
-	ID_MSHTML,
+	ID_BROWSER,
 	ID_RELOAD,
 	ID_BACK,
 	ID_FORWARD,
@@ -91,20 +89,19 @@ BEGIN_EVENT_TABLE(PreviewDlg, wxPanel)
 	EVT_TEXT_ENTER(ID_PIPECMD, PreviewDlg::OnPipeCmdEnter)
 	EVT_CHOICE(ID_WEBCHOICE, PreviewDlg::OnWebChoice)
 #ifdef __WXMSW__
-    EVT_ACTIVEX(ID_MSHTML, "TitleChange", PreviewDlg::OnMSHTMLTitleChange)
-//	EVT_ACTIVEX(ID_MSHTML, "BeforeNavigate2", PreviewDlg::OnMSHTMLBeforeNavigate2X)
-	EVT_ACTIVEX(ID_MSHTML, "CommandStateChange", PreviewDlg::OnMSHTMLStateChanged)
-	EVT_ACTIVEX(ID_MSHTML, "DocumentComplete", PreviewDlg::OnMSHTMLDocumentComplete)
+    EVT_ACTIVEX(ID_BROWSER, "TitleChange", PreviewDlg::OnMSHTMLTitleChange)
+	EVT_ACTIVEX(ID_BROWSER, "CommandStateChange", PreviewDlg::OnMSHTMLStateChanged)
+	EVT_ACTIVEX(ID_BROWSER, "DocumentComplete", PreviewDlg::OnMSHTMLDocumentComplete)
 #endif
 	EVT_WEB_TITLECHANGE(ID_WEBCONNECT, PreviewDlg::OnWebTitleChange)
 	EVT_WEB_DOMCONTENTLOADED(ID_WEBCONNECT, PreviewDlg::OnWebDocumentComplete)
 END_EVENT_TABLE()
 
-PreviewDlg::PreviewDlg(EditorFrame& parent)
-:  wxPanel (&parent),
-   m_parent(parent), m_editorCtrl(NULL), m_thread(NULL), m_isOnPreview(true), m_isFirst(false),
-   m_pinnedEditor(NULL), m_re_style(NULL), m_re_href(NULL), m_webcontrol(NULL) {
-
+PreviewDlg::PreviewDlg(EditorFrame& parent):
+	wxPanel (&parent),
+	m_parent(parent), m_editorCtrl(NULL), m_thread(NULL), m_isOnPreview(true), m_isFirst(false),
+	m_pinnedEditor(NULL), m_re_style(NULL), m_re_href(NULL), m_webcontrol(NULL)
+{
 	// Adressbar ctrl
 	m_backButton = new wxBitmapButton(this, ID_BACK, wxBitmap(left_arrow_xpm), wxDefaultPosition, wxDefaultSize, 0);
 	m_backButton->SetBitmapDisabled(wxBitmap(left_arrow_gray_xpm));
@@ -124,13 +121,7 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 
 	m_browser = NULL; // know to skip events sent during construction
 
-#if defined (__WXMSW__)
-	// IE Control
-	m_browser = new wxIEHtmlWin(this, ID_MSHTML);
-#elif defined (__WXGTK__)
-	// WebKit control
-	m_browser = new wxBrowser(this, ID_MSHTML);
-#endif
+	m_browser = NewBrowser(this, ID_BROWSER);
 
 	// Do we have XULRunner installed?
 	bool xulrunner = false;
@@ -147,6 +138,7 @@ PreviewDlg::PreviewDlg(EditorFrame& parent)
 	wxButton* reloadButton = new wxButton(this, ID_RELOAD, _("Reload now"));
 	if (xulrunner) {
 		m_webChoice = new wxChoice(this, ID_WEBCHOICE);
+
 #ifdef __WXMSW__
 		m_webChoice->Append(_("IE"));
 #else
@@ -303,14 +295,13 @@ void PreviewDlg::RefreshBrowser(cxUpdateMode mode) {
 	}
 	else {
 #ifdef __WXMSW__
-		wxIEHtmlWin* ie = dynamic_cast<wxIEHtmlWin*>(m_browser);
-		ie->UIDeactivate(); // otherwise ie may steal focus
+		m_browser->UIDeactivate(); // otherwise ie may steal focus
 #endif
 
-		if (mode == cxUPDATE_RELOAD || m_isFirst) {
+		if (mode == cxUPDATE_RELOAD || m_isFirst)
 			m_browser->LoadUrl(m_tempPath);
-		}
-		else m_browser->Refresh(wxHTML_REFRESH_NORMAL);
+		else
+			m_browser->Refresh(wxHTML_REFRESH_NORMAL);
 	}
 
 	m_isFirst = false;
@@ -341,8 +332,8 @@ void PreviewDlg::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	if (m_pinnedEditor) {
 		if (((m_pinnedEditor == m_editorCtrl || m_editorCtrl->GetName().EndsWith(wxT(".css")))
 			&& m_editorCtrl->GetChangeToken() != m_editorChangeToken)
-			|| m_editorCtrl->IsSavedForPreview() ) {
-
+			|| m_editorCtrl->IsSavedForPreview() )
+		{
 			UpdateBrowser(cxUPDATE_REFRESH);
 		}
 	}
@@ -550,8 +541,7 @@ void PreviewDlg::SetBrowser(int sel) {
 		m_mainSizer->Hide(m_browser->GetWindow());
 		m_mainSizer->Show(m_webcontrol);
 
-		// WebConnect does not yet offer a way to detect
-		// whick nav buttons should be enabled
+		// WebConnect does not yet offer a way to detect which nav buttons should be enabled
 		m_backButton->Enable(true);
 		m_forwardButton->Enable(true);
 	}
@@ -602,10 +592,8 @@ void PreviewDlg::OnTitleChange(const wxString& title) {
 	// This is a bit of a hack, but the easiest way to see if
 	// it does not have a title and returns path is to compare
 	// filenames (very litle chance for match with other)
-	if (tempFile != titleEnd)
-		m_parent.SetWebPreviewTitle(wxT("Preview: ") + title);
-	else
-		m_parent.SetWebPreviewTitle(wxT("Preview: ") + m_truePath);
+	m_parent.SetWebPreviewTitle(wxT("Preview: ") + 
+		(tempFile != titleEnd) ? title : m_truePath);
 }
 
 void PreviewDlg::OnDocumentComplete(const wxString& location) {

@@ -16,41 +16,29 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 
-// STL can't compile with Level 4
-#ifdef __WXMSW__
-    #pragma warning(disable:4786)
-    #pragma warning(push, 1)
-#endif
 #include <vector>
-#ifdef __WXMSW__
-    #pragma warning(pop)
-#endif
-using namespace std;
+#include "eBrowserDef.h"
 
-using namespace std;
-
-// pre-declarations
 struct real_pcre;                 // This double pre-definition is needed
 typedef struct real_pcre pcre;    // because of the way it is defined in pcre.h
+
 class EditorFrame;
 class EditorCtrl;
 class eFrameSettings;
 class wxProcessEvent;
+class Preview_CommandThread;
+
 class wxWebControl;
 class wxWebEvent;
 
 #if defined (__WXMSW__)
-	class wxIEHtmlWin;
-	class wxActiveXEvent;
-#elif defined (__WXGTK__)
-	class IHtmlWnd;
+class wxActiveXEvent;
 #endif
 
-class Preview_CommandThread;
 
 class PreviewDlg : public wxPanel {
 public:
@@ -62,8 +50,8 @@ public:
 	void PageClosed(const EditorCtrl* ec);
 
 	// Utility functions
-	bool InsertStyle(vector<char>& html);
-	static void InsertBase(vector<char>& html, const wxString& path);
+	bool InsertStyle(std::vector<char>& html);
+	static void InsertBase(std::vector<char>& html, const wxString& path);
 
 private:
 	enum cxUpdateMode {
@@ -119,11 +107,7 @@ private:
 	pcre* m_re_href;
 
 	// Member Ctrls
-#ifdef __WXMSW__
-	wxIEHtmlWin* m_browser;
-#else
-	IHtmlWnd* m_browser;
-#endif
+	eBrowser* m_browser;
 	wxWebControl* m_webcontrol;
 
 	wxCheckBox* m_pipeCheck;
@@ -137,7 +121,6 @@ private:
 
 	wxBoxSizer* m_mainSizer;
 	wxBoxSizer* m_optionSizer;
-
 };
 
 #endif // __PREVIEWDLG_H__

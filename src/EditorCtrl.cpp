@@ -39,7 +39,7 @@
 #include "Fold.h"
 #include "TextTip.h"
 #include "RemoteThread.h"
-
+#include "LiveCaret.h"
 #include "eSettings.h"
 #include "IAppPaths.h"
 
@@ -6940,6 +6940,10 @@ void EditorCtrl::MakeSelectionVisible(unsigned int sel_id) {
 	}
 
 	// NOTE: Will first be visible on next redraw
+}
+
+void EditorCtrl::KeepCaretAlive(bool keepAlive) {
+	caret->KeepAlive(keepAlive);
 }
 
 wxString EditorCtrl::GetSelFirstLine() {

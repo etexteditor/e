@@ -461,6 +461,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LiveCaret.h"
+				>
+			</File>
+			<File
 				RelativePath="SearchListBox.cpp"
 				>
 			</File>

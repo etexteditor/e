@@ -20,7 +20,6 @@
 #endif
 
 #include <wx/dnd.h>
-#include <wx/caret.h>
 
 #include "Catalyst.h"
 #include "Lines.h"
@@ -52,6 +51,7 @@ class cxRemoteAction;
 class MultilineDataObject;
 class TextTip;
 class eFrameSettings;
+class LiveCaret;
 
 struct thTheme;
 class tmAction;
@@ -251,7 +251,7 @@ public:
 	bool MakeCaretVisible();
 	void MakeCaretVisibleCenter();
 	void MakeSelectionVisible(unsigned int sel_id = 0);
-	void KeepCaretAlive(bool keepAlive=true) {caret->KeepAlive(keepAlive);};
+	void KeepCaretAlive(bool keepAlive=true);
 
 	// Syntax Highlighting
 	const wxString& GetSyntaxName() const {return m_syntaxstyler.GetName();};
@@ -378,8 +378,9 @@ private:
 	// Classes
 	class RepParseState {
 	public:
-		RepParseState(const wxString& reptext, const map<unsigned int,interval>& caps, const vector<char>* source=NULL)
-		: replacetext(reptext), captures(caps), source(source), upcase(false), lowcase(false), caseChar(false), caseText(false) {
+		RepParseState(const wxString& reptext, const map<unsigned int,interval>& caps, const vector<char>* source=NULL):
+			replacetext(reptext), captures(caps), source(source), upcase(false), lowcase(false), caseChar(false), caseText(false)
+		{
 			newtext.reserve(replacetext.size());
 		};
 		// member variables
@@ -406,25 +407,6 @@ private:
 		wxTextDataObject* m_textObject;
 		MultilineDataObject* m_columnObject;
 		wxDataObjectComposite* m_dataObject;
-	};
-
-	class LiveCaret : public wxCaret {
-	public:
-		LiveCaret(wxWindow *window, int width, int height)
-			: wxCaret(window, width, height), m_keepAlive(false) {};
-		void KeepAlive(bool keepAlive) {m_keepAlive = keepAlive;};
-
-		virtual void OnKillFocus() {
-#ifdef __WXDEBUG__
-			// WORKAROUND: avoid assert in wxCaret::DoMove()
-			wxCaret::OnKillFocus();
-#else
-			if (!m_keepAlive) wxCaret::OnKillFocus();
-#endif // __WXDEBUG__
-		};
-
-	private:
-		bool m_keepAlive;
 	};
 
 	// Event handlers

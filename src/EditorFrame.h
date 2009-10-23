@@ -264,7 +264,6 @@ public:
 
 	// Output Pane
 	void ShowOutput(const wxString& title, const wxString& output);
-	void AppendToOutput(const wxString& html);
 
 	// Symbol List (pane)
 	void ShowSymbolList(bool keepOpen=true);

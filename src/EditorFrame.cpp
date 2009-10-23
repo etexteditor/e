@@ -919,13 +919,6 @@ void EditorFrame::ShowOutput(const wxString& title, const wxString& output) {
 	m_frameManager.Update();
 }
 
-void EditorFrame::AppendToOutput(const wxString& html) {
-	wxAuiPaneInfo& outPane = m_frameManager.GetPane(m_outputPane);
-	if (!outPane.IsShown()) return;
-
-	m_outputPane->AppendText(html);
-}
-
 void EditorFrame::CheckForModifiedFilesAsync() {
 	if (m_changeCheckerThread) return; // check in progress
 

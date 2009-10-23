@@ -1029,6 +1029,14 @@
 			Name="Browser"
 			>
 			<File
+				RelativePath=".\eBrowser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\eBrowserDef.h"
+				>
+			</File>
+			<File
 				RelativePath="IEHtmlWin.cpp"
 				>
 			</File>

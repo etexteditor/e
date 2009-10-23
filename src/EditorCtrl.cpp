@@ -7190,9 +7190,8 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	DrawLayout();
 }
 
-void EditorCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {
-	// # no evt.skip() as we don't want the control to erase the background
-}
+// # no evt.skip() as we don't want the control to erase the background
+void EditorCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 void EditorCtrl::OnFocus(wxFocusEvent& WXUNUSED(event)) {
 	ClearSearchRange(true);

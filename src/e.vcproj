@@ -985,6 +985,42 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Diff"
+			>
+			<File
+				RelativePath="DiffBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath="DiffBar.h"
+				>
+			</File>
+			<File
+				RelativePath="DiffDirPane.cpp"
+				>
+			</File>
+			<File
+				RelativePath="DiffDirPane.h"
+				>
+			</File>
+			<File
+				RelativePath="DiffMarkBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath="DiffMarkBar.h"
+				>
+			</File>
+			<File
+				RelativePath="DiffPanel.cpp"
+				>
+			</File>
+			<File
+				RelativePath="DiffPanel.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="application.ico"
 			>
@@ -1063,38 +1099,6 @@
 		</File>
 		<File
 			RelativePath="diff.xpm"
-			>
-		</File>
-		<File
-			RelativePath="DiffBar.cpp"
-			>
-		</File>
-		<File
-			RelativePath="DiffBar.h"
-			>
-		</File>
-		<File
-			RelativePath="DiffDirPane.cpp"
-			>
-		</File>
-		<File
-			RelativePath="DiffDirPane.h"
-			>
-		</File>
-		<File
-			RelativePath="DiffMarkBar.cpp"
-			>
-		</File>
-		<File
-			RelativePath="DiffMarkBar.h"
-			>
-		</File>
-		<File
-			RelativePath="DiffPanel.cpp"
-			>
-		</File>
-		<File
-			RelativePath="DiffPanel.h"
 			>
 		</File>
 		<File

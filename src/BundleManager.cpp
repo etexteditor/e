@@ -26,6 +26,7 @@
 #include "urlencode.h"
 #include "eBrowser.h"
 #include "IAppPaths.h"
+#include "RemoteThread.h"
 
 
 #include "images/accept.xpm"
@@ -41,7 +42,7 @@
     #pragma warning(pop)
 #endif
 
-// control id's
+// control ids
 enum
 {
 	ID_HTML_DESC = 100,
@@ -163,11 +164,10 @@ void BundleManager::UpdateBundleList() {
 
 const wxString& BundleManager::GetCurrentRepoUrl() const {
 	wxASSERT(!m_currentRepo.empty());
-	
+
 	for (vector<RepoInfo>::const_iterator p = m_repositories.begin(); p != m_repositories.end(); ++p) {
-		if (p->name == m_currentRepo) {
+		if (p->name == m_currentRepo)
 			return p->url;
-		}
 	}
 
 	return s_emptyString;

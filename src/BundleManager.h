@@ -19,7 +19,8 @@
 #include <wx/wx.h>
 #endif
 
-#include "RemoteThread.h"
+#include <vector>
+#include "FileInfo.h"
 #include "BundleInfo.h"
 
 
@@ -31,6 +32,9 @@ class wxListCtrl;
 class wxListEvent;
 class IHtmlWnd;
 class IHtmlWndBeforeLoadEvent;
+class RemoteThread;
+class cxRemoteListEvent;
+class cxRemoteAction;
 
 
 class BundleManager : public wxDialog {

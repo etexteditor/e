@@ -1,6 +1,27 @@
 #include "Strings.h"
 #include "wx/tokenzr.h"
 
+#ifdef __WXMSW__
+void InplaceConvertCRLFtoLF(wxString& text) {
+	// WINDOWS ONLY!! newline conversion
+	// The build-in replace is too slow so we do
+	// it manually (at the price of some memory)
+	//copytext.Replace(wxT("\r\n"), wxT("\n"));
+	wxString newtext;
+	newtext.reserve(text.size());
+	unsigned int lastPos = 0;
+	for (unsigned int i = 0; i < text.size(); ++i) {
+		if (text[i] == wxT('\r')) {
+			newtext += text.substr(lastPos, i - lastPos);
+			lastPos = i + 1;
+		}
+	}
+	if (lastPos < text.size()) newtext += text.substr(lastPos, text.size() - lastPos);
+	text.swap(newtext);
+}
+#endif // __WXMSW__
+
+
 int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
 {
     return s1->CmpNoCase(*s2);

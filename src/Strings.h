@@ -10,6 +10,11 @@ int HexToNumber(wxChar hexDigit);
 void SimpleHtmlEncode(wxString& s);
 wxString URLDecode(const wxString &value);
 
+#ifdef __WXMSW__
+void InplaceConvertCRLFtoLF(wxString& text);
+#endif
+
+
 // Back-port of wxJoin and wxSplit from newer versions of wxWidgets
 
 // ----------------------------------------------------------------------------

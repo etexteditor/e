@@ -547,7 +547,6 @@ protected:
 	bool cmd_Undo(int count, vector<int>& cStack, bool end=false);
 
 	// Utility functions
-	static void ConvertCRLFtoLF(wxString& text);
 	static bool Isalnum(wxChar c) {
 #ifdef __WXMSW__
 			return ::IsCharAlphaNumeric(c) != 0;

@@ -42,7 +42,7 @@
 #include "LiveCaret.h"
 #include "eSettings.h"
 #include "IAppPaths.h"
-
+#include "Strings.h"
 #include "pcre.h"
 
 // Document Icons
@@ -4451,7 +4451,7 @@ void EditorCtrl::OnPaste() {
 			if (copytext.empty()) return;
 
 #ifdef __WXMSW__
-			ConvertCRLFtoLF(copytext);
+			InplaceConvertCRLFtoLF(copytext);
 #endif // __WXMSW__
 
 			Freeze();
@@ -4463,26 +4463,6 @@ void EditorCtrl::OnPaste() {
 		}
 	}
 }
-
-#ifdef __WXMSW__
-void EditorCtrl::ConvertCRLFtoLF(wxString& text) { // static
-	// WINDOWS ONLY!! newline conversion
-	// The build-in replace is too slow so we do
-	// it manually (at the price of some memory)
-	//copytext.Replace(wxT("\r\n"), wxT("\n"));
-	wxString newtext;
-	newtext.reserve(text.size());
-	unsigned int lastPos = 0;
-	for (unsigned int i = 0; i < text.size(); ++i) {
-		if (text[i] == wxT('\r')) {
-			newtext += text.substr(lastPos, i - lastPos);
-			lastPos = i + 1;
-		}
-	}
-	if (lastPos < text.size()) newtext += text.substr(lastPos, text.size() - lastPos);
-	text.swap(newtext);
-}
-#endif // __WXMSW__
 
 bool EditorCtrl::IsSelected() const {
 	return m_lines.IsSelected();
@@ -8187,7 +8167,7 @@ void EditorCtrl::OnDragDropText(const wxString& text, wxDragResult dragType) {
 
 #ifdef __WXMSW__
 	wxString copytext = text;
-	ConvertCRLFtoLF(copytext);
+	InplaceConvertCRLFtoLF(copytext);
 	const unsigned int byte_len = RawInsert(pos, copytext);
 #else
 	const unsigned int byte_len = RawInsert(pos, text);

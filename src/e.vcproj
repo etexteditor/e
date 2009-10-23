@@ -1025,6 +1025,22 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Browser"
+			>
+			<File
+				RelativePath="IEHtmlWin.cpp"
+				>
+			</File>
+			<File
+				RelativePath="IEHtmlWin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IHtmlWnd.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="application.ico"
 			>
@@ -1327,14 +1343,6 @@
 		</File>
 		<File
 			RelativePath="HtmlOutputPane.h"
-			>
-		</File>
-		<File
-			RelativePath="IEHtmlWin.cpp"
-			>
-		</File>
-		<File
-			RelativePath="IEHtmlWin.h"
 			>
 		</File>
 		<File

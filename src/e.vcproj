@@ -1294,6 +1294,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\FileInfo.h"
+			>
+		</File>
+		<File
 			RelativePath="FindFlags.h"
 			>
 		</File>

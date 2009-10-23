@@ -24,6 +24,8 @@
 #include <deque>
 #include <vector>
 
+#include "FileInfo.h"
+
 class cxRemoteAction;
 class cxRemoteListEvent;
 class TiXmlElement;
@@ -51,22 +53,6 @@ public:
 	wxString m_dir;
 	wxString m_username;
 	wxString m_pwd;
-};
-
-class cxFileInfo {
-public:
-	cxFileInfo() : m_isDir(false) {};
-	cxFileInfo(const cxFileInfo& fi) {
-		m_isDir = fi.m_isDir;
-		m_name = fi.m_name.c_str();
-		m_modDate = fi.m_modDate;
-		m_size = fi.m_size;
-	};
-
-	bool m_isDir;
-	wxString m_name;
-	wxDateTime m_modDate;
-	size_t m_size;
 };
 
 enum cxActionType {

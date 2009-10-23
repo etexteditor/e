@@ -33,7 +33,7 @@ using namespace std;
 
 class IStreamAdaptorBase;
 
-class wxIEHtmlWin : public wxActiveX
+class wxIEHtmlWin : public wxActiveX, public IHtmlWnd
 {
 public:
     wxIEHtmlWin(wxWindow * parent, wxWindowID id = -1,

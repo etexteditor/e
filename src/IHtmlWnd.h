@@ -19,7 +19,7 @@ class IHtmlWnd {
 public:
 	virtual ~IHtmlWnd() {};
 	virtual wxWindow* GetWindow() = 0;
-	virtual bool LoadString(wxString html) = 0;
+	virtual bool LoadString(const wxString& html) = 0;
 	virtual void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false) = 0;
 	virtual bool Refresh(wxHtmlRefreshLevel level) = 0;
 	virtual bool GoBack() = 0;

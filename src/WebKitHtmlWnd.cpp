@@ -28,7 +28,7 @@ wxWindow* wxBrowser::GetWindow() {
     return static_cast<wxWindow*>(this);
 }
 
-bool wxBrowser::LoadString(wxString html) {
+bool wxBrowser::LoadString(const wxString& html) {
 	wxWebView::SetPageSource(html);
 	m_realLocation = wxT("file://");
 	return true;

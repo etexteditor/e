@@ -1,19 +1,12 @@
 #include "HtmlOutputPane.h"
 #include "IOpenTextmateURL.h"
 #include "eDocumentPath.h"
+#include "eBrowser.h"
 
-#if defined (__WXMSW__)
-    #include "IEHtmlWin.h"
-#elif defined (__WXGTK__)
-    #ifdef FEAT_BROWSER
-        #include "WebKitHtmlWnd.h"
-    #endif
-#endif
-
-enum { ID_THE_BROWSER };
+enum { CTRL_BROWSER };
 
 BEGIN_EVENT_TABLE(HtmlOutputPane, wxPanel)
-	EVT_HTMLWND_BEFORE_LOAD(ID_THE_BROWSER, HtmlOutputPane::OnBeforeLoad)
+	EVT_HTMLWND_BEFORE_LOAD(CTRL_BROWSER, HtmlOutputPane::OnBeforeLoad)
 END_EVENT_TABLE()
 
 HtmlOutputPane::HtmlOutputPane(wxWindow *parent, IOpenTextmateURL& opener):
@@ -23,15 +16,7 @@ HtmlOutputPane::HtmlOutputPane(wxWindow *parent, IOpenTextmateURL& opener):
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
 #ifdef FEAT_BROWSER
-
-#if defined (__WXMSW__)
-	// IE Control
-	m_browser = new wxIEHtmlWin(this, ID_THE_BROWSER);
-#elif defined (__WXGTK__)
-	// WebKit control
-	m_browser = new wxBrowser(this, ID_THE_BROWSER);
-#endif
-
+	m_browser = NewBrowser(this, CTRL_BROWSER);
 	mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND);
 #endif // FEAT_BROWSER
 
@@ -76,13 +61,13 @@ void HtmlOutputPane::SetPage(const wxString& text) {
 #endif //FEAT_BROWSER
 }
 
-void HtmlOutputPane::AppendText(const wxString& html) {
-#ifdef FEAT_BROWSER
-#ifdef __WXMSW__
-	m_browser->AppendString(html);
-#endif //__WXMSW__
-#endif //FEAT_BROWSER
-}
+//void HtmlOutputPane::AppendText(const wxString& html) {
+//#ifdef FEAT_BROWSER
+//#ifdef __WXMSW__
+//	m_browser->AppendString(html);
+//#endif //__WXMSW__
+//#endif //FEAT_BROWSER
+//}
 
 void HtmlOutputPane::OnBeforeLoad(IHtmlWndBeforeLoadEvent& event) {
     const wxString url = event.GetURL();

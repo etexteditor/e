@@ -3,14 +3,11 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
-#include "IHtmlWnd.h"
-
-#ifdef __WXMSW__
-class wxIEHtmlWin;
-#endif
+class IHtmlWnd;
+class IHtmlWndBeforeLoadEvent;
 
 class IOpenTextmateURL;
 
@@ -18,23 +15,16 @@ class HtmlOutputPane : public wxPanel {
 public:
 	HtmlOutputPane(wxWindow *parent, IOpenTextmateURL& opener);
 	void SetPage(const wxString& html);
-	void AppendText(const wxString& html);
+	//void AppendText(const wxString& html);
 
 private:
 	static void DecodePath(wxString& path);
 
-	// Event handlers
 	void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
+	DECLARE_EVENT_TABLE()
 
 	IOpenTextmateURL& m_opener;
-
-#ifdef __WXMSW__
-	wxIEHtmlWin* m_browser;
-#else
 	IHtmlWnd* m_browser;
-#endif
-
-	DECLARE_EVENT_TABLE()
 };
 
 #endif

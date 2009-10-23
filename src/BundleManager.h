@@ -16,24 +16,22 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #include "RemoteThread.h"
-#include "IHtmlWnd.h"
 #include "BundleInfo.h"
 
-// pre-definitions
+
 class ITmLoadBundles;
 class PListHandler;
 class wxFileName;
 class wxProgressDialog;
 class wxListCtrl;
 class wxListEvent;
+class IHtmlWnd;
+class IHtmlWndBeforeLoadEvent;
 
-#ifdef __WXMSW__
-class wxIEHtmlWin;
-#endif
 
 class BundleManager : public wxDialog {
 public:
@@ -113,11 +111,7 @@ private:
 	// Member ctrls
 	wxSizer* m_mainSizer;
 	wxListCtrl* m_bundleList;
-#ifdef __WXMSW__
-	wxIEHtmlWin* m_browser;
-#else
 	IHtmlWnd* m_browser;
-#endif
 	wxStaticText* m_statusText;
 	wxButton* m_installButton;
 	wxButton* m_deleteButton;

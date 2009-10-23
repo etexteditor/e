@@ -24,13 +24,9 @@
 #include "plistHandler.h"
 #include "ITmLoadBundles.h"
 #include "urlencode.h"
-
+#include "eBrowser.h"
 #include "IAppPaths.h"
 
-#ifdef __WXMSW__
-    #include "IEHtmlWin.h"
-#endif
-#include "IHtmlWnd.h"
 
 #include "images/accept.xpm"
 #include "images/exclamation.xpm"
@@ -93,9 +89,7 @@ BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLo
 	m_bundleList->InsertColumn(2, _("Source"));
 	m_bundleList->AssignImageList(imageList, wxIMAGE_LIST_SMALL);
 
-#ifdef __WXMSW__
-	m_browser = new wxIEHtmlWin(this, ID_HTML_DESC);
-#endif
+	m_browser = NewBrowser(this, ID_HTML_DESC);
 
 	wxStaticText* statusLabel = new wxStaticText(this, wxID_ANY, _("Status: "));
 	m_statusText = new wxStaticText(this, wxID_ANY, wxT(""));
@@ -118,9 +112,7 @@ BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLo
 			statusSizer->Add(m_installButton, 0, wxALIGN_RIGHT|wxLEFT, 5);
 			statusSizer->Add(m_deleteButton, 0, wxALIGN_RIGHT|wxLEFT, 5);
 			m_mainSizer->Add(statusSizer, 0, wxEXPAND|wxLEFT|wxRIGHT, 5);
-#ifdef __WXMSW__
-		m_mainSizer->Add(m_browser, 1, wxEXPAND|wxALL, 5);
-#endif
+		m_mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND|wxALL, 5);
 
 	SetSizerAndFit(m_mainSizer);
 	SetSize(600, 600);
@@ -332,9 +324,7 @@ void BundleManager::SelectItem(long itemId, bool update) {
 
 	if (!update) {
 		// Clear description
-#ifdef __WXMSW__
 		m_browser->LoadString(wxT(""));
-#endif
 		
 		// See if we can download the info.plist
 		RemoteProfile rp;
@@ -364,10 +354,8 @@ void BundleManager::OnRemoteAction(cxRemoteAction& event) {
 		if (strcmp(child->GetText(), "description") == 0) {
 			const char* desc = value->GetText(); // Get value
 			if (desc) {
-#ifdef __WXMSW__
 				const wxString descStr(desc, wxConvUTF8);
 				m_browser->LoadString(descStr);
-#endif
 			}
 
 			return;

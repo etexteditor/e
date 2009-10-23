@@ -296,32 +296,34 @@ void GotoFileDlg::OnListSelection(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void GotoFileDlg::UpdateStatusbar() {
-	if(m_cmdList->GetSelectedCount() == 1) {
-		wxString path = GetSelection();
-
-		// Calc extension width
-		wxClientDC dc(this);
-		dc.SetFont(m_pathStatic->GetFont());
-		int w, h;
-		static const wxString ext = wxT("...");
-		dc.GetTextExtent(ext, &w, &h);
-		const unsigned int extwidth = w;
-
-		// See if we have to resize the path to fit
-		unsigned int len = path.length();
-		const unsigned int ctrlWidth = GetClientSize().x - 10;
-		dc.GetTextExtent(path, &w, &h);
-		if (len && w > (int)ctrlWidth) {
-			do {
-				path.erase(0, 1);
-				dc.GetTextExtent(path, &w, &h);
-			} while (--len > 0 && extwidth + w > ctrlWidth);
-			path.Prepend(ext);
-		}
-
-		m_pathStatic->SetLabel(path);
+	if(m_cmdList->GetSelectedCount() != 1) {
+		m_pathStatic->SetLabel(wxEmptyString);
+		return;
 	}
-	else m_pathStatic->SetLabel(wxEmptyString);
+
+	wxString path = GetSelection();
+
+	// Calc extension width
+	wxClientDC dc(this);
+	dc.SetFont(m_pathStatic->GetFont());
+	int w, h;
+	static const wxString ext = wxT("...");
+	dc.GetTextExtent(ext, &w, &h);
+	const unsigned int extwidth = w;
+
+	// See if we have to resize the path to fit
+	unsigned int len = path.length();
+	const unsigned int ctrlWidth = GetClientSize().x - 10;
+	dc.GetTextExtent(path, &w, &h);
+	if (len && w > (int)ctrlWidth) {
+		do {
+			path.erase(0, 1);
+			dc.GetTextExtent(path, &w, &h);
+		} while (--len > 0 && extwidth + w > ctrlWidth);
+		path.Prepend(ext);
+	}
+
+	m_pathStatic->SetLabel(path);
 }
 
 // ---- FileEntry ----------------------------------------------------

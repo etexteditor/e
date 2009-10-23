@@ -16,6 +16,7 @@
 #include "EditorFrame.h"
 #include "ProjectInfoHandler.h"
 #include "Strings.h"
+#include "pcre.h"
 
 #ifdef __WXMSW__
     #include "IEHtmlWin.h"
@@ -96,9 +97,9 @@ BEGIN_EVENT_TABLE(FindInProjectDlg, wxDialog)
 	EVT_HTMLWND_BEFORE_LOAD(CTRL_BROWSER, FindInProjectDlg::OnBeforeLoad)
 END_EVENT_TABLE()
 
-FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHandler& projectPane)
-: wxDialog (&parentFrame, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-  m_parentFrame(parentFrame), m_projectPane(projectPane), m_searchThread(NULL), m_inSearch(false)
+FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHandler& projectPane):
+	wxDialog (&parentFrame, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
+	m_parentFrame(parentFrame), m_projectPane(projectPane), m_searchThread(NULL), m_inSearch(false)
 {
 	SetTitle (_("Find In Project"));
 
@@ -302,23 +303,19 @@ void SearchThread::CancelSearch() {
 bool SearchThread::GetCurrentPath(wxString& currentPath) {
 	wxCriticalSectionLocker locker(m_outputCrit);
 
-	if (m_currentPath != currentPath) {
-		currentPath = m_currentPath.c_str(); // wxString is not threadsafe, so we have to force copy
-		return true;
-	}
+	if (m_currentPath == currentPath) return false;
 
-	return false;
+	currentPath = m_currentPath.c_str(); // wxString is not threadsafe, so we have to force copy
+	return true;
 }
 
 bool SearchThread::UpdateOutput(wxString& output) {
 	wxCriticalSectionLocker locker(m_outputCrit);
 
-	if (m_output.length() > output.length()) {
-		output = m_output.c_str(); // wxString is not threadsafe, so we have to force copy
-		return true;
-	}
+	if (m_output.length() <= output.length()) return false;
 
-	return false;
+	output = m_output.c_str(); // wxString is not threadsafe, so we have to force copy
+	return true;
 }
 
 bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex) {
@@ -364,7 +361,7 @@ bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bo
 			m_outputCrit.Leave();
 			m_lastError = true;
 			return false;
-		};
+		}
 	}
 	else {
 		si.byte_len = strlen(si.UTF8buffer);

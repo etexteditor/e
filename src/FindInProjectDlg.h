@@ -16,16 +16,14 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-   #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #ifdef __WXMSW__
 #include "IEHtmlWin.h"
 #endif
 #include "IHtmlWnd.h"
-#include "pcre.h"
 
-// pre-definitions
 class EditorFrame;
 class MMapBuffer;
 class ProjectInfoHandler;
@@ -41,7 +39,6 @@ public:
 	void SetPattern(const wxString& pattern);
  
 private:
-	// Event handlers
 	void OnSearch(wxCommandEvent& event);
 	void OnIdle(wxIdleEvent& event);
 	void OnClose(wxCloseEvent& event);

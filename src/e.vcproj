@@ -949,6 +949,42 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Project"
+			>
+			<File
+				RelativePath=".\ProjectInfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath="ProjectInfo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProjectInfoHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ProjectInfoHandler.h"
+				>
+			</File>
+			<File
+				RelativePath="ProjectPane.cpp"
+				>
+			</File>
+			<File
+				RelativePath="ProjectPane.h"
+				>
+			</File>
+			<File
+				RelativePath="ProjectSettings.cpp"
+				>
+			</File>
+			<File
+				RelativePath="ProjectSettings.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\application.ico"
 			>
@@ -1355,38 +1391,6 @@
 		</File>
 		<File
 			RelativePath=".\MultilineDataObject.h"
-			>
-		</File>
-		<File
-			RelativePath=".\ProjectInfo.cpp"
-			>
-		</File>
-		<File
-			RelativePath="ProjectInfo.h"
-			>
-		</File>
-		<File
-			RelativePath=".\ProjectInfoHandler.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\ProjectInfoHandler.h"
-			>
-		</File>
-		<File
-			RelativePath="ProjectPane.cpp"
-			>
-		</File>
-		<File
-			RelativePath="ProjectPane.h"
-			>
-		</File>
-		<File
-			RelativePath="ProjectSettings.cpp"
-			>
-		</File>
-		<File
-			RelativePath="ProjectSettings.h"
 			>
 		</File>
 		<File

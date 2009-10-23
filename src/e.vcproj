@@ -2029,28 +2029,76 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Editor"
+			>
+			<File
+				RelativePath=".\AutoPairs.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AutoPairs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BracketHighlight.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\BracketHighlight.h"
+				>
+			</File>
+			<File
+				RelativePath="CompletionPopup.cpp"
+				>
+			</File>
+			<File
+				RelativePath="CompletionPopup.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CurrentTabsPopup.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CurrentTabsPopup.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DetectTripleClicks.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DetectTripleClicks.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EditorChangeState.h"
+				>
+			</File>
+			<File
+				RelativePath="EditorCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="EditorCtrl.h"
+				>
+			</File>
+			<File
+				RelativePath="EditorFrame.cpp"
+				>
+			</File>
+			<File
+				RelativePath="EditorFrame.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\application.ico"
 			>
 		</File>
 		<File
 			RelativePath="auto_vector.h"
-			>
-		</File>
-		<File
-			RelativePath=".\AutoPairs.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\AutoPairs.h"
-			>
-		</File>
-		<File
-			RelativePath=".\BracketHighlight.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\BracketHighlight.h"
 			>
 		</File>
 		<File
@@ -2262,67 +2310,7 @@
 			>
 		</File>
 		<File
-			RelativePath="CompletionPopup.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug Testing|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="CompletionPopup.h"
-			>
-		</File>
-		<File
 			RelativePath="CrashFileNames.h"
-			>
-		</File>
-		<File
-			RelativePath=".\CurrentTabsPopup.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\CurrentTabsPopup.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DetectTripleClicks.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\DetectTripleClicks.h"
 			>
 		</File>
 		<File
@@ -2651,98 +2639,6 @@
 		</File>
 		<File
 			RelativePath=".\EditorBundlePanel.h"
-			>
-		</File>
-		<File
-			RelativePath=".\EditorChangeState.h"
-			>
-		</File>
-		<File
-			RelativePath="EditorCtrl.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug Testing|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="EditorCtrl.h"
-			>
-		</File>
-		<File
-			RelativePath="EditorFrame.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug2|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug Testing|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="EditorFrame.h"
 			>
 		</File>
 		<File

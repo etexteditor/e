@@ -19,10 +19,8 @@
 #include <wx/wx.h>
 #endif
 
-#ifdef __WXMSW__
-#include "IEHtmlWin.h"
-#endif
-#include "IHtmlWnd.h"
+class IHtmlWnd;
+class IHtmlWndBeforeLoadEvent;
 
 class EditorFrame;
 class MMapBuffer;
@@ -51,11 +49,7 @@ private:
 	wxCheckBox* m_caseCheck;
 	wxCheckBox* m_regexCheck;
 	wxStaticText* m_pathStatic;
-#ifdef __WXMSW__
-	wxIEHtmlWin* m_browser;
-#else
 	IHtmlWnd* m_browser;
-#endif
 
 	// member variables
 	EditorFrame& m_parentFrame;

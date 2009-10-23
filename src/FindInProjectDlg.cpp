@@ -18,11 +18,7 @@
 #include "Strings.h"
 #include "pcre.h"
 
-#ifdef __WXMSW__
-    #include "IEHtmlWin.h"
-#elif defined __WXGTK__
-    #include "WebKitHtmlWnd.h"
-#endif
+#include "eBrowser.h"
 
 class SearchThread : public wxThread {
 public:
@@ -115,11 +111,7 @@ FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHa
 	m_regexCheck->SetValue(false); // default is no regex matching
 	m_pathStatic = new wxStaticText(this, wxID_ANY, wxT(""));
 
-#if defined (__WXMSW__)
-	m_browser = new wxIEHtmlWin(this, CTRL_BROWSER); // IE Control
-#elif defined (__WXGTK__)
-	m_browser = new wxBrowser(this, CTRL_BROWSER); // WebKit control
-#endif
+	m_browser = NewBrowser(this, CTRL_BROWSER);
 
 	// Create Layout
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);

@@ -914,6 +914,7 @@ void EditorFrame::ShowOutput(const wxString& title, const wxString& output) {
 	outPane.Caption(title);
 	m_outputPane->SetPage(output);
 	outPane.Show();
+	this->GetMenuBar()->Check(MENU_COMMANDOUTPUT, true);
 
 	m_frameManager.Update();
 }

@@ -469,6 +469,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SeparatorLine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SeparatorLine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ShortcutCtrl.cpp"
 				>
 			</File>
@@ -1411,14 +1419,6 @@
 		</File>
 		<File
 			RelativePath="SearchPanel.h"
-			>
-		</File>
-		<File
-			RelativePath=".\SeparatorLine.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\SeparatorLine.h"
 			>
 		</File>
 		<File

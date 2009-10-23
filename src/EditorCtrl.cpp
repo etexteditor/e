@@ -7799,6 +7799,17 @@ void EditorCtrl::DoHorizontalWheelScroll(wxMouseEvent& event) {
 }
 
 void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
+	// Only scroll if we're within bounds of the editor...
+	const wxSize& my_size = this->GetSize();
+	const wxPoint& where = event.GetPosition();
+
+	if ((where.x < 0) || (where.y < 0) || 
+		(where.x > my_size.GetWidth()) || (where.y > my_size.GetHeight()))
+	{
+		event.Skip(true);
+		return;
+	}
+
 	if (event.ShiftDown()) {
 		// Only handle scrollwheel if we have a scrollbar
 		if (GetScrollThumb(wxHORIZONTAL))

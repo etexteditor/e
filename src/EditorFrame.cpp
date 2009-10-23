@@ -249,6 +249,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(MENU_INCOMMING, EditorFrame::OnMenuIncomming)
 	//EVT_MENU(MENU_INCOMMING_TOOLBAR, EditorFrame::OnMenuIncommingTool)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
+	EVT_MOUSEWHEEL(EditorFrame::OnMouseWheel)
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
@@ -3849,4 +3850,10 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 	self->ResetSyntaxMenu();
 	self->ResetBundleMenu();
 	self->CheckForModifiedFilesAsync();
+}
+
+void EditorFrame::OnMouseWheel(wxMouseEvent& event) {
+//	wxLogDebug(_("Mouse wheel (EditorFrame)"));
+// TODO: If no one handled it, see if we're hovered over the project pane, and scroll that.
+	event.Skip(true);
 }

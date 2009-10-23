@@ -16,6 +16,12 @@ public:
 
 	wxString SavePerspective();
 	bool LoadPerspective(const wxString& layout);
+
+	// Public so EditorCtrl can delegate its scroll events to us.
+	void OnMouseWheel(wxMouseEvent& event);
+
+protected:
+	DECLARE_EVENT_TABLE();
 };
 
 #endif //_EAUINOTEBOOK_H_

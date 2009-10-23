@@ -1,4 +1,9 @@
 #include "eauibook.h"
+#include <wx/log.h>
+
+BEGIN_EVENT_TABLE(eAuiNotebook, wxAuiNotebook)
+	EVT_MOUSEWHEEL(eAuiNotebook::OnMouseWheel)
+END_EVENT_TABLE()
 
 // This class redefined here as a workaround for not having
 // access to the original wxTabFrame definition in auibook.cpp
@@ -27,8 +32,8 @@ public:
 };
 
 // Constructor
-eAuiNotebook::eAuiNotebook(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
-: wxAuiNotebook(parent, id, pos, size, style) {}
+eAuiNotebook::eAuiNotebook(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style):
+	wxAuiNotebook(parent, id, pos, size, style) {}
 
 // Convert page index to tab position
 int eAuiNotebook::PageToTab(size_t page_idx) {
@@ -47,9 +52,7 @@ int eAuiNotebook::PageToTab(size_t page_idx) {
 		
 		const int page_idx = tabframe->m_tabs->GetIdxFromWindow(page);
         if (page_idx != -1)
-        {
 			return offset + page_idx;
-		}
 
 		offset += tabframe->m_tabs->GetPageCount();
 	}
@@ -210,4 +213,29 @@ bool eAuiNotebook::LoadPerspective(const wxString& layout) {
 	SetSelection(sel_page);
 
 	return true;
+}
+
+void eAuiNotebook::OnMouseWheel(wxMouseEvent& event) {
+	const wxCoord x = event.GetX();
+	const wxCoord y = event.GetY();
+
+	bool hit = ((0 <= y) && (y < this->m_tab_ctrl_height) &&
+					(0 <= x) && (x < this->GetSize().GetWidth()));
+
+	if (!hit) {
+		event.Skip(true);
+		return;
+	}
+
+	const int rotation = event.GetWheelRotation();
+	wxLogDebug(_("Rotation: %d"), rotation);
+
+	if (rotation < 0) {
+		if (this->GetSelection() + 1 < this->GetPageCount())
+			this->SetSelection(this->GetSelection() + 1);
+	}
+	else if (rotation > 0) {
+		if (this->GetSelection() > 0)
+			this->SetSelection(this->GetSelection() - 1);
+	}
 }

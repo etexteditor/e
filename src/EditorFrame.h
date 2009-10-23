@@ -199,8 +199,6 @@ public:
 	virtual wxControl* GetEditorAndChangeType(const EditorChangeState& lastChangeState, EditorChangeType& newStatus);
 	virtual void FocusEditor();
 
-	// Expose syntax handler for now; this will remove the last
-	// of the global dependencies for getting this property
 	TmSyntaxHandler& GetSyntaxHandler() const { return this->m_syntax_handler; }
 
 	// Files
@@ -553,7 +551,7 @@ private:
 	// Printing
 	wxPageSetupDialogData m_printData;
 
-	wxBitmap bitmap; // shared by EditorCtrl's
+	wxBitmap bitmap; // shared by all EditorCtrls in this frame
 
 	DECLARE_DYNAMIC_CLASS_NO_COPY(EditorFrame)
 };

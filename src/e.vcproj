@@ -17,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="Debug"
+			IntermediateDirectory="Debug"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -42,7 +42,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/e.tlb"
+				TypeLibraryName="Debug/e.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -53,10 +53,10 @@
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="true"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/e.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
+				PrecompiledHeaderFile="Debug/e.pch"
+				AssemblerListingLocation="Debug/"
+				ObjectFile="Debug/"
+				ProgramDataBaseFileName="Debug/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -88,7 +88,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/e.bsc"
+				OutputFile="Debug/e.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -99,8 +99,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug2|Win32"
-			OutputDirectory=".\Debug2"
-			IntermediateDirectory=".\Debug2"
+			OutputDirectory="Debug2"
+			IntermediateDirectory="Debug2"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -124,7 +124,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug2/e.tlb"
+				TypeLibraryName="Debug2/e.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -133,10 +133,10 @@
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud,$(WXWIN)\include,C:\dev\epcre,C:\dev\DevTools\libtomcrypt-1.11\src\headers,C:\Dev\BonjourSDK\include"
 				PreprocessorDefinitions="cxDEBUG2;_DEBUG;WIN32;_WINDOWS;WINVER=0x500;_MT;wxUSE_GUI=1;__WXDEBUG__;wxUSE_UNICODE=1;WXDEBUG=1"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug2/e.pch"
-				AssemblerListingLocation=".\Debug2/"
-				ObjectFile=".\Debug2/"
-				ProgramDataBaseFileName=".\Debug2/"
+				PrecompiledHeaderFile="Debug2/e.pch"
+				AssemblerListingLocation="Debug2/"
+				ObjectFile="Debug2/"
+				ProgramDataBaseFileName="Debug2/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -166,7 +166,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug2/e.bsc"
+				OutputFile="Debug2/e.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -177,8 +177,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="Release"
+			IntermediateDirectory="Release"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -203,7 +203,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Release/e.tlb"
+				TypeLibraryName="Release/e.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -217,10 +217,10 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/e.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				PrecompiledHeaderFile="Release/e.pch"
+				AssemblerListingLocation="Release/"
+				ObjectFile="Release/"
+				ProgramDataBaseFileName="Release/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -250,7 +250,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/e.bsc"
+				OutputFile="Release/e.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -286,7 +286,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Debug/e.tlb"
+				TypeLibraryName="Debug/e.tlb"
 				HeaderFileName=""
 			/>
 			<Tool
@@ -297,10 +297,10 @@
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="true"
 				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/e.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
+				PrecompiledHeaderFile="Debug/e.pch"
+				AssemblerListingLocation="Debug/"
+				ObjectFile="Debug/"
+				ProgramDataBaseFileName="Debug/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -332,7 +332,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/e.bsc"
+				OutputFile="Debug/e.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -349,87 +349,87 @@
 			Name="Interfaces"
 			>
 			<File
-				RelativePath=".\IAppPaths.h"
+				RelativePath="IAppPaths.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IEditorDoAction.h"
+				RelativePath="IEditorDoAction.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IEditorSearch.h"
+				RelativePath="IEditorSearch.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IEditorSymbols.h"
+				RelativePath="IEditorSymbols.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IExecuteAppCommand.h"
+				RelativePath="IExecuteAppCommand.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFoldingEditor.h"
+				RelativePath="IFoldingEditor.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFrameEditorService.h"
+				RelativePath="IFrameEditorService.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFrameProjectService.h"
+				RelativePath="IFrameProjectService.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFrameRemoteThread.h"
+				RelativePath="IFrameRemoteThread.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFrameSearchService.h"
+				RelativePath="IFrameSearchService.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFrameSymbolService.h"
+				RelativePath="IFrameSymbolService.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IFrameUndoPane.h"
+				RelativePath="IFrameUndoPane.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IGetPListHandlerRef.h"
+				RelativePath="IGetPListHandlerRef.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IOpenTextmateURL.h"
+				RelativePath="IOpenTextmateURL.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IPrintableDocument.h"
+				RelativePath="IPrintableDocument.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ISettings.h"
+				RelativePath="ISettings.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ITabPage.h"
+				RelativePath="ITabPage.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ITmGetSyntaxes.h"
+				RelativePath="ITmGetSyntaxes.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ITmLoadBundles.h"
+				RelativePath="ITmLoadBundles.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ITmThemeHandler.h"
+				RelativePath="ITmThemeHandler.h"
 				>
 			</File>
 			<File
-				RelativePath=".\IUpdatePanel.h"
+				RelativePath="IUpdatePanel.h"
 				>
 			</File>
 		</Filter>
@@ -445,11 +445,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\eauibook.cpp"
+				RelativePath="eauibook.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\eauibook.h"
+				RelativePath="eauibook.h"
 				>
 			</File>
 			<File
@@ -469,27 +469,27 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SeparatorLine.cpp"
+				RelativePath="SeparatorLine.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SeparatorLine.h"
+				RelativePath="SeparatorLine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ShortcutCtrl.cpp"
+				RelativePath="ShortcutCtrl.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ShortcutCtrl.h"
+				RelativePath="ShortcutCtrl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\TextTip.cpp"
+				RelativePath="TextTip.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\TextTip.h"
+				RelativePath="TextTip.h"
 				>
 			</File>
 			<File
@@ -517,11 +517,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wxListCtrlEx.cpp"
+				RelativePath="wxListCtrlEx.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\wxListCtrlEx.h"
+				RelativePath="wxListCtrlEx.h"
 				>
 			</File>
 		</Filter>
@@ -537,11 +537,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CompareDlg.cpp"
+				RelativePath="CompareDlg.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\CompareDlg.h"
+				RelativePath="CompareDlg.h"
 				>
 			</File>
 			<File
@@ -569,11 +569,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\FindInProjectDlg.cpp"
+				RelativePath="FindInProjectDlg.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\FindInProjectDlg.h"
+				RelativePath="FindInProjectDlg.h"
 				>
 			</File>
 			<File
@@ -701,7 +701,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\cx_pcre_internal.h"
+				RelativePath="cx_pcre_internal.h"
 				>
 			</File>
 			<File
@@ -753,75 +753,75 @@
 			Name="WebConnect"
 			>
 			<File
-				RelativePath=".\webconnect\dom.cpp"
+				RelativePath="webconnect\dom.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\dom.h"
+				RelativePath="webconnect\dom.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\domprivate.h"
+				RelativePath="webconnect\domprivate.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsall.h"
+				RelativePath="webconnect\nsall.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsbase.h"
+				RelativePath="webconnect\nsbase.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsimpl.cpp"
+				RelativePath="webconnect\nsimpl.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsinclude.h"
+				RelativePath="webconnect\nsinclude.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsptr.h"
+				RelativePath="webconnect\nsptr.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsstr.h"
+				RelativePath="webconnect\nsstr.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsutils.h"
+				RelativePath="webconnect\nsutils.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\nsweak.h"
+				RelativePath="webconnect\nsweak.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\promptservice.cpp"
+				RelativePath="webconnect\promptservice.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\promptservice.h"
+				RelativePath="webconnect\promptservice.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\webcontrol.cpp"
+				RelativePath="webconnect\webcontrol.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\webcontrol.h"
+				RelativePath="webconnect\webcontrol.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\webframe.cpp"
+				RelativePath="webconnect\webframe.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\webframe.h"
+				RelativePath="webconnect\webframe.h"
 				>
 			</File>
 			<File
-				RelativePath=".\webconnect\webprefs.cpp"
+				RelativePath="webconnect\webprefs.cpp"
 				>
 			</File>
 		</Filter>
@@ -845,7 +845,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SyntaxInfo.h"
+				RelativePath="SyntaxInfo.h"
 				>
 			</File>
 			<File
@@ -857,31 +857,31 @@
 				>
 			</File>
 			<File
-				RelativePath=".\tmAction.h"
+				RelativePath="tmAction.h"
 				>
 			</File>
 			<File
-				RelativePath=".\tmBundle.h"
+				RelativePath="tmBundle.h"
 				>
 			</File>
 			<File
-				RelativePath=".\tmCommand.h"
+				RelativePath="tmCommand.h"
 				>
 			</File>
 			<File
-				RelativePath=".\tmKey.cpp"
+				RelativePath="tmKey.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\tmKey.h"
+				RelativePath="tmKey.h"
 				>
 			</File>
 			<File
-				RelativePath=".\tmStyle.h"
+				RelativePath="tmStyle.h"
 				>
 			</File>
 			<File
-				RelativePath=".\tmTheme.h"
+				RelativePath="tmTheme.h"
 				>
 			</File>
 		</Filter>
@@ -889,19 +889,19 @@
 			Name="Editor"
 			>
 			<File
-				RelativePath=".\AutoPairs.cpp"
+				RelativePath="AutoPairs.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\AutoPairs.h"
+				RelativePath="AutoPairs.h"
 				>
 			</File>
 			<File
-				RelativePath=".\BracketHighlight.cpp"
+				RelativePath="BracketHighlight.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\BracketHighlight.h"
+				RelativePath="BracketHighlight.h"
 				>
 			</File>
 			<File
@@ -913,23 +913,23 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CurrentTabsPopup.cpp"
+				RelativePath="CurrentTabsPopup.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\CurrentTabsPopup.h"
+				RelativePath="CurrentTabsPopup.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DetectTripleClicks.cpp"
+				RelativePath="DetectTripleClicks.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DetectTripleClicks.h"
+				RelativePath="DetectTripleClicks.h"
 				>
 			</File>
 			<File
-				RelativePath=".\EditorChangeState.h"
+				RelativePath="EditorChangeState.h"
 				>
 			</File>
 			<File
@@ -953,7 +953,7 @@
 			Name="Project"
 			>
 			<File
-				RelativePath=".\ProjectInfo.cpp"
+				RelativePath="ProjectInfo.cpp"
 				>
 			</File>
 			<File
@@ -961,11 +961,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ProjectInfoHandler.cpp"
+				RelativePath="ProjectInfoHandler.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ProjectInfoHandler.h"
+				RelativePath="ProjectInfoHandler.h"
 				>
 			</File>
 			<File
@@ -986,7 +986,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\application.ico"
+			RelativePath="application.ico"
 			>
 		</File>
 		<File
@@ -994,19 +994,19 @@
 			>
 		</File>
 		<File
-			RelativePath=".\BundleInfo.h"
+			RelativePath="BundleInfo.h"
 			>
 		</File>
 		<File
-			RelativePath=".\BundleItemEditorCtrl.cpp"
+			RelativePath="BundleItemEditorCtrl.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\BundleItemEditorCtrl.h"
+			RelativePath="BundleItemEditorCtrl.h"
 			>
 		</File>
 		<File
-			RelativePath=".\BundleItemType.h"
+			RelativePath="BundleItemType.h"
 			>
 		</File>
 		<File
@@ -1026,11 +1026,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\BundlePane.cpp"
+			RelativePath="BundlePane.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\BundlePane.h"
+			RelativePath="BundlePane.h"
 			>
 		</File>
 		<File
@@ -1050,11 +1050,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Colours.cpp"
+			RelativePath="Colours.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Colours.h"
+			RelativePath="Colours.h"
 			>
 		</File>
 		<File
@@ -1062,39 +1062,39 @@
 			>
 		</File>
 		<File
-			RelativePath=".\diff.xpm"
+			RelativePath="diff.xpm"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffBar.cpp"
+			RelativePath="DiffBar.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffBar.h"
+			RelativePath="DiffBar.h"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffDirPane.cpp"
+			RelativePath="DiffDirPane.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffDirPane.h"
+			RelativePath="DiffDirPane.h"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffMarkBar.cpp"
+			RelativePath="DiffMarkBar.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffMarkBar.h"
+			RelativePath="DiffMarkBar.h"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffPanel.cpp"
+			RelativePath="DiffPanel.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\DiffPanel.h"
+			RelativePath="DiffPanel.h"
 			>
 		</File>
 		<File
@@ -1122,11 +1122,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Document.cpp"
+			RelativePath="Document.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Document.h"
+			RelativePath="Document.h"
 			>
 		</File>
 		<File
@@ -1158,19 +1158,19 @@
 			>
 		</File>
 		<File
-			RelativePath=".\EasyPlistWriter.cpp"
+			RelativePath="EasyPlistWriter.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\EasyPlistWriter.h"
+			RelativePath="EasyPlistWriter.h"
 			>
 		</File>
 		<File
-			RelativePath=".\EditorBundlePanel.cpp"
+			RelativePath="EditorBundlePanel.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\EditorBundlePanel.h"
+			RelativePath="EditorBundlePanel.h"
 			>
 		</File>
 		<File
@@ -1190,11 +1190,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\eDocumentPath.cpp"
+			RelativePath="eDocumentPath.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\eDocumentPath.h"
+			RelativePath="eDocumentPath.h"
 			>
 		</File>
 		<File
@@ -1206,27 +1206,27 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Env.cpp"
+			RelativePath="Env.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Env.h"
+			RelativePath="Env.h"
 			>
 		</File>
 		<File
-			RelativePath=".\EnvVarsPanel.cpp"
+			RelativePath="EnvVarsPanel.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\EnvVarsPanel.h"
+			RelativePath="EnvVarsPanel.h"
 			>
 		</File>
 		<File
-			RelativePath=".\eSettings.cpp"
+			RelativePath="eSettings.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\eSettings.h"
+			RelativePath="eSettings.h"
 			>
 		</File>
 		<File
@@ -1238,7 +1238,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Execute.cpp"
+			RelativePath="Execute.cpp"
 			>
 		</File>
 		<File
@@ -1262,7 +1262,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\FindFlags.h"
+			RelativePath="FindFlags.h"
 			>
 		</File>
 		<File
@@ -1274,11 +1274,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Fold.cpp"
+			RelativePath="Fold.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Fold.h"
+			RelativePath="Fold.h"
 			>
 		</File>
 		<File
@@ -1298,11 +1298,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\GotoLineDlg.cpp"
+			RelativePath="GotoLineDlg.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\GotoLineDlg.h"
+			RelativePath="GotoLineDlg.h"
 			>
 		</File>
 		<File
@@ -1314,11 +1314,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\HtmlOutputPane.cpp"
+			RelativePath="HtmlOutputPane.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\HtmlOutputPane.h"
+			RelativePath="HtmlOutputPane.h"
 			>
 		</File>
 		<File
@@ -1330,11 +1330,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Interval.h"
+			RelativePath="Interval.h"
 			>
 		</File>
 		<File
-			RelativePath=".\key_hook.h"
+			RelativePath="key_hook.h"
 			>
 		</File>
 		<File
@@ -1386,15 +1386,15 @@
 			>
 		</File>
 		<File
-			RelativePath=".\MultilineDataObject.cpp"
+			RelativePath="MultilineDataObject.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\MultilineDataObject.h"
+			RelativePath="MultilineDataObject.h"
 			>
 		</File>
 		<File
-			RelativePath=".\RecursiveCriticalSection.h"
+			RelativePath="RecursiveCriticalSection.h"
 			>
 		</File>
 		<File
@@ -1406,7 +1406,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\resource.h"
+			RelativePath="resource.h"
 			>
 		</File>
 		<File
@@ -1434,11 +1434,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\ShellRunner.cpp"
+			RelativePath="ShellRunner.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\ShellRunner.h"
+			RelativePath="ShellRunner.h"
 			>
 		</File>
 		<File
@@ -1450,19 +1450,19 @@
 			>
 		</File>
 		<File
-			RelativePath=".\StringHistorySetting.cpp"
+			RelativePath="StringHistorySetting.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\StringHistorySetting.h"
+			RelativePath="StringHistorySetting.h"
 			>
 		</File>
 		<File
-			RelativePath=".\Strings.cpp"
+			RelativePath="Strings.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Strings.h"
+			RelativePath="Strings.h"
 			>
 		</File>
 		<File
@@ -1502,7 +1502,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\SymbolRef.h"
+			RelativePath="SymbolRef.h"
 			>
 		</File>
 		<File
@@ -1522,31 +1522,31 @@
 			>
 		</File>
 		<File
-			RelativePath=".\UpdaterThread.cpp"
+			RelativePath="UpdaterThread.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\UpdaterThread.h"
+			RelativePath="UpdaterThread.h"
 			>
 		</File>
 		<File
-			RelativePath=".\urlencode.cpp"
+			RelativePath="urlencode.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\urlencode.h"
+			RelativePath="urlencode.h"
 			>
 		</File>
 		<File
-			RelativePath=".\Utf.cpp"
+			RelativePath="Utf.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Utf.h"
+			RelativePath="Utf.h"
 			>
 		</File>
 		<File
-			RelativePath=".\WrapMode.h"
+			RelativePath="WrapMode.h"
 			>
 		</File>
 		<File

@@ -32,6 +32,7 @@
 #include "BracketHighlight.h"
 #include "DetectTripleClicks.h"
 #include "AutoPairs.h"
+#include "Bookmarks.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -40,7 +41,7 @@
 #include "IEditorSearch.h"
 #include "ITabPage.h"
 
-// Pre-definitions
+
 class wxFileName;
 
 class cxEnv;
@@ -48,7 +49,6 @@ class GutterCtrl;
 class EditorFrame;
 class PreviewDlg;
 class cxRemoteAction;
-class MultilineDataObject;
 class TextTip;
 class eFrameSettings;
 class LiveCaret;
@@ -57,6 +57,7 @@ struct thTheme;
 class tmAction;
 class tmDragCommand;
 class TmSyntaxHandler;
+
 
 class EditorCtrl : public KeyHookable<wxControl>, 
 	public IFoldingEditor,
@@ -348,10 +349,10 @@ public:
 	void ToogleBookmarkOnCurrentLine();
 	void AddBookmark(unsigned int line_id, bool toggle=false);
 	void DeleteBookmark(unsigned int line_id);
-	void ClearBookmarks() {m_bookmarks.clear();};
+	void ClearBookmarks();
 	void GotoNextBookmark();
 	void GotoPrevBookmark();
-	const vector<cxBookmark>& GetBookmarks() const {return m_bookmarks;};
+	const vector<cxBookmark>& GetBookmarks() const;
 
 	// Scroll Position
 	int GetYScrollPos() const { return scrollPos; };
@@ -503,11 +504,6 @@ protected:
 	vector<cxFold>::iterator ParseFoldLine(unsigned int line_id, vector<cxFold>::iterator insertPos, bool doFold);
 	unsigned int GetLastLineInFold(const vector<cxFold*>& foldStack) const;
 
-	// Bookmarks
-	void BookmarksInsert(unsigned int pos, unsigned int length);
-	void BookmarksDelete(unsigned int start, unsigned int end);
-	void BookmarksApplyDiff(const vector<cxChange>& changes);
-
 	// Commands
 	bool cmd_Undo(int count, vector<int>& cStack, bool end=false);
 
@@ -589,7 +585,7 @@ protected:
 	unsigned int m_foldTooltipLine;
 
 	// Bookmarks
-	vector<cxBookmark> m_bookmarks;
+	Bookmarks bookmarks;
 
 	action lastaction;
 	wxPoint lastMousePos; // Used to check if mouse have really moved
@@ -617,30 +613,25 @@ protected:
 	SnippetHandler m_snippetHandler;
 
 	// Change state vars
-	int change_pos;
 	doc_id change_doc_id;
+	int change_pos;
 	int change_toppos;
 
 	// incremental search trackers
 	vector<interval> m_searchRanges;
 	// start/found are used to track state between Find calls
-	unsigned int m_search_start_pos;
-	unsigned int m_search_found_pos;
+	unsigned int m_search_start_pos, m_search_found_pos;
 
 	wxString m_indent;
 
 	AutoPairs m_autopair;
 
 	// Wrapping
-	bool m_doAutoWrap;
-	bool m_wrapAtMargin;
+	bool m_doAutoWrap, m_wrapAtMargin;
 
 	BracketHighlight m_bracketHighlight;
 
 	int m_lastScopePos;
-
-	// Cache of last compiled regex
-	mutable wxString m_regex_cache;
 
 	// Cached env variables
 	wxString m_tmFilePath;
@@ -648,6 +639,9 @@ protected:
 
 	// Symbol cache
 	mutable vector<SymbolRef> m_symbolCache;
+
+	// Cache of last compiled regex
+	mutable wxString m_regex_cache;
 
 	// Key state
 	static unsigned long s_ctrlDownTime;

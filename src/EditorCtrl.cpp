@@ -20,9 +20,10 @@
 
 #include <algorithm>
 
+#include "pcre.h"
+
 #include "doc_byte_iter.h"
 #include "tm_syntaxhandler.h"
-
 #include "EditorFrame.h"
 #include "StyleRun.h"
 #include "FindCmdDlg.h"
@@ -43,8 +44,6 @@
 #include "eSettings.h"
 #include "IAppPaths.h"
 #include "Strings.h"
-#include "pcre.h"
-
 #include "ReplaceStringParser.h"
 
 // Document Icons
@@ -89,12 +88,10 @@ private:
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
-// Ids
-enum {
+enum EDITORCTL_IDS {
 	TIMER_FOLDTOOLTIP = 100,
 	ID_LEFTSCROLL
 };
-
 
 BEGIN_EVENT_TABLE(EditorCtrl, wxControl)
 	EVT_PAINT(EditorCtrl::OnPaint)
@@ -162,7 +159,9 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	do_freeze(true), 
 	m_options_cache(0), 
 	m_re(NULL), 
-	m_symbolCacheToken(0)
+	m_symbolCacheToken(0),
+
+	bookmarks(m_lines)
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -208,7 +207,10 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	do_freeze(true),
 	m_options_cache(0),
 	m_re(NULL),
-	m_symbolCacheToken(0)
+	m_symbolCacheToken(0),
+
+	bookmarks(m_lines)
+
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Init();
@@ -267,7 +269,9 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	do_freeze(true), 
 	m_options_cache(0), 
 	m_re(NULL), 
-	m_symbolCacheToken(0)
+	m_symbolCacheToken(0),
+
+	bookmarks(m_lines)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -302,9 +306,7 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 	}
 	else {
 		const bool isBundleItem = eDocumentPath::IsBundlePath(mirrorPath);
-		if (isBundleItem) {
-			m_remotePath = mirrorPath;
-		}
+		if (isBundleItem) m_remotePath = mirrorPath;
 		else m_path = mirrorPath;
 
 		cxLOCKDOC_WRITE(m_doc)
@@ -324,10 +326,9 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 
 	SetDocumentAndScrollPosition(newpos, topline);
 
-	// Fold lines that was folded in previous session
+	// Fold lines that were folded in previous session
 	if (!folds.empty()) {
-		// We have to make sure all text is syntaxed
-		// and all fold markers found
+		// We have to make sure all text is syntaxed and all fold markers found
 		m_syntaxstyler.ParseAll();
 		UpdateFolds();
 
@@ -335,16 +336,14 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 			const unsigned int line_id = *p;
 			const cxFold target(line_id);
 			vector<cxFold>::iterator f = lower_bound(m_folds.begin(), m_folds.end(), target);
-			if (f != m_folds.end() && f->line_id == line_id && f->type == cxFOLD_START) {
+			if (f != m_folds.end() && f->line_id == line_id && f->type == cxFOLD_START)
 				Fold(*p);
-			}
 		}
 	}
 
 	// Set bookmarks
-	for (vector<unsigned int>::const_iterator p = bookmarks.begin(); p != bookmarks.end(); ++p) {
+	for (vector<unsigned int>::const_iterator p = bookmarks.begin(); p != bookmarks.end(); ++p)
 		AddBookmark(*p);
-	}
 }
 
 void EditorCtrl::Init() {
@@ -398,9 +397,8 @@ void EditorCtrl::Init() {
 
 	// resize the bitmap used for doublebuffering
 	wxSize size = GetClientSize();
-	if (bitmap.GetWidth() < size.x || bitmap.GetHeight() < size.y) {
+	if (bitmap.GetWidth() < size.x || bitmap.GetHeight() < size.y)
 		bitmap = wxBitmap(size.x, size.y);
-	}
 
 	// Init the lines
 	m_lines.SetWordWrap(m_parentFrame.GetWrapMode());
@@ -484,9 +482,8 @@ void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings, unsigned
 	const int topline = GetTopLine();
 	const wxString& syntax = GetSyntaxName();
 	const vector<unsigned int> folds = GetFoldedLines();
-	const vector<cxBookmark>& bookmarks = GetBookmarks();
 
-	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks, (SubPage)subid);
+	settings.SetPageSettings(i, path, di, pos, topline, syntax, folds, bookmarks.GetBookmarks(), (SubPage)subid);
 	//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
 }
 
@@ -555,9 +552,7 @@ unsigned int EditorCtrl::GetCurrentColumnNumber() {
 
 int EditorCtrl::GetTopLine() {
 	wxASSERT(scrollPos >= 0);
-
 	//wxLogDebug(wxT("GetTopLine() - %d %d - %s"), scrollPos, m_lines.GetLineFromYPos(scrollPos), GetPath());
-
 	return m_lines.GetLineFromYPos(scrollPos);
 }
 
@@ -643,8 +638,7 @@ bool EditorCtrl::IsOk() const {
 	wxSize size = GetClientSize();
 
 	// It is ok to have a size 0 window with invalid bitmap
-	if (size.x == 0 && size.y == 0) return true;
-	else return bitmap.Ok();
+	return (size.x == 0 && size.y == 0) || bitmap.Ok();
 }
 
 // WARNING: Be aware that during a change grouping, lines is not valid
@@ -713,9 +707,7 @@ bool EditorCtrl::Show(bool show) {
 void EditorCtrl::SetShowGutter(bool showGutter) {
 	if (m_showGutter == showGutter) return;
 
-	if (showGutter) {
-		m_gutterCtrl->Show();
-	}
+	if (showGutter) m_gutterCtrl->Show();
 	else {
 		m_gutterCtrl->Hide();
 		m_gutterWidth = 0;
@@ -738,9 +730,8 @@ void EditorCtrl::SetWordWrap(cxWrapMode wrapMode) {
 
 	m_lines.SetWordWrap(wrapMode);
 
-	if (m_wrapAtMargin && wrapMode != cxWRAP_NONE) {
+	if (m_wrapAtMargin && wrapMode != cxWRAP_NONE)
 		m_lines.SetWidth(m_lines.GetMarginPos(), topline);
-	}
 
 	scrollPos = m_lines.GetYPosFromLine(topline);
 	DrawLayout();
@@ -1316,7 +1307,7 @@ unsigned int EditorCtrl::GetLineIndentPos(unsigned int lineid) {
 	wxASSERT(lineid < m_lines.GetLineCount());
 
 	unsigned int linestart, lineend;
-	m_lines.GetLineExtent(lineend, linestart, lineend);
+	m_lines.GetLineExtent(lineid, linestart, lineend);
 	if (linestart == lineend) return 0;
 
 	cxLOCKDOC_READ(m_doc)
@@ -2986,7 +2977,7 @@ void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	m_syntaxstyler.ApplyDiff(linechanges);
 	FoldingApplyDiff(linechanges);
 	m_search_hl_styler.ApplyDiff(changes);
-	BookmarksApplyDiff(changes);
+	if (!changes.empty()) bookmarks.ApplyChanges(changes);
 
 	// Move caret to position of first change
 	if (moveToFirstChange) {
@@ -3058,14 +3049,14 @@ void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
 	m_search_hl_styler.Insert(pos, length);
 	m_syntaxstyler.Insert(pos, length);
 	FoldingInsert(pos, length);
-	BookmarksInsert(pos, length);
+	bookmarks.InsertChars(pos, length);
 }
 
 void EditorCtrl::StylersDelete(unsigned int start, unsigned int end) {
 	m_search_hl_styler.Delete(start, end);
 	m_syntaxstyler.Delete(start, end);
 	FoldingDelete(start, end);
-	BookmarksDelete(start, end);
+	bookmarks.DeleteChars(start, end);
 }
 
 unsigned int EditorCtrl::GetChangePos(const doc_id& old_version_id) const {
@@ -3930,7 +3921,7 @@ void EditorCtrl::SwapLines(unsigned int line1, unsigned int line2) {
 		RawMove(linestart, lineend, lineend2);
 	}
 
-	if (!m_lines.isLineVirtual(line2) && linestart2 != lineend2) {
+	if (!m_lines.IsLineVirtual(line2) && linestart2 != lineend2) {
 		const unsigned int offset = lineend - linestart;
 
 		// Move bottom line to top lines position
@@ -4268,7 +4259,7 @@ void EditorCtrl::OnCopy() {
 	else if (!m_lines.IsEmpty()) {
 		// Copy line
 		const unsigned int line_id = m_lines.GetCurrentLine();
-		if (!m_lines.isLineVirtual(line_id)) {
+		if (!m_lines.IsLineVirtual(line_id)) {
 			unsigned int startpos, endpos;
 			m_lines.GetLineExtent(line_id, startpos, endpos);
 			copytext = GetText(startpos, endpos);
@@ -4585,7 +4576,7 @@ void EditorCtrl::SelectLine(unsigned int line_id, bool multiselect) {
 	if (!multiselect || m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
 
 	// Select the line
-	if (!m_lines.isLineVirtual(line_id)) {
+	if (!m_lines.IsLineVirtual(line_id)) {
 		unsigned int start, end;
 		m_lines.GetLineExtent(line_id, start, end);
 
@@ -7209,7 +7200,7 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 			else if (m_selMode == SEL_LINE && m_currentSel != -1) {
 				// Extend selection one line at a time
 				const unsigned int line_id = m_lines.GetCurrentLine();
-				if (!m_lines.isLineVirtual(line_id)) {
+				if (!m_lines.IsLineVirtual(line_id)) {
 					unsigned int linestart, lineend;
 					m_lines.GetLineExtent(line_id, linestart, lineend);
 
@@ -7975,9 +7966,9 @@ void EditorCtrl::OnDragDropText(const wxString& text, wxDragResult dragType) {
 	wxLogDebug(wxT("OnDragDropText (pos=%d)"), GetPos());
 
 	// If we are moving inside same doc we should delete source
-	if (dragType == wxDragMove && m_dragStartPos != wxDefaultPosition) {
+	if (dragType == wxDragMove && m_dragStartPos != wxDefaultPosition)
 		DeleteSelections(); // Will adjust caret pos
-	}
+
 	RemoveAllSelections();
 
 	const unsigned int pos = GetPos();
@@ -8005,13 +7996,11 @@ void EditorCtrl::OnDragDropColumn(const wxArrayString& text, wxDragResult dragTy
 	wxLogDebug(wxT("OnDragDropColumn (pos=%d)"), GetPos());
 
 	// If we are moving inside same doc we should delete source
-	if (dragType == wxDragMove && m_dragStartPos != wxDefaultPosition) {
+	if (dragType == wxDragMove && m_dragStartPos != wxDefaultPosition)
 		DeleteSelections(); // Will adjust caret pos
-	}
-	RemoveAllSelections();
 
+	RemoveAllSelections();
 	InsertColumn(text, true /*select*/);
-	
 	m_parentFrame.BringToFront();
 }
 
@@ -8059,9 +8048,8 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 
 		// Add drag actions
 		wxArrayString actionList;
-		for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p) {
+		for (vector<const tmDragCommand*>::const_iterator p = actions.begin(); p != actions.end(); ++p)
 			listMenu.Append(menuId++, (*p)->name);
-		}
 
 		// Add commands
 		listMenu.AppendSeparator();
@@ -8077,9 +8065,9 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 		}
 		else if (result == 1002-1000) {
 			// Open all
-			for (; i < filenames.GetCount(); ++i) {
+			for (; i < filenames.GetCount(); ++i)
 				m_parentFrame.Open(filenames[i]);
-			}
+
 			newTabs = true;
 			break;
 		}
@@ -8180,11 +8168,9 @@ wxString EditorCtrl::GetSymbolString(const SymbolRef& sr) const {
 								const wxCharBuffer buf = rep.mb_str(wxConvUTF8);
 								source.insert(source.begin()+res.start, buf.data(), buf.data()+strlen(buf.data()));
 							}
-
 							break;
 						}
 					}
-
 					break;
 				}
 			}
@@ -8196,7 +8182,7 @@ wxString EditorCtrl::GetSymbolString(const SymbolRef& sr) const {
 	}
 
 	if (source.empty()) return wxEmptyString;
-	else return wxString(&*source.begin(), wxConvUTF8, source.size());
+	return wxString(&*source.begin(), wxConvUTF8, source.size());
 }
 
 bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
@@ -8276,12 +8262,13 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 	}
 	return false;
 }
+
 bool EditorCtrl::OnPreKeyUp(wxKeyEvent& event) {
 #ifdef __WXMSW__
-		if (event.m_rawCode == 17 || event.m_rawCode == 18) {
+		if (event.m_rawCode == 17 || event.m_rawCode == 18)
 			s_altGrDown = false;
-		}
 #endif
+
 	return false;
 }
 
@@ -8403,7 +8390,7 @@ void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
 	const unsigned int lineCount = m_lines.GetLineCount(false/*includeVirtual*/);
 	const unsigned int firstline = m_lines.GetLineFromCharPos(pos);
 	unsigned int lastline = m_lines.GetLineFromCharPos(pos + len);
-	if (lastline && m_lines.isLineVirtual(lastline)) --lastline; // Don't try to parse last virtual line
+	if (lastline && m_lines.IsLineVirtual(lastline)) --lastline; // Don't try to parse last virtual line
 
 	// How many new lines were inserted?
 	unsigned int newLines = lastline - firstline;
@@ -8463,7 +8450,7 @@ void EditorCtrl::FoldingDelete(unsigned int start, unsigned int WXUNUSED(end)) {
 		if (p->type == cxFOLD_START_FOLDED) doRefold = true;
 		p = m_folds.erase(p);
 	}
-	if (!m_lines.isLineVirtual(line_id)) {
+	if (!m_lines.IsLineVirtual(line_id)) {
 		p = ParseFoldLine(line_id, p, doRefold);
 	}
 
@@ -8521,7 +8508,7 @@ void EditorCtrl::FoldingApplyDiff(const vector<cxLineChange>& linechanges) {
 		}
 		else { // DELETION
 			// Reparse line with partial deletion
-			if (!m_lines.isLineVirtual(line_id)) {
+			if (!m_lines.IsLineVirtual(line_id)) {
 				f = ParseFoldLine(line_id, f, doRefold);
 			}
 
@@ -8741,7 +8728,7 @@ bool EditorCtrl::IsPosInFold(unsigned int pos, unsigned int* fold_start, unsigne
 
 vector<cxFold*> EditorCtrl::GetFoldStack(unsigned int line_id) {
 	vector<cxFold*> foldStack;
-	if (m_lines.isLineVirtual(line_id)) return foldStack;
+	if (m_lines.IsLineVirtual(line_id)) return foldStack;
 	if (m_foldLineCount == 0) return foldStack;
 
 	wxASSERT(line_id < m_foldLineCount);
@@ -8776,6 +8763,10 @@ vector<cxFold*> EditorCtrl::GetFoldStack(unsigned int line_id) {
 	return foldStack;
 }
 
+void EditorCtrl::ClearBookmarks() {bookmarks.Clear();}
+
+const vector<cxBookmark>& EditorCtrl::GetBookmarks() const {return bookmarks.GetBookmarks();}
+
 void EditorCtrl::ToogleBookmarkOnCurrentLine() {
 	const unsigned line_id = m_lines.GetCurrentLine();
 	AddBookmark(line_id, true /*toggle*/);
@@ -8783,157 +8774,36 @@ void EditorCtrl::ToogleBookmarkOnCurrentLine() {
 
 void EditorCtrl::AddBookmark(unsigned int line_id, bool toggle) {
 	wxASSERT(line_id < m_lines.GetLineCount());
-
-	// Find insert position
-	vector<cxBookmark>::iterator p = m_bookmarks.begin();
-	while (p != m_bookmarks.end()) {
-		if (p->line_id == line_id) {
-			if (toggle) m_bookmarks.erase(p);
-			return; // already added
-		}
-		else if (p->line_id > line_id) break;
-		++p;
-	}
-
-	// Insert the new bookmark
-	const cxBookmark bm = {line_id, m_lines.GetLineStartpos(line_id), m_lines.GetLineEndpos(line_id)};
-	m_bookmarks.insert(p, bm);
+	bookmarks.AddBookmark(line_id, toggle);
 }
 
 void EditorCtrl::DeleteBookmark(unsigned int line_id) {
-	for (vector<cxBookmark>::iterator p = m_bookmarks.begin(); p != m_bookmarks.end(); ++p) {
-		if (p->line_id == line_id) {
-			m_bookmarks.erase(p);
-			return;
-		}
-		else if (p->line_id > line_id) {
-			wxASSERT(false); // no bookmark on line
-			return;
-		}
-	}
-}
-
-void EditorCtrl::BookmarksInsert(unsigned int pos, unsigned int length) {
-	for (vector<cxBookmark>::iterator p = m_bookmarks.begin(); p != m_bookmarks.end(); ++p) {
-		if (p->start > pos) {
-			p->start += length;
-			p->line_id = m_lines.GetLineFromStartPos(p->start);
-			p->end = m_lines.GetLineEndpos(p->line_id);
-		}
-		else if (p->end > pos) {
-			p->end = m_lines.GetLineEndpos(p->line_id);
-		}
-	}
-}
-
-void EditorCtrl::BookmarksDelete(unsigned int start, unsigned int end) {
-	const unsigned int len = end - start;
-
-	vector<cxBookmark>::iterator p = m_bookmarks.begin();
-	while (p != m_bookmarks.end()) {
-		if (p->end > start) { // ignore bookmarks before deletion
-			if ((start == p->start && end >= p->end) || (start < p->start && end >= p->start)) {
-				p = m_bookmarks.erase(p);
-				continue;
-			}
-			else if (start >= p->start) {
-				p->end = m_lines.GetLineEndpos(p->line_id);
-			}
-			else {
-				p->start -= len;
-				p->line_id = m_lines.GetLineFromStartPos(p->start);
-				p->end = m_lines.GetLineEndpos(p->line_id);
-			}
-		}
-
-		++p;
-	}
-}
-
-void EditorCtrl::BookmarksApplyDiff(const vector<cxChange>& changes) {
-	if (changes.empty()) return;
-
-	// Check if all has been deleted
-	if (m_lines.IsEmpty()) {
-		m_bookmarks.clear();
-		return;
-	}
-
-	// Adjust all start positions and remove deleted lines
-	int offset = 0;
-	for (vector<cxChange>::const_iterator ch = changes.begin(); ch != changes.end(); ++ch) {
-		const unsigned int len = ch->end - ch->start;
-		if (ch->type == cxINSERTION) {
-			for (vector<cxBookmark>::iterator p = m_bookmarks.begin(); p != m_bookmarks.end(); ++p) {
-				if (p->start >= ch->start) p->start += len;
-			}
-			offset += len;
-		}
-		else { // ch->type == cxDELETION
-			const unsigned int start = ch->start + offset;
-			const unsigned int end = ch->end + offset;
-
-			vector<cxBookmark>::iterator p = m_bookmarks.begin();
-			while (p != m_bookmarks.end()) {
-				if ((p->start > start && p->start <= end) || (p->start == start && ch->lines > 0)) {
-					p = m_bookmarks.erase(p);
-					continue;
-				}
-				else if (p->start > end) p->start -= len;
-				++p;
-			}
-			offset -= len;
-		}
-	}
-
-	// Update line numbers and ends
-	for (vector<cxBookmark>::iterator p = m_bookmarks.begin(); p != m_bookmarks.end(); ++p) {
-		p->line_id = m_lines.GetLineFromStartPos(p->start);
-		p->end = m_lines.GetLineEndpos(p->line_id);
-	}
+	bookmarks.DeleteBookmark(line_id);
 }
 
 void EditorCtrl::GotoNextBookmark() {
-	if (m_bookmarks.empty()) return;
-
-	// Find first bookmark after current line
-	const unsigned int line_id = m_lines.GetCurrentLine();
-	vector<cxBookmark>::iterator p = m_bookmarks.begin();
-	for (; p != m_bookmarks.end(); ++p) {
-		if (p->line_id > line_id) break;
+	const unsigned int new_line = bookmarks.NextBookmark(m_lines.GetCurrentLine());
+	if (new_line != NO_BOOKMARK) {
+		m_lines.SetPos(m_lines.GetLineStartpos(new_line));
+		MakeCaretVisible();
+		DrawLayout();
 	}
-	if (p == m_bookmarks.end()) p = m_bookmarks.begin(); // restart from top
-
-	// Goto bookmark
-	m_lines.SetPos(m_lines.GetLineStartpos(p->line_id));
-	MakeCaretVisible();
-	DrawLayout();
 }
 
 void EditorCtrl::GotoPrevBookmark() {
-	if (m_bookmarks.empty()) return;
-
-	// Find first bookmark before current line
-	const unsigned int line_id = m_lines.GetCurrentLine();
-	vector<cxBookmark>::reverse_iterator p = m_bookmarks.rbegin();
-	for (; p != m_bookmarks.rend(); ++p) {
-		if (p->line_id < line_id) break;
+	const unsigned int new_line = bookmarks.PrevBookmark(m_lines.GetCurrentLine());
+	if (new_line != NO_BOOKMARK) {
+		m_lines.SetPos(m_lines.GetLineStartpos(new_line));
+		MakeCaretVisible();
+		DrawLayout();
 	}
-	if (p == m_bookmarks.rend()) p = m_bookmarks.rbegin(); // restart from bottom
-
-	// Goto bookmark
-	m_lines.SetPos(m_lines.GetLineStartpos(p->line_id));
-	MakeCaretVisible();
-	DrawLayout();
 }
 
 EditorChangeState EditorCtrl::GetChangeState() const {
 	return EditorChangeState(this->GetId(), this->GetChangeToken());
 }
 
-
 #ifdef __WXDEBUG__
-
 void EditorCtrl::TestMilestones() {
 	//Clear();
 

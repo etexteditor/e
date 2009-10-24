@@ -14,26 +14,40 @@ class IFoldingEditor;
 struct tmTheme;
 class Styler;
 
-class Lines {
+class ILinePositions {
+public:
+	virtual bool IsEmpty() const = 0;
+
+	virtual unsigned int GetLineFromStartPos(unsigned int char_pos) const = 0;
+
+	virtual unsigned int GetLineStartFromPos(unsigned int pos) const = 0;
+	virtual unsigned int GetLineEndFromPos(unsigned int pos) const = 0;
+
+	virtual unsigned int GetLineStartpos(unsigned int lineid) const = 0;
+	virtual unsigned int GetLineEndpos(unsigned int lineid, bool stripnewline=true) const = 0;
+	virtual void GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end) const = 0;
+};
+
+class Lines: public ILinePositions {
 public:
 	Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme);
 	void Init();
 
 	int GetHeight() const;
 	int GetLineHeight() const;
-	bool IsEmpty() const {return GetLength() == 0;};
+	virtual bool IsEmpty() const {return GetLength() == 0;};
 	unsigned int GetLength() const;
 	unsigned int GetLineCount(bool includeVirtual=true) const;
 	unsigned int GetLastLine() const;
 	unsigned int GetDisplayWidth() const {return line.GetDisplayWidth();};
 
-	int GetWidth();
+	int GetWidth() const;
 	void SetWidth(unsigned int newwidth, unsigned int index=0);
 
 	unsigned int GetPos() const;
 	void SetPos(unsigned int newpos, bool update_lastpos = true);
 
-	unsigned int GetLastpos();
+	unsigned int GetLastpos() const;
 	void SetLastpos(unsigned int newpos);
 
 	void UpdateParsedLine(unsigned int line_id);
@@ -50,32 +64,35 @@ public:
 	void UpdateFont();
 	void SetTabWidth(unsigned int width);
 
-	bool IsCaretInPreparedPos();
+	bool IsCaretInPreparedPos() const;
 	wxPoint GetCaretPos() const;
 	void UpdateCaretPos();
 	wxPoint GetCharPos(unsigned int char_pos);
 
-	int GetCurrentLine();
-	int GetLineFromCharPos(unsigned int char_pos);
-	unsigned int GetLineFromStartPos(unsigned int char_pos);
-	unsigned int GetLineEndFromPos(unsigned int pos);
-	unsigned int GetLineStartFromPos(unsigned int pos);
-	unsigned int GetLineEndpos(unsigned int lineid, bool stripnewline = true);
-	void GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end); //equiv to "stripnewline = false"
+	int GetCurrentLine() const;
+	int GetLineFromCharPos(unsigned int char_pos) const;
 
-	unsigned int GetLineStartpos(unsigned int lineid);
-	bool isLineVirtual(unsigned int lineid);
-	bool IsLineEnd(unsigned int pos);
-	bool IsLineEnd(unsigned int line_id, unsigned int pos);
-	bool IsLineStart(unsigned int line_id, unsigned int pos);
-	bool IsBeforeNewline(unsigned int pos);
-	bool IsLineEmpty(unsigned int lineid);
+	virtual unsigned int GetLineFromStartPos(unsigned int char_pos) const;
+
+	virtual unsigned int GetLineStartFromPos(unsigned int pos) const;
+	virtual unsigned int GetLineEndFromPos(unsigned int pos) const;
+
+	virtual unsigned int GetLineStartpos(unsigned int lineid) const;
+	virtual unsigned int GetLineEndpos(unsigned int lineid, bool stripnewline = true) const;
+	virtual void GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end) const; //equiv to "stripnewline = false"
+
+	bool IsLineVirtual(unsigned int lineid) const;
+	bool IsLineEnd(unsigned int pos) const;
+	bool IsLineEnd(unsigned int line_id, unsigned int pos) const;
+	bool IsLineStart(unsigned int line_id, unsigned int pos) const;
+	bool IsBeforeNewline(unsigned int pos) const;
+	bool IsLineEmpty(unsigned int lineid) const;
 
 	int GetLineFromYPos(int ypos) const;
 	int GetYPosFromLine(unsigned int lineid) const;
 	int GetBottomYPosFromLine(unsigned int lineid) const;
 	int PrepareYPos(int ypos);
-	int PrepareAll() const {return ll->prepare_all();};
+	int PrepareAll() {return ll->prepare_all();};
 	int GetPosFromXY(int xpos, int ypos, bool allowOutbound=true);
 
 	full_pos ClickOnLine(int xpos, int ypos, bool doSetpos=true);
@@ -161,4 +178,3 @@ private:
 };
 
 #endif // LINES_H
-

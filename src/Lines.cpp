@@ -133,7 +133,7 @@ void Lines::UpdateParsedLine(unsigned int line_id) {
 	ll->update_parsed_line(line_id);
 }
 
-int Lines::GetWidth() {
+int Lines::GetWidth() const {
 	return m_wrapMode == cxWRAP_NONE ? ll->width() : line.GetDisplayWidth();
 }
 
@@ -150,12 +150,12 @@ void Lines::SetTabWidth(unsigned int width) {
 }
 
 unsigned int Lines::GetPos() const {
-	wxASSERT(pos >= 0 && pos <= ll->length());
+	wxASSERT(0 <= pos && pos <= ll->length());
 	return pos;
 }
 
-unsigned int Lines::GetLastpos() {
-	wxASSERT(lastpos >= 0 && lastpos <= ll->length());
+unsigned int Lines::GetLastpos() const {
+	wxASSERT(0 <= lastpos && lastpos <= ll->length());
 	return lastpos;
 }
 
@@ -176,19 +176,9 @@ void Lines::SetPos(unsigned int newpos, bool update_lastpos) {
 }
 
 void Lines::SetLastpos(unsigned int newpos) {
-	wxASSERT(newpos >= 0 && newpos <= ll->length());
+	wxASSERT(0 <= newpos && newpos <= ll->length());
 	lastpos = newpos;
 }
-
-/*bool Lines::CaretVisible() {
-	// Checks if caret is in linelist window
-	// might not be visible in current display
-	if (ll->in_window(pos)) {
-		//SetCaretPos();
-		return true;
-	}
-	else return false;
-}*/
 
 wxPoint Lines::GetCaretPos() const {
 	return wxPoint(caretpos.x, FoldedYPos(caretpos.y));
@@ -286,7 +276,7 @@ bool Lines::IsOverFoldIndicator(const wxPoint& point) {
 	return false;
 }
 
-bool Lines::IsAtTabPoint(){
+bool Lines::IsAtTabPoint() {
 	unsigned int posline = ll->find_offset(pos);
 	if (posline == ll->size()) return true;
 
@@ -299,15 +289,14 @@ bool Lines::IsAtTabPoint(){
 	return true; // start of next line
 }
 
-int Lines::GetCurrentLine() {
+int Lines::GetCurrentLine() const {
 	if (ll->size() == 0) return 0; // WARNING: This line does not exist yet
 
 	// Notice that this can return the last (virtual) line
-	unsigned int lineid = GetLineFromCharPos(pos);
-	return lineid;
+	return GetLineFromCharPos(pos);
 }
 
-unsigned int Lines::GetLineStartpos(unsigned int lineid) {
+unsigned int Lines::GetLineStartpos(unsigned int lineid) const {
 	wxASSERT(0 <= lineid && lineid <= ll->size());
 
 	if (ll->size() == 0) return 0;
@@ -320,7 +309,7 @@ unsigned int Lines::GetLineStartpos(unsigned int lineid) {
 	}
 }
 
-unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
+unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) const {
 	wxASSERT(0 <= lineid && lineid <= ll->size());
 
 	if (ll->size() == 0) return 0;
@@ -339,7 +328,7 @@ unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
 	}
 }
 
-void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end) {
+void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end) const {
 	wxASSERT(0 <= lineid && lineid <= ll->size());
 	if (ll->size() == 0) {
 		start = end = 0;
@@ -357,14 +346,14 @@ void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int
 	end = ll->end(lineid);
 }
 
-bool Lines::isLineVirtual(unsigned int lineid) {
+bool Lines::IsLineVirtual(unsigned int lineid) const {
 	wxASSERT(lineid >= 0 && lineid <= ll->size());
 	wxASSERT(NewlineTerminated || lineid != ll->size());
 
 	return lineid == ll->size() && NewlineTerminated;
 }
 
-bool Lines::IsLineEmpty(unsigned int lineid) {
+bool Lines::IsLineEmpty(unsigned int lineid) const {
 	wxASSERT(lineid <= ll->size());
 
 	if (ll->size() == 0) return true;
@@ -372,26 +361,26 @@ bool Lines::IsLineEmpty(unsigned int lineid) {
 	return (ll->offset(lineid)+1 >= ll->end(lineid));
 }
 
-bool Lines::IsLineEnd(unsigned int pos) {
+bool Lines::IsLineEnd(unsigned int pos) const {
 	wxASSERT(pos <= GetLength());
 	return ll->IsLineEnd(pos);
 }
 
-bool Lines::IsLineEnd(unsigned int line_id, unsigned int pos) {
+bool Lines::IsLineEnd(unsigned int line_id, unsigned int pos) const {
 	wxASSERT(line_id <= ll->size());
 
 	if (line_id == ll->size()) return (pos == ll->length());
 	return (pos == ll->end(line_id));
 }
 
-bool Lines::IsLineStart(unsigned int line_id, unsigned int pos) {
+bool Lines::IsLineStart(unsigned int line_id, unsigned int pos) const {
 	wxASSERT(line_id <= ll->size());
 
 	if (line_id == ll->size()) return (pos == ll->length());
 	return (pos == ll->offset(line_id));
 }
 
-bool Lines::IsBeforeNewline(unsigned int pos) {
+bool Lines::IsBeforeNewline(unsigned int pos) const {
 	wxASSERT(pos <= GetLength());
 
 	const unsigned int lineid = GetLineFromCharPos(pos);
@@ -399,20 +388,20 @@ bool Lines::IsBeforeNewline(unsigned int pos) {
 	return (pos == beforeNewline);
 }
 
-unsigned int Lines::GetLineEndFromPos(unsigned int pos) {
+unsigned int Lines::GetLineEndFromPos(unsigned int pos) const {
 	wxASSERT(pos <= GetLength());
 	
 	const unsigned int endPos = ll->EndFromPos(pos);
 	return endPos;
 }
 
-unsigned int Lines::GetLineStartFromPos(unsigned int pos) {
+unsigned int Lines::GetLineStartFromPos(unsigned int pos) const {
 	wxASSERT(pos <= GetLength());
 
 	return ll->StartFromPos(pos);
 }
 
-int Lines::GetLineFromCharPos(unsigned int char_pos) {
+int Lines::GetLineFromCharPos(unsigned int char_pos) const {
 	wxASSERT(char_pos >= 0 && char_pos <= GetLength());
 
 	if (char_pos == 0 && GetLength() == 0) return 0; // empty doc
@@ -426,7 +415,7 @@ int Lines::GetLineFromCharPos(unsigned int char_pos) {
 	return lineid;
 }
 
-unsigned int Lines::GetLineFromStartPos(unsigned int char_pos) {
+unsigned int Lines::GetLineFromStartPos(unsigned int char_pos) const {
 	wxASSERT(char_pos <= GetLength());
 
 	if (char_pos == 0) return 0;
@@ -943,7 +932,7 @@ void Lines::ApplyDiff(vector<cxChange>& changes) {
 #endif
 }
 
-bool Lines::IsCaretInPreparedPos() {
+bool Lines::IsCaretInPreparedPos() const {
 	// Checks we can update caret without doing any validations that
 	// could move positions.
 	return ll->in_window(pos);

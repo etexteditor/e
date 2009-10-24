@@ -901,6 +901,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Bookmarks.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Bookmarks.h"
+				>
+			</File>
+			<File
 				RelativePath="BracketHighlight.cpp"
 				>
 			</File>

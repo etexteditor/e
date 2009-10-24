@@ -234,10 +234,12 @@ void GutterCtrl::DrawGutter(wxDC& dc) {
 		}
 
 		// Draw bookmark
-		if (m_showBookmarks && nextBookmark != bookmarks.end() && nextBookmark->line_id == i) {
-			//m_mdc.DrawText(wxT("\u066D"), 3, ypos);
-			m_mdc.DrawBitmap(m_bmBookmark, 2, ypos + line_middle - 5);
-			++nextBookmark;
+		if (m_showBookmarks) {
+			if (nextBookmark != bookmarks.end() && nextBookmark->line_id == i) {
+				//m_mdc.DrawText(wxT("\u066D"), 3, ypos);
+				m_mdc.DrawBitmap(m_bmBookmark, 2, ypos + line_middle - 5);
+				++nextBookmark;
+			}
 		}
 
 		// Draw the line number
@@ -326,7 +328,6 @@ void GutterCtrl::DrawGutter()
 	wxClientDC dc(this);DrawGutter(dc);
 }
 
-
 void GutterCtrl::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxPaintDC dc(this);
 
@@ -334,7 +335,6 @@ void GutterCtrl::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxSize size = GetClientSize();
 	dc.Blit(0, 0,  size.x, size.y, &m_mdc, 0, 0);
 }
-
 
 void GutterCtrl::OnSize(wxSizeEvent& WXUNUSED(event)) {
 	const wxSize size = GetClientSize();
@@ -348,7 +348,6 @@ void GutterCtrl::OnSize(wxSizeEvent& WXUNUSED(event)) {
 	}
 
 	// Don't draw the new layout before asked by frame
-	// DrawGutter();
 }
 
 // Don't erase the background
@@ -389,16 +388,15 @@ void GutterCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	}
 
 	// If not multiselecting or extending, remove previous selections
-	if (!event.ControlDown()) {
+	if (!event.ControlDown())
 		lines.RemoveAllSelections();
-	}
 
 	// Find out which line was clicked on
 	if (y < lines.GetHeight()) {
 		const unsigned int line_id = lines.GetLineFromYPos(y);
 
 		// Select the line
-		if (!lines.isLineVirtual(line_id)) {
+		if (!lines.IsLineVirtual(line_id)) {
 			int startpos = lines.GetLineStartpos(line_id);
 			int endpos = lines.GetLineEndpos(line_id, false);
 
@@ -528,12 +526,11 @@ void GutterCtrl::OnMouseMotion(wxMouseEvent& event) {
 			}
 			else {
 				// Update the lines selection info
-				if (m_currentSel == -1) {
+				if (m_currentSel == -1)
 					m_currentSel = lines.AddSelection(sel_start, sel_end);
-				}
-				else {
+				else
 					m_currentSel = lines.UpdateSelection(m_currentSel, sel_start, sel_end);
-				}
+
 				lines.SetPos(m_sel_endline < m_sel_startline ? sel_start : sel_end);
 			}
 

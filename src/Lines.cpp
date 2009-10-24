@@ -20,15 +20,15 @@
 #include <wx/filename.h>
 #include "styler.h"
 
-Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme)
-: dc(dc), m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),
-  line(dc, dw, selections, editorCtrl.GetHlBracket(), lastpos, m_isSelShadow, theme),
-  m_theme(theme), m_lastSel(-1), m_marginChars(0), m_marginPos(0),
-  selections(), m_isSelShadow(false),
-  m_wrapMode(cxWRAP_NONE), ll(NULL), llWrap(line, dw), llNoWrap(line, dw)
+Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme):
+	dc(dc),
+	m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),
+	line(dc, dw, selections, editorCtrl.GetHlBracket(), lastpos, m_isSelShadow, theme),
+	m_theme(theme), m_lastSel(-1), m_marginChars(0), m_marginPos(0),
+	selections(), m_isSelShadow(false),
+	m_wrapMode(cxWRAP_NONE), ll(NULL), llWrap(line, dw), llNoWrap(line, dw)
 {
-	// WARNING: Do not touch the document here
-	// it is not locked during construction
+	// WARNING: Do not touch the document here; it is not locked during construction
 	caretpos.x = 0;
 	caretpos.y = 0;
 
@@ -43,7 +43,6 @@ Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tm
 void Lines::Init() {
 	// We can not count on the dc being valid in the constructor
 	// so we have to do initialization using it here
-
 	line.Init();
 }
 
@@ -311,7 +310,7 @@ int Lines::GetCurrentLine() {
 }
 
 unsigned int Lines::GetLineStartpos(unsigned int lineid) {
-	wxASSERT(lineid >= 0 && lineid <= ll->size());
+	wxASSERT(0 <= lineid && lineid <= ll->size());
 
 	if (ll->size() == 0) return 0;
 
@@ -324,15 +323,8 @@ unsigned int Lines::GetLineStartpos(unsigned int lineid) {
 	return ll->offset(lineid);
 }
 
-bool Lines::isLineVirtual(unsigned int lineid) {
-	wxASSERT(lineid >= 0 && lineid <= ll->size());
-	wxASSERT(NewlineTerminated || lineid != ll->size());
-
-	return lineid == ll->size() && NewlineTerminated;
-}
-
 unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
-	wxASSERT(lineid >= 0 && lineid <= ll->size());
+	wxASSERT(0 <= lineid && lineid <= ll->size());
 
 	if (ll->size() == 0) return 0;
 
@@ -349,6 +341,13 @@ unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
 	}
 
 	return ll->end(lineid);
+}
+
+bool Lines::isLineVirtual(unsigned int lineid) {
+	wxASSERT(lineid >= 0 && lineid <= ll->size());
+	wxASSERT(NewlineTerminated || lineid != ll->size());
+
+	return lineid == ll->size() && NewlineTerminated;
 }
 
 bool Lines::IsLineEmpty(unsigned int lineid) {
@@ -611,6 +610,10 @@ void Lines::RemoveAllSelections(bool checkShadow, unsigned int pos) {
 
 const vector<interval>& Lines::GetSelections() const {
 	return selections;
+}
+
+const interval* const Lines::FirstSelection() const {
+	return selections.empty() ? NULL : &(selections[0]);
 }
 
 void Lines::Clear() {

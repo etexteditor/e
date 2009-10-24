@@ -25,12 +25,15 @@ public:
 	unsigned int GetLength() const;
 	unsigned int GetLineCount(bool includeVirtual=true) const;
 	unsigned int GetLastLine() const;
-	void SetWidth(unsigned int newwidth, unsigned int index=0);
-	int GetWidth();
 	unsigned int GetDisplayWidth() const {return line.GetDisplayWidth();};
+
+	int GetWidth();
+	void SetWidth(unsigned int newwidth, unsigned int index=0);
+
 	unsigned int GetPos() const;
-	unsigned int GetLastpos();
 	void SetPos(unsigned int newpos, bool update_lastpos = true);
+
+	unsigned int GetLastpos();
 	void SetLastpos(unsigned int newpos);
 
 	void UpdateParsedLine(unsigned int line_id);
@@ -86,6 +89,7 @@ public:
 	int AddSelection(unsigned int start, unsigned int end);
 	int UpdateSelection(unsigned int sel_id, unsigned int start, unsigned int end);
 	const std::vector<interval>& GetSelections() const;
+	const interval* const FirstSelection() const;
 	void ShadowSelections(bool isShadow=true) {m_isSelShadow = isShadow;};
 	void RemoveAllSelections(bool checkShadow=false, unsigned int pos=0);
 	void RemoveSelection(unsigned int sel_id);

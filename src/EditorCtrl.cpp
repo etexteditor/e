@@ -1595,12 +1595,12 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 		// Get the input
 		unsigned int selStart = GetPos();
 		unsigned int selEnd = selStart;
+
 		switch (src) {
 		case tmCommand::ciSEL:
-			if(IsSelected()) {
-				const interval& sel = m_lines.GetSelections()[0];
-				selStart = sel.start;
-				selEnd = sel.end;
+			{
+				const interval* const sel = m_lines.FirstSelection();
+				if (sel) sel->Get(selStart, selEnd);
 			}
 			break;
 
@@ -1708,15 +1708,9 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 
 			// End if we could not run command and there is no output
 			if (pid != -1 || !out.empty()) {
-
 				if (!isSelectionInput) {
-					if(IsSelected()) {
-						{
-							const interval& sel = m_lines.GetSelections()[0];
-							selStart = sel.start;
-							selEnd = sel.end;
-						}
-					}
+					const interval* const sel = m_lines.FirstSelection();
+					if (sel) sel->Get(selStart, selEnd);
 					else selStart = selEnd = GetPos();
 				}
 				RemoveAllSelections();
@@ -3172,13 +3166,14 @@ void EditorCtrl::RemapPos(const doc_id& old_version_id, unsigned int old_pos, co
 }
 
 void EditorCtrl::DeleteSelections() {
-	if(!m_lines.IsSelected()) return;
+	const interval* const selection = m_lines.FirstSelection();
+	if (selection == NULL) return;
 
 	if (m_snippetHandler.IsActive()) {
-		const interval& iv = m_lines.GetSelections()[0];
-		m_snippetHandler.Delete(iv.start, iv.end);
+		m_snippetHandler.Delete(selection->start, selection->end);
 		return;
 	}
+
 	m_autopair.Clear(); // invalidate auto-pair state
 
 	cxLOCKDOC_WRITE(m_doc)
@@ -5020,7 +5015,7 @@ cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
 	// Make sure that next search has the new starting point
 	// (no selection if invalid pattern)
 	if (result != cxNOT_FOUND && IsSelected())
-		m_lines.SetLastpos(m_lines.GetSelections()[0].start);
+		m_lines.SetLastpos(m_lines.FirstSelection()->start);
 
 	return result;
 }
@@ -5029,15 +5024,13 @@ cxFindResult EditorCtrl::FindPrevious(const wxString& text, int options) {
 	unsigned int start_pos;
 	if (options & FIND_RESTART) start_pos = m_searchRanges.empty() ? m_lines.GetLength() : m_searchRanges.back().end;
 	else if (m_lines.IsSelected()) {
-		const interval& iv = m_lines.GetSelections()[0];
-		start_pos  = iv.start;
+		const interval* const selection = m_lines.FirstSelection();
+		start_pos  = selection->start;
 
 		// Avoid hitting same zero-length selection
-		if (iv.start == iv.end) {
-			if (start_pos == 0) {
-				return cxNOT_FOUND;
-			}
-			--start_pos;
+		if (selection->empty()) {
+			if (start_pos == 0) return cxNOT_FOUND;
+			else --start_pos;
 		}
 	}
 	else start_pos = m_lines.GetPos();
@@ -5054,7 +5047,7 @@ cxFindResult EditorCtrl::FindPrevious(const wxString& text, int options) {
 	// Make sure that next search has the new starting point
 	// (no selection if invalid pattern)
 	if (result != cxNOT_FOUND && IsSelected())
-		m_lines.SetLastpos(m_lines.GetSelections()[0].end);
+		m_lines.SetLastpos(m_lines.FirstSelection()->end);
 
 	return result;
 }
@@ -6942,13 +6935,12 @@ wxString EditorCtrl::GetSelFirstLine() {
 }
 
 wxString EditorCtrl::GetFirstSelection() const {
-	if (!m_lines.IsSelected()) return wxT("");
-
-	const interval& sel = m_lines.GetSelections()[0];
+	const interval* const sel = m_lines.FirstSelection();
+	if (!sel) return wxEmptyString;
 
 	// Get text
 	cxLOCKDOC_READ(m_doc)
-		return doc.GetTextPart(sel.start, sel.end);
+		return doc.GetTextPart(sel->start, sel->end);
 	cxENDLOCK
 }
 
@@ -7107,12 +7099,8 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	unsigned int start;
 	unsigned int end;
 
-	if (m_lines.IsSelected()) {
-		// Get first selection
-		const interval& sel = m_lines.GetSelections()[0];
-		start = sel.start;
-		end = sel.end;
-	}
+	const interval* const selection = m_lines.FirstSelection();
+	if (selection) selection->Get(start, end);
 	else {
 		// Get current line
 		const unsigned int cl = m_lines.GetCurrentLine();
@@ -7137,6 +7125,7 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 		RawDelete(start, end);
 		end = start;
 	}
+
 	SetPos(end);
 
 	{

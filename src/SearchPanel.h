@@ -16,8 +16,8 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/panel.h>
-	#include <wx/string.h>
+#include <wx/panel.h>
+#include <wx/string.h>
 #endif
 
 #include "FindFlags.h"
@@ -96,7 +96,6 @@ private:
 	wxCheckBox* checkMatchcase;
 	wxStaticText* commandResults;
 
-
 	// Member variables (user settings)
 	wxString m_searchText;
 	bool m_use_regex;
@@ -109,4 +108,4 @@ private:
 	eSettings& m_settings;
 };
 
-#endif // __SEARCHPANEL_H__
+#endif

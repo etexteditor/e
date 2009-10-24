@@ -52,17 +52,17 @@
 // Embedded class: Sort list based on bundle
 class CompareActionBundle : public binary_function<size_t, size_t, bool> {
 public:
-        CompareActionBundle(const vector<const tmAction*>& actionList) : m_list(actionList) {};
-        bool operator() (const size_t a1, const size_t a2) const {
-                return m_list[a1]->bundle > m_list[a2]->bundle;
-        }
+	CompareActionBundle(const vector<const tmAction*>& actionList) : m_list(actionList) {};
+	bool operator() (const size_t a1, const size_t a2) const {
+		return m_list[a1]->bundle > m_list[a2]->bundle;
+	}
 private:
-        const vector<const tmAction*>& m_list;
+	 const vector<const tmAction*>& m_list;
 };
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
-// id's
+// Ids
 enum {
 	TIMER_FOLDTOOLTIP = 100,
 	ID_LEFTSCROLL
@@ -7798,18 +7798,7 @@ void EditorCtrl::DoHorizontalWheelScroll(wxMouseEvent& event) {
 	}
 }
 
-void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
-	// Only scroll if we're within bounds of the editor...
-	const wxSize& my_size = this->GetSize();
-	const wxPoint& where = event.GetPosition();
-
-	if ((where.x < 0) || (where.y < 0) || 
-		(where.x > my_size.GetWidth()) || (where.y > my_size.GetHeight()))
-	{
-		event.Skip(true);
-		return;
-	}
-
+void EditorCtrl::ProcessMouseWheel(wxMouseEvent& event) {
 	if (event.ShiftDown()) {
 		// Only handle scrollwheel if we have a scrollbar
 		if (GetScrollThumb(wxHORIZONTAL))
@@ -7820,6 +7809,26 @@ void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
 		if (HasScrollbar())
 			DoVerticalWheelScroll(event);
 	}
+}
+
+void EditorCtrl::OnMouseWheel(wxMouseEvent& event) {
+	// If the EditorCtrl is focused, only handle the event directly if happens within the bounds
+	// of the editor control. Otherwise, let if float up to the EditorFrame.
+
+	// The EditorFrame may float the event back down, but it will do so by
+	// calling EditorCtrl::ProcessMouseWheel directly.
+
+	const wxSize& my_size = this->GetSize();
+	const wxPoint& where = event.GetPosition();
+
+	if ((where.x < 0) && (where.y < 0) && 
+		(where.x > my_size.GetWidth()) && (where.y > my_size.GetHeight()))
+	{
+		ProcessMouseWheel(event);
+		return;
+	}
+
+	event.Skip(true);
 }
 
 void EditorCtrl::SetScroll(unsigned int ypos) {

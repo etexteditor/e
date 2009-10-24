@@ -464,7 +464,10 @@ private:
 	//void OnMenuHighlightUsers(wxCommandEvent& event);
 	//void OnMenuDocOpen(wxCommandEvent& event);
 	//void OnMenuDocShare(wxCommandEvent& event);
+public:
 	void OnMouseWheel(wxMouseEvent& event);
+
+private:
 	DECLARE_EVENT_TABLE();
 
 	// Static Notification handlers

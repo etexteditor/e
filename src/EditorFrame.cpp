@@ -3853,7 +3853,6 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 }
 
 void EditorFrame::OnMouseWheel(wxMouseEvent& event) {
-//	wxLogDebug(_("Mouse wheel (EditorFrame)"));
-// TODO: If no one handled it, see if we're hovered over the project pane, and scroll that.
-	event.Skip(true);
+	// If no one else handled the event, send it to the editor.
+	this->editorCtrl->ProcessMouseWheel(event);
 }

@@ -4994,62 +4994,68 @@ cxFindResult EditorCtrl::Find(const wxString& text, int options) {
 }
 
 cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
-	int start_pos;
+	unsigned int start_pos;
 	if (options & FIND_RESTART) start_pos = m_searchRanges.empty() ? 0 : m_searchRanges[0].start;
-	else {
-		if (m_lines.IsSelected()) {
-			const interval& iv = m_lines.GetSelections().back();
-			start_pos = iv.end;
+	else if (m_lines.IsSelected()) {
+		const interval& iv = m_lines.GetSelections().back();
+		start_pos = iv.end;
 
-			// Avoid hitting same zero-length selection
-			if (iv.start == iv.end) {
-				++start_pos;
-				if (start_pos > (int)m_lines.GetLength()) return cxNOT_FOUND;
-			}
+		// Avoid hitting same zero-length selection
+		if (iv.start == iv.end) {
+			++start_pos;
+			if (start_pos > (int)m_lines.GetLength()) return cxNOT_FOUND;
 		}
-		else start_pos = m_lines.GetPos();
 	}
+	else start_pos = m_lines.GetPos();
 
 	cxFindResult result = cxNOT_FOUND;
 	if (DoFind(text, start_pos, options)) result = cxFOUND;
 
 	if (result == cxNOT_FOUND && start_pos > 0) {
 		// Restart search from top
-		const unsigned int start_pos = m_searchRanges.empty() ? 0 : m_searchRanges[0].start;
+		start_pos = m_searchRanges.empty() ? 0 : m_searchRanges[0].start;
 		if (DoFind(text, start_pos, options)) result = cxFOUND_AFTER_RESTART;
 	}
 
 	// Make sure that next search has the new starting point
 	// (no selection if invalid pattern)
-	if (result != cxNOT_FOUND && IsSelected()) {
+	if (result != cxNOT_FOUND && IsSelected())
 		m_lines.SetLastpos(m_lines.GetSelections()[0].start);
-	}
 
 	return result;
 }
 
-bool EditorCtrl::FindPrevious(const wxString& text, int options) {
-	int start_pos;
-	if (options & FIND_RESTART) start_pos = m_searchRanges.empty() ? 0 : m_searchRanges.back().end;
-	else {
-		if (m_lines.IsSelected()) {
-			const interval& iv = m_lines.GetSelections()[0];
-			start_pos  = iv.start;
+cxFindResult EditorCtrl::FindPrevious(const wxString& text, int options) {
+	unsigned int start_pos;
+	if (options & FIND_RESTART) start_pos = m_searchRanges.empty() ? m_lines.GetLength() : m_searchRanges.back().end;
+	else if (m_lines.IsSelected()) {
+		const interval& iv = m_lines.GetSelections()[0];
+		start_pos  = iv.start;
 
-			// Avoid hitting same zero-length selection
-			if (iv.start == iv.end) {
-				if (start_pos == 0) return false;
-				--start_pos;
+		// Avoid hitting same zero-length selection
+		if (iv.start == iv.end) {
+			if (start_pos == 0) {
+				return cxNOT_FOUND;
 			}
+			--start_pos;
 		}
-		else start_pos = m_lines.GetPos();
 	}
+	else start_pos = m_lines.GetPos();
 
-	const bool result = DoFind(text, start_pos, options, false);
+	cxFindResult result = cxNOT_FOUND;
+	if (DoFind(text, start_pos, options, false)) result = cxFOUND;
+
+	if (result == cxNOT_FOUND && start_pos == 0) {
+		// Restart search from bottom
+		start_pos = m_searchRanges.empty() ? m_lines.GetLength() : m_searchRanges.back().end;
+		if (DoFind(text, start_pos, options, false)) result = cxFOUND_AFTER_RESTART;
+	}
 
 	// Make sure that next search has the new starting point
 	// (no selection if invalid pattern)
-	if (result && IsSelected()) m_lines.SetLastpos(m_lines.GetSelections()[0].start);
+	if (result != cxNOT_FOUND && IsSelected())
+		m_lines.SetLastpos(m_lines.GetSelections()[0].end);
+
 	return result;
 }
 
@@ -5834,9 +5840,9 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 		Insert(wxString::Format(wxT("\tunicode: %x\n"), event.GetUnicodeKey()));
 	}
 
-	int key = event.GetKeyCode();
-	unsigned int pos;
+	const int key = event.GetKeyCode();
 	const unsigned int oldpos = m_lines.GetPos();
+	unsigned int pos; // Used within several cases, and a case doesn't define a scope, so declare here.
 
 	// If the cursor is positioned outside of the innermost bracket pair, then
 	// we toss our nested bracket pair information.
@@ -5853,9 +5859,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	const wxChar c = event.GetUnicodeKey();
 // FIXME - is this needed (or it's just for speed?)
 #ifdef __WXMSW__
-	if ((unsigned int)c > 127) {
-		InsertChar(c);
-	}
+	if ((unsigned int)c > 127) InsertChar(c);
 	else 
 #endif
 	{
@@ -5868,8 +5872,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case 11: // Ctrl-K
-				if (event.ShiftDown()) DelCurrentLine(false);
-				else DelCurrentLine(true);
+				DelCurrentLine(!event.ShiftDown());
 				break;
 
 			case 16: // Ctrl-P
@@ -5885,10 +5888,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_SPACE: // Ctrl-space
-				/*if (m_lines.GetLastpos() != m_lines.GetPos()) {
-					m_lines.RemoveAllSelections();
-					m_lines.AddSelection(m_lines.GetLastpos(), m_lines.GetPos());
-				}*/
 				DoCompletion();
 				break;
 

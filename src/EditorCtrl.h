@@ -136,7 +136,7 @@ public:
 
 	// Drawing & Layout
 	void EnableRedraw(bool enable) {m_enableDrawing = enable;};
-	void ReDraw();
+	inline void ReDraw(){DrawLayout();}
 	bool Show(bool show);
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);

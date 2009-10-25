@@ -1216,8 +1216,8 @@ wxString EditorCtrl::GetLineIndent(unsigned int lineid) {
 	if (lineid == 0 && GetLength() == 0) return wxEmptyString;
 	wxASSERT(lineid < m_lines.GetLineCount());
 
-	const unsigned int linestart = m_lines.GetLineStartpos(lineid);
-	const unsigned int lineend = m_lines.GetLineEndpos(lineid, false);
+	unsigned int linestart, lineend;
+	m_lines.GetLineExtent(lineend, linestart, lineend);
 	if (linestart == lineend) return wxEmptyString;
 
 	wxString indent;
@@ -1240,8 +1240,8 @@ unsigned int EditorCtrl::GetLineIndentLevel(unsigned int lineid) {
 	if (lineid == 0 && GetLength() == 0) return 0;
 	wxASSERT(lineid < m_lines.GetLineCount());
 
-	const unsigned int linestart = m_lines.GetLineStartpos(lineid);
-	const unsigned int lineend = m_lines.GetLineEndpos(lineid, false);
+	unsigned int linestart, lineend;
+	m_lines.GetLineExtent(lineend, linestart, lineend);
 	if (linestart == lineend) return 0;
 
 	unsigned int indent = 0;
@@ -1293,8 +1293,8 @@ unsigned int EditorCtrl::GetLineIndentPos(unsigned int lineid) {
 	if (lineid == 0 && GetLength() == 0) return 0;
 	wxASSERT(lineid < m_lines.GetLineCount());
 
-	const unsigned int linestart = m_lines.GetLineStartpos(lineid);
-	const unsigned int lineend = m_lines.GetLineEndpos(lineid, false);
+	unsigned int linestart, lineend;
+	m_lines.GetLineExtent(lineend, linestart, lineend);
 	if (linestart == lineend) return 0;
 
 	cxLOCKDOC_READ(m_doc)
@@ -3539,8 +3539,8 @@ void EditorCtrl::SelectLines(const vector<unsigned int>& sel_lines) {
 
 	// select the lines (consequtive lines as one selection)
 	for (vector<unsigned int>::const_iterator i = sel_lines.begin(); i != sel_lines.end(); ++i) {
-		unsigned int linestart = m_lines.GetLineStartpos(*i);
-		unsigned int lineend = m_lines.GetLineEndpos(*i, false);
+		unsigned int linestart, lineend;
+		m_lines.GetLineExtent(*i, linestart, lineend);
 
 		if (i > sel_lines.begin() && *i == lastline+1 && sel != -1) {
 			m_lines.UpdateSelection(sel, firststart, lineend);
@@ -4258,8 +4258,8 @@ void EditorCtrl::OnCopy() {
 		// Copy line
 		const unsigned int line_id = m_lines.GetCurrentLine();
 		if (!m_lines.isLineVirtual(line_id)) {
-			const unsigned int startpos = m_lines.GetLineStartpos(line_id);
-			const unsigned int endpos = m_lines.GetLineEndpos(line_id, false); // include newline
+			unsigned int startpos, endpos;
+			m_lines.GetLineExtent(line_id, startpos, endpos);
 			copytext = GetText(startpos, endpos);
 		}
 	}
@@ -4324,8 +4324,8 @@ void EditorCtrl::OnCut() {
 	if (!m_lines.IsSelected()) {
 		// Select current line 
 		const unsigned int cl = m_lines.GetCurrentLine();
-		const unsigned int start = m_lines.GetLineStartpos(cl);
-		const unsigned int end = m_lines.GetLineEndpos(cl, false);
+		unsigned int start, end;
+		m_lines.GetLineExtent(cl, start, end);
 		m_lines.AddSelection(start, end);
 
 		if (m_lines.IsLineEmpty(cl)) doCopy = false; // don't copy empty line
@@ -4576,14 +4576,14 @@ void EditorCtrl::SelectLine(unsigned int line_id, bool multiselect) {
 
 	// Select the line
 	if (!m_lines.isLineVirtual(line_id)) {
-		const unsigned int startpos = m_lines.GetLineStartpos(line_id);
-		const unsigned int endpos = m_lines.GetLineEndpos(line_id, false); // include newline
+		unsigned int start, end;
+		m_lines.GetLineExtent(line_id, start, end);
 
 		m_selMode = SEL_LINE;
-		m_sel_start = startpos;
-		m_sel_end = endpos;
-		m_currentSel = m_lines.AddSelection(startpos, endpos);
-		m_lines.SetPos(endpos);
+		m_sel_start = start;
+		m_sel_end = end;
+		m_currentSel = m_lines.AddSelection(start, end);
+		m_lines.SetPos(end);
 	}
 }
 
@@ -7104,8 +7104,7 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 	else {
 		// Get current line
 		const unsigned int cl = m_lines.GetCurrentLine();
-		start = m_lines.GetLineStartpos(cl);
-		end = m_lines.GetLineEndpos(cl, false);
+		m_lines.GetLineExtent(cl, start, end);
 	}
 
 	if (start < end) {
@@ -7393,8 +7392,8 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 				// Extend selection one line at a time
 				const unsigned int line_id = m_lines.GetCurrentLine();
 				if (!m_lines.isLineVirtual(line_id)) {
-					const unsigned int linestart = m_lines.GetLineStartpos(line_id);
-					const unsigned int lineend = m_lines.GetLineEndpos(line_id, false); // include newline
+					unsigned int linestart, lineend;
+					m_lines.GetLineExtent(line_id, linestart, lineend);
 
 					const unsigned int sel_start = wxMin(m_sel_start, (int)linestart);
 					const unsigned int sel_end = wxMax(m_sel_end, (int)lineend);

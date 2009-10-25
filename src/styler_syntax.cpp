@@ -457,8 +457,7 @@ void Styler_Syntax::DoSearch(unsigned int start, unsigned int end, unsigned int 
 	SearchInfo si;
 	si.pos = start;
 	si.line_id = m_lines.GetLineFromCharPos(start);
-	si.lineStart = m_lines.GetLineStartpos(si.line_id);
-	si.lineEnd = m_lines.GetLineEndpos(si.line_id, false);
+	m_lines.GetLineExtent(si.line_id, si.lineStart, si.lineEnd);
 	cxLOCKDOC_READ(m_doc)
 		doc.GetTextPart(si.lineStart, si.lineEnd, si.line);
 	cxENDLOCK

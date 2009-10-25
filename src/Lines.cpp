@@ -293,7 +293,6 @@ bool Lines::IsAtTabPoint(){
 	if (pos != ll->end(posline) || (pos == ll->length() && !NewlineTerminated)) {
 		// Get position in line
 		SetLine(posline);
-
 		return line.IsTabPos(pos - ll->offset(posline));
 	}
 
@@ -301,11 +300,10 @@ bool Lines::IsAtTabPoint(){
 }
 
 int Lines::GetCurrentLine() {
-	if (ll->size() == 0) return 0; // WARNING: This line do not exist yet
-
-	unsigned int lineid = GetLineFromCharPos(pos);
+	if (ll->size() == 0) return 0; // WARNING: This line does not exist yet
 
 	// Notice that this can return the last (virtual) line
+	unsigned int lineid = GetLineFromCharPos(pos);
 	return lineid;
 }
 
@@ -314,13 +312,12 @@ unsigned int Lines::GetLineStartpos(unsigned int lineid) {
 
 	if (ll->size() == 0) return 0;
 
-	if (lineid > ll->last()) {
+	if (lineid <= ll->last()) return ll->offset(lineid);
+	else {
 		// last (virtual) line
 		wxASSERT(lineid == ll->size() && NewlineTerminated);
 		return ll->length();
 	}
-	
-	return ll->offset(lineid);
 }
 
 unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
@@ -331,16 +328,33 @@ unsigned int Lines::GetLineEndpos(unsigned int lineid, bool stripnewline) {
 	if (stripnewline) {
 		// We want the pos right before the newline
 		if (lineid == ll->last() && !NewlineTerminated) return ll->length();
-		if (lineid > ll->last()) return ll->length();
-		return ll->end(lineid)-1;
+		else if (lineid > ll->last()) return ll->length();
+		else return ll->end(lineid)-1;
 	}
 
-	if (lineid > ll->last()) {
+	if (lineid <= ll->last()) return ll->end(lineid);
+	else {
 		wxASSERT(lineid == ll->size() && NewlineTerminated);
 		return ll->length();
 	}
+}
 
-	return ll->end(lineid);
+void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end) {
+	wxASSERT(0 <= lineid && lineid <= ll->size());
+	if (ll->size() == 0) {
+		start = end = 0;
+		return;
+	}
+
+	if ( ll->last() < lineid) {
+		// last (virtual) line
+		wxASSERT(lineid == ll->size() && NewlineTerminated);
+		start = end = ll->length();
+		return;
+	}
+
+	start = ll->offset(lineid);
+	end = ll->end(lineid);
 }
 
 bool Lines::isLineVirtual(unsigned int lineid) {
@@ -498,8 +512,8 @@ bool Lines::IsSelectionMultiline() {
 }
 
 int Lines::AddSelection(unsigned int start, unsigned int end) {
-	wxASSERT(start >= 0 && start <= GetLength());
-	wxASSERT(end >= 0 && end <= GetLength());
+	wxASSERT(0 <= start && start <= GetLength());
+	wxASSERT(0 <= end && end <= GetLength());
 	//wxASSERT(start != end || m_isSelShadow);
 
 	interval iv(start, end);

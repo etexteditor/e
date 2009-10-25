@@ -61,6 +61,8 @@ public:
 	unsigned int GetLineEndFromPos(unsigned int pos);
 	unsigned int GetLineStartFromPos(unsigned int pos);
 	unsigned int GetLineEndpos(unsigned int lineid, bool stripnewline = true);
+	void GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int& end); //equiv to "stripnewline = false"
+
 	unsigned int GetLineStartpos(unsigned int lineid);
 	bool isLineVirtual(unsigned int lineid);
 	bool IsLineEnd(unsigned int pos);

@@ -952,6 +952,14 @@
 				RelativePath="EditorFrame.h"
 				>
 			</File>
+			<File
+				RelativePath=".\ReplaceStringParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ReplaceStringParser.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Project"

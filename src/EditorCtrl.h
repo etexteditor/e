@@ -375,25 +375,6 @@ protected:
 	virtual void UpdateParentPanels();
 
 private:
-	// Classes
-	class RepParseState {
-	public:
-		RepParseState(const wxString& reptext, const map<unsigned int,interval>& caps, const vector<char>* source=NULL):
-			replacetext(reptext), captures(caps), source(source), upcase(false), lowcase(false), caseChar(false), caseText(false)
-		{
-			newtext.reserve(replacetext.size());
-		};
-		// member variables
-		const wxString& replacetext;
-		const map<unsigned int,interval>& captures;
-		const vector<char>* source;
-		wxString newtext;
-		bool upcase;
-		bool lowcase;
-		bool caseChar;
-		bool caseText;
-	};
-
 	// Embedded class: DragDropTarget
 	class DragDropTarget : public wxDropTarget {
 	public:
@@ -497,7 +478,6 @@ protected:
 	wxString GetCurrentLine();
 
 	bool DoFind(const wxString& text, unsigned int start_pos, int options=0, bool dir_forward = true);
-	void DoRepParse(RepParseState& state, const wxChar* start, const wxChar* end) const;
 
 	void GetCompletionMatches(interval wordIv, wxArrayString& result, bool precharbase) const;
 

@@ -375,21 +375,6 @@ protected:
 	virtual void UpdateParentPanels();
 
 private:
-	// Embedded class: DragDropTarget
-	class DragDropTarget : public wxDropTarget {
-	public:
-		DragDropTarget(EditorCtrl& parent);
-		wxDragResult OnDragOver(wxCoord x, wxCoord y, wxDragResult def);
-		wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def);
-
-	private:
-		EditorCtrl& m_parent;
-		wxFileDataObject* m_fileObject;
-		wxTextDataObject* m_textObject;
-		MultilineDataObject* m_columnObject;
-		wxDataObjectComposite* m_dataObject;
-	};
-
 	// Event handlers
 	void OnPaint(wxPaintEvent& event);
 	void OnChar(wxKeyEvent& event);

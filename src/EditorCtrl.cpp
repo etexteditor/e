@@ -62,6 +62,24 @@ private:
 	 const vector<const tmAction*>& m_list;
 };
 
+class DragDropTarget : public wxDropTarget {
+public:
+	DragDropTarget(EditorCtrl& parent);
+	wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def);
+	wxDragResult OnDragOver(wxCoord x, wxCoord y, wxDragResult def) {
+		m_parent.OnDragOver(x, y);
+		return def;
+	}
+
+private:
+	EditorCtrl& m_parent;
+	wxFileDataObject* m_fileObject;
+	wxTextDataObject* m_textObject;
+	MultilineDataObject* m_columnObject;
+	wxDataObjectComposite* m_dataObject;
+};
+
+
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
 // Ids
@@ -9020,7 +9038,7 @@ void EditorCtrl::TestMilestones() {
 
 // -- Editor DragDropTarget -----------------------------------------------------------------
 
-EditorCtrl::DragDropTarget::DragDropTarget(EditorCtrl& parent) : m_parent(parent) {
+DragDropTarget::DragDropTarget(EditorCtrl& parent) : m_parent(parent) {
 	m_fileObject = new wxFileDataObject;
 	m_textObject = new wxTextDataObject;
 	m_columnObject = new MultilineDataObject;
@@ -9033,12 +9051,7 @@ EditorCtrl::DragDropTarget::DragDropTarget(EditorCtrl& parent) : m_parent(parent
 	SetDataObject(m_dataObject);
 }
 
-wxDragResult EditorCtrl::DragDropTarget::OnDragOver(wxCoord x, wxCoord y, wxDragResult def) {
-	m_parent.OnDragOver(x, y);
-	return def;
-}
-
-wxDragResult EditorCtrl::DragDropTarget::OnData(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), wxDragResult def) {
+wxDragResult DragDropTarget::OnData(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), wxDragResult def) {
 	// Copy the data from the drag source to our data object
 	GetData();
 

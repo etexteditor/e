@@ -19,8 +19,7 @@ void InplaceConvertCRLFtoLF(wxString& text) {
 	if (lastPos < text.size()) newtext += text.substr(lastPos, text.size() - lastPos);
 	text.swap(newtext);
 }
-#endif // __WXMSW__
-
+#endif
 
 int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2)
 {
@@ -78,7 +77,6 @@ wxString URLDecode(const wxString &value) {
 
 	return szDecoded;
 }
-
 
 
 // ===========================================================================

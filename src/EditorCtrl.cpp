@@ -50,6 +50,13 @@
 // Document Icons
 #include "document.xpm"
 
+inline bool Isalnum(wxChar c) {
+#ifdef __WXMSW__
+	return ::IsCharAlphaNumeric(c) != 0;
+#else
+	return wxIsalnum(c);
+#endif
+}
 
 // Embedded class: Sort list based on bundle
 class CompareActionBundle : public binary_function<size_t, size_t, bool> {

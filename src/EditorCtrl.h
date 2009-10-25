@@ -16,7 +16,7 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #include <wx/dnd.h>
@@ -510,15 +510,6 @@ protected:
 
 	// Commands
 	bool cmd_Undo(int count, vector<int>& cStack, bool end=false);
-
-	// Utility functions
-	static bool Isalnum(wxChar c) {
-#ifdef __WXMSW__
-			return ::IsCharAlphaNumeric(c) != 0;
-#else
-			return wxIsalnum(c);
-#endif // __WXMSW__
-	};
 
 	// Tests
 #ifdef __WXDEBUG__

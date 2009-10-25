@@ -6222,8 +6222,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					// Check if we are at a soft tabpoint
 					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
 					if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
-						&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth)) {
-
+						&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
+					{
 						Delete(pos, pos + tabWidth);
 					}
 					else {
@@ -6301,7 +6301,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					}
 
 					if (pos == 0) return; // Can't delete at start of text
-
 
 					unsigned int prevpos;
 					wxChar prevchar;
@@ -6457,7 +6456,6 @@ bool EditorCtrl::cmd_Undo(int WXUNUSED(count), vector<int>& cStack, bool end) {
 		if (end) return false;
 
 		int action = cStack.back();
-
 		int currentVersion = doc.GetVersionID();
 
 		if(action == WXK_UP || action == 26) {
@@ -6492,7 +6490,7 @@ bool EditorCtrl::cmd_Undo(int WXUNUSED(count), vector<int>& cStack, bool end) {
 				vector<int> childlist;
 				doc.GetVersionChildren(doc.GetDraftParent(currentVersion).version_id, childlist);
 				vector<int>::const_iterator idx = find(childlist.begin(), childlist.end(), currentVersion);
-				if (idx < childlist.end()-1) {
+				if (idx < childlist.end() - 1) {
 					const doc_id di(DRAFT, doc.GetDocumentID(), *(idx+1));
 					SetDocument(di);
 				}
@@ -6500,8 +6498,7 @@ bool EditorCtrl::cmd_Undo(int WXUNUSED(count), vector<int>& cStack, bool end) {
 		}
 	cxENDLOCK
 
-	if (end) return false;
-	else return true;
+	return !end;
 }
 
 void EditorCtrl::SetPos(unsigned int pos) {
@@ -6704,9 +6701,8 @@ void EditorCtrl::CursorWordLeft(bool select) {
 
 		// Check if we are moving over a fold
 		unsigned int fold_start;
-		if (IsPosInFold(pos, &fold_start)) {
+		if (IsPosInFold(pos, &fold_start))
 			pos = fold_start;
-		}
 
 		m_lines.SetPos(pos);
 
@@ -6742,17 +6738,14 @@ void EditorCtrl::CursorWordRight(bool select) {
 
 	// Check if we are moving over a fold
 	unsigned int fold_end;
-	if (IsPosInFold(pos, NULL, &fold_end)) {
+	if (IsPosInFold(pos, NULL, &fold_end))
 		pos = fold_end;
-	}
 
 	m_lines.SetPos(pos);
 
 	// Handle selection
 	if (!select) m_lines.RemoveAllSelections(true, pos);
-	else if (oldpos != pos) {
-		SelectFromMovement(oldpos, pos);
-	}
+	else if (oldpos != pos) SelectFromMovement(oldpos, pos);
 }
 
 void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible) {
@@ -6882,9 +6875,7 @@ void EditorCtrl::MakeSelectionVisible(unsigned int sel_id) {
 	const wxSize clientsize = GetClientSize();
 
 	// Vertically
-	if (sel_start.y < scrollPos) {
-		scrollPos = sel_start.y;
-	}
+	if (sel_start.y < scrollPos) scrollPos = sel_start.y;
 	else {
 		const int lineheight = m_lines.GetLineHeight();
 		if (sel_end.y + lineheight >= scrollPos + clientsize.y) {

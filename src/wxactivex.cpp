@@ -226,9 +226,8 @@ wxActiveX::~wxActiveX()
 	{
 		wxOleConnectionPoint& cp = it->first;
 		cp->Unadvise(it->second);
-
 		it++;
-	};
+	}
 	m_connections.clear();
 
     if (m_oleInPlaceObject.Ok())
@@ -236,7 +235,6 @@ wxActiveX::~wxActiveX()
 		m_oleInPlaceObject->InPlaceDeactivate();
 		m_oleInPlaceObject->UIDeactivate();
 	}
-
 
 	if (m_oleObject.Ok())
 	{
@@ -251,9 +249,7 @@ wxActiveX::~wxActiveX()
 
 void wxActiveX::UIDeactivate() {
 	if (m_oleInPlaceObject.Ok())
-	{
 		m_oleInPlaceObject->UIDeactivate();
-	}
 }
 
 void wxActiveX::CreateActiveX(REFCLSID clsid)
@@ -300,7 +296,6 @@ void wxActiveX::CreateActiveX(REFCLSID clsid)
 	OleSetContainedObject(m_oleObject, TRUE);
     OleRun(m_oleObject);
 
-
     // Get IOleInPlaceObject interface
 	hret = m_oleInPlaceObject.QueryInterface(IID_IOleInPlaceObject, m_ActiveX);
 	wxASSERT(SUCCEEDED(hret));
@@ -314,7 +309,6 @@ void wxActiveX::CreateActiveX(REFCLSID clsid)
     if (dwMiscStatus & OLEMISC_SETCLIENTSITEFIRST)
 		m_oleObject->SetClientSite(m_clientSite);
 
-
     // stream init
     wxAutoOleInterface<IPersistStreamInit>
 		pPersistStreamInit(IID_IPersistStreamInit, m_oleObject);
@@ -323,11 +317,10 @@ void wxActiveX::CreateActiveX(REFCLSID clsid)
     {
         hret = pPersistStreamInit->InitNew();
         WXOLE_WARN(hret, "CreateActiveX::pPersistStreamInit->InitNew()");
-    };
+    }
 
     if (! (dwMiscStatus & OLEMISC_SETCLIENTSITEFIRST))
 		m_oleObject->SetClientSite(m_clientSite);
-
 
 	int w, h;
 	GetClientSize(&w, &h);
@@ -345,8 +338,7 @@ void wxActiveX::CreateActiveX(REFCLSID clsid)
 	    WXOLE_WARN(hret, "m_oleInPlaceObject->GetWindow(&m_oleObjectHWND)");
         if (SUCCEEDED(hret))
 	        ::SetActiveWindow(m_oleObjectHWND);
-    };
-
+    }
 
     if (! (dwMiscStatus & OLEMISC_INVISIBLEATRUNTIME))
     {
@@ -355,13 +347,13 @@ void wxActiveX::CreateActiveX(REFCLSID clsid)
 
 		hret = m_oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL, m_clientSite, 0, (HWND)GetHWND(), &posRect);
         hret = m_oleObject->DoVerb(OLEIVERB_SHOW, 0, m_clientSite, 0, (HWND)GetHWND(), &posRect);
-    };
+    }
 
 	if (! m_oleObjectHWND && m_oleInPlaceObject.Ok())
 	{
 		hret = m_oleInPlaceObject->GetWindow(&m_oleObjectHWND);
 		WXOLE_WARN(hret, "m_oleInPlaceObject->GetWindow(&m_oleObjectHWND)");
-	};
+	}
 
 	if (m_oleObjectHWND)
 	{
@@ -372,7 +364,7 @@ void wxActiveX::CreateActiveX(REFCLSID clsid)
         wxSizeEvent szEvent;
         szEvent.m_size = wxSize(w, h) ;
 		AddPendingEvent(szEvent);
-	};
+	}
 }
 
 void wxActiveX::CreateActiveX(LPOLESTR progId)
@@ -408,10 +400,10 @@ const wxEventType& RegisterActiveXEvent(const wxChar *eventName)
         (*sgp_NamedEventMap)[ev] = et;
 
         return *et;
-    };
+    }
 
     return *(it->second);
-};
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -434,14 +426,13 @@ const wxEventType& RegisterActiveXEvent(DISPID event)
         sg_dispIdEventMap[event] = et;
 
         return *et;
-    };
+    }
 
     return *(it->second);
 };
 
 // one off class for automatic freeing of activeX eventtypes
-class ActiveXEventMapFlusher
-{
+class ActiveXEventMapFlusher {
 public:
     ~ActiveXEventMapFlusher()
     {
@@ -502,7 +493,7 @@ VARTYPE wxTypeToVType(const wxVariant& v)
         return VT_VOID | VT_BYREF;
     else
         return VT_NULL;
-};
+}
 
 bool wxDateTimeToDATE(wxDateTime dt, DATE& d)
 {
@@ -517,12 +508,12 @@ bool wxDateTimeToDATE(wxDateTime dt, DATE& d)
 	st.wSecond = dt.GetSecond();
 	st.wMilliseconds = dt.GetMillisecond();
 	return SystemTimeToVariantTime(&st, &d) != FALSE;
-};
+}
 
 bool wxDateTimeToVariant(wxDateTime dt, VARIANTARG& va)
 {
 	return wxDateTimeToDATE(dt, va.date);
-};
+}
 
 bool DATEToWxDateTime(DATE date, wxDateTime& dt)
 {
@@ -537,7 +528,7 @@ bool DATEToWxDateTime(DATE date, wxDateTime& dt)
         st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
 	return true;
-};
+}
 
 bool VariantToWxDateTime(VARIANTARG va, wxDateTime& dt)
 {
@@ -546,7 +537,7 @@ bool VariantToWxDateTime(VARIANTARG va, wxDateTime& dt)
         return false;
 
 	return DATEToWxDateTime(va.date, dt);
-};
+}
 
 bool MSWVariantToVariant(VARIANTARG& va, wxVariant& vx)
 {
@@ -560,8 +551,7 @@ bool MSWVariantToVariant(VARIANTARG& va, wxVariant& vx)
 	{
 		byRef = true;
 		vt &= ~(VT_BYREF);
-	};
-
+	}
 
     switch(vt)
     {
@@ -575,7 +565,7 @@ bool MSWVariantToVariant(VARIANTARG& va, wxVariant& vx)
 			bool rc = MSWVariantToVariant(tmp, vx);
 			VariantClear(&tmp);
 			return rc;
-		};
+		}
 
 	// 1 byte chars
 	case VT_I1:
@@ -646,7 +636,7 @@ bool MSWVariantToVariant(VARIANTARG& va, wxVariant& vx)
 
 			vx = d;
 			return SUCCEEDED(hr);
-		};
+		}
 
 	case VT_DATE:
 		{
@@ -658,7 +648,7 @@ bool MSWVariantToVariant(VARIANTARG& va, wxVariant& vx)
 				rc = VariantToWxDateTime(va, dt);
 			vx = dt;
 			return rc;
-		};
+		}
 
     case VT_BSTR:
 		if (byRef)
@@ -684,7 +674,7 @@ bool MSWVariantToVariant(VARIANTARG& va, wxVariant& vx)
     default:
         vx.MakeNull();
         return false;
-    };
+    }
 };
 
 bool VariantToMSWVariant(const wxVariant& vx, VARIANTARG& va)
@@ -699,7 +689,7 @@ bool VariantToMSWVariant(const wxVariant& vx, VARIANTARG& va)
 	{
 		byRef = true;
 		vt &= ~(VT_BYREF);
-	};
+	}
 
     switch(vt)
     {
@@ -710,7 +700,7 @@ bool VariantToMSWVariant(const wxVariant& vx, VARIANTARG& va)
 		{
 			va.vt = wxTypeToVType(vx);
 			return VariantToMSWVariant(vx, va);
-		};
+		}
 
 	// 1 byte chars
 	case VT_I1:
@@ -804,15 +794,14 @@ bool VariantToMSWVariant(const wxVariant& vx, VARIANTARG& va)
 
     default:
         return false;
-    };
-};
+    }
+}
 
 
 class wxActiveXEvents : public IDispatch
 {
 private:
     DECLARE_OLE_UNKNOWN(wxActiveXEvents);
-
 
     wxActiveX	*m_activeX;
 	IID			m_customId;
@@ -823,9 +812,7 @@ private:
 public:
     wxActiveXEvents(wxActiveX *ax) : m_activeX(ax), m_haveCustomId(false) {}
 	wxActiveXEvents(wxActiveX *ax, REFIID iid) : m_activeX(ax), m_haveCustomId(true), m_customId(iid) {}
-	virtual ~wxActiveXEvents()
-    {
-    }
+	virtual ~wxActiveXEvents(){}
 
 	//IDispatch
 	STDMETHODIMP GetIDsOfNames(REFIID WXUNUSED(r), OLECHAR** WXUNUSED(o), unsigned int WXUNUSED(i), LCID WXUNUSED(l), DISPID* WXUNUSED(d))
@@ -842,7 +829,6 @@ public:
 	{
         return E_NOTIMPL;
     };
-
 
     void DispatchEvent(wxActiveX::FuncX &func, const wxEventType& eventType, DISPPARAMS * pDispParams)
     {
@@ -867,8 +853,8 @@ public:
                 vx.SetName(px.name);
                 MSWVariantToVariant(va, vx);
                 event.m_params.Append(vx);
-            };
-        };
+            }
+        }
 
 		if (func.hasOut)
 		{
@@ -884,8 +870,8 @@ public:
 					wxVariant& vx = event.m_params[nArg - i - 1];
 
 					VariantToMSWVariant(vx, va);
-				};
-			};
+				}
+			}
 		}
 		else
     		m_activeX->AddPendingEvent(event);
@@ -922,7 +908,7 @@ public:
             // Dispatch Event
             DispatchEvent(func, *(dit->second), pDispParams);
         	return S_OK;
-        };
+        }
 
         // try named event
         if (sgp_NamedEventMap)
@@ -946,10 +932,10 @@ bool wxActiveXEventsInterface(wxActiveXEvents *self, REFIID iid, void **_interfa
     	*_interface = (IUnknown *) (IDispatch *) self;
     	desc = "Custom Dispatch Interface";
         return true;
-    };
+    }
 
 	return false;
-};
+}
 
 DEFINE_OLE_TABLE(wxActiveXEvents)
 	OLE_IINTERFACE(IUnknown)
@@ -960,35 +946,32 @@ END_OLE_TABLE;
 wxString wxActiveXEvent::EventName()
 {
     return m_params.GetName();
-};
+}
 
-int wxActiveXEvent::ParamCount() const
+size_t wxActiveXEvent::ParamCount() const
 {
     return m_params.GetCount();
-};
+}
 
-wxString wxActiveXEvent::ParamType(int idx)
+wxString wxActiveXEvent::ParamType(unsigned int idx)
 {
-    wxASSERT(idx >= 0 && idx < m_params.GetCount());
-
+    wxASSERT(0 <= idx && idx < m_params.GetCount());
     return m_params[idx].GetType();
-};
+}
 
-wxString wxActiveXEvent::ParamName(int idx)
+wxString wxActiveXEvent::ParamName(unsigned int idx)
 {
-    wxASSERT(idx >= 0 && idx < m_params.GetCount());
-
+    wxASSERT(0 <= idx && idx < m_params.GetCount());
     return m_params[idx].GetName();
-};
+}
 
 static wxVariant nullVar;
 
-wxVariant& wxActiveXEvent::operator[] (int idx)
+wxVariant& wxActiveXEvent::operator[] (unsigned int idx)
 {
-    wxASSERT(idx >= 0 && idx < ParamCount());
-
+    wxASSERT(0 <= idx && idx < ParamCount());
     return m_params[idx];
-};
+}
 
 wxVariant& wxActiveXEvent::operator[] (wxString name)
 {
@@ -996,7 +979,7 @@ wxVariant& wxActiveXEvent::operator[] (wxString name)
     {
         if (name.CmpNoCase(m_params[i].GetName()) == 0)
             return m_params[i];
-    };
+    }
 
     wxString err = wxT("wxActiveXEvent::operator[] invalid name <") + name + wxT(">");
     err += wxT("\r\nValid Names = :\r\n");
@@ -1004,12 +987,12 @@ wxVariant& wxActiveXEvent::operator[] (wxString name)
     {
         err += m_params[i].GetName();
         err += wxT("\r\n");
-    };
+    }
 
 	wxFAIL_MSG(err);
 
     return nullVar;
-};
+}
 
 void wxActiveX::GetTypeInfo()
 {
@@ -1080,24 +1063,22 @@ void wxActiveX::GetTypeInfo()
 				{
 					WXOLE_TRACEOUT("*ERROR* - Default Event Sink is via vTable");
 					defEventSink = false;
-				};
+				}
             }
             else
             {
                 WXOLE_TRACEOUT("Default Interface");
 				defInterface = true;
             }
-        };
-
+        }
 
 		// process
 		GetTypeInfo(ti, defInterface, defEventSink);
-	};
-
+	}
 
     // free
     typeInfo->ReleaseTypeAttr(ta);
-};
+}
 
 void ElemDescToParam(const ELEMDESC& ed, wxActiveX::ParamX& param)
 {
@@ -1107,7 +1088,7 @@ void ElemDescToParam(const ELEMDESC& ed, wxActiveX::ParamX& param)
     param.isSafeArray = (param.vt == VT_SAFEARRAY);
     if (param.isPtr || param.isSafeArray)
         param.vt = ed.tdesc.lptdesc->vt;
-};
+}
 
 void wxActiveX::GetTypeInfo(ITypeInfo *ti, bool defInterface, bool defEventSink)
 {
@@ -1129,8 +1110,7 @@ void wxActiveX::GetTypeInfo(ITypeInfo *ti, bool defInterface, bool defEventSink)
         {
             wxActiveXEvents *disp = new wxActiveXEvents(this, ta->guid);
             ConnectAdvise(ta->guid, disp);
-        };
-
+        }
 
 		// Get Function Names
 		for (int i = 0; i < ta->cFuncs; i++)
@@ -1172,14 +1152,13 @@ void wxActiveX::GetTypeInfo(ITypeInfo *ti, bool defInterface, bool defEventSink)
 					{
 						pbase++;
 	                    SysFreeString(pnames[0]);
-					};
+					}
 
 					// params
                     ElemDescToParam(fd->elemdescFunc, func.retType);
 					for (int p = 0; p < fd->cParams; p++)
 					{
 						ParamX param;
-
 						ElemDescToParam(fd->lprgelemdescParam[p], param);
 
                         param.name = pnames[pbase + p];
@@ -1224,27 +1203,26 @@ void wxActiveX::GetTypeInfo(ITypeInfo *ti, bool defInterface, bool defEventSink)
 							{
 								m_props[idx].arg = func.params[0];
 								m_props[idx].putByRef = (fd->invkind == INVOKE_PROPERTYPUTREF);
-							};
-						};
-					};
-                };
-			};
+							}
+						}
+					}
+                }
+			}
 
 			typeInfo->ReleaseFuncDesc(fd);
-		};
+		}
 	}
 
 	typeInfo->ReleaseTypeAttr(ta);
-};
+}
 
 ///////////////////////////////////////////////
 // Type Info exposure
 const wxActiveX::FuncX& wxActiveX::GetEventDesc(int idx) const
 {
-    wxASSERT(idx >= 0 && idx < GetEventCount());
-
+    wxASSERT(0 <= idx && idx < GetEventCount());
     return m_events[idx];
-};
+}
 
 const wxActiveX::PropX& wxActiveX::GetPropDesc(int idx) const
 {
@@ -1252,7 +1230,7 @@ const wxActiveX::PropX& wxActiveX::GetPropDesc(int idx) const
         throw exception("Property index out of bounds");
 
     return m_props[idx];
-};
+}
 
 const wxActiveX::PropX& wxActiveX::GetPropDesc(wxString name) const
 {
@@ -1262,20 +1240,18 @@ const wxActiveX::PropX& wxActiveX::GetPropDesc(wxString name) const
         wxString s;
         s << wxT("property <") << name << wxT("> not found");
         throw exception(s.mb_str());
-    };
+    }
 
     return GetPropDesc(it->second);
-};
+}
 
 const wxActiveX::FuncX& wxActiveX::GetMethodDesc(int idx) const
 {
     if (idx < 0 || idx >= GetMethodCount())
         throw exception("Method index out of bounds");
 
-
     return m_methods[idx];
-};
-
+}
 
 const wxActiveX::FuncX& wxActiveX::GetMethodDesc(wxString name) const
 {
@@ -1285,11 +1261,10 @@ const wxActiveX::FuncX& wxActiveX::GetMethodDesc(wxString name) const
         wxString s;
         s << wxT("method <") << name << wxT("> not found");
         throw exception(s.mb_str());
-    };
+    }
 
     return GetMethodDesc(it->second);
-};
-
+}
 
 void wxActiveX::SetProp(MEMBERID name, VARIANTARG& value)
 {
@@ -1306,7 +1281,7 @@ void wxActiveX::SetProp(MEMBERID name, VARIANTARG& value)
 		&params, NULL, &x, &argErr);
 
     WXOLE_WARN(hr, "Invoke Prop(...)");
-};
+}
 
 void wxActiveX::SetProp(const wxString &name, const wxVariant &value)
 {
@@ -1316,13 +1291,13 @@ void wxActiveX::SetProp(const wxString &name, const wxVariant &value)
         wxString s;
         s << wxT("property <") << name << wxT("> is readonly");
         throw exception(s.mb_str());
-    };
+    }
 
     VARIANT v = {prop.arg.vt};
     VariantToMSWVariant(value, v);
     SetProp(prop.memid, v);
     VariantClear(&v); // this releases any BSTR's etc
-};
+}
 
 VARIANT wxActiveX::GetPropAsVariant(MEMBERID name)
 {
@@ -1343,7 +1318,7 @@ VARIANT wxActiveX::GetPropAsVariant(MEMBERID name)
     WXOLE_WARN(hr, "Invoke Prop(...)");
 
     return v;
-};
+}
 
 VARIANT wxActiveX::GetPropAsVariant(const wxString& name)
 {
@@ -1353,10 +1328,10 @@ VARIANT wxActiveX::GetPropAsVariant(const wxString& name)
         wxString s;
         s << wxT("property <") << name << wxT("> is writeonly");
         throw exception(s.mb_str());
-    };
+    }
 
     return GetPropAsVariant(prop.memid);
-};
+}
 
 wxVariant wxActiveX::GetPropAsWxVariant(const wxString& name)
 {
@@ -1371,7 +1346,7 @@ wxVariant wxActiveX::GetPropAsWxVariant(const wxString& name)
     VariantClear(&v);
 
     return wv;
-};
+}
 
 wxString wxActiveX::GetPropAsString(const wxString& name)
 {
@@ -1384,7 +1359,7 @@ wxString wxActiveX::GetPropAsString(const wxString& name)
     VariantClear(&v);
 
     return s;
-};
+}
 
 char wxActiveX::GetPropAsChar(const wxString& name)
 {
@@ -1394,7 +1369,7 @@ char wxActiveX::GetPropAsChar(const wxString& name)
         throw exception("Unable to convert variant");
 
     return v.cVal;
-};
+}
 
 long wxActiveX::GetPropAsLong(const wxString& name)
 {
@@ -1404,7 +1379,7 @@ long wxActiveX::GetPropAsLong(const wxString& name)
         throw exception("Unable to convert variant");
 
     return v.iVal;
-};
+}
 
 bool wxActiveX::GetPropAsBool(const wxString& name)
 {
@@ -1414,7 +1389,7 @@ bool wxActiveX::GetPropAsBool(const wxString& name)
         throw exception("Unable to convert variant");
 
     return v.boolVal != 0;
-};
+}
 
 double wxActiveX::GetPropAsDouble(const wxString& name)
 {
@@ -1424,7 +1399,7 @@ double wxActiveX::GetPropAsDouble(const wxString& name)
         throw exception("Unable to convert variant");
 
     return v.dblVal;
-};
+}
 
 wxDateTime wxActiveX::GetPropAsDateTime(const wxString& name)
 {
@@ -1435,7 +1410,7 @@ wxDateTime wxActiveX::GetPropAsDateTime(const wxString& name)
         throw exception("Unable to convert variant to wxDateTime");
 
     return dt;
-};
+}
 
 void *wxActiveX::GetPropAsPointer(const wxString& name)
 {
@@ -1445,8 +1420,7 @@ void *wxActiveX::GetPropAsPointer(const wxString& name)
         throw exception("Unable to convert variant");
 
     return v.byref;
-};
-
+}
 
 
 // call methods
@@ -1467,7 +1441,7 @@ VARIANT wxActiveX::CallMethod(MEMBERID name, VARIANTARG args[], int argc)
 
     WXOLE_WARN(hr, "Invoke Method(...)");
     return retVal;
-};
+}
 
 VARIANT wxActiveX::CallMethod(wxString name, VARIANTARG args[], int argc)
 {
@@ -1476,8 +1450,7 @@ VARIANT wxActiveX::CallMethod(wxString name, VARIANTARG args[], int argc)
         argc = func.params.size();
 
     return CallMethod(func.memid, args, argc);
-};
-
+}
 
 wxVariant wxActiveX::CallMethod(wxString name, wxVariant args[], int nargs)
 {

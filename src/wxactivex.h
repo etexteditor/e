@@ -577,10 +577,10 @@ public:
     virtual wxEvent *Clone() const { return new wxActiveXEvent(*this); }
 
     wxString EventName();
-    int ParamCount() const;
-    wxString ParamType(int idx);
-    wxString ParamName(int idx);
-    wxVariant& operator[] (int idx);
+    size_t ParamCount() const;
+    wxString ParamType(unsigned int idx);
+    wxString ParamName(unsigned int idx);
+    wxVariant& operator[] (unsigned int idx);
     wxVariant& operator[] (wxString name);
 };
 

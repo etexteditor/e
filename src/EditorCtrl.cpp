@@ -1230,7 +1230,7 @@ wxString EditorCtrl::GetLineIndent(unsigned int lineid) {
 	wxASSERT(lineid < m_lines.GetLineCount());
 
 	unsigned int linestart, lineend;
-	m_lines.GetLineExtent(lineend, linestart, lineend);
+	m_lines.GetLineExtent(lineid, linestart, lineend);
 	if (linestart == lineend) return wxEmptyString;
 
 	wxString indent;
@@ -1254,7 +1254,7 @@ unsigned int EditorCtrl::GetLineIndentLevel(unsigned int lineid) {
 	wxASSERT(lineid < m_lines.GetLineCount());
 
 	unsigned int linestart, lineend;
-	m_lines.GetLineExtent(lineend, linestart, lineend);
+	m_lines.GetLineExtent(lineid, linestart, lineend);
 	if (linestart == lineend) return 0;
 
 	unsigned int indent = 0;

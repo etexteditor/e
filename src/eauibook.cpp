@@ -231,7 +231,7 @@ void eAuiNotebook::OnMouseWheel(wxMouseEvent& event) {
 	wxLogDebug(_("Rotation: %d"), rotation);
 
 	if (rotation < 0) {
-		if (this->GetSelection() + 1 < this->GetPageCount())
+		if (this->GetSelection() + 1 < (int)this->GetPageCount())
 			this->SetSelection(this->GetSelection() + 1);
 	}
 	else if (rotation > 0) {

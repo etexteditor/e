@@ -589,6 +589,14 @@
 				>
 			</File>
 			<File
+				RelativePath="GotoLineDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath="GotoLineDlg.h"
+				>
+			</File>
+			<File
 				RelativePath="OpenDocDlg.cpp"
 				>
 			</File>
@@ -1098,10 +1106,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\application.ico"
-			>
-		</File>
-		<File
 			RelativePath=".\AppVersion.h"
 			>
 		</File>
@@ -1367,14 +1371,6 @@
 		</File>
 		<File
 			RelativePath="GetWinVer.h"
-			>
-		</File>
-		<File
-			RelativePath="GotoLineDlg.cpp"
-			>
-		</File>
-		<File
-			RelativePath="GotoLineDlg.h"
 			>
 		</File>
 		<File

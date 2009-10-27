@@ -3,6 +3,7 @@
 
 #include "SymbolRef.h"
 #include "EditorChangeState.h"
+#include <vector>
 
 class IEditorSymbols : public IGetChangeState {
 public:

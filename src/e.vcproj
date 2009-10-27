@@ -1454,6 +1454,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\RankedItem.h"
+			>
+		</File>
+		<File
 			RelativePath="RecursiveCriticalSection.h"
 			>
 		</File>

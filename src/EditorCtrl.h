@@ -243,7 +243,7 @@ public:
 	void RestoreSettings(unsigned int i, eFrameSettings& settings, unsigned int id=0);
 
 	// Needed by IEditorSearch interface
-	void EditorCtrl::ProcessMouseWheel(wxMouseEvent& event);
+	void ProcessMouseWheel(wxMouseEvent& event);
 
 	// Caret and Selection Visibility
 private:

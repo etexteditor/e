@@ -414,7 +414,7 @@ private:
 
 public:
 	// Used by GutterControl
-	void DrawLayout(bool isScrolling=false) {wxClientDC dc(this);DrawLayout(dc, isScrolling);};
+	void DrawLayout(bool isScrolling=false);
 
 protected:
 	void DrawLayout(wxDC& dc, bool isScrolling=false);

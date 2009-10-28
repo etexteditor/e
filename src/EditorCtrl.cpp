@@ -490,9 +490,7 @@ void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings, unsigned
 	//wxLogDebug(wxT("  %d (%d,%d,%d) pos:%d topline:%d"), i, di.type, di.document_id, di.version_id, pos, topline);
 }
 
-EditorCtrl* EditorCtrl::GetActiveEditor() {
-	return this;
-}
+EditorCtrl* EditorCtrl::GetActiveEditor() { return this; }
 
 const char** EditorCtrl::RecommendedIcon() const { return document_xpm; }
 
@@ -505,13 +503,8 @@ void EditorCtrl::ClearRemoteInfo() {
 		wxRemoveFile(m_path.GetFullPath());
 }
 
-unsigned int EditorCtrl::GetLength() const {
-	return m_lines.GetLength();
-}
-
-unsigned int EditorCtrl::GetPos() const {
-	return m_lines.GetPos();
-}
+unsigned int EditorCtrl::GetLength() const { return m_lines.GetLength(); }
+unsigned int EditorCtrl::GetPos() const { return m_lines.GetPos(); }
 
 void EditorCtrl::SetDocumentAndScrollPosition(int pos, int topline) {
 	m_lines.SetPos(pos);
@@ -519,7 +512,7 @@ void EditorCtrl::SetDocumentAndScrollPosition(int pos, int topline) {
 }
 
 unsigned int EditorCtrl::GetCurrentLineNumber() {
-	// Line index start from 1
+	// Rows count from 1; internally they count from 0.
 	return m_lines.GetCurrentLine() +1 ;
 }
 
@@ -753,9 +746,7 @@ void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
 	MarkAsModified();
 }
 
-const wxFont& EditorCtrl::GetEditorFont() const {
-	return mdc.GetFont();
-}
+const wxFont& EditorCtrl::GetEditorFont() const { return mdc.GetFont(); }
 
 void EditorCtrl::SetGutterRight(bool doMove) {
 	m_gutterLeft = !doMove;
@@ -867,6 +858,11 @@ bool EditorCtrl::UpdateScrollbars(unsigned int x, unsigned int y) {
 	}
 
 	return false; // no scrollbar was added or removed
+}
+
+void EditorCtrl::DrawLayout(bool isScrolling) {
+	wxClientDC dc(this);
+	DrawLayout(dc, isScrolling);
 }
 
 void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
@@ -1275,14 +1271,11 @@ unsigned int EditorCtrl::GetLineIndentLevel(unsigned int lineid) {
 				const unsigned int spaces = tabWidth - (indent % tabWidth);
 				indent += spaces;
 			}
-			else if (*dbi == ' ') {
-				++indent;
-			}
+			else if (*dbi == ' ') indent++;
 			else break;
 			++dbi;
 		}
 	cxENDLOCK
-
 	return indent;
 }
 
@@ -1300,7 +1293,6 @@ unsigned int EditorCtrl::GetLineIndentPos(unsigned int lineid) {
 			if (!wxIsspace(*dbi) || *dbi == '\n') break;
 			++dbi;
 		}
-
 		return dbi.GetIndex();
 	cxENDLOCK
 }
@@ -1316,9 +1308,8 @@ bool EditorCtrl::IsSpaces(unsigned int start, unsigned int end) const {
 			if (*dbi != ' ') return false;
 			++dbi;
 		}
+		return true;
 	cxENDLOCK
-
-	return true;
 }
 
 unsigned int EditorCtrl::CountMatchingChars(wxChar match, unsigned int start, unsigned int end) const {
@@ -1328,9 +1319,8 @@ unsigned int EditorCtrl::CountMatchingChars(wxChar match, unsigned int start, un
 	const wxString text = GetText(start, end);
 	unsigned int count = 0;
 
-	for (unsigned int i = 0; i < text.size(); ++i) {
+	for (unsigned int i = 0; i < text.size(); ++i)
 		if (text[i] == match) ++count;
-	}
 
 	return count;
 }
@@ -1370,7 +1360,7 @@ void EditorCtrl::Tab() {
 	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
 	const bool isMultiSel = m_lines.IsSelectionMultiline() && !m_lines.IsSelectionShadow();
 
-	// If there are multible lines selected tab triggers indentation
+	// If there are multiple lines selected then tab triggers indentation
 	if (m_snippetHandler.IsActive()) {
 		if (shiftDown) m_snippetHandler.PrevTab();
 		else m_snippetHandler.NextTab();
@@ -2067,7 +2057,7 @@ void EditorCtrl::MatchBrackets() {
 			}
 		}
 		if (!bracketFound) return; // no bracket at pos
-	};
+	}
 
 	if (searchForward) {
 		cxLOCKDOC_READ(m_doc)
@@ -2186,18 +2176,16 @@ void EditorCtrl::RawMove(unsigned int start, unsigned int end, unsigned int dest
 
 		// Adjust destination
 		const unsigned int len = end - start;
-		if (dest >= end) {
+		if (dest >= end)
 			dest -= len;
-		}
 
 		// Insert at destination
 		RawInsert(dest, text);
 	}
 
 	// If caret was in source, it moves with the text
-	if (pos >= start && pos <= end) {
+	if (start <= pos && pos <= end)
 		m_lines.SetPos(dest + (pos - start));
-	}
 
 	// no need for MarkAsModified(), already called by subfunctions
 }
@@ -2572,26 +2560,24 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 }
 
 cxFileResult EditorCtrl::LoadLinesIntoDocument(const wxString& whence_to_load, wxFontEncoding enc, const RemoteProfile* rp, wxFileName& localPath) {
-		// First clean up old remote info (and delete evt. buffer file);
-		ClearRemoteInfo();
+	// First clean up old remote info (and delete evt. buffer file);
+	ClearRemoteInfo();
 
+	if (!eDocumentPath::IsRemotePath(whence_to_load)) localPath = whence_to_load;
+	else	{
 		// If the path points to a remote file, we have to download it first.
-		if (eDocumentPath::IsRemotePath(whence_to_load)) {
-			m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(whence_to_load, false);
-			const wxString buffPath = m_parentFrame.DownloadFile(whence_to_load, m_remoteProfile);
-			if (buffPath.empty()) return cxFILE_DOWNLOAD_ERROR; // download failed
+		m_remoteProfile = rp ? rp : m_parentFrame.GetRemoteProfile(whence_to_load, false);
+		const wxString buffPath = m_parentFrame.DownloadFile(whence_to_load, m_remoteProfile);
+		if (buffPath.empty()) return cxFILE_DOWNLOAD_ERROR; // download failed
 
-			localPath = buffPath;
-			m_remotePath = whence_to_load;
-		}
-		else {
-			localPath = whence_to_load;
-		}
+		localPath = buffPath;
+		m_remotePath = whence_to_load;
+	}
 
-		// Invalidate all stylers
-		StylersInvalidate();
+	// Invalidate all stylers
+	StylersInvalidate();
 
-		return m_lines.LoadText(localPath, enc, m_remotePath);
+	return m_lines.LoadText(localPath, enc, m_remotePath);
 }
 
 bool EditorCtrl::SaveText(bool askforpath) {
@@ -2628,9 +2614,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	if (askforpath || newpath.empty()) {
 		wxFileDialog dlg(this, _T("Save as..."), _T(""), _T(""), EditorFrame::DefaultFileFilters, wxSAVE|wxCHANGE_DIR);
-
-		if (!newpath.empty()) dlg.SetPath(newpath);
-		else dlg.SetPath(_("Untitled"));
+		dlg.SetPath( newpath.empty() ? _("Untitled") : newpath );
 
 		dlg.Centre();
 		if (dlg.ShowModal() != wxID_OK) return false;
@@ -2940,9 +2924,8 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	return true;
 }
 
-void EditorCtrl::UpdateParentPanels() {
-	// Only derived controls are embedded in a parent panel.
-}
+// Only derived controls are embedded in a parent panel; see BundleItemEditorCtrl.
+void EditorCtrl::UpdateParentPanels() {}
 
 void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	vector<cxChange> changes;
@@ -2958,7 +2941,6 @@ void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	// not to do any reads of text from stale refs. To avoid this we only
 	// apply changes as full lines.
 	const vector<cxLineChange> linechanges = m_lines.ChangesToFullLines(changes);
-
 
 	m_syntaxstyler.ApplyDiff(linechanges);
 	FoldingApplyDiff(linechanges);
@@ -8116,6 +8098,11 @@ wxString EditorCtrl::GetSymbolString(const SymbolRef& sr) const {
 	for (size_t i = 0; i < len; ++i) {
 		wxChar c = transform[i];
 
+		if (c == '#') { // ignore comments
+			while (i < len && transform[i] != '\n') ++i;
+			continue;
+		}
+
 		if (c == 's' && i+1 < len && transform[i+1] == '/') {
 			i += 2; // advance over "s/"
 			const size_t regexstart = i;
@@ -8161,10 +8148,6 @@ wxString EditorCtrl::GetSymbolString(const SymbolRef& sr) const {
 					break;
 				}
 			}
-		}
-		else if (c == '#') {
-			// ignore comments
-			while (i < len && transform[i] != '\n') ++i;
 		}
 	}
 

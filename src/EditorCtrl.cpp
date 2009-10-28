@@ -5215,7 +5215,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 		ovector,              // output vector for substring information
 		OVECCOUNT);           // number of elements in the output vector
 
-	free(re); // clean up
+	pcre_free(re); // clean up
 
 	// Copy match info from ovector to result struct
 	sr.error_code = rc;
@@ -5250,7 +5250,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 	// Compile the pattern
 	const char *error;
 	int erroffset;
-	const pcre* const re = pcre_compile(
+	pcre* re = pcre_compile(
 		regex,      // the pattern
 		PCRE_UTF8,  // options
 		&error,     // for error message
@@ -5275,6 +5275,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 		ovector,              // output vector for substring information
 		OVECCOUNT);           // number of elements in the output vector
 
+	pcre_free(re); // clean up
 
 	// Copy match info from ovector to result struct
 	sr.error_code = rc;

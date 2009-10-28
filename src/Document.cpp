@@ -13,7 +13,7 @@
 
 #include "Document.h"
 #include "DataList.h"
-#include "wx/fontmap.h"
+#include <wx/fontmap.h>
 #include <wx/wfstream.h>
 #include "doc_byte_iter.h"
 #include "cx_pcre.h"
@@ -23,7 +23,7 @@
 // Needed for file permission functions.
 #include "eDocumentPath.h"
 
-// Constructor
+
 Document::Document(const doc_id& di, CatalystWrapper cw):
 	m_catalyst(cw.m_catalyst),
 	dispatcher(cw.GetDispatcher()),
@@ -92,9 +92,8 @@ void Document::SetDefaultsFromSettings(const ISettings& settings) {
 
 	// Check if we need to set bom property
 	bool bom;
-	if (settings.GetSettingBool(wxT("formatBom"), bom)) {
+	if (settings.GetSettingBool(wxT("formatBom"), bom))
 		SetPropertyBOM(bom);
-	}
 }
 
 bool Document::operator==(const doc_id& di) const {
@@ -117,9 +116,8 @@ void Document::Close() {
 }
 
 bool Document::IsOk() const {
-	if (m_docId.document_id == -1 || m_docId.version_id == -1) return false; // invalid document
-	//else if (vHistory.GetSize() > 0 && GetPropnode().node_id == 0) return false;
-	else return true;
+	bool bad_document = m_docId.document_id == -1 || m_docId.version_id == -1;
+	return !bad_document;
 }
 
 bool Document::IsEmpty() const {
@@ -290,7 +288,6 @@ wxString Document::GetTextPart(int start_pos, int end_pos) const {
 	m_catalyst.ResetIdle();
 	wxString text;
 	m_textData.GetTextPart(start_pos, end_pos, text);
-
 	return text;
 }
 
@@ -421,7 +418,8 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 
 	// Open the file & load the text
 	wxDateTime fileDate;
-	if (path.FileExists()) {
+	if (!path.FileExists()) len = 0; // fileDate will be invalid
+	else {
 		fileDate = path.GetModificationTime();
 
 		// Use memory mapped files
@@ -429,10 +427,6 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 		if (!buffer.IsOpened()) return cxFILE_OPEN_ERROR; // Could not open file
 
 		len = buffer.Length();
-	}
-	else {
-		len = 0;
-		// fileDate will be invalid
 	}
 
 	// Load the text
@@ -990,9 +984,8 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 		
 		wxRenameFile(tmpPath, fullPath);
 
-		if (previous_file_exists) {
+		if (previous_file_exists)
 			eDocumentPath::SetPermissions(fullPath, permissions);
-		}
 	}
 
 	{
@@ -1003,9 +996,7 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 		if (oldName != newName) {
 			const bool notifyCache = do_notify;
 			do_notify = false; // we don't want any notification from name change
-
-			SetPropertyName(newName);
-
+				SetPropertyName(newName);
 			do_notify = notifyCache;
 		}
 
@@ -1017,9 +1008,8 @@ cxFileResult Document::SaveText(const wxFileName& path, bool forceNativeEOL, con
 
 			doc_id di;
 			wxDateTime modDate;
-			if (m_catalyst.GetFileMirror(realpath, di, modDate)) {
+			if (m_catalyst.GetFileMirror(realpath, di, modDate))
 				wxFileName(path).SetTimes(NULL, &modDate, NULL);
-			}
 			else wxASSERT(false);
 		}
 		else {
@@ -1139,8 +1129,7 @@ bool Document::DetectEncoding(const char* buffer, size_t len, wxFontEncoding& en
 		else if (null_byte_count) return false; // May be binary file
 	}
 
-	// If we can't detect encoding and it does not contain null bytes
-	// just set it to the default encoding.
+	// If we can't detect encoding and it does not contain null bytes just set it to the default encoding.
 	if (enc == wxFONTENCODING_DEFAULT) enc = wxFONTENCODING_SYSTEM;
 
 	encoding = enc;
@@ -1151,22 +1140,20 @@ void Document::GetLines(vector<unsigned int>& list) const {
 	wxASSERT(IsOk());
 	wxASSERT(list.empty());
 
-	int len = GetLength();
+	const int len = GetLength();
+	if (len <= 0) return;
 
-	if (len > 0) {
+	list.reserve(len/35); // Aprox characters per line.
 
-		list.reserve(len/35);
-
-		for (doc_byte_iter subject(*this); subject.GetIndex() < len; ++subject) {
-			if (*subject == '\n') {
-				// Lines end right after newlines
-				list.push_back(subject.GetIndex()+1);
-			}
-		}
-
-		// If the text does not end with a newline there will be a rest
-		if (list.empty() || list.back() != GetLength()) list.push_back(GetLength());
+	for (doc_byte_iter subject(*this); subject.GetIndex() < len; ++subject) {
+		if (*subject == '\n') // Lines end right after newlines
+			list.push_back(subject.GetIndex()+1);
 	}
+
+	// If the text does not end with a newline, put the rest of the text in as the last
+	// (non-terminated) line.
+	if (list.empty() || list.back() != GetLength())
+		list.push_back(GetLength());
 }
 
 bool Document::HasProperty(const wxString& name) const {
@@ -1299,22 +1286,21 @@ wxTextFileType Document::GetPropertyEOL() const{
 void Document::SetPropertyEOL(wxTextFileType eol) {
 	if (eol == wxTextFileType_None) {
 		DeleteProperty(wxT("eol")); // Default encoding is indicated by lack of property
+		return;
 	}
-	else {
-		// Set the property
-		switch (eol) {
-		case wxTextFileType_Unix:
-			SetProperty(wxT("eol"), wxString(wxT("lf")));
-			break;
-		case wxTextFileType_Dos:
-			SetProperty(wxT("eol"), wxString(wxT("crlf")));
-			break;
-		case wxTextFileType_Mac:
-			SetProperty(wxT("eol"), wxString(wxT("cr")));
-			break;
-		default:
-			wxASSERT(false);
-		}
+
+	switch (eol) { // Set the property
+	case wxTextFileType_Unix:
+		SetProperty(wxT("eol"), wxString(wxT("lf")));
+		break;
+	case wxTextFileType_Dos:
+		SetProperty(wxT("eol"), wxString(wxT("crlf")));
+		break;
+	case wxTextFileType_Mac:
+		SetProperty(wxT("eol"), wxString(wxT("cr")));
+		break;
+	default:
+		wxASSERT(false);
 	}
 }
 
@@ -1379,24 +1365,7 @@ void Document::SetPropertyBOM(bool hasBOM) {
 		}
 	}
 }
-/*
-pcre* Document::RegExCompile(const wxString& pattern, bool matchcase) { // static
-	const char *error;
-	int erroffset;
 
-	int options = PCRE_UTF8; //|PCRE_MULTILINE;
-	if (!matchcase) options |= PCRE_CASELESS;
-
-	// Compile the pattern
-	return pcre_compile(
-			pattern.mb_str(wxConvUTF8),   // the pattern
-			options,              // options
-			&error,               // for error message
-			&erroffset,           // for error offset
-			NULL);                // use default character tables
-}
-
-*/
 search_result Document::RegExFind(const pcre* re, const pcre_extra* study, int start_pos, map<unsigned int,interval> *captures, int end_pos, int search_options) const {
 	wxASSERT(end_pos == 0 || (end_pos > 0 && end_pos <= (int)GetLength()));
 	if (end_pos == 0) end_pos = GetLength();
@@ -1443,9 +1412,8 @@ search_result Document::RegExFind(const pcre* re, const pcre_extra* study, int s
 	if (captures != NULL && rc > 0) {
 		// copy intervals to the supplied vector
 		for (int i = 0; i < rc; ++i) {
-			if (ovector[2*i] != -1) {
+			if (ovector[2*i] != -1)
 				(*captures)[i] = interval(ovector[2*i], ovector[2*i+1]);
-			}
 		}
 	}
 
@@ -1454,7 +1422,7 @@ search_result Document::RegExFind(const pcre* re, const pcre_extra* study, int s
 
 
 search_result Document::RegExFind(const wxString& searchtext, int start_pos, bool matchcase, map<unsigned int,interval> *captures, int end_pos) const {
-	wxASSERT(end_pos == 0 || (end_pos > 0 && end_pos <= (int)GetLength()));
+	wxASSERT(end_pos == 0 || (0 < end_pos && end_pos <= (int)GetLength()));
 	if (end_pos == 0) end_pos = GetLength();
 
 #ifdef __WXDEBUG__
@@ -1492,6 +1460,7 @@ search_result Document::RegExFind(const wxString& searchtext, int start_pos, boo
 			&error,               // for error message
 			&erroffset,           // for error offset
 			NULL);                // use default character tables
+
 		if (m_re == 0) {
 			search_result sr;
 			sr.error_code = -4; // invalid pattern
@@ -1526,6 +1495,7 @@ search_result Document::RegExFindBackwards(const wxString& searchtext, int start
 		&error,               // for error message
 		&erroffset,           // for error offset
 		NULL);                // use default character tables
+
 	if (re == 0) {
 		sr.error_code = -4; // invalid pattern
 		return sr;
@@ -1921,15 +1891,13 @@ unsigned int Document::Replace(unsigned int start_pos, unsigned int end_pos, con
 	PrepareForChange();
 
 	// Delete text
-	if (start_pos < end_pos) {
+	if (start_pos < end_pos)
 		m_textData.Delete(start_pos, end_pos);
-	}
 
 	// Insert new text
 	unsigned int byte_len = 0;
-	if (!text.empty()) {
+	if (!text.empty())
 		byte_len = m_textData.Insert(start_pos, text);
-	}
 
 	// Check if the headnode has been updated
 	UpdateHeadnode();
@@ -2073,9 +2041,8 @@ doc_id Document::GetParent() const {
 		const c4_RowRef rDocument = vRevisions[m_docId.document_id];
 		return doc_id(DOCUMENT, pParentDoc(rDocument), pParentVer(rDocument));
 	}
-	else {
+	else
 		return doc_id(DOCUMENT, m_docId.document_id, pParent(vHistory[m_docId.version_id]));
-	}
 }
 
 doc_id Document::GetDraftParent() const {
@@ -2157,7 +2124,6 @@ vector<match> Document::Diff(const doc_id& version1, const doc_id& version2) con
 
 	const node_ref headnode1 = GetHeadnode(version1);
 	const node_ref headnode2 = GetHeadnode(version2);
-
 	const DataText text1(m_catalyst, version1, headnode1);
 
 	return text1.Diff(version2, headnode2);
@@ -2172,9 +2138,8 @@ void Document::PartialDiff(const interval& range, vector<cxDiffEntry>& rangeHist
 	if (rangeHistory.empty()) return;
 
 	reverse(rangeHistory.begin(), rangeHistory.end());
-	for (size_t i = 1; i < rangeHistory.size(); ++i) {
+	for (size_t i = 1; i < rangeHistory.size(); ++i)
 		rangeHistory[i].parent = i-1;
-	}
 }
 
 vector<cxChange> Document::GetChanges(const doc_id& version1, const doc_id& version2) const {
@@ -2386,9 +2351,7 @@ void Document::OnDocDeleted(Document* self, void* data, int WXUNUSED(filter)) {
 
 #ifdef __WXDEBUG__
 
-int Document::NodeCount() const {
-	return vNodes.GetSize();
-}
+int Document::NodeCount() const { return vNodes.GetSize(); }
 
 void Document::Print() const {
 	wxLogDebug(wxT("X Document: %d version: %d"), m_docId.document_id, m_docId.version_id);

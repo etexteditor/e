@@ -96,7 +96,6 @@ public:
 	search_result RegExFind(const pcre* re, const pcre_extra* study, int start_pos, map<unsigned int,interval> *captures=NULL, int end_pos = 0, int search_options=0) const;
 	search_result RegExFind(const wxString& searchtext, int start_pos, bool matchcase=false, map<unsigned int,interval> *captures=NULL, int end_pos = 0) const;
 	search_result RegExFindBackwards(const wxString& searchtext, int start_pos, bool matchcase=false) const;
-	//static pcre* RegExCompile(const wxString& pattern, bool matchcase=false);
 
 	// Diff
 	cxNodeInfo GetNodeInfo(unsigned int pos) const {return m_textData.GetNodeInfo(pos);};
@@ -144,7 +143,7 @@ public:
 	void GetVersionChildren(int version, vector<int>& childlist) const;
 	void MakeHead();
 
-	// Grouping of multible changes
+	// Grouping of multiple changes
 	void StartChange();
 	void EndChange();
 
@@ -208,7 +207,7 @@ public:
 	bool operator!=(const doc_id& di) const {return (m_doc != di);};
 	bool IsOk() const {return m_doc.IsOk();};
 
-	// GetLength() is so used that we add direct access from the wrapper
+	// GetLength() is used a lot; add direct access from the wrapper.
 	unsigned int GetLength() const {
 		RecursiveCriticalSectionLocker cx_lock(m_doc.GetReadLock());
 		return m_doc.GetLength();

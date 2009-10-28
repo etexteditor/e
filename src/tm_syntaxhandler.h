@@ -37,7 +37,7 @@
 #include "ITmGetSyntaxes.h"
 #include "ITmLoadBundles.h"
 
-// Pre-definitions
+
 class PListHandler;
 class PListDict;
 class PListArray;
@@ -56,19 +56,11 @@ class Dispatcher;
 
 struct style;
 
-class tmSnippet : public tmAction {
-public:
-	bool IsSnippet() const {return true;};
-	virtual ~tmSnippet() {};
-};
-
 
 class tmDragCommand : public tmCommand {
 public:
     virtual ~tmDragCommand() {};
-
 	bool IsDrag() const {return true;};
-
 	wxArrayString extArray;
 };
 
@@ -225,38 +217,6 @@ public:
 		const wxString& m_ext;
 	};
 
-	class PrefsMatch : public std::unary_function<const tmPrefs*, bool> {
-	public:
-		enum PrefType {
-			increaseIndentPattern,
-			decreaseIndentPattern,
-			indentNextLinePattern,
-			unIndentedLinePattern
-		};
-
-		PrefsMatch(PrefType target) : m_target(target) {};
-		bool operator()(const tmPrefs* x) const {
-			switch(m_target) {
-			case increaseIndentPattern:
-				if (!x->increaseIndentPattern.empty()) return true;
-				break;
-			case decreaseIndentPattern:
-				if (!x->decreaseIndentPattern.empty()) return true;
-				break;
-			case indentNextLinePattern:
-				if (!x->indentNextLinePattern.empty()) return true;
-				break;
-			case unIndentedLinePattern:
-				if (!x->unIndentedLinePattern.empty()) return true;
-				break;
-			}
-			return false;
-		};
-	private:
-		const PrefType m_target;
-	};
-
-	
 	// Plists
 	virtual PListHandler& GetPListHandler() {return m_plistHandler;};
 	bool DoIdle();

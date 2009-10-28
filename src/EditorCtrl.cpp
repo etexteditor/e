@@ -1286,28 +1286,6 @@ unsigned int EditorCtrl::GetLineIndentLevel(unsigned int lineid) {
 	return indent;
 }
 
-unsigned int EditorCtrl::CountIndent(const wxString& text) const {
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-	unsigned int indent = 0;
-
-	// The level is counted in spaces
-	for (unsigned int i = 0; i < text.size(); ++i) {
-		const wxChar c = text[i];
-
-		if (c == '\t') {
-			// it is ok to have a few spaces before tab (making one mixed tab)
-			const unsigned int spaces = tabWidth - (indent % tabWidth);
-			indent += spaces;
-		}
-		else if (c == ' ') {
-			++indent;
-		}
-		else break;
-	}
-
-	return indent;
-}
-
 unsigned int EditorCtrl::GetLineIndentPos(unsigned int lineid) {
 	if (lineid == 0 && GetLength() == 0) return 0;
 	wxASSERT(lineid < m_lines.GetLineCount());
@@ -2245,8 +2223,8 @@ unsigned int EditorCtrl::InsertNewline() {
 		if (!atLineEnd) {
 			// Get the correct indentation for new line
 			const wxString newindent = GetRealIndent(lineid+1);
-			const unsigned int indentlevel = CountIndent(indent);
-			const unsigned int newindentlevel = CountIndent(newindent);
+			const unsigned int indentlevel = CountTextIndent(indent, m_parentFrame.GetTabWidth());
+			const unsigned int newindentlevel = CountTextIndent(newindent, m_parentFrame.GetTabWidth());
 
 			// Only double the newlines if the new line will be de-dented
 			if (newindentlevel < indentlevel) {
@@ -6338,7 +6316,7 @@ bool EditorCtrl::cmd_Undo(int WXUNUSED(count), vector<int>& cStack, bool end) {
 }
 
 void EditorCtrl::SetPos(unsigned int pos) {
-	wxASSERT(pos >= 0 && pos <= m_lines.GetLength());
+	wxASSERT(0 <= pos && pos <= m_lines.GetLength());
 	m_lines.SetPos(pos);
 }
 

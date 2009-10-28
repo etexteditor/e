@@ -80,6 +80,25 @@ wxString URLDecode(const wxString &value) {
 }
 
 
+// Returns the indent level of the given text, in spaces.
+unsigned int CountTextIndent(const wxString& text, const unsigned int tabWidth) {
+	unsigned int indent = 0;
+	for (unsigned int i = 0; i < text.size(); ++i) {
+		const wxChar c = text[i];
+
+		if (c == '\t') {
+			// it is ok to have a few spaces before tab (making one mixed tab)
+			const unsigned int spaces = tabWidth - (indent % tabWidth);
+			indent += spaces;
+		}
+		else if (c == ' ') indent++;
+		else break;
+	}
+
+	return indent;
+}
+
+
 // ===========================================================================
 // wxJoin and wxSplit
 // ===========================================================================

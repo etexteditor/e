@@ -15,6 +15,7 @@ wxString URLDecode(const wxString &value);
 void InplaceConvertCRLFtoLF(wxString& text);
 #endif
 
+unsigned int CountTextIndent(const wxString& text, const unsigned int tabWidth);
 
 bool DetectTextEncoding(const char* buffer, size_t len, wxFontEncoding& encoding, unsigned int& BOM_len);
 

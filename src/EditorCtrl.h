@@ -262,7 +262,6 @@ public:
 	void DedentSelectedLines() {IndentSelectedLines(false);};
 	wxString GetLineIndent(unsigned int lineid);
 	unsigned int GetLineIndentLevel(unsigned int lineid);
-	unsigned int CountIndent(const wxString& text) const;
 	wxString GetLineIndentFromPos(unsigned int pos);
 	void TabsToSpaces();
 	void SpacesToTabs();

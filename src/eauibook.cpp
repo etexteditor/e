@@ -215,6 +215,27 @@ bool eAuiNotebook::LoadPerspective(const wxString& layout) {
 	return true;
 }
 
+void eAuiNotebook::SelectNextTab(bool wrap_around) {
+	if (GetPageCount() <= 1) return;
+
+	unsigned int newtab = this->GetSelection() + 1;
+	if (wrap_around || ( newtab < GetPageCount() ))
+		this->SetSelection(newtab % GetPageCount());
+}
+
+void eAuiNotebook::SelectPrevTab(bool wrap_around) {
+	if (GetPageCount() <= 1) return;
+
+	unsigned int newtab = GetSelection();
+	if (newtab == 0) {
+		if(!wrap_around) return;
+		newtab = GetPageCount()-1;
+	}
+	else newtab -=  1;
+
+	this->SetSelection(newtab);
+}
+
 void eAuiNotebook::OnMouseWheel(wxMouseEvent& event) {
 	const wxCoord x = event.GetX();
 	const wxCoord y = event.GetY();
@@ -230,12 +251,7 @@ void eAuiNotebook::OnMouseWheel(wxMouseEvent& event) {
 	const int rotation = event.GetWheelRotation();
 	wxLogDebug(_("Rotation: %d"), rotation);
 
-	if (rotation < 0) {
-		if (this->GetSelection() + 1 < (int)this->GetPageCount())
-			this->SetSelection(this->GetSelection() + 1);
-	}
-	else if (rotation > 0) {
-		if (this->GetSelection() > 0)
-			this->SetSelection(this->GetSelection() - 1);
-	}
+	// Don't use wrap-around tab selection when mouse-wheeling
+	if (rotation < 0) SelectNextTab(false);
+	else if (rotation > 0) SelectPrevTab(false);
 }

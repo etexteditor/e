@@ -2695,9 +2695,8 @@ bool EditorFrame::OnPreKeyUp(wxKeyEvent& event) {
 
 void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 	wxLogDebug(wxT("KeyUp %d"), event.GetKeyCode());
-	if (event.GetKeyCode() == WXK_CONTROL) {
+	if (event.GetKeyCode() == WXK_CONTROL)
 		m_ctrlHeldDown = false;
-	}
 
 	event.Skip();
 }
@@ -2712,11 +2711,11 @@ void EditorFrame::OnMenuNextTab(wxCommandEvent& evt) {
 	}
 
 	// Go to next tab
-	const unsigned int tabCount = m_tabBar->GetPageCount();
-	if (tabCount <= 1) return;
+	m_tabBar->SelectNextTab();
+}
 
-	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
-	m_tabBar->SetSelection(m_tabBar->TabToPage( (currentTab + 1) % tabCount ));
+void EditorFrame::OnMenuPrevTab(wxCommandEvent& WXUNUSED(event)) {
+	m_tabBar->SelectPrevTab();
 }
 
 void EditorFrame::OnMenuLastTab(wxCommandEvent& WXUNUSED(event)) {
@@ -2727,29 +2726,16 @@ void EditorFrame::OnMenuLastTab(wxCommandEvent& WXUNUSED(event)) {
 	}
 }
 
-void EditorFrame::OnMenuPrevTab(wxCommandEvent& WXUNUSED(event)) {
-#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
-	const unsigned int tabCount = m_tabBar->GetPageCount();
-	if (tabCount <= 1) return;
-
-	const unsigned int currentTab = m_tabBar->PageToTab(m_tabBar->GetSelection());
-	m_tabBar->SetSelection(m_tabBar->TabToPage( (tabCount + currentTab - 1) % tabCount));
-#endif
-}
-
 void EditorFrame::OnMenuGotoTab(wxCommandEvent& event) {
-#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
 	const unsigned int tabId = event.GetId() - 40000;
-
-	if (tabId < m_tabBar->GetPageCount()) m_tabBar->SetSelection(m_tabBar->TabToPage(tabId));
-#endif
+	if (tabId < m_tabBar->GetPageCount()) 
+		m_tabBar->SetSelection(m_tabBar->TabToPage(tabId));
 }
 
 void EditorFrame::OnMenuGotoLastTab(wxCommandEvent& WXUNUSED(event)) {
-#ifdef __WXMSW__ //LINUX: removed until wxWidgets rebuild
 	const unsigned int tabcount = m_tabBar->GetPageCount();
-	if (tabcount) m_tabBar->SetSelection(m_tabBar->TabToPage(tabcount-1));
-#endif
+	if (tabcount) 
+		m_tabBar->SetSelection(m_tabBar->TabToPage(tabcount-1));
 }
 
 void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {

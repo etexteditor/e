@@ -260,8 +260,6 @@ public:
 	const wxString& GetIndentUnit() const {return m_indent;};
 	void IndentSelectedLines(bool add_indent=true);
 	void DedentSelectedLines() {IndentSelectedLines(false);};
-	wxString GetLineIndent(unsigned int lineid);
-	unsigned int GetLineIndentLevel(unsigned int lineid);
 	wxString GetLineIndentFromPos(unsigned int pos);
 	void TabsToSpaces();
 	void SpacesToTabs();
@@ -478,7 +476,6 @@ protected:
 
 	// Indentation
 	wxString GetRealIndent(unsigned int lineid, bool newline=false);
-	unsigned int GetLineIndentPos(unsigned int lineid);
 
 	bool IsSpaces(unsigned int start, unsigned int end) const;
 	unsigned int CountMatchingChars(wxChar match, unsigned int start, unsigned int end) const;

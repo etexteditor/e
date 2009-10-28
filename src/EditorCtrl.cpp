@@ -1085,7 +1085,7 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 			const wxString& increasePattern = m_syntaxHandler.GetIndentIncreasePattern(scope);
 			if (!increasePattern.empty()) {
 				const search_result res = RegExFind(increasePattern, linestart, false, NULL, lineend);
-				if (res.error_code > 0) return GetLineIndent(i) + m_indent;
+				if (res.error_code > 0) return m_lines.GetLineIndent(i) + m_indent;
 			}
 
 			/*// Check if only next line should be indented
@@ -1100,7 +1100,7 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 					//	const unsigned int lineend2 = m_lines.GetLineEndpos(i-1, true);
 					//	if (linestart2 < lineend2) {
 					//		const search_result res2 = RegExFind(nextPattern, linestart2, false, NULL, lineend2);
-					//		if (res.error_code > 0) return GetLineIndent(i+1);
+					//		if (res.error_code > 0) return m_lines.GetLineIndent(i+1);
 					//	}
 					//}
 					return GetRealIndent(i+1); //+ m_indent;
@@ -1112,12 +1112,11 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 		break;
 	}
 
-	if (i == -1) return GetLineIndent(0);
-	else return GetLineIndent(i);
+	return m_lines.GetLineIndent( (i == -1) ? 0 : i );
 }
 
 wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
-	if (lineid == 0) return GetLineIndent(0);
+	if (lineid == 0) return m_lines.GetLineIndent(0);
 	wxASSERT(lineid < m_lines.GetLineCount());
 
 	unsigned int linestart = m_lines.GetLineStartpos(lineid);
@@ -1194,7 +1193,7 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 		break;
 	}
 
-	indent += GetLineIndent(validLine);
+	indent += m_lines.GetLineIndent(validLine);
 
 	// Check if the current line should be de-dented
 	if (!newline && validLine < lineid) {
@@ -1220,81 +1219,12 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 	return indent;
 }
 
+// Used by SnippetHandler
 wxString EditorCtrl::GetLineIndentFromPos(unsigned int pos) {
 	wxASSERT(pos <= GetLength());
 
 	const unsigned int lineid = m_lines.GetLineFromCharPos(pos);
-	return GetLineIndent(lineid);
-}
-
-wxString EditorCtrl::GetLineIndent(unsigned int lineid) {
-	if (lineid == 0 && GetLength() == 0) return wxEmptyString;
-	wxASSERT(lineid < m_lines.GetLineCount());
-
-	unsigned int linestart, lineend;
-	m_lines.GetLineExtent(lineid, linestart, lineend);
-	if (linestart == lineend) return wxEmptyString;
-
-	wxString indent;
-	cxLOCKDOC_READ(m_doc)
-		doc_byte_iter dbi(doc, linestart);
-		while ((unsigned int)dbi.GetIndex() < lineend) {
-			if (!wxIsspace(*dbi) || *dbi == '\n') break;
-			++dbi;
-		}
-
-		if (linestart < (unsigned int)dbi.GetIndex()) {
-			indent = doc.GetTextPart(linestart, dbi.GetIndex());
-		}
-	cxENDLOCK
-
-	return indent;
-}
-
-unsigned int EditorCtrl::GetLineIndentLevel(unsigned int lineid) {
-	if (lineid == 0 && GetLength() == 0) return 0;
-	wxASSERT(lineid < m_lines.GetLineCount());
-
-	unsigned int linestart, lineend;
-	m_lines.GetLineExtent(lineid, linestart, lineend);
-	if (linestart == lineend) return 0;
-
-	unsigned int indent = 0;
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-
-	// The level is counted in spaces
-	cxLOCKDOC_READ(m_doc)
-		doc_byte_iter dbi(doc, linestart);
-		while ((unsigned int)dbi.GetIndex() < lineend) {
-			if (*dbi == '\t') {
-				// it is ok to have a few spaces before tab (making one mixed tab)
-				const unsigned int spaces = tabWidth - (indent % tabWidth);
-				indent += spaces;
-			}
-			else if (*dbi == ' ') indent++;
-			else break;
-			++dbi;
-		}
-	cxENDLOCK
-	return indent;
-}
-
-unsigned int EditorCtrl::GetLineIndentPos(unsigned int lineid) {
-	if (lineid == 0 && GetLength() == 0) return 0;
-	wxASSERT(lineid < m_lines.GetLineCount());
-
-	unsigned int linestart, lineend;
-	m_lines.GetLineExtent(lineid, linestart, lineend);
-	if (linestart == lineend) return 0;
-
-	cxLOCKDOC_READ(m_doc)
-		doc_byte_iter dbi(doc, linestart);
-		while ((unsigned int)dbi.GetIndex() < lineend) {
-			if (!wxIsspace(*dbi) || *dbi == '\n') break;
-			++dbi;
-		}
-		return dbi.GetIndex();
-	cxENDLOCK
+	return m_lines.GetLineIndent(lineid);
 }
 
 bool EditorCtrl::IsSpaces(unsigned int start, unsigned int end) const {
@@ -5879,7 +5809,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_NUMPAD_BEGIN:
 				{
 					const unsigned int currentLine = m_lines.GetCurrentLine();
-					const unsigned int indentPos = GetLineIndentPos(currentLine);
+					const unsigned int indentPos = m_lines.GetLineIndentPos(currentLine);
 
 					if (indentPos < oldpos) {
 						// Move to first text after indentation
@@ -8307,11 +8237,11 @@ void EditorCtrl::ParseFoldMarkers() {
 
 			if (matchStartMarker) {
 				if (!matchEndMarker) { // starter and ender on same line cancels out
-					m_folds.push_back(cxFold(i, cxFOLD_START, GetLineIndentLevel(i)));
+					m_folds.push_back(cxFold(i, cxFOLD_START, m_lines.GetLineIndentLevel(i)));
 				}
 			}
 			else if (matchEndMarker) {
-				m_folds.push_back(cxFold(i, cxFOLD_END, GetLineIndentLevel(i)));
+				m_folds.push_back(cxFold(i, cxFOLD_END, m_lines.GetLineIndentLevel(i)));
 			}
 		}
 
@@ -8344,11 +8274,17 @@ vector<cxFold>::iterator EditorCtrl::ParseFoldLine(unsigned int line_id, vector<
 
 		if (matchStartMarker) {
 			if (!matchEndMarker) { // starter and ender on same line cancels out
-				return m_folds.insert(insertPos, cxFold(line_id, (doFold ? cxFOLD_START_FOLDED : cxFOLD_START), GetLineIndentLevel(line_id)))+1;
+				return m_folds.insert(
+						insertPos, 
+						cxFold(line_id, (doFold ? cxFOLD_START_FOLDED : cxFOLD_START), m_lines.GetLineIndentLevel(line_id))
+					) + 1;
 			}
 		}
 		else if (matchEndMarker) {
-			return m_folds.insert(insertPos, cxFold(line_id, cxFOLD_END, GetLineIndentLevel(line_id)))+1;
+			return m_folds.insert(
+					insertPos, 
+					cxFold(line_id, cxFOLD_END, m_lines.GetLineIndentLevel(line_id))
+				) + 1;
 		}
 	}
 
@@ -8396,7 +8332,7 @@ void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
 
 void EditorCtrl::FoldingReIndent() {
 	for (vector<cxFold>::iterator p = m_folds.begin(); p != m_folds.end(); ++p)
-		p->indent = GetLineIndentLevel(p->line_id);
+		p->indent = m_lines.GetLineIndentLevel(p->line_id);
 }
 
 void EditorCtrl::FoldingDelete(unsigned int start, unsigned int WXUNUSED(end)) {

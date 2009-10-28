@@ -139,6 +139,15 @@ public:
 	bool NeedIdle() const {return ll->NeedIdle();};
 	void Verify(bool deep=false);
 
+	//// Indentation
+
+	// Get indent string (which can be mixed tabs and spaces) from the beginning of this line
+	wxString GetLineIndent(unsigned int lineid) const;
+	// Get the position of the start of this line plus tab/spaces
+	unsigned int GetLineIndentPos(unsigned int lineid) const;
+	// Get the indent leve of this line, in spaces
+	unsigned int GetLineIndentLevel(unsigned int lineid) const;
+
 	// Allow access to our document; used by the Fold manager
 	// Adam V: Don't know a better way to do this since this is still
 	// better than EditorCtrl being in the loop

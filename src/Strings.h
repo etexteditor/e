@@ -1,7 +1,8 @@
 #ifndef __STRINGS_H__
 #define __STRINGS_H__
 
-#include "wx/arrstr.h"
+#include <wx/arrstr.h>
+#include <wx/fontenc.h>
 
 int wxCMPFUNC_CONV wxStringSortAscendingNoCase(wxString* s1, wxString* s2);
 
@@ -14,6 +15,8 @@ wxString URLDecode(const wxString &value);
 void InplaceConvertCRLFtoLF(wxString& text);
 #endif
 
+
+bool DetectTextEncoding(const char* buffer, size_t len, wxFontEncoding& encoding, unsigned int& BOM_len);
 
 // Back-port of wxJoin and wxSplit from newer versions of wxWidgets
 

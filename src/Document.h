@@ -188,8 +188,6 @@ private:
 	void UpdatePropnode(node_ref propnode);
 	void NewRevision();
 
-	static bool DetectEncoding(const char* buffer, size_t len, wxFontEncoding& encoding, unsigned int& BOM_len);
-
 	// Notifier handlers
 	static void OnDocDeleted(Document* self, void* data, int filter);
 

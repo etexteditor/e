@@ -19,8 +19,7 @@
 #include "cx_pcre.h"
 #include "Utf.h"
 #include "eSettings.h"
-
-// Needed for file permission functions.
+#include "Strings.h"
 #include "eDocumentPath.h"
 
 
@@ -480,7 +479,7 @@ cxFileResult Document::LoadText(const wxFileName& path, vector<unsigned int>& of
 	// See if we can detect the encoding
 	unsigned int bom_len = 0;
 	wxFontEncoding det_enc;
-	const bool result = DetectEncoding(bufptr, len, det_enc, bom_len);
+	const bool result = DetectTextEncoding(bufptr, len, det_enc, bom_len);
 	if (result && enc == wxFONTENCODING_SYSTEM) {
 		enc = det_enc; // Initial system means we should follow detection
 	}
@@ -1037,103 +1036,6 @@ conv_failed:
 	// clean up atomic save attempt
 	if (wxFileExists(tmpPath)) wxRemoveFile(tmpPath);
 	return cxFILE_CONV_ERROR;
-}
-
-bool Document::DetectEncoding(const char* buffer, size_t len, wxFontEncoding& encoding, unsigned int& BOM_len) { // static
-	wxASSERT(buffer);
-	if (!buffer || len == 0) return false;
-
-	const char* buff_ptr = buffer;
-	const char* buff_end = &buffer[len];
-	wxFontEncoding enc = wxFONTENCODING_DEFAULT;
-
-	// Check if the buffer starts with a BOM (Byte Order Marker)
-	if (len >= 2) {
-		if (len >= 4 && memcmp(buffer, "\xFF\xFE\x00\x00", 4) == 0) {enc = wxFONTENCODING_UTF32LE; BOM_len = 4;}
-		else if (len >= 4 && memcmp(buffer, "\x00\x00\xFE\xFF", 4) == 0) {enc = wxFONTENCODING_UTF32BE; BOM_len = 4;}
-		else if (memcmp(buffer, "\xFF\xFE", 2) == 0) {enc = wxFONTENCODING_UTF16LE; BOM_len = 2;}
-		else if (memcmp(buffer, "\xFE\xFF", 2) == 0) {enc = wxFONTENCODING_UTF16BE; BOM_len = 2;}
-		else if (len >= 3 && memcmp(buffer, "\xEF\xBB\xBF", 3) == 0) {enc = wxFONTENCODING_UTF8; BOM_len = 3;}
-		else if (len >= 5 && memcmp(buffer, "\x2B\x2F\x76\x38\x2D", 5) == 0) {enc = wxFONTENCODING_UTF7; BOM_len = 5;}
-
-		buff_ptr += BOM_len;
-	}
-
-	// If the file starts with a leading < (less) sign, it is probably an XML file
-	// and we can determine the encoding by how the sign is encoded.
-	if (enc == wxFONTENCODING_DEFAULT && len >= 2) {
-		if (len >= 4 && memcmp(buffer, "\x3C\x00\x00\x00", 4) == 0) enc = wxFONTENCODING_UTF32LE;
-		else if (len >= 4 && memcmp(buffer, "\x00\x00\x00\x3C", 4) == 0) enc = wxFONTENCODING_UTF32BE;
-		else if (memcmp(buffer, "\x3C\x00", 2) == 0) enc = wxFONTENCODING_UTF16LE;
-		else if (memcmp(buffer, "\x00\x3C", 2) == 0) enc = wxFONTENCODING_UTF16BE;
-	}
-
-	// Unicode Detection
-	if (enc == wxFONTENCODING_DEFAULT) {
-		unsigned int null_byte_count = 0;
-		unsigned int utf_bytes = 0;
-		unsigned int good_utf_count = 0;
-		unsigned int bad_utf_count = 0;
-		unsigned int bad_utf32_count = 0;
-		unsigned int bad_utf16_count = 0;
-		unsigned int nl_utf32le_count = 0;
-		unsigned int nl_utf32be_count = 0;
-		unsigned int nl_utf16le_count = 0;
-		unsigned int nl_utf16be_count = 0;
-
-		while (buff_ptr != buff_end) {
-			if (*buff_ptr == 0) ++null_byte_count;
-
-			// Detect UTF-8 by scanning for invalid sequences
-			if (utf_bytes == 0) {
-				if ((*buff_ptr & 0xC0) == 0x80 || *buff_ptr == 0) ++bad_utf_count;
-				else {
-					utf_bytes = utf8_len(*buff_ptr) - 1;
-					if (utf_bytes > 3) {
-						++bad_utf_count;
-						utf_bytes = 0;
-					}
-				}
-			}
-			else if ((*buff_ptr & 0xC0) == 0x80) {
-				--utf_bytes;
-				if (utf_bytes == 0) ++good_utf_count;
-			}
-			else {
-				++bad_utf_count;
-				utf_bytes = 0;
-			}
-
-			// Detect UTF-32 by scanning for newlines (and lack of null chars)
-			if ((uintptr_t)buff_ptr % 4 == 0 && buff_ptr+4 <= buff_end) {
-				if (*((wxUint32*)buff_ptr) == 0) ++bad_utf32_count;
-				if (*((wxUint32*)buff_ptr) == wxUINT32_SWAP_ON_BE(0x0A)) ++nl_utf32le_count;
-				if (*((wxUint32*)buff_ptr) == wxUINT32_SWAP_ON_LE(0x0A)) ++nl_utf32be_count;
-			}
-
-			// Detect UTF-16 by scanning for newlines (and lack of null chars)
-			if ((uintptr_t)buff_ptr % 2 == 0  && buff_ptr+4 <= buff_end) {
-				if (*((wxUint16*)buff_ptr) == 0) ++bad_utf16_count;
-				if (*((wxUint16*)buff_ptr) == wxUINT16_SWAP_ON_BE(0x0A)) ++nl_utf16le_count;
-				if (*((wxUint16*)buff_ptr) == wxUINT16_SWAP_ON_LE(0x0A)) ++nl_utf16be_count;
-			}
-
-			++buff_ptr;
-		}
-
-		if (bad_utf_count == 0) enc = wxFONTENCODING_UTF8;
-		else if (bad_utf32_count == 0 && nl_utf32le_count > len / 400) enc = wxFONTENCODING_UTF32LE;
-		else if (bad_utf32_count == 0 && nl_utf32be_count > len / 400) enc = wxFONTENCODING_UTF32BE;
-		else if (bad_utf16_count == 0 && nl_utf16le_count > len / 200) enc = wxFONTENCODING_UTF16LE;
-		else if (bad_utf16_count == 0 && nl_utf16be_count > len / 200) enc = wxFONTENCODING_UTF16BE;
-		else if (null_byte_count) return false; // May be binary file
-	}
-
-	// If we can't detect encoding and it does not contain null bytes just set it to the default encoding.
-	if (enc == wxFONTENCODING_DEFAULT) enc = wxFONTENCODING_SYSTEM;
-
-	encoding = enc;
-	return true;
 }
 
 void Document::GetLines(vector<unsigned int>& list) const {

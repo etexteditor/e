@@ -17,10 +17,11 @@
 #include "FixedLine.h"
 #include "LineListWrap.h"
 #include "Catalyst.h"
+#include "BracketHighlight.h"
 
 // Dummy vars for line
 const std::vector<interval> s_sel;
-const interval s_hlBracket(0,0);
+const BracketHighlight s_brackets;
 const unsigned int s_lastpos = 0;
 const bool s_isShadow = false;
 
@@ -52,7 +53,7 @@ void EditorPrintout::OnPreparePrinting() {
 
 	// Initialize line info
 
-	m_line = new FixedLine(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, m_theme);
+	m_line = new FixedLine(dc, m_printDoc.GetDocument(), s_sel, s_brackets, s_lastpos, s_isShadow, m_theme);
 	m_line->SetPrintMode();
 	m_line->Init();
 	m_line->SetWordWrap(cxWRAP_SMART);
@@ -114,7 +115,7 @@ bool EditorPrintout::OnPrintPage(int pageNum) {
 	const wxFont& font = m_theme.font;
 	dc.SetFont(font);
 
-	FixedLine line(dc, m_printDoc.GetDocument(), s_sel, s_hlBracket, s_lastpos, s_isShadow, m_theme);
+	FixedLine line(dc, m_printDoc.GetDocument(), s_sel, s_brackets, s_lastpos, s_isShadow, m_theme);
 	line.SetPrintMode();
 	line.Init();
 	line.SetWordWrap(cxWRAP_SMART);

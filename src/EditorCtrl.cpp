@@ -5172,7 +5172,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 	wxASSERT(regex);
 	wxASSERT(subjectStart <= subjectEnd);
 	wxASSERT(subjectEnd <= GetLength());
-	wxASSERT(pos >= subjectStart && pos <= subjectEnd);
+	wxASSERT(subjectStart <= pos && pos <= subjectEnd);
 
 	search_result sr;
 

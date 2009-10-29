@@ -325,7 +325,7 @@ public:
 	virtual void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
-	virtual const interval& GetHlBracket() const {return m_bracketHighlight.GetInterval();};
+	virtual const BracketHighlight& GetHlBracket() const {return m_bracketHighlight;};
 
 	// Folding
 	vector<unsigned int> GetFoldedLines() const;

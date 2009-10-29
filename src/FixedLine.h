@@ -27,6 +27,7 @@ class FastDC;
 struct tmTheme;
 class Styler;
 class DocumentWrapper;
+class BracketHighlight;
 
 struct full_pos {
 	int pos;
@@ -38,7 +39,7 @@ struct full_pos {
 
 class FixedLine {
 public:
-	FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme);
+	FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const BracketHighlight& brackets, const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme);
 	void Init();
 
 	bool IsValid() const {return width != 0;};
@@ -90,49 +91,48 @@ private:
 	// Member variables
 	FastDC& dc;
 	const DocumentWrapper& m_doc;
-	unsigned int m_docLen;
 	unsigned int textstart;
 	unsigned int textend;
 	unsigned int m_lineLen;
-	wxCharBuffer m_lineBuffer;
 	unsigned int m_lineBufferLen;
+	int width;
+	int old_width;
+	unsigned int m_tabChars;
+	const unsigned int& lastpos;
+	const bool& m_isSelShadow;
+	const BracketHighlight& m_brackets;
+	const tmTheme& m_theme;
+	StyleRun m_sr;
+	unsigned int m_docLen;
+	wxCharBuffer m_lineBuffer;
 	unsigned int m_lineWidth; // full width when no word-wrap
 	wxString m_textBuf;
 	vector<unsigned int> m_extents;
 	wxArrayInt m_extsBuf;
-	int width;
 	int height;
-	int old_width;
 	int charwidth;
 	int m_nlwidth;
 	int charheight;
 	int tabwidth;
-	unsigned int m_tabChars;
-	const unsigned int& lastpos;
-	const bool& m_isSelShadow;
 	const vector<interval>& selections;
-	const interval& m_hlBracket;
-	vector<unsigned int> breakpoints;
-	vector<Styler*> m_stylers;
-	const tmTheme& m_theme;
-	StyleRun m_sr;
-	bool m_isFontFixedWidth;
-
-	// Settings
 	cxWrapMode m_wrapMode;
 	bool m_showIndent;
-
-	// Smart wrap
 	unsigned int m_indentWidth;
-
-	// Folding
 	wxBitmap bmFold;
-	unsigned int m_foldWidth;
-	unsigned int m_foldHeight;
-
 	wxBitmap bmNewline;
 	wxBitmap bmSpace;
 	wxBitmap bmTab;
+
+	// Above: set in constructors' intializer list
+	// ----
+	// Below: not set in initializer list
+
+	vector<unsigned int> breakpoints;
+	vector<Styler*> m_stylers;
+	bool m_isFontFixedWidth;
+
+	unsigned int m_foldWidth;
+	unsigned int m_foldHeight;
 
 	static wxString s_text;
 

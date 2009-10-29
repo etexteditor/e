@@ -21,6 +21,9 @@ public:
 
 	bool UpdateIfChanged(unsigned int changeToken, unsigned int pos);
 
+	unsigned int Start() const {return m_interval.start;};
+	unsigned int End() const {return m_interval.end;};
+
 private:
 	interval m_interval; // Interval for the current bracket pair.
 	unsigned int m_lastChangeToken;

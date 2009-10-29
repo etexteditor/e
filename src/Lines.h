@@ -139,6 +139,11 @@ public:
 	bool NeedIdle() const {return ll->NeedIdle();};
 	void Verify(bool deep=false);
 
+	// Allow access to our document; used by the Fold manager
+	// Adam V: Don't know a better way to do this since this is still
+	// better than EditorCtrl being in the loop
+	const DocumentWrapper& UseDocument(void) const { return m_doc; }
+
 private:
 	void SetCaretPos(bool update=false);
 	void SetLine(unsigned int lineId);

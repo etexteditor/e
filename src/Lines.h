@@ -162,6 +162,9 @@ private:
 	unsigned int m_marginChars;
 	unsigned int m_marginPos;
 
+	// Cache the tab width
+	unsigned int m_tabWidth;
+
 	// Selection variables
 	std::vector<interval> selections;
 	bool m_isSelShadow;

@@ -145,6 +145,7 @@ void Lines::UpdateFont() {
 }
 
 void Lines::SetTabWidth(unsigned int width) {
+	this->m_tabWidth = width;
 	line.SetTabWidth(width);
 	ll->invalidate();
 }

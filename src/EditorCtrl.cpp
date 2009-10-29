@@ -409,7 +409,7 @@ void EditorCtrl::Init() {
 	m_lines.AddStyler(m_search_hl_styler);
 
 	// Set initial tabsize
-	SetTabWidth(m_parentFrame.GetTabWidth());
+	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
 
 	// Should we show margin line?
 	if (!doShowMargin) marginChars = 0;
@@ -737,9 +737,13 @@ void EditorCtrl::SetWordWrap(cxWrapMode wrapMode) {
 	DrawLayout();
 }
 
-void EditorCtrl::SetTabWidth(unsigned int width) {
-	if (m_parentFrame.IsSoftTabs()) m_indent = wxString(wxT(' '), m_parentFrame.GetTabWidth());
-	else m_indent = wxString(wxT("\t"));
+void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
+	// m_indent is the string used for indentation, either a real tab character
+	// or an appropriate number of spaces
+	if (soft_tabs) 
+		m_indent = wxString(wxT(' '), width);
+	else 
+		m_indent = wxString(wxT("\t"));
 
 	m_lines.SetTabWidth(width);
 	FoldingReIndent();

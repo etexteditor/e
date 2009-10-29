@@ -2048,13 +2048,12 @@ void EditorFrame::SetSoftTab(bool isSoft)  {
 	// update all editor pages
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
-		page->SetTabWidth(m_tabWidth);
+		page->SetTabWidth(m_tabWidth, m_softTabs);
 	}
 }
 
 void EditorFrame::SetTabWidth(unsigned int width) {
 	wxASSERT(width > 0);
-
 	if ((int)width == m_tabWidth) return;
 
 	// Save setting
@@ -2064,7 +2063,7 @@ void EditorFrame::SetTabWidth(unsigned int width) {
 	// Invalidate all editor pages
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
-		page->SetTabWidth(width);
+		page->SetTabWidth(m_tabWidth, m_softTabs);
 	}
 
 	// Redraw current

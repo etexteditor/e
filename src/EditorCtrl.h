@@ -142,7 +142,7 @@ public:
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);
 	void SetShowIndent(bool showIndent);
-	void SetTabWidth(unsigned int width);
+	void SetTabWidth(unsigned int width, bool soft_tabs);
 	void SetGutterRight(bool doMove=true);
 	const wxFont& GetEditorFont() const;
 	void SetScrollbarLeft(bool doMove=true);

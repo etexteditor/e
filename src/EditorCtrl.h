@@ -82,9 +82,6 @@ public:
 	bool IsRemote() const {return m_remoteProfile != NULL;};
 	const RemoteProfile* GetRemoteProfile() const {return m_remoteProfile;};
 
-	void SetMate(const wxString& mate) {m_mate = mate;};
-	const wxString& GetMate() const {return m_mate;};
-
 	// Change state
 	void StartChange();
 	void EndChange();
@@ -412,6 +409,8 @@ private:
 	static void OnBundlesReloaded(EditorCtrl* self, void* data, int filter);
 	static void OnSettingsChanged(EditorCtrl* self, void* data, int filter);
 
+	void SetMate(const wxString& mate) {m_mate = mate;}
+	void NotifyParentMate();
 	void ClearRemoteInfo();
 
 public:

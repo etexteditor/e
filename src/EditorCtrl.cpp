@@ -450,7 +450,12 @@ EditorCtrl::~EditorCtrl() {
 		doc.Close();
 	cxENDLOCK
 
-	// Notify mate that we have finished editing document
+	NotifyParentMate();
+	ClearRemoteInfo();
+}
+
+// Notify mate that we have finished editing document
+void EditorCtrl::NotifyParentMate() {
 	if (!m_mate.empty()) {
 #ifdef __WXMSW__
 		HWND hWndRecv = ::FindWindow(wxT("wxWindowClassNR"), m_mate);
@@ -467,8 +472,6 @@ EditorCtrl::~EditorCtrl() {
 		}
 #endif
 	}
-
-	ClearRemoteInfo();
 }
 
 void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings) {
@@ -491,16 +494,15 @@ EditorCtrl* EditorCtrl::GetActiveEditor() {
 	return this;
 }
 
-const char** EditorCtrl::RecommendedIcon() const {
-	return document_xpm;
-}
+const char** EditorCtrl::RecommendedIcon() const { return document_xpm; }
 
 void EditorCtrl::ClearRemoteInfo() {
 	if (m_remotePath.empty()) return;
 
 	m_remotePath.clear();
 	m_remoteProfile = NULL;
-	if (m_path.IsOk()) wxRemoveFile(m_path.GetFullPath()); // Clean up temp buffer file
+	if (m_path.IsOk()) // Clean up temp buffer file
+		wxRemoveFile(m_path.GetFullPath());
 }
 
 unsigned int EditorCtrl::GetLength() const {
@@ -2796,9 +2798,11 @@ bool EditorCtrl::IsModified() const {
 
 cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, const RemoteProfile* rp, const wxString& mate) {
 	// Bundle items do their own mirror handling during loading
-	if (eDocumentPath::IsBundlePath(filepath)) return LoadText(filepath, enc, rp);
+	if (eDocumentPath::IsBundlePath(filepath))
+		return LoadText(filepath, enc, rp);
 
-	if (!mate.empty()) SetMate(mate);
+	if (!mate.empty())
+		SetMate(mate);
 
 	// Check if there is a mirror that matches the file
 	doc_id di;

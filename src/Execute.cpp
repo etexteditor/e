@@ -16,8 +16,8 @@
 #include "IAppPaths.h"
 
 #include <wx/process.h>
-#include <wx/filename.h>
 #include <wx/file.h>
+#include <wx/filename.h>
 
 #ifndef WX_PRECOMP
 #include <wx/log.h>

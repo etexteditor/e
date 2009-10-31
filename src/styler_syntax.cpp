@@ -429,9 +429,8 @@ void Styler_Syntax::DoStyle(StyleRun& sr, unsigned int offset, const auto_vector
 			}
 
 			// Check if there are submatches
-			if ((*p)->subMatch.get()) {
+			if ((*p)->subMatch.get())
 				 DoStyle(sr, (*p)->start+offset, (*p)->subMatch->matches);
-			}
 		}
 	}
 }
@@ -496,7 +495,8 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 		// We are only the endscope if changeEnd is free and there is no open span
 		// bordering up to it.
 		if (end_match == matches.end() || (*end_match)->start >= m.end ||
-			((*end_match)->end == m.end && (!(*end_match)->subMatch.get() || (*end_match)->subMatch->flags & cxSPAN_IS_CLOSED))) {
+			((*end_match)->end == m.end && (!(*end_match)->subMatch.get() || (*end_match)->subMatch->flags & cxSPAN_IS_CLOSED)))
+		{
 			isEndScope = true;
 		}
 	}
@@ -505,7 +505,8 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 	if (next_match != matches.end()) {
 		// In spans with contentName, we have to enter the content
 		if (scope && scope->subMatch->flags & cxSPAN_HAS_CONTENT) {
-			if (scope->subMatch->flags & cxSPAN_HAS_STARTER && next_match == matches.begin() && (*next_match)->end == adjPos) {
+			if (scope->subMatch->flags & cxSPAN_HAS_STARTER && next_match == matches.begin() && (*next_match)->end == adjPos)
+			{
 				++next_match;
 				wxASSERT(next_match != matches.end()); // content span has been deleted
 			}
@@ -610,20 +611,18 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 
 		if (rc < 0) {
 			// Remove any old matches between pos and end-of-line
-			while (next_match != matches.end() && scopeStart + (*next_match)->start < si.lineEnd) {
+			while (next_match != matches.end() && scopeStart + (*next_match)->start < si.lineEnd)
 				next_match = matches.erase(next_match);
-			}
 
 			if (rc == PCRE_ERROR_NULL) {
 				// Invalid pattern
 				si.done = true;
 				return si.limit;
 			}
-			else {
-				// Go to end-of-line
-				si.pos = si.lineEnd;
-				continue;
-			}
+
+			// Go to end-of-line
+			si.pos = si.lineEnd;
+			continue;
 		}
 		else {
 			// Get match interval
@@ -662,9 +661,9 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 							++next_match;
 
 							// Check if we have overwritten following matches
-							while (next_match != matches.end() && si.pos > scopeStart + (*next_match)->start) {
+							while (next_match != matches.end() && si.pos > scopeStart + (*next_match)->start)
 								next_match = matches.erase(next_match);
-							}
+
 							continue;
 						}
 					}
@@ -712,21 +711,20 @@ unsigned int Styler_Syntax::Search(submatch& submatches, SearchInfo& si, unsigne
 				submatches.flags |= cxSPAN_IS_CLOSED;
 
 				// Remove any leftover matches
-				if (next_match != matches.end()) {
+				if (next_match != matches.end())
 					matches.erase(next_match, matches.end());
-				}
 
 				return si.pos;
 			}
 			else {
 				// Check if we have overwritten following matches
-				while (next_match != matches.end() && si.pos > scopeStart + (*next_match)->start) {
+				while (next_match != matches.end() && si.pos > scopeStart + (*next_match)->start)
 					next_match = matches.erase(next_match);
-				}
 			}
 
 			// Avoid eternal loop with faulty regexs
-			if (callout_start == callout_end && callout_end == si.pos) zeromatch = callout_id;
+			if (callout_start == callout_end && callout_end == si.pos)
+				zeromatch = callout_id;
 		}
 	}
 }

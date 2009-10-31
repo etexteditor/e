@@ -3127,12 +3127,12 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		const interval& iv = m_autopair.InnerPair();
 
 		// Detect backspacing in active auto-pair
-		if (!nextchar && pos == iv.start && pos == iv.end) {
+		if (!nextchar && iv.IsPoint(pos)) {
 			// Also delete pair ender
 			inAutoPair = true;
 			m_autopair.DropInnerPair();
 		}
-		else if ((nextchar && pos >= iv.end) || (!nextchar && pos <= iv.start)) {
+		else if ((nextchar && iv.end <= pos) || (!nextchar && pos <= iv.start)) {
 			// Reset autoPair state if deleting outside inner pair
 			m_autopair.Clear();
 		}
@@ -3144,7 +3144,7 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 	// Calculate delete positions
 	for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
 		// Check for overlap
-		if (pos >= iv->start && pos <= iv->end) {
+		if ( iv->start <= pos && pos <= iv->end) {
 			// Check if range is outside shadow
 			if (pos == iv->start && nextchar == false) return false;
 			if (pos == iv->end && nextchar == true) return false;
@@ -3201,9 +3201,8 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		}
 
 		// pairStack may be moved by insertions above it
-		if (m_autopair.BeforeOuterPair(del_end)) {
+		if (m_autopair.BeforeOuterPair(del_end))
 			m_autopair.AdjustIntervalsDown(byte_len);
-		}
 
 		if (atCaret) {
 			// Adjust containing pairs

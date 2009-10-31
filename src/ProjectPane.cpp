@@ -85,9 +85,7 @@ void DirItemData::SetNewPath(const wxString& path) {
 }
 
 
-
-// ctrl ids
-enum {
+enum ProjectPane_Ids {
 	ID_PRJTREE,
 	ID_NEWDIR,
 	ID_NEWDOC,
@@ -178,8 +176,6 @@ ProjectPane::ProjectPane(IFrameProjectService& projectServce, wxWindow*parent, w
 	wxAcceleratorTable accel(accelcount, entries);
 	SetAcceleratorTable(accel);
 
-	//const wxFileName path(wxT("C:\\Temp\\"));
-	//SetProject(path);
 #ifdef __WXGTK__
 	isDirWatched = false;
 #endif
@@ -266,12 +262,11 @@ void ProjectPane::Init() {
 
 	// Get the name of the project dir
 	wxString projectName;
-	if (m_isRemote) {
-		projectName = m_remoteProfile->m_name;
-	}
+	if (m_isRemote)  projectName = m_remoteProfile->m_name;
 	else {
 		const wxArrayString& path = m_prjPath.GetDirs();
-		if (path.empty() && m_prjPath.HasVolume()) {
+		if (! (path.empty() && m_prjPath.HasVolume()) ) projectName = path.Last();
+		else {
 			// Get label if it is a drive
 			const wxString vol = m_prjPath.GetFullPath();
 			wxString label;
@@ -281,9 +276,6 @@ void ProjectPane::Init() {
 			projectName = volname;
 #endif //__WXMSW__
 			projectName += wxT(" (") + m_prjPath.GetVolume() + wxFileName::GetVolumeSeparator() + wxT(")");
-		}
-		else {
-			projectName = path.Last();
 		}
 	}
 
@@ -319,7 +311,7 @@ void ProjectPane::Init() {
 #ifdef __WXMSW__
 		m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(), *this, true);
 #else
-		if (false == isDirWatched) {
+		if (!isDirWatched) {
 			m_dirWatchHandle = m_projectService.GetDirWatcher().WatchDirectory(m_prjPath.GetPath(),
 				*this, true);
 			WatchTree(m_prjPath.GetPath());
@@ -381,10 +373,8 @@ void ProjectPane::OnRemoteListReceived(cxRemoteListEvent& event) {
 	std::vector<cxFileInfo>& fiList = event.GetFileList();
 	wxArrayString dirs;
 	wxArrayString files;
-	for (std::vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p) {
-		if (p->m_isDir) dirs.Add(p->m_name);
-		else files.Add(p->m_name);
-	}
+	for (std::vector<cxFileInfo>::const_iterator p = fiList.begin(); p != fiList.end(); ++p)
+		( (p->m_isDir) ? dirs : files ).Add(p->m_name);
 
 	ExpandDir(item, data, dirs, files);
 	m_prjTree->Expand(item);
@@ -577,7 +567,6 @@ wxTreeItemId ProjectPane::GetItemFromPath(const wxString& path) const {
 	//if (!changedFile.IsOk()) return wxTreeItemId();
 
 	const wxArrayString dirs = wxStringTokenize(relativePath, wxFileName::GetPathSeparators(), wxTOKEN_STRTOK);
-
 	return GetItemFromNames(dirs);
 }
 
@@ -588,7 +577,6 @@ wxTreeItemId ProjectPane::GetItemFromUrl(const wxString& url) const {
 	// Get subdirs
 	const wxString subDirs = url.substr(m_prjUrl.size());
 	const wxArrayString dirs = wxStringTokenize(subDirs, wxT("/"));
-
 	return GetItemFromNames(dirs);
 }
 
@@ -686,9 +674,11 @@ void ProjectPane::ExpandDir(wxTreeItemId parentId, DirItemData *data, const wxAr
 
 	// Prepare path for adding file/dirname
 	if (!m_isRemote) {
-		if(!wxEndsWithPathSeparator(dirName)) dirName += wxFILE_SEP_PATH;
+		if(!wxEndsWithPathSeparator(dirName)) 
+			dirName += wxFILE_SEP_PATH;
 	}
-	else if (dirName.Last() != wxT('/')) dirName += wxT('/');
+	else if (dirName.Last() != wxT('/')) 
+		dirName += wxT('/');
 
 
 	// Add the sorted dirs
@@ -906,7 +896,6 @@ void ProjectPane::GetExpandedDirs(wxTreeItemId item, wxArrayString& dirs) {
 
 		if (subdata->m_isDir && subdata->m_isExpanded) {
 			dirs.Add(subdata->m_path);
-
 			GetExpandedDirs(subItem, dirs);
 		}
 
@@ -933,9 +922,8 @@ void ProjectPane::RefreshSubItemPaths(const wxTreeItemId& item) {
 		}
 		else subdata->m_path = data->m_path + wxString(wxFILE_SEP_PATH) + subdata->m_name;
 
-		if (subdata->m_isDir && subdata->m_isExpanded) {
+		if (subdata->m_isDir && subdata->m_isExpanded)
 			RefreshSubItemPaths(subItem);
-		}
 
 		subItem = m_prjTree->GetNextChild(item, cookie);
 	}
@@ -955,9 +943,8 @@ void ProjectPane::RefreshIcon(const wxTreeItemId& item) {
 	}
 
 	// Update parent icons as well
-	if (item != m_prjTree->GetRootItem()) {
+	if (item != m_prjTree->GetRootItem())
 		RefreshIcon(m_prjTree->GetItemParent(item));
-	}
 }
 
 wxTreeItemId ProjectPane::FindSubItem(const wxTreeItemId& item, const wxString& label) const {
@@ -976,7 +963,6 @@ wxTreeItemId ProjectPane::FindSubItem(const wxTreeItemId& item, const wxString& 
 void ProjectPane::OnExpandItem(wxTreeEvent &event)
 {
     const wxTreeItemId parentId = event.GetItem();
-
     Freeze();
 	ExpandDir(parentId);
 	Thaw();
@@ -1001,9 +987,8 @@ void ProjectPane::OnBeginEditItem(wxTreeEvent &event) {
 		DirItemData *data = (DirItemData*)m_prjTree->GetItemData( item );
 		const wxFileName fn = data->m_path;
 
-		if (fn.GetDirs().empty() && fn.HasVolume()) {
+		if (fn.GetDirs().empty() && fn.HasVolume())
 			event.Veto();
-		}
 	}
 }
 
@@ -1063,9 +1048,8 @@ void ProjectPane::OnEndEditItem(wxTreeEvent &event)
 			wxString oldPath = data->m_path;
 			data->SetNewPath( new_path );
 
-			if (data->m_isDir && data->m_isExpanded) {
+			if (data->m_isDir && data->m_isExpanded)
 				RefreshSubItemPaths(id);
-			}
 
 			// chequeo si el archivo estaba abierto, lo cierro y vuelvo a abrir el nuevo
 			// EditorCtrl -> SetPath(pathStr);
@@ -1100,9 +1084,8 @@ static bool projectpane_is_binary_file(const wxString& path) {
 	wxFFile file(path);
 	char buffer[1024];
 	const size_t bufLen = file.Read(buffer, 1024);
-	for(size_t i = 0; i < bufLen; ++i) {
+	for(size_t i = 0; i < bufLen; ++i)
 		if (buffer[i] == '\0') return true;
-	}
 
 	return false;
 }
@@ -1182,9 +1165,8 @@ void ProjectPane::OnMenuOpenTreeItems(wxCommandEvent& WXUNUSED(event)) {
 void ProjectPane::RenameItem() {
 	wxArrayTreeItemIds items;
 	m_prjTree->GetSelections(items);
-	if (!items.IsEmpty()) {
+	if (!items.IsEmpty())
 		m_prjTree->EditLabel(items.Last());
-	}
 }
 
 void ProjectPane::Upload(const wxString& url, const wxString& path) {
@@ -1302,9 +1284,7 @@ void ProjectPane::OnTreeContextMenu(wxTreeEvent& event) {
 
 			// Check if item is in the current dir
 			// context menu can only deal with items all in same dir
-			if (dir == rootdir) {
-				paths.Add(data->m_path);
-			}
+			if (dir == rootdir) paths.Add(data->m_path);
 			else m_prjTree->UnselectItem(items[i]);
 		}
 	}
@@ -1431,7 +1411,6 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 				else {
 					// Make the dir expandable
 					m_prjTree->SetItemHasChildren(subItem);
-
 					return; // changed file not visible
 				}
 			}
@@ -1449,9 +1428,8 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 	case DIRWATCHER_FILE_MODIFIED:
 		{
 			wxTreeItemId id = FindSubItem(item, fileName);
-			if (id.IsOk()) {
+			if (id.IsOk())
 				RefreshIcon(id);
-			}
 		}
 		break;
 
@@ -1473,13 +1451,12 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 			while(subItem.IsOk()) {
 				const wxString treeItem = m_prjTree->GetItemText(subItem);
 				if (treeItem == fileName) {
-					if (changeType == DIRWATCHER_FILE_REMOVED) {
-						//OutputDebugString(wxT(" del_1\n"));
-						m_prjTree->Delete(subItem);
-						//OutputDebugString(wxT(" del_2\n"));
-						return;
-					}
-					else break;
+					if (changeType != DIRWATCHER_FILE_REMOVED) break;
+
+					//OutputDebugString(wxT(" del_1\n"));
+					m_prjTree->Delete(subItem);
+					//OutputDebugString(wxT(" del_2\n"));
+					return;
 				}
 
 				subItem = m_prjTree->GetNextChild(item, cookie);
@@ -1519,9 +1496,8 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 					data->SetNewPath(event.GetNewFile());
 
 					// Refresh paths in all subitems
-					if (data->m_isDir && data->m_isExpanded) {
+					if (data->m_isDir && data->m_isExpanded)
 						RefreshSubItemPaths(subItem);
-					}
 					break;
 				}
 
@@ -1576,9 +1552,8 @@ void ProjectPane::OnDirChanged(wxDirWatcherEvent& event) {
 					excludeFiles.Empty();
 					m_infoHandler.GetFilters(path, includeDirs, excludeDirs, includeFiles, excludeFiles);
 
-					if (!projectpane_is_dir_empty(path))	{
+					if (!projectpane_is_dir_empty(path))
 						m_prjTree->SetItemHasChildren(id);
-					}
 				}
 
 				// If this is a folder we have just created, we give the user a
@@ -1658,10 +1633,7 @@ void ProjectPane::OnNewDir(wxCommandEvent& WXUNUSED(event)) {
 			if (data->m_isDir) 	path = wxFileName(data->m_path, wxEmptyString);
 			else path = data->m_path;
 		}
-		else {
-			// Create dir in root
-			path = m_prjPath;
-		}
+		else path = m_prjPath; // Create dir in root
 
 		// Create the dir
 		wxFileName newDir(path);
@@ -1674,7 +1646,6 @@ void ProjectPane::OnNewDir(wxCommandEvent& WXUNUSED(event)) {
 
 		// Remember path so we can edit name when notified of creation
 		m_newFolder = newDir.GetPath();
-
 		wxMkdir(m_newFolder);
 	}
 }
@@ -1758,10 +1729,7 @@ void ProjectPane::OnButtonSettings(wxCommandEvent& WXUNUSED(event)) {
 			path.SetFullName(wxEmptyString);
 		}
 	}
-	else {
-		// Create file in root
-		path = m_prjPath;
-	}
+	else path = m_prjPath; // Create file in root
 
 	// Load project settings for current dir
 	cxProjectInfo currentInfo;
@@ -1839,9 +1807,7 @@ int ProjectPane::AddFileIcon(const wxString& path, bool isDir) {
 		}
 #endif
 		// Add to imagelist
-		if (m_freeImages.empty()) {
-			index = m_imageList.Add(icon);
-		}
+		if (m_freeImages.empty()) index = m_imageList.Add(icon);
 		else {
 			index = m_freeImages.back();
 			m_freeImages.pop_back();
@@ -2014,9 +1980,7 @@ void ProjectPane::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 
 		// Add new icon to imagelist
 		int index;
-		if (m_freeImages.empty()) {
-			index = m_imageList.Add(pi.icon);
-		}
+		if (m_freeImages.empty())  index = m_imageList.Add(pi.icon);
 		else {
 			index = m_freeImages.back();
 			m_freeImages.pop_back();
@@ -2036,9 +2000,8 @@ WXLRESULT ProjectPane::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lPar
 	// Contextmenu needs to intercept event sent to parent window
 	if (m_contextMenu) {
 		WXLRESULT res;
-		if (m_contextMenu->HookWndProc(nMsg, wParam, lParam, res)) {
+		if (m_contextMenu->HookWndProc(nMsg, wParam, lParam, res))
 			return res;
-		}
 	}
 
 	// Let the window do it's own event handling
@@ -2095,7 +2058,8 @@ wxDragResult ProjectPane::DropTarget::OnData(wxCoord x, wxCoord y, wxDragResult 
 		}
 		else if (def == wxDragMove) {
 			// Dragging in tree get easily triggered, so we want confirmation
-			const wxString msg = (filenames.GetCount() == 1) ? wxT("Are you sure you want to move this item?")
+			const wxString msg = (filenames.GetCount() == 1) 
+				? wxT("Are you sure you want to move this item?")
 				: wxString::Format(wxT("Are you sure you want to move these %d items?"), filenames.GetCount());
 
 			if (!allowUndo || wxMessageBox(msg, wxT("Moving files"), wxYES_NO|wxICON_QUESTION, &m_parent) == wxYES) {
@@ -2158,9 +2122,8 @@ bool ProjectPane::DropTarget::TestDrop(wxCoord x, wxCoord y) {
 	// Verify that we are not trying to copy a dir into itself
 	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
 		const wxString& dragPath = filenames[i];
-		if (path.StartsWith(dragPath)) {
+		if (path.StartsWith(dragPath))
 			return false;
-		}
 	}
 
 	return true;

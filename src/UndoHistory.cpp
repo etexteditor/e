@@ -17,8 +17,7 @@
 #include "EditorCtrl.h"
 #include "VersionTree.h"
 
-// ctrl & menu id's
-enum {
+enum UndoHistory_IDs {
 	CTRL_VERSIONTREE = 1,
 	MENU_DIFF_TO_CURRENT
 };
@@ -38,10 +37,10 @@ BEGIN_EVENT_TABLE(UndoHistory, wxControl)
 	EVT_MENU(MENU_DIFF_TO_CURRENT, UndoHistory::OnMenuDiffToCurrent)
 END_EVENT_TABLE()
 
-UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
-	: wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
-	  m_catalyst(cw), m_doc(cw), m_dispatcher(cw.GetDispatcher()), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
-	  m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame), m_source_win_id(win_id)
+UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size):
+	wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
+	m_catalyst(cw), m_doc(cw), m_dispatcher(cw.GetDispatcher()), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
+	m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame), m_source_win_id(win_id)
 {
 	SetBackgroundStyle(wxBG_STYLE_CUSTOM); // Avoid flicker
 
@@ -131,9 +130,8 @@ void UndoHistory::UpdateTree(bool doCenter) {
 			const int nodecount = doc.GetVersionCount();
 			if (nodecount) m_pTree->AddRoot();
 
-			for(int i = 1; i < nodecount; ++i) {
+			for(int i = 1; i < nodecount; ++i)
 				m_pTree->AddNode(doc.GetDraftParent(i).version_id);
-			}
 		cxENDLOCK
 		m_selectedNode = m_sourceDoc.version_id;
 	}
@@ -347,30 +345,33 @@ void UndoHistory::OnSize(wxSizeEvent& WXUNUSED(event)) {
 }
 
 void UndoHistory::OnMouseWheel(wxMouseEvent& event) {
-	if (GetScrollThumb(wxVERTICAL)) { // Only handle scrollwheel if we have a scrollbar
-		const wxSize size = GetClientSize();
-		int pos = m_scrollPos;
-		const int rotation = event.GetWheelRotation();
-		const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
+	// Only handle scrollwheel if we have a scrollbar
+	if (!GetScrollThumb(wxVERTICAL)) return;
 
-		if (rotation > 0) { // up
-			pos = pos - (pos % m_lineHeight) - (m_lineHeight * linescount);
-			if (pos < 0) pos = 0;
-		}
-		else if (rotation < 0) { // down
-			pos = pos - (pos % m_lineHeight) + (m_lineHeight * linescount);
-			if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
-		}
-		else return; // no rotation
+	const int rotation = event.GetWheelRotation();
+	if (rotation == 0) return; // No net rotation.
 
-		if (pos != m_scrollPos) {
-			m_oldScrollPos = m_scrollPos;
-			m_scrollPos = pos;
-			m_isScrolling = true;
+	const wxSize size = GetClientSize();
+	const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
 
-			wxClientDC dc(this);
-			DrawLayout(dc);
-		}
+	int pos = m_scrollPos;
+
+	if (rotation > 0) { // up
+		pos = pos - (pos % m_lineHeight) - (m_lineHeight * linescount);
+		if (pos < 0) pos = 0;
+	}
+	else if (rotation < 0) { // down
+		pos = pos - (pos % m_lineHeight) + (m_lineHeight * linescount);
+		if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
+	}
+
+	if (pos != m_scrollPos) {
+		m_oldScrollPos = m_scrollPos;
+		m_scrollPos = pos;
+		m_isScrolling = true;
+
+		wxClientDC dc(this);
+		DrawLayout(dc);
 	}
 }
 
@@ -560,15 +561,13 @@ void UndoHistory::OnVersionTreeDrawitem(VersionTreeEvent& event) {
 	const doc_id hot_doc(m_sourceDoc.type, m_sourceDoc.document_id, (int)event.GetItem());
 
 	cxLOCK_READ(m_catalyst)
-		if (catalyst.IsMirroredSpecific(hot_doc)) {
+		if (catalyst.IsMirroredSpecific(hot_doc))
 			event.SetItemStyle(event.GetItemStyle() | VTREESTYLE_SAVED);
-		}
 	cxENDLOCK
 
 	cxLOCKDOC_READ(m_doc)
-		if (!(event.GetItem() == 0 && doc.GetParent().IsOk())) {
+		if (!(event.GetItem() == 0 && doc.GetParent().IsOk()))
 			event.SetItemStyle(event.GetItemStyle() | VTREESTYLE_DRAFT);
-		}
 	cxENDLOCK
 }
 
@@ -659,7 +658,6 @@ void UndoHistory::OnDocCommited(UndoHistory* self, void* data, int WXUNUSED(filt
 
 	const docid_pair* const diPair = (docid_pair*)data;
 
-	if (self->m_sourceDoc.SameDoc(diPair->doc1)) {
+	if (self->m_sourceDoc.SameDoc(diPair->doc1))
 		self->SetDocument(diPair->doc2);
-	}
 }

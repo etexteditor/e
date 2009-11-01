@@ -16,28 +16,25 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
-#include <wx/snglinst.h>
 #include <wx/dynlib.h>
 
 #ifdef __WXDEBUG__
-	#include <wx/ffile.h>
+#include <wx/ffile.h>
 #endif
 
-#include "Catalyst.h"
-#include "mk4.h"
 #include "eIpcServer.h"
 #include "eSettings.h"
 #include "IAppPaths.h"
 #include "IExecuteAppCommand.h"
 
-// pre-declearations
+
+class wxSingleInstanceChecker;
 class TmSyntaxHandler;
 class PListHandler;
 class EditorFrame;
-
 class AppVersion;
 
 class eApp : public wxApp, 
@@ -65,17 +62,17 @@ public:
 	virtual wxString CreateTempAppDataFile();
 
 	// Settings functions
-	const wxLongLong& GetId() const {cxLOCK_READ((*m_catalyst)) return catalyst.GetId(); cxENDLOCK};
+	const wxLongLong& GetId() const;
 	eSettings& GetSettings(){return m_settings;};
 
-	wxString GetAppTitle();
+	const wxString& GetAppTitle();
 
 	// Registration functions
-	bool IsRegistered() const {return m_pCatalyst->IsRegistered();};
-	int DaysLeftOfTrial() const {return m_pCatalyst->DaysLeftOfTrial();};
-	int TotalDays() const {return m_pCatalyst->DaysLeftOfTrial();};
-	const wxString& RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();};
-	const wxString& RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();};
+	bool IsRegistered() const;
+	int DaysLeftOfTrial() const;
+	int TotalDays() const;
+	const wxString& RegisteredUserName() const;
+	const wxString& RegisteredUserEmail() const;
 
     // Suppress default console handling even if wxWidgets was compiled with --enable-cmdline
 #if wxUSE_CMDLINE_PARSER
@@ -101,14 +98,10 @@ private:
 	// Member functions
 	void ClearState();
 	void ClearLayout();
-	wxRect DetermineFrameSize();
 
 	bool SendArgsToInstance();
-	wxString ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) const;
 
 #ifdef __WXMSW__
-	void SendCommandToServer(HWND hWndRecv, const wxString& cmd);
-
 	// Callback for ASProtect to set days left
 	static void __declspec(dllexport) __stdcall GetTrialDays(int Total, int Left);
 #endif

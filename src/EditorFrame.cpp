@@ -655,7 +655,7 @@ void EditorFrame::InitMenus() {
 
 	// Help menu
 	wxMenu *helpMenu = new wxMenu;
-	if (!((eApp*)wxTheApp)->IsRegistered()) {
+	if (!wxGetApp().IsRegistered()) {
 		// These are deleted again in RemoveRegMenus()
 		// BEWARE of changing their IDs and positions!
 		helpMenu->Append(MENU_BUY, _("&Buy"), _("Buy"));
@@ -1263,7 +1263,7 @@ void EditorFrame::UpdateWindowTitle() {
 	}
 
 	title += wxT( " - ");
-	title += ((eApp*)wxTheApp)->GetAppTitle();
+	title += wxGetApp().GetAppTitle();
 
 	SetTitle(title);
 
@@ -2256,7 +2256,7 @@ void EditorFrame::OnMenuNew(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuNewWindow(wxCommandEvent& WXUNUSED(event)) {
-	((eApp*)wxTheApp)->NewFrame();
+	wxGetApp().NewFrame();
 }
 
 void EditorFrame::OnNotebookDClick(wxAuiNotebookEvent& WXUNUSED(event)) {
@@ -2510,7 +2510,7 @@ void EditorFrame::OnMenuCloseWindow(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuExit(wxCommandEvent& WXUNUSED(event)) {
-	((eApp*)wxTheApp)->CloseAllFrames();
+	wxGetApp().CloseAllFrames();
 }
 
 void EditorFrame::OnMenuUndo(wxCommandEvent& WXUNUSED(event)) {
@@ -3290,7 +3290,7 @@ void EditorFrame::OnMenuRegister(wxCommandEvent& WXUNUSED(event)) {
 		catalyst.ShowRegisterDlg(this);
 	cxENDLOCK
 
-	if (!((eApp*)wxTheApp)->IsRegistered()) return;
+	if (!wxGetApp().IsRegistered()) return;
 
 	UpdateWindowTitle(); // to remove title bar nag
 	RemoveRegMenus();
@@ -3356,7 +3356,7 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 
 #ifdef __WXMSW__
 	// Show nag screen if the trial is about to expire
-	if (!((eApp*)wxTheApp)->IsRegistered() && ((eApp*)wxTheApp)->DaysLeftOfTrial() <= 5) {
+	if (!wxGetApp().IsRegistered() && wxGetApp().DaysLeftOfTrial() <= 5) {
 		int result = 0;
 		cxLOCK_READ(m_catalyst)
 			eAbout aboutdlg(this, catalyst);
@@ -3401,7 +3401,7 @@ void EditorFrame::OnClose(wxCloseEvent& event) {
 	editorCtrl = NULL; // avoid dangling pointer
 
 	// Clean up state info
-	if (!keep_state || !((eApp*)wxTheApp)->IsLastFrame()) {
+	if (!keep_state || !wxGetApp().IsLastFrame()) {
 		m_settings.SetSettingBool(wxT("showproject"), false);
 		m_generalSettings.RemoveFrame(m_settings);
 	}

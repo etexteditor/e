@@ -49,6 +49,7 @@ class BundlePane;
 class DocHistory;
 class UndoHistory;
 class SearchPanel;
+class CommandPanel;
 class TmSyntaxHandler;
 class StatusBar;
 class DirWatcher;
@@ -232,6 +233,11 @@ public:
 	// Search Bar
 	virtual void ShowSearch(bool show=true, bool replace=false);
 	bool IsSearching() const;
+
+	// Command Mode
+	void ShowCommandMode(bool show=true);
+	void ShowCommand(const wxString& cmd=wxEmptyString);
+	bool IsCommandMode() const;
 
 	// Settings
 	bool GetSetting(const wxString& name) const;
@@ -500,6 +506,7 @@ private:
 	wxBoxSizer* box;
 	wxBoxSizer*	editorbox;
 	SearchPanel* m_searchPanel;
+	CommandPanel* m_commandPanel;
 	eAuiNotebook* m_tabBar;
 
 	// Menus

@@ -161,7 +161,8 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_re(NULL), 
 	m_symbolCacheToken(0),
 
-	bookmarks(m_lines)
+	bookmarks(m_lines),
+	m_commandHandler(parentFrame, *this)
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -209,7 +210,8 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_re(NULL),
 	m_symbolCacheToken(0),
 
-	bookmarks(m_lines)
+	bookmarks(m_lines),
+	m_commandHandler(parentFrame, *this)
 
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -271,7 +273,8 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_re(NULL), 
 	m_symbolCacheToken(0),
 
-	bookmarks(m_lines)
+	bookmarks(m_lines),
+	m_commandHandler(parentFrame, *this)
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -2512,6 +2515,195 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 		else m_lines.SetPos(pos - del_len);
 	}
 
+	MarkAsModified();
+}
+
+void EditorCtrl::Delete(bool delWord) {
+	const unsigned int pos = m_lines.GetPos();
+
+	// Reset autoPair state if deleting outside inner pair
+	if (m_autopair.HasPairs())
+	{
+		const interval& inner_pair = m_autopair.InnerPair();
+		if (pos < inner_pair.start || inner_pair.end <= pos)
+			m_autopair.Clear();
+	}
+
+	// Check if we should delete entire word
+	if (delWord && !m_lines.IsSelected()) {
+		const interval iv = GetWordIv(pos);
+
+		if (pos >= iv.start && pos < iv.end) {
+			Delete(pos, iv.end);
+			return;
+		}
+	}
+
+	// Check if we delete outside zero-width selection
+	if (m_lines.IsSelected()) {
+		const vector<interval>& sels = m_lines.GetSelections();
+		if (sels.size() == 1 && sels[0].start == sels[0].end) {
+			m_lines.RemoveAllSelections();
+		}
+	}
+
+	// Handle deletions in snippet
+	if (m_snippetHandler.IsActive()) {
+		if (m_lines.IsSelected()) DeleteSelections();
+		else if (pos < m_lines.GetLength()) {
+			unsigned int nextcharpos;
+			cxLOCKDOC_READ(m_doc)
+				nextcharpos = doc.GetNextCharPos(pos);
+			cxENDLOCK
+			m_snippetHandler.Delete(pos, nextcharpos);
+		}
+		return;
+	}
+
+	if (pos != lastpos || lastaction != ACTION_DELETE) {
+		cxLOCKDOC_WRITE(m_doc)
+			doc.Freeze();
+		cxENDLOCK
+	}
+
+	if (m_lines.IsSelected()) {
+		if (m_lines.IsSelectionShadow()) {
+			if (DeleteInShadow(pos, true)) return; // if false we have to del outside shadow
+		}
+		else {
+			DeleteSelections();
+			cxLOCKDOC_WRITE(m_doc)
+				doc.Freeze();
+			cxENDLOCK
+			return;
+		}
+
+		m_lines.RemoveAllSelections();
+	}
+
+	if (pos >= m_lines.GetLength()) return; // Can't delete at end of text
+
+	unsigned int nextpos;
+	wxChar nextchar;
+	cxLOCKDOC_READ(m_doc)
+		nextpos = doc.GetNextCharPos(pos);
+		nextchar = doc.GetChar(pos);
+	cxENDLOCK
+
+	// Check if we are deleting over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(nextpos, NULL, &fold_end)) {
+		Delete(pos, fold_end); // delete fold
+		return;
+	}
+
+	// Check if we are at a soft tabpoint
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
+		&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
+	{
+		Delete(pos, pos + tabWidth);
+	}
+	else {
+		// Just delete the char
+		unsigned int byte_len;
+		cxLOCKDOC_WRITE(m_doc)
+			byte_len = doc.DeleteChar(pos);
+		cxENDLOCK
+		unsigned int del_end = pos + byte_len;
+		m_lines.Delete(pos, del_end);
+		StylersDelete(pos, del_end);
+		MarkAsModified();
+	}
+
+	lastpos = pos;
+	lastaction = ACTION_DELETE;
+}
+
+void EditorCtrl::Backspace(bool delWord) {
+	const unsigned int pos = m_lines.GetPos();
+
+	// Check if we should delete entire word
+	if (delWord && !m_lines.IsSelected()) {
+		const interval iv = GetWordIv(pos);
+
+		if (pos <= iv.end && pos > iv.start) {
+			Delete(iv.start, pos);
+			return;
+		}
+	}
+
+	// Check if we delete outside zero-width selection
+	if (m_lines.IsSelected()) {
+		const vector<interval>& sels = m_lines.GetSelections();
+		if (sels.size() == 1 && sels[0].start == sels[0].end) {
+			m_lines.RemoveAllSelections();
+		}
+	}
+
+	// Handle deletions in snippet
+	if (m_snippetHandler.IsActive()) {
+		if (m_lines.IsSelected()) DeleteSelections();
+		else if (pos > 0) {
+			unsigned int prevcharpos;
+			cxLOCKDOC_READ(m_doc)
+				prevcharpos = doc.GetPrevCharPos(pos);
+			cxENDLOCK
+
+			m_snippetHandler.Delete(prevcharpos, pos);
+		}
+		return;
+	}
+
+	if (pos != lastpos || lastaction != ACTION_DELETE) {
+		cxLOCKDOC_WRITE(m_doc)
+			doc.Freeze();
+		cxENDLOCK
+	}
+
+	if (m_lines.IsSelected()) {
+		if (m_lines.IsSelectionShadow()) {
+			if (DeleteInShadow(pos, false)) return; // if false we have to del outside shadow
+		}
+		else {
+			DeleteSelections();
+			cxLOCKDOC_WRITE(m_doc)
+				doc.Freeze();
+			cxENDLOCK
+			return;
+		}
+
+		m_lines.RemoveAllSelections();
+	}
+
+	if (pos == 0) return; // Can't delete at start of text
+
+	unsigned int prevpos;
+	wxChar prevchar;
+	cxLOCKDOC_READ(m_doc)
+		prevpos = doc.GetPrevCharPos(pos);
+		prevchar = doc.GetChar(prevpos);
+	cxENDLOCK
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	unsigned int newpos;
+
+	// Check if we are at a soft tabpoint
+	if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()
+		&& pos >= tabWidth && IsSpaces(pos - tabWidth, pos)) {
+
+		newpos = pos - tabWidth;
+		RawDelete(newpos, pos);
+	}
+	else {
+		// Else just delete the char
+		RawDelete(prevpos, pos);
+		newpos = prevpos;
+	}
+
+	m_lines.SetPos(newpos);
+
+	lastpos = newpos;
+	lastaction = ACTION_DELETE;
 	MarkAsModified();
 }
 
@@ -5648,6 +5840,8 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 }
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {
+	if (m_parentFrame.IsCommandMode() && m_commandHandler.ProcessCommand(event)) return;
+
 	wxString modifiers;
 	if (event.ControlDown()) modifiers += wxT("CTRL-");
 	if (event.AltDown()) modifiers += wxT("ALT-");
@@ -5664,7 +5858,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 	const int key = event.GetKeyCode();
 	const unsigned int oldpos = m_lines.GetPos();
-	unsigned int pos; // Used within several cases, and a case doesn't define a scope, so declare here.
 
 	// If the cursor is positioned outside of the innermost bracket pair, then
 	// we toss our nested bracket pair information.
@@ -5772,29 +5965,12 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_HOME:
-				SetPos(0);
-
-				// Handle selection
-				if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-				else if (oldpos != 0) SelectFromMovement(0, oldpos);
-
+				CursorToHome(event.ShiftDown());
 				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
-				pos = GetLength();
-
-				// Check if end is in a fold
-				unsigned int fold_start;
-				if (IsPosInFold(pos, &fold_start))
-					pos = fold_start;
-
-				SetPos(pos);
-
-				// Handle selection
-				if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-				else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
-
+				CursorToEnd(event.ShiftDown());
 				lastaction = ACTION_NONE;
 				break;
 
@@ -5908,42 +6084,13 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_HOME:
 			case WXK_NUMPAD_HOME:
 			case WXK_NUMPAD_BEGIN:
-				{
-					const unsigned int currentLine = m_lines.GetCurrentLine();
-					const unsigned int indentPos = GetLineIndentPos(currentLine);
-
-					if (indentPos < oldpos) {
-						// Move to first text after indentation
-						m_lines.SetPos(indentPos);
-					}
-					else {
-						const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
-						if (oldpos == startOfLine) {
-							// Move back to text after indentation
-							m_lines.SetPos(indentPos);
-						}
-						else {
-							// Move to start-of-line
-							m_lines.SetPos(startOfLine);
-						}
-					}
-
-					// Handle selection
-					if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-					else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
-
-					lastaction = ACTION_NONE;
-				}
+				CursorToLineStart(true, event.ShiftDown());
+				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
 			case WXK_NUMPAD_END:
-				m_lines.SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
-
-				// Handle selection
-				if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-				else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
-
+				CursorToLineEnd(event.ShiftDown());
 				lastaction = ACTION_NONE;
 				break;
 
@@ -5968,195 +6115,16 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_NUMPAD_DELETE:
 				if (event.ShiftDown()) OnCut();
 				else {
-					pos = m_lines.GetPos();
-
-					// Reset autoPair state if deleting outside inner pair
-					if (m_autopair.HasPairs())
-					{
-						const interval& inner_pair = m_autopair.InnerPair();
-						if (pos < inner_pair.start || inner_pair.end <= pos)
-							m_autopair.Clear();
-					}
-
-					// Check if we should delete entire word
-					if (event.ControlDown() && !m_lines.IsSelected()) {
-						const interval iv = GetWordIv(pos);
-
-						if (pos >= iv.start && pos < iv.end) {
-							Delete(pos, iv.end);
-							break;
-						}
-					}
-
-					// Check if we delete outside zero-width selection
-					if (m_lines.IsSelected()) {
-						const vector<interval>& sels = m_lines.GetSelections();
-						if (sels.size() == 1 && sels[0].start == sels[0].end) {
-							m_lines.RemoveAllSelections();
-						}
-					}
-
-					// Handle deletions in snippet
-					if (m_snippetHandler.IsActive()) {
-						if (m_lines.IsSelected()) DeleteSelections();
-						else if (pos < m_lines.GetLength()) {
-							unsigned int nextcharpos;
-							cxLOCKDOC_READ(m_doc)
-								nextcharpos = doc.GetNextCharPos(pos);
-							cxENDLOCK
-							m_snippetHandler.Delete(pos, nextcharpos);
-						}
-						break;
-					}
-
-					if (pos != lastpos || lastaction != ACTION_DELETE) {
-						cxLOCKDOC_WRITE(m_doc)
-							doc.Freeze();
-						cxENDLOCK
-					}
-
-					if (m_lines.IsSelected()) {
-						if (m_lines.IsSelectionShadow()) {
-							if (DeleteInShadow(pos, true)) break; // if false we have to del outside shadow
-						}
-						else {
-							DeleteSelections();
-							cxLOCKDOC_WRITE(m_doc)
-								doc.Freeze();
-							cxENDLOCK
-							break;
-						}
-
-						m_lines.RemoveAllSelections();
-					}
-
-					if (pos >= m_lines.GetLength()) return; // Can't delete at end of text
-
-					unsigned int nextpos;
-					wxChar nextchar;
-					cxLOCKDOC_READ(m_doc)
-						nextpos = doc.GetNextCharPos(pos);
-						nextchar = doc.GetChar(pos);
-					cxENDLOCK
-
-					// Check if we are deleting over a fold
-					unsigned int fold_end;
-					if (IsPosInFold(nextpos, NULL, &fold_end)) {
-						Delete(pos, fold_end); // delete fold
-						break;
-					}
-
-					// Check if we are at a soft tabpoint
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-					if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
-						&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
-					{
-						Delete(pos, pos + tabWidth);
-					}
-					else {
-						// Just delete the char
-						unsigned int byte_len;
-						cxLOCKDOC_WRITE(m_doc)
-							byte_len = doc.DeleteChar(pos);
-						cxENDLOCK
-						unsigned int del_end = pos + byte_len;
-						m_lines.Delete(pos, del_end);
-						StylersDelete(pos, del_end);
-						MarkAsModified();
-					}
-
-					lastpos = pos;
-					lastaction = ACTION_DELETE;
+					const bool delWord = event.ControlDown();
+					Delete(delWord);
 				}
 				break;
 
 			case WXK_BACK:
 				{
-					pos = m_lines.GetPos();
-
-					// Check if we should delete entire word
-					if (event.ControlDown() && !m_lines.IsSelected()) {
-						const interval iv = GetWordIv(pos);
-
-						if (pos <= iv.end && pos > iv.start) {
-							Delete(iv.start, pos);
-							break;
-						}
-					}
-
-					// Check if we delete outside zero-width selection
-					if (m_lines.IsSelected()) {
-						const vector<interval>& sels = m_lines.GetSelections();
-						if (sels.size() == 1 && sels[0].start == sels[0].end) {
-							m_lines.RemoveAllSelections();
-						}
-					}
-
-					// Handle deletions in snippet
-					if (m_snippetHandler.IsActive()) {
-						if (m_lines.IsSelected()) DeleteSelections();
-						else if (pos > 0) {
-							unsigned int prevcharpos;
-							cxLOCKDOC_READ(m_doc)
-								prevcharpos = doc.GetPrevCharPos(pos);
-							cxENDLOCK
-
-							m_snippetHandler.Delete(prevcharpos, pos);
-						}
-						break;
-					}
-
-					if (pos != lastpos || lastaction != ACTION_DELETE) {
-						cxLOCKDOC_WRITE(m_doc)
-							doc.Freeze();
-						cxENDLOCK
-					}
-
-					if (m_lines.IsSelected()) {
-						if (m_lines.IsSelectionShadow()) {
-							if (DeleteInShadow(pos, false)) break; // if false we have to del outside shadow
-						}
-						else {
-							DeleteSelections();
-							cxLOCKDOC_WRITE(m_doc)
-								doc.Freeze();
-							cxENDLOCK
-							break;
-						}
-
-						m_lines.RemoveAllSelections();
-					}
-
-					if (pos == 0) return; // Can't delete at start of text
-
-					unsigned int prevpos;
-					wxChar prevchar;
-					cxLOCKDOC_READ(m_doc)
-						prevpos = doc.GetPrevCharPos(pos);
-						prevchar = doc.GetChar(prevpos);
-					cxENDLOCK
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-					unsigned int newpos;
-
-					// Check if we are at a soft tabpoint
-					if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()
-						&& pos >= tabWidth && IsSpaces(pos - tabWidth, pos)) {
-
-						newpos = pos - tabWidth;
-						RawDelete(newpos, pos);
-					}
-					else {
-						// Else just delete the char
-						RawDelete(prevpos, pos);
-						newpos = prevpos;
-					}
-
-					m_lines.SetPos(newpos);
-
-					lastpos = newpos;
-					lastaction = ACTION_DELETE;
-					MarkAsModified();
-				}
+					const bool delWord = event.ControlDown();
+					Backspace(delWord);
+				}	
 				break;
 
 			case WXK_RETURN:
@@ -6181,7 +6149,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_ESCAPE:
 				if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 				else if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
-				else DoCompletion();
+				else m_parentFrame.ShowCommandMode();
 				break;
 
 			default:
@@ -6335,22 +6303,8 @@ void EditorCtrl::SetPos(unsigned int pos) {
 
 void EditorCtrl::SetPos(int line, int column) {
 	// line & colums indexes starts from 1
-	if (line > 0) {
-		--line;
-		if (line < (int)m_lines.GetLineCount())
-			m_lines.SetPos(m_lines.GetLineStartpos(line));
-	}
-	if (column > 0) {
-		--column;
-		const unsigned int pos = m_lines.GetPos();
-		const unsigned int curLine = m_lines.GetLineFromCharPos(pos);
-		const unsigned int lineEnd = m_lines.GetLineEndpos(curLine);
-		unsigned int newpos;
-		cxLOCKDOC_READ(m_doc)
-			newpos = doc.GetValidCharPos(pos + column);
-		cxENDLOCK
-		m_lines.SetPos(wxMin(newpos, lineEnd));
-	}
+	if (line > 0) CursorToLine(line);
+	if (column > 0) CursorToColumn(column);
 }
 
 void EditorCtrl::PageUp(bool select, int WXUNUSED(count)) {
@@ -6569,6 +6523,102 @@ void EditorCtrl::CursorWordRight(bool select) {
 	// Handle selection
 	if (!select) m_lines.RemoveAllSelections(true, pos);
 	else if (oldpos != pos) SelectFromMovement(oldpos, pos);
+}
+
+void EditorCtrl::CursorToHome(bool select) {
+	const unsigned int oldpos = GetPos();
+	SetPos(0);
+
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != 0) SelectFromMovement(0, oldpos);
+}
+
+void EditorCtrl::CursorToEnd(bool select) {
+	unsigned int pos = GetLength();
+	const unsigned int oldpos = pos;
+
+	// Check if end is in a fold
+	unsigned int fold_start;
+	if (IsPosInFold(pos, &fold_start))
+		pos = fold_start;
+
+	SetPos(pos);
+
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
+}
+
+void EditorCtrl::CursorToLine(unsigned int line, bool select) {
+	if (line == 0) return; // line id's start from 1
+	if (--line >= m_lines.GetLineCount()) return CursorToEnd(select);
+
+	const unsigned int oldpos = GetPos();
+	m_lines.SetPos(m_lines.GetLineStartpos(line));
+	
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != GetPos()) SelectFromMovement(oldpos, GetPos());
+}
+
+void EditorCtrl::CursorToColumn(unsigned int column, bool select) {
+	if (column == 0) return; // column id's start from 1
+	--column;
+
+	const unsigned int oldpos = m_lines.GetPos();
+	const unsigned int curLine = m_lines.GetCurrentLine();
+	const unsigned int lineStart = m_lines.GetLineStartpos(curLine);
+	const unsigned int lineEnd = m_lines.GetLineEndpos(curLine);
+
+	unsigned int newpos;
+	cxLOCKDOC_READ(m_doc)
+		newpos = doc.GetValidCharPos(lineStart + column);
+	cxENDLOCK
+	m_lines.SetPos(wxMin(newpos, lineEnd));
+	
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != GetPos()) SelectFromMovement(oldpos, GetPos());
+}
+
+void EditorCtrl::CursorToLineStart(bool soft, bool select) {
+	const unsigned int oldpos = GetPos();
+	const unsigned int currentLine = m_lines.GetCurrentLine();
+	const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
+
+	if (!soft) m_lines.SetPos(startOfLine);
+	else {
+		const unsigned int indentPos = GetLineIndentPos(currentLine);
+
+		if (indentPos < oldpos) {
+			// Move to first text after indentation
+			m_lines.SetPos(indentPos);
+		}
+		else {
+			if (oldpos == startOfLine) {
+				// Move back to text after indentation
+				m_lines.SetPos(indentPos);
+			}
+			else {
+				// Move to start-of-line
+				m_lines.SetPos(startOfLine);
+			}
+		}
+	}
+
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
+}
+
+void EditorCtrl::CursorToLineEnd(bool select) {
+	const unsigned int oldpos = GetPos();
+	m_lines.SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
 void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible) {

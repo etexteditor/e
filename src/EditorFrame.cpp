@@ -58,6 +58,7 @@
 #include "DocHistory.h"
 #include "eDocumentPath.h"
 #include "SearchPanel.h"
+#include "CommandPanel.h"
 #include "StatusBar.h"
 #include "DirWatcher.h"
 #include "FindInProjectDlg.h"
@@ -315,6 +316,11 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		m_searchPanel = new SearchPanel(*this, panel, wxID_ANY, wxDefaultPosition, wxSize(10,25));
 		box->Add(m_searchPanel, 0, wxEXPAND);
 		box->Show(m_searchPanel, false);
+
+		// Create and add the commandpanel
+		m_commandPanel = new CommandPanel(*this, panel);
+		box->Add(m_commandPanel, 0, wxEXPAND);
+		box->Show(m_commandPanel, false);
 
 		// Layout main components
 		box->Layout();
@@ -2023,6 +2029,26 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 
 bool EditorFrame::IsSearching() const {
 	return m_searchPanel->IsShown();
+}
+
+void EditorFrame::ShowCommandMode(bool show) {
+	if (show) {
+		if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel); 
+		box->Show(m_commandPanel);
+	}
+	else {
+		box->Hide(m_commandPanel);
+		editorCtrl->SetFocus();
+	}
+	box->Layout();
+}
+
+void EditorFrame::ShowCommand(const wxString& cmd) {
+	m_commandPanel->ShowCommand(cmd);
+}
+
+bool EditorFrame::IsCommandMode() const {
+	return m_commandPanel->IsShown();
 }
 
 bool EditorFrame::GetSetting(const wxString& name) const {

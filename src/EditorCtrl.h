@@ -33,6 +33,7 @@
 #include "DetectTripleClicks.h"
 #include "AutoPairs.h"
 #include "Bookmarks.h"
+#include "CommandHandler.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -120,6 +121,10 @@ public:
 	void Insert(const wxString& text);
 	unsigned int InsertNewline();
 	void Delete(unsigned int start, unsigned int end);
+	void Delete(bool delWord=false);
+	void Backspace(bool delWord=false);
+
+	// Undo/Versioning
 	void Freeze();
 	void Commit(const wxString& label, const wxString& desc);
 
@@ -217,6 +222,12 @@ public:
 	void CursorRight(bool select=false);
 	void CursorWordLeft(bool select=false);
 	void CursorWordRight(bool select=false);
+	void CursorToHome(bool select=false);
+	void CursorToEnd(bool select=false);
+	void CursorToLine(unsigned int line, bool select=false);
+	void CursorToColumn(unsigned int column, bool select=false);
+	void CursorToLineStart(bool soft=true, bool select=false);
+	void CursorToLineEnd(bool select=false);
 	void GotoMatchingBracket();
 
 	// Search & Replace
@@ -419,6 +430,7 @@ public:
 	void DrawLayout(bool isScrolling=false) {wxClientDC dc(this);DrawLayout(dc, isScrolling);};
 
 protected:
+	// Drawing
 	void DrawLayout(wxDC& dc, bool isScrolling=false);
 	bool UpdateScrollbars(unsigned int x, unsigned int y);
 	void HandleScroll(int orientation, int position, wxEventType eventType);
@@ -551,6 +563,12 @@ protected:
 	mutable pcre *m_re; // for last compiled regex
 	mutable unsigned int m_symbolCacheToken;
 
+	// Bookmarks
+	Bookmarks bookmarks;
+
+	// Command Mode
+	CommandHandler m_commandHandler;
+
 	// Above: set in constructors' intializer list
 	// ----
 	// Below: not set in initializer list
@@ -583,9 +601,6 @@ protected:
 	unsigned int m_foldedLines;
 	unsigned int m_foldLineCount;
 	unsigned int m_foldTooltipLine;
-
-	// Bookmarks
-	Bookmarks bookmarks;
 
 	action lastaction;
 	wxPoint lastMousePos; // Used to check if mouse have really moved

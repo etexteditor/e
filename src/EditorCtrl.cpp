@@ -2873,7 +2873,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	UpdateParentPanels();
 
 	// Notify that we have changed document
-	const doc_id docId = di; // AdamV: Does this exist just to be on the stack in bug reports?
+	const doc_id docId = di; // just to be on the stack in bug reports
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), this, m_parentFrame.GetId());
 
 	return true;

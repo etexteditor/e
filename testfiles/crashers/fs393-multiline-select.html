@@ -1,0 +1,32 @@
+<%= link_to t('txt.customer_order.back_to_form'), new_customer_orders_order_path(:active_order_type => @active_order_type) if type == "links" %>
+
+<h3><%= t('txt.customer_order.select_from_place') %></h3>
+
+<p><%= t('txt.customer_order.select_from_place_info') %></p>
+
+<ul>
+<% for place in order.from_places %>
+  <% if type == "links" %>
+    <% place_params = params %>
+    <% place_params[:transport_order][:from_pos_wgs_lng] = place["y"] %>
+    <% place_params[:transport_order][:from_pos_wgs_lat] = place["x"] %>
+    <% place_params[:transport_order][:from_city] = place["city"] %>
+    <% place_params[:transport_order][:from_street] = place["street"] %>
+    <% place_params[:transport_order][:from_house_number] = [place["cp"], place["co"]].compact.join("/") %>
+    <li><%= link_to address_from_ms(place), new_customer_orders_transport_order_path(place_params) %></li>
+  <% else %>
+    <% index = order.from_places.index(place) %>
+    <li>
+      <%= hidden_field_tag "from_places[#{index}][city]", place["city"] %>
+      <%= hidden_field_tag "from_places[#{index}][street]", place["street"] %>
+      <%= hidden_field_tag "from_places[#{index}][house_number]", [place["cp"], place["co"]].compact.join("/") %>
+      <%= hidden_field_tag "from_places[#{index}][pos_wgs_lng]", place["y"] %>
+      <%= hidden_field_tag "from_places[#{index}][pos_wgs_lat]", place["x"] %>
+      <%= radio_button_tag "from_places[selected]", index %><%= label_tag "from_places_selected_#{index}", address_from_ms(place) %>
+    </li>
+  <% end %>
+<% end %>
+</ul>
+
+# Selecting all of the ":transport_order" via CTL-ALT-mouse is a reported crashser (FS#393)
+# Language is HTML (Rails)

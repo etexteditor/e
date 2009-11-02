@@ -2,7 +2,10 @@
 #define __UPDATERTHREAD_H__
 
 // Constants
-#define ID_UPDATES_AVAILABLE 100
+enum {
+	ID_UPDATES_AVAILABLE=100,
+	ID_UPDATES_CHECKED
+};
 
 class ISettings;
 class AppVersion;

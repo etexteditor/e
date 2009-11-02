@@ -54,6 +54,7 @@ IMPLEMENT_APP(eApp)
 
 BEGIN_EVENT_TABLE(eApp, wxApp)
 	EVT_MENU(ID_UPDATES_AVAILABLE, eApp::OnUpdatesAvailable)
+	EVT_MENU(ID_UPDATES_CHECKED, eApp::OnUpdatesChecked)
 	EVT_IDLE(eApp::OnIdle)
 END_EVENT_TABLE()
 
@@ -724,12 +725,22 @@ wxString eApp::CreateTempAppDataFile() {
 }
 
 void eApp::OnUpdatesAvailable(wxCommandEvent& WXUNUSED(event)) {
+	// Remember this time as last update checked
+	const wxLongLong now = wxDateTime::Now().GetValue();
+	m_settings.SetSettingLong(wxT("lastupdatecheck"), now);
+
 	// Ask user if he wants to download new release
 	const int answer = wxMessageBox(_("A new release of e is available.\nDo you wish to go the the website to download it now?"), wxT("Program update!"), wxYES_NO|wxICON_EXCLAMATION, GetTopFrame());
 	if (answer == wxYES) {
 		// Go to website
 		wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com"));
 	}
+}
+
+void eApp::OnUpdatesChecked(wxCommandEvent& WXUNUSED(event)) {
+	// Remember this time as last update checked
+	const wxLongLong now = wxDateTime::Now().GetValue();
+	m_settings.SetSettingLong(wxT("lastupdatecheck"), now);
 }
 
 #ifdef __WXDEBUG__

@@ -115,6 +115,7 @@ private:
 
 	// Event handlers
 	void OnUpdatesAvailable(wxCommandEvent& event);
+	void OnUpdatesChecked(wxCommandEvent& event);
 	void OnIdle(wxIdleEvent& event);
 	DECLARE_EVENT_TABLE();
 

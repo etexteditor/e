@@ -70,9 +70,9 @@
 #include "DiffDirPane.h"
 
 #ifdef __WXMSW__
-	// For multi-monitor-aware position restore on Windows, include WinUser.h
-	#include "Winuser.h"
-    #include <wx/msw/registry.h>
+// For multi-monitor-aware position restore on Windows, include WinUser.h
+#include "Winuser.h"
+#include <wx/msw/registry.h>
 #endif
 
 
@@ -98,10 +98,7 @@ bool FrameDropTarget::OnDropFiles(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), cons
 }
 
 
-// ctrl id's
-enum {
-	CTRL_TABBAR=100
-};
+enum EditorFrame_IDs { CTRL_TABBAR=100 };
 
 wxString EditorFrame::DefaultFileFilters = wxT("All files (*.*)|*.*|Text files (*.txt)|*.txt|") \
 						wxT("Batch Files (*.bat)|*.bat|INI Files (*.ini)|*.ini|") \
@@ -116,28 +113,43 @@ wxIMPLEMENT_CLASS_COMMON1(EditorFrame, wxFrame, NULL)
 
 BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_SIZE(EditorFrame::OnSize)
+
 	EVT_MENU_OPEN(EditorFrame::OnOpeningMenu)
+
+	// File menu
 	EVT_MENU(wxID_NEW, EditorFrame::OnMenuNew)
-	EVT_MENU(MENU_NEWWINDOW, EditorFrame::OnMenuNewWindow)
 	EVT_MENU(wxID_OPEN, EditorFrame::OnMenuOpen)
 	EVT_MENU(MENU_DIFF, EditorFrame::OnMenuCompareFiles)
-	EVT_MENU(MENU_OPENPROJECT, EditorFrame::OnMenuOpenProject)
-	EVT_MENU(MENU_OPENREMOTE, EditorFrame::OnMenuOpenRemote)
-	EVT_MENU(MENU_CLOSEPROJECT, EditorFrame::OnMenuCloseProject)
+
+	EVT_MENU(MENU_NEWWINDOW, EditorFrame::OnMenuNewWindow)
+
 	EVT_MENU(wxID_SAVE, EditorFrame::OnMenuSave)
 	EVT_MENU(wxID_SAVEAS, EditorFrame::OnMenuSaveAs)
 	EVT_MENU(MENU_SAVEALL, EditorFrame::OnMenuSaveAll)
+	EVT_MENU(MENU_COMMIT, EditorFrame::OnMenuCommit)
+
+	EVT_MENU(MENU_OPENPROJECT, EditorFrame::OnMenuOpenProject)
+	EVT_MENU(MENU_OPENREMOTE, EditorFrame::OnMenuOpenRemote)
+	EVT_MENU(MENU_CLOSEPROJECT, EditorFrame::OnMenuCloseProject)
 	EVT_MENU(wxID_PAGE_SETUP, EditorFrame::OnMenuPageSetup)
-	//EVT_MENU(wxID_PREVIEW, EditorFrame::OnMenuPrintPreview)
 	EVT_MENU(wxID_PRINT, EditorFrame::OnMenuPrint)
 	EVT_MENU(MENU_CLOSE, EditorFrame::OnMenuClose)
 	EVT_MENU(MENU_CLOSEWINDOW, EditorFrame::OnMenuCloseWindow)
 	EVT_MENU(wxID_EXIT, EditorFrame::OnMenuExit)
+
+	// Edit menu
 	EVT_MENU(wxID_UNDO, EditorFrame::OnMenuUndo)
 	EVT_MENU(wxID_REDO, EditorFrame::OnMenuRedo)
 	EVT_MENU(wxID_CUT, EditorFrame::OnMenuCut)
 	EVT_MENU(wxID_COPY, EditorFrame::OnMenuCopy)
 	EVT_MENU(wxID_PASTE, EditorFrame::OnMenuPaste)
+
+	EVT_MENU(wxID_SELECTALL, EditorFrame::OnMenuSelectAll)
+	EVT_MENU(MENU_SELECTWORD, EditorFrame::OnMenuSelectWord)
+	EVT_MENU(MENU_SELECTLINE, EditorFrame::OnMenuSelectLine)
+	EVT_MENU(MENU_SELECTSCOPE, EditorFrame::OnMenuSelectScope)
+	EVT_MENU(MENU_SELECTFOLD, EditorFrame::OnMenuSelectFold)
+
 	EVT_MENU(wxID_FIND, EditorFrame::OnMenuFind)
 	EVT_MENU(MENU_FIND_IN_PROJECT, EditorFrame::OnMenuFindInProject)
 	EVT_MENU(MENU_FIND_IN_SEL, EditorFrame::OnMenuFindInSel)
@@ -145,63 +157,79 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_FIND_PREVIOUS, EditorFrame::OnMenuFindPrevious)
 	EVT_MENU(MENU_FIND_CURRENT, EditorFrame::OnMenuFindCurrent)
 	EVT_MENU(wxID_REPLACE, EditorFrame::OnMenuReplace)
-	EVT_MENU(wxID_SELECTALL, EditorFrame::OnMenuSelectAll)
-	EVT_MENU(MENU_SELECTWORD, EditorFrame::OnMenuSelectWord)
-	EVT_MENU(MENU_SELECTLINE, EditorFrame::OnMenuSelectLine)
-	EVT_MENU(MENU_SELECTSCOPE, EditorFrame::OnMenuSelectScope)
-	EVT_MENU(MENU_SELECTFOLD, EditorFrame::OnMenuSelectFold)
+
 	EVT_MENU(MENU_EDIT_THEME, EditorFrame::OnMenuEditTheme)
 	EVT_MENU(MENU_SETTINGS, EditorFrame::OnMenuSettings)
+
+	// View menu
+	EVT_MENU(MENU_SHOWPROJECT, EditorFrame::OnMenuShowProject)
+	EVT_MENU(MENU_SHIFT_PROJECT_FOCUS, EditorFrame::OnShiftProjectFocus)
+	EVT_MENU(MENU_SHOWSYMBOLS, EditorFrame::OnMenuShowSymbols)
+	EVT_MENU(MENU_REVHIS, EditorFrame::OnMenuRevisionHistory)
+	EVT_MENU(MENU_UNDOHIS, EditorFrame::OnMenuUndoHistory)
+	EVT_MENU(MENU_COMMANDOUTPUT, EditorFrame::OnMenuShowCommandOutput)
+	EVT_MENU(MENU_PREVIEW, EditorFrame::OnMenuPreview)
+
+	EVT_MENU(MENU_LINENUM, EditorFrame::OnMenuLineNumbers)
+	EVT_MENU(MENU_INDENTGUIDE, EditorFrame::OnMenuIndentGuide)
+
+	EVT_MENU(MENU_WRAP_NONE, EditorFrame::OnMenuWordWrap)
+	EVT_MENU(MENU_WRAP_NORMAL, EditorFrame::OnMenuWordWrap)
+	EVT_MENU(MENU_WRAP_SMART, EditorFrame::OnMenuWordWrap)
+
+	EVT_MENU(MENU_STATUSBAR, EditorFrame::OnMenuStatusbar)
+
+	// Folds...
+	EVT_MENU(MENU_FOLDTOGGLE, EditorFrame::OnMenuFoldToggle)
+	EVT_MENU(MENU_FOLDALL, EditorFrame::OnMenuFoldAll)
+	EVT_MENU(MENU_FOLDOTHERS, EditorFrame::OnMenuFoldOthers)
+	EVT_MENU(MENU_UNFOLDALL, EditorFrame::OnMenuUnfoldAll)
+
+	// Text menu
+	// Convert...
 	EVT_MENU(MENU_UPPERCASE, EditorFrame::OnMenuConvUpper)
 	EVT_MENU(MENU_LOWERCASE, EditorFrame::OnMenuConvLower)
 	EVT_MENU(MENU_TITLECASE, EditorFrame::OnMenuConvTitle)
 	EVT_MENU(MENU_REVERSECASE, EditorFrame::OnMenuConvReverse)
+			// Transpose
+	EVT_MENU(MENU_REVSEL, EditorFrame::OnMenuRevSel)
+
 	EVT_MENU(MENU_INDENTLEFT, EditorFrame::OnMenuIndentLeft)
 	EVT_MENU(MENU_INDENTRIGHT, EditorFrame::OnMenuIndentRight)
 	EVT_MENU(MENU_TABSTOSPACES, EditorFrame::OnMenuTabsToSpaces)
 	EVT_MENU(MENU_SPACESTOTABS, EditorFrame::OnMenuSpacesToTabs)
 	EVT_MENU(MENU_COMPLETE, EditorFrame::OnMenuCompleteWord)
-	EVT_MENU(MENU_REVSEL, EditorFrame::OnMenuRevSel)
+
 	EVT_MENU(MENU_FILTER, EditorFrame::OnMenuFilter)
 	EVT_MENU(MENU_RUN, EditorFrame::OnMenuRunCurrent)
 
-	EVT_MENU(MENU_NEXTTAB, EditorFrame::OnMenuNextTab)
-	EVT_MENU(MENU_PREVTAB, EditorFrame::OnMenuPrevTab)
-	EVT_MENU(MENU_LASTTAB, EditorFrame::OnMenuLastTab)
-
-	EVT_MENU(MENU_OPEN_EXT, EditorFrame::OnMenuOpenExt)
-	EVT_MENU(MENU_GOTOFILE, EditorFrame::OnMenuGotoFile)
-	EVT_MENU(MENU_GOTOLINE, EditorFrame::OnMenuGotoLine)
-	EVT_MENU(MENU_GOTOBRACKET, EditorFrame::OnMenuGotoBracket)
-	EVT_MENU(MENU_FOLDTOGGLE, EditorFrame::OnMenuFoldToggle)
-	EVT_MENU(MENU_FOLDALL, EditorFrame::OnMenuFoldAll)
-	EVT_MENU(MENU_FOLDOTHERS, EditorFrame::OnMenuFoldOthers)
-	EVT_MENU(MENU_UNFOLDALL, EditorFrame::OnMenuUnfoldAll)
+	// Navigation menu
+	// Bookmarks...
+	EVT_MENU(MENU_BOOKMARK_TOGGLE, EditorFrame::OnMenuBookmarkToggle)
 	EVT_MENU(MENU_BOOKMARK_NEXT, EditorFrame::OnMenuBookmarkNext)
 	EVT_MENU(MENU_BOOKMARK_PREVIOUS, EditorFrame::OnMenuBookmarkPrevious)
-	EVT_MENU(MENU_BOOKMARK_TOGGLE, EditorFrame::OnMenuBookmarkToggle)
 	EVT_MENU(MENU_BOOKMARK_CLEAR, EditorFrame::OnMenuBookmarkClear)
-	EVT_MENU(MENU_COMMIT, EditorFrame::OnMenuCommit)
-	EVT_MENU(MENU_SHOWPROJECT, EditorFrame::OnMenuShowProject)
-	EVT_MENU(MENU_SHIFT_PROJECT_FOCUS, EditorFrame::OnShiftProjectFocus)
-	EVT_MENU(MENU_REVHIS, EditorFrame::OnMenuRevisionHistory)
-	EVT_MENU(MENU_UNDOHIS, EditorFrame::OnMenuUndoHistory)
-	EVT_MENU(MENU_COMMANDOUTPUT, EditorFrame::OnMenuShowCommandOutput)
-	EVT_MENU(MENU_SHOWSYMBOLS, EditorFrame::OnMenuShowSymbols)
-	EVT_MENU(MENU_SYMBOLS, EditorFrame::OnMenuSymbols)
-	EVT_MENU(MENU_LINENUM, EditorFrame::OnMenuLineNumbers)
-	EVT_MENU(MENU_INDENTGUIDE, EditorFrame::OnMenuIndentGuide)
-	EVT_MENU(MENU_WRAP_NONE, EditorFrame::OnMenuWordWrap)
-	EVT_MENU(MENU_WRAP_NORMAL, EditorFrame::OnMenuWordWrap)
-	EVT_MENU(MENU_WRAP_SMART, EditorFrame::OnMenuWordWrap)
-	EVT_MENU(MENU_PREVIEW, EditorFrame::OnMenuPreview)
-	EVT_MENU(MENU_STATUSBAR, EditorFrame::OnMenuStatusbar)
+
+	// Document tabs...
+	EVT_MENU(MENU_GO_NEXT_TAB, EditorFrame::OnMenuNextTab)
+	EVT_MENU(MENU_GO_PREV_TAB, EditorFrame::OnMenuPrevTab)
+	EVT_MENU(MENU_GO_LAST_TAB, EditorFrame::OnMenuLastTab)
+
+			// Go to Header
+	EVT_MENU(MENU_OPEN_EXT, EditorFrame::OnMenuOpenExt) 
+	EVT_MENU(MENU_GOTO_FILE, EditorFrame::OnMenuGotoFile)
+	EVT_MENU(MENU_GOTO_SYMBOLS, EditorFrame::OnMenuSymbols)
+	EVT_MENU(MENU_GOTO_BRACKET, EditorFrame::OnMenuGotoBracket)
+	EVT_MENU(MENU_GOTO_LINE, EditorFrame::OnMenuGotoLine)
+
+	// Help menu
 	EVT_MENU(wxID_HELP_CONTENTS, EditorFrame::OnMenuHelp)
 	EVT_MENU(MENU_HELP_FORUM, EditorFrame::OnMenuGotoForum)
 	EVT_MENU(MENU_BUY, EditorFrame::OnMenuBuy)
 	EVT_MENU(MENU_REGISTER, EditorFrame::OnMenuRegister)
 	EVT_MENU(MENU_WEBSITE, EditorFrame::OnMenuWebsite)
 	EVT_MENU(wxID_ABOUT, EditorFrame::OnMenuAbout)
+
 	EVT_MENU(MENU_EOL_DOS, EditorFrame::OnMenuEolDos)
 	EVT_MENU(MENU_EOL_UNIX, EditorFrame::OnMenuEolUnix)
 	EVT_MENU(MENU_EOL_MAC, EditorFrame::OnMenuEolMac)
@@ -213,6 +241,8 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_EDIT_BUNDLES, EditorFrame::OnMenuEditBundles)
 	EVT_MENU(MENU_MANAGE_BUNDLES, EditorFrame::OnMenuManageBundles)
 	EVT_MENU(MENU_KEYDIAG, EditorFrame::OnMenuKeyDiagnostics)
+
+	// Dynamic sub-menus
 	EVT_MENU_RANGE(1000, 1999, EditorFrame::OnSubmenuSyntax)
 	EVT_MENU_RANGE(2000, 2999, EditorFrame::OnSubmenuEncoding)
 	EVT_MENU_RANGE(3000, 3999, EditorFrame::OnMenuOpen)
@@ -220,6 +250,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU_RANGE(4100, 4199, EditorFrame::OnMenuOpenRecentProject)
 	EVT_MENU_RANGE(9000, 11999, EditorFrame::OnMenuBundleAction)
 	EVT_MENU_RANGE(40000, 49999, EditorFrame::OnMenuGotoTab)
+
 	EVT_ERASE_BACKGROUND(EditorFrame::OnEraseBackground)
 	EVT_CLOSE(EditorFrame::OnClose)
 	EVT_ACTIVATE(EditorFrame::OnActivate)
@@ -231,25 +262,30 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_AUINOTEBOOK_TAB_RIGHT_DOWN(CTRL_TABBAR, EditorFrame::OnNotebookContextMenu)
 	EVT_AUI_PANE_CLOSE(EditorFrame::OnPaneClose)
 	//EVT_COMMAND(1, wxEVT_CHANGED_TAB, EditorFrame::OnNotebook)
+
 	EVT_MENU(MENU_TABS_NEW, EditorFrame::OnMenuNew)
 	EVT_MENU(MENU_TABS_CLOSE, EditorFrame::OnDoCloseTab)
 	EVT_MENU(MENU_TABS_CLOSE_OTHER, EditorFrame::OnCloseOtherTabs)
 	EVT_MENU(MENU_TABS_CLOSE_ALL, EditorFrame::OnCloseAllTabs)
 	EVT_MENU(MENU_TABS_COPY_PATH, EditorFrame::OnCopyPathToClipboard)
 	EVT_MENU(MENU_TABS_SHOWDROPDOWN, EditorFrame::OnTabsShowDropdown)
+
 	EVT_MOVE(EditorFrame::OnMove)
 	EVT_MAXIMIZE(EditorFrame::OnMaximize)
 	EVT_MOUSE_CAPTURE_LOST (EditorFrame::OnMouseCaptureLost)
 	EVT_IDLE(EditorFrame::OnIdle)
 	EVT_KEY_UP(EditorFrame::OnKeyUp)
 	EVT_FILESCHANGED(EditorFrame::OnFilesChanged)
+
+	EVT_MOUSEWHEEL(EditorFrame::OnMouseWheel)
+
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
 	//EVT_MENU(MENU_REVTOOLTIP, EditorFrame::OnMenuRevTooltip)
 	//EVT_MENU(MENU_INCOMMING, EditorFrame::OnMenuIncomming)
 	//EVT_MENU(MENU_INCOMMING_TOOLBAR, EditorFrame::OnMenuIncommingTool)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
-	EVT_MOUSEWHEEL(EditorFrame::OnMouseWheel)
+	//EVT_MENU(wxID_PREVIEW, EditorFrame::OnMenuPrintPreview)
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
@@ -364,6 +400,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 #ifdef __WXGTK__ // FIXME
 		Show();
 #endif
+
 		if (showProject && hasProject && !projectPath.empty())
 			OpenProject(projectPath);
 
@@ -624,18 +661,18 @@ void EditorFrame::InitMenus() {
 	navMenu->Append(MENU_BOOKMARK_PREVIOUS, _("&Previous Bookmark\tShift-F2"), _("Go to Previous Bookmark"));
 	navMenu->Append(MENU_BOOKMARK_CLEAR, _("&Remove All Bookmarks\tCtrl-Shift-F2"), _("Remove All Bookmarks"));
 	navMenu->AppendSeparator();
-	navMenu->Append(MENU_NEXTTAB, _("N&ext Tab\tCtrl-Tab"), _("Next Tab"));
-	navMenu->Append(MENU_PREVTAB, _("Pre&vious Tab\tCtrl-Shift-Tab"), _("Previous Tab"));
+	navMenu->Append(MENU_GO_NEXT_TAB, _("N&ext Tab\tCtrl-Tab"), _("Next Tab"));
+	navMenu->Append(MENU_GO_PREV_TAB, _("Pre&vious Tab\tCtrl-Shift-Tab"), _("Previous Tab"));
 	navMenu->Append(MENU_TABS_SHOWDROPDOWN, _("Go to &Tab...\tCtrl-0"), _("Go to Tab..."));
-	navMenu->Append(MENU_LASTTAB, _("L&ast used Tab\tCtrl-Alt-0"), _("Last used Tab"));
+	navMenu->Append(MENU_GO_LAST_TAB, _("L&ast used Tab\tCtrl-Alt-0"), _("Last used Tab"));
 	m_tabMenu = new wxMenu; // Tab submenu (in navigation menu)
 	navMenu->Append(MENU_TABS, _("Ta&bs"), m_tabMenu, _("Tabs"));
 	navMenu->AppendSeparator();
 	navMenu->Append(MENU_OPEN_EXT, _("Go to &Header/Source\tCtrl-Alt-Up"), _(""));
-	navMenu->Append(MENU_GOTOFILE, _("Go to &File...\tCtrl-Shift-T"), _("Go to File..."));
-	navMenu->Append(MENU_SYMBOLS, _("Go to &Symbol...\tCtrl-L"), _("Show Symbol List"));
-	navMenu->Append(MENU_GOTOBRACKET, _("Go to &Matching Bracket\tCtrl-B"), _("Go to Matching Bracket"));
-	navMenu->Append(MENU_GOTOLINE, _("Go to &Line...\tCtrl-G"), _("Go to Line..."));
+	navMenu->Append(MENU_GOTO_FILE, _("Go to &File...\tCtrl-Shift-T"), _("Go to File..."));
+	navMenu->Append(MENU_GOTO_SYMBOLS, _("Go to &Symbol...\tCtrl-L"), _("Show Symbol List"));
+	navMenu->Append(MENU_GOTO_BRACKET, _("Go to &Matching Bracket\tCtrl-B"), _("Go to Matching Bracket"));
+	navMenu->Append(MENU_GOTO_LINE, _("Go to &Line...\tCtrl-G"), _("Go to Line..."));
 	menuBar->Append(navMenu, _("&Navigation"));
 
 	// Document menu
@@ -2099,7 +2136,7 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	if (sbItem) sbItem->Check(m_pStatBar != NULL);
 
 	// Go to File
-	wxMenuItem* gfItem = GetMenuBar()->FindItem(MENU_GOTOFILE);
+	wxMenuItem* gfItem = GetMenuBar()->FindItem(MENU_GOTO_FILE);
 	if (gfItem) gfItem->Enable(m_projectPane->HasProject());
 
 	// Set the selected syntax

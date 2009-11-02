@@ -147,7 +147,7 @@ public:
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);
 	void SetShowIndent(bool showIndent);
-	void SetTabWidth(unsigned int width);
+	void SetTabWidth(unsigned int width, bool soft_tabs);
 	void SetGutterRight(bool doMove=true);
 	const wxFont& GetEditorFont() const;
 	void SetScrollbarLeft(bool doMove=true);
@@ -254,7 +254,7 @@ public:
 	void RestoreSettings(unsigned int i, eFrameSettings& settings, unsigned int id=0);
 
 	// Needed by IEditorSearch interface
-	void EditorCtrl::ProcessMouseWheel(wxMouseEvent& event);
+	void ProcessMouseWheel(wxMouseEvent& event);
 
 	// Caret and Selection Visibility
 private:
@@ -336,7 +336,7 @@ public:
 	virtual void GotoSymbolPos(unsigned int pos);
 
 	// Bracket Highlighting
-	virtual const interval& GetHlBracket() const {return m_bracketHighlight.GetInterval();};
+	virtual const BracketHighlight& GetHlBracket() const {return m_bracketHighlight;};
 
 	// Folding
 	vector<unsigned int> GetFoldedLines() const;

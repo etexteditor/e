@@ -412,7 +412,7 @@ void EditorCtrl::Init() {
 	m_lines.AddStyler(m_search_hl_styler);
 
 	// Set initial tabsize
-	SetTabWidth(m_parentFrame.GetTabWidth());
+	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
 
 	// Should we show margin line?
 	if (!doShowMargin) marginChars = 0;
@@ -740,9 +740,13 @@ void EditorCtrl::SetWordWrap(cxWrapMode wrapMode) {
 	DrawLayout();
 }
 
-void EditorCtrl::SetTabWidth(unsigned int width) {
-	if (m_parentFrame.IsSoftTabs()) m_indent = wxString(wxT(' '), m_parentFrame.GetTabWidth());
-	else m_indent = wxString(wxT("\t"));
+void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
+	// m_indent is the string used for indentation, either a real tab character
+	// or an appropriate number of spaces
+	if (soft_tabs) 
+		m_indent = wxString(wxT(' '), width);
+	else 
+		m_indent = wxString(wxT("\t"));
 
 	m_lines.SetTabWidth(width);
 	FoldingReIndent();
@@ -5364,7 +5368,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 	wxASSERT(regex);
 	wxASSERT(subjectStart <= subjectEnd);
 	wxASSERT(subjectEnd <= GetLength());
-	wxASSERT(pos >= subjectStart && pos <= subjectEnd);
+	wxASSERT(subjectStart <= pos && pos <= subjectEnd);
 
 	search_result sr;
 
@@ -5407,7 +5411,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 		ovector,              // output vector for substring information
 		OVECCOUNT);           // number of elements in the output vector
 
-	free(re); // clean up
+	pcre_free(re); // clean up
 
 	// Copy match info from ovector to result struct
 	sr.error_code = rc;
@@ -5442,7 +5446,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 	// Compile the pattern
 	const char *error;
 	int erroffset;
-	const pcre* const re = pcre_compile(
+	pcre* re = pcre_compile(
 		regex,      // the pattern
 		PCRE_UTF8,  // options
 		&error,     // for error message
@@ -5467,6 +5471,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 		ovector,              // output vector for substring information
 		OVECCOUNT);           // number of elements in the output vector
 
+	pcre_free(re); // clean up
 
 	// Copy match info from ovector to result struct
 	sr.error_code = rc;

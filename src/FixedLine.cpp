@@ -18,11 +18,13 @@
 #include "tmTheme.h"
 #include "styler.h"
 #include "Utf.h"
+#include "BracketHighlight.h"
 
 // Initialize static variables
 wxString FixedLine::s_text;
 
-FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const interval& hlBracket, const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme):
+FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>& sel, const BracketHighlight& brackets,
+					 const unsigned int& lastpos, const bool& isShadow, const tmTheme& theme):
 	dc((FastDC&)dc), 
 	m_doc(dw), 
 	textstart(0), textend(0), 
@@ -32,7 +34,7 @@ FixedLine::FixedLine(wxDC& dc, const DocumentWrapper& dw, const vector<interval>
 	lastpos(lastpos), 
 	m_isSelShadow(isShadow), 
 	selections(sel), 
-	m_hlBracket(hlBracket),
+	m_brackets(brackets),
 	m_theme(theme), 
 	m_sr(m_theme, (FastDC&)dc),
 	m_wrapMode(cxWRAP_NONE), 
@@ -315,7 +317,7 @@ void FixedLine::SetTabWidth(unsigned int tabChars) {
 	tabwidth = tabChars * charwidth;
 	m_tabChars = tabChars;
 
-	// Draw hidden tab
+	// Draw hidden tab arrow
 	bmTab = wxBitmap(tabwidth, charheight, 1);
 	wxMemoryDC mdc;
 	mdc.SelectObject(bmTab);
@@ -463,14 +465,14 @@ void FixedLine::DrawLine(int xoffset, int yoffset, const wxRect& WXUNUSED(rect),
 	}
 
 	// Highlight matching brackets (can only be single byte utf char)
-	if (m_hlBracket.start < m_hlBracket.end) {
-		if (m_hlBracket.start >= textstart && m_hlBracket.start < textend) {
-			m_sr.SetFontStyle(m_hlBracket.start, m_hlBracket.start+1, wxFONTFLAG_BOLD);
-			m_sr.SetBackgroundColor(m_hlBracket.start, m_hlBracket.start+1, m_theme.bracketHighlightColor);
+	if (m_brackets.HasOrderedInterval()) {
+		if (textstart <= m_brackets.Start() && m_brackets.Start() < textend) {
+			m_sr.SetFontStyle(m_brackets.Start(), m_brackets.Start()+1, wxFONTFLAG_BOLD);
+			m_sr.SetBackgroundColor(m_brackets.Start(), m_brackets.Start()+1, m_theme.bracketHighlightColor);
 		}
-		if (m_hlBracket.end >= textstart && m_hlBracket.end < textend) {
-			m_sr.SetFontStyle(m_hlBracket.end, m_hlBracket.end+1, wxFONTFLAG_BOLD);
-			m_sr.SetBackgroundColor(m_hlBracket.end, m_hlBracket.end+1, m_theme.bracketHighlightColor);
+		if (textstart <= m_brackets.End() && m_brackets.End() < textend) {
+			m_sr.SetFontStyle(m_brackets.End(), m_brackets.End()+1, wxFONTFLAG_BOLD);
+			m_sr.SetBackgroundColor(m_brackets.End(), m_brackets.End()+1, m_theme.bracketHighlightColor);
 		}
 	}
 

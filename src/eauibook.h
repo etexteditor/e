@@ -14,6 +14,9 @@ public:
 	int PageToTab(size_t page_idx);
     int TabToPage(size_t tab_idx);
 
+	void SelectNextTab(bool wrap_around=true);
+	void SelectPrevTab(bool wrap_around=true);
+
 	wxString SavePerspective();
 	bool LoadPerspective(const wxString& layout);
 

@@ -18,9 +18,8 @@
 #include "tmCommand.h"
 #include "eSettings.h"
 
-// control ids
-enum
-{
+
+enum RunCmdDlg_IDs {
 	COMMAND_BOX = 100,
 };
 

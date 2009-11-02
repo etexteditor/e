@@ -113,7 +113,7 @@ private:
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
-enum EDITORCTL_IDS {
+enum EditorCtrl_IDs {
 	TIMER_FOLDTOOLTIP = 100,
 	ID_LEFTSCROLL
 };

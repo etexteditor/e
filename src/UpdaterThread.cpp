@@ -96,10 +96,6 @@ void* UpdaterThread::Entry() {
 #endif  //__WXDEBUG__
 			}
 			delete pStream; // Clean up
-
-			// Remember this time as last update checked
-			wxLongLong now = wxDateTime::Now().GetValue();
-			eGetSettings().SetSettingLong(wxT("lastupdatecheck"), now);
 		}
 	}
 
@@ -110,6 +106,11 @@ void* UpdaterThread::Entry() {
 	if (newrelease) {
 		// Notify main thread that there are new updates available
 		wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, ID_UPDATES_AVAILABLE);
+		wxTheApp->AddPendingEvent(event);
+	}
+	else {
+		// Notify main thread that we have finished checking for updates
+		wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, ID_UPDATES_CHECKED);
 		wxTheApp->AddPendingEvent(event);
 	}
 

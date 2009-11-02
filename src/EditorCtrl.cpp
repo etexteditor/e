@@ -6626,6 +6626,22 @@ void EditorCtrl::CursorToLineEnd(bool select) {
 	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
+void EditorCtrl::CursorToNextChar(wxChar c, bool select) {
+	const unsigned int oldpos = GetPos();
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.Find(c, oldpos, true, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+	
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
+}
+
 void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible) {
 	wxASSERT(oldpos >= 0 && oldpos <= m_lines.GetLength());
 	wxASSERT(newpos >= 0 && newpos <= m_lines.GetLength());

@@ -228,6 +228,7 @@ public:
 	void CursorToColumn(unsigned int column, bool select=false);
 	void CursorToLineStart(bool soft=true, bool select=false);
 	void CursorToLineEnd(bool select=false);
+	void CursorToNextChar(wxChar c, bool select=false);
 	void GotoMatchingBracket();
 
 	// Search & Replace

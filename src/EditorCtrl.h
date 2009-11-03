@@ -491,7 +491,6 @@ protected:
 
 	// Folding
 	void FoldingClear();
-	void FoldingInvalidate();
 	void FoldingInsert(unsigned int pos, unsigned int length);
 	void FoldingDelete(unsigned int start, unsigned int end);
 	void FoldingApplyDiff(const vector<cxLineChange>& linechanges);

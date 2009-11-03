@@ -229,7 +229,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_syntaxstyler.UpdateSyntax();
 
 	// Init Folding
-	FoldingInvalidate();
+	FoldingClear();
 }
 
 
@@ -284,7 +284,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	Init();
 
 	// Init Folding
-	FoldingInvalidate();
+	FoldingClear();
 }
 
 void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings, unsigned int subid) {
@@ -320,7 +320,7 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 	// Set the syntax to match the new path
 	if (syntax.empty()) {
 		m_syntaxstyler.UpdateSyntax();
-		FoldingInvalidate(); // Init Folding
+		FoldingClear(); // Init Folding
 	}
 	else SetSyntax(syntax);
 
@@ -2940,7 +2940,7 @@ void EditorCtrl::StylersClear() {
 void EditorCtrl::StylersInvalidate() {
 	m_search_hl_styler.Invalidate();
 	m_syntaxstyler.Invalidate();
-	FoldingInvalidate();
+	FoldingClear();
 }
 
 void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
@@ -4142,7 +4142,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	wxEndBusyCursor();
 
 	// We also have to reparse the foldings
-	FoldingInvalidate();
+	FoldingClear();
 
 	MarkAsModified(); // flush symbol cache
 
@@ -8202,10 +8202,6 @@ void EditorCtrl::FoldingClear() {
 	m_folds.clear();
 	m_foldedLines = 0;
 	m_foldLineCount = 0;
-}
-
-void EditorCtrl::FoldingInvalidate() {
-	FoldingClear();
 }
 
 void EditorCtrl::ParseFoldMarkers() {

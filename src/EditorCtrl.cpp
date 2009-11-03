@@ -2727,12 +2727,14 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 			if (isRemoteItem) {
 				if (!rp) rp = m_parentFrame.GetRemoteProfile(filepath, false);
 				const wxDateTime fileDate = m_parentFrame.GetRemoteThread().GetModDate(filepath, *rp);
-				if (modifiedDate == fileDate) doReload = false; // No need to reload unchanged file
+				if (modifiedDate == fileDate)
+					doReload = false; // No need to reload unchanged file
 				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
 			}
 			else {
 				const wxFileName path(filepath);
-				if (path.FileExists() && modifiedDate == path.GetModificationTime()) doReload = false; // No need to reload unchanged file
+				if (path.FileExists() && modifiedDate == path.GetModificationTime())
+					doReload = false; // No need to reload unchanged file
 				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
 			}
 		}
@@ -2759,19 +2761,22 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 			}
 		}
 #endif
-		if (!doReload) return cxFILE_OK;
+
+		if (!doReload)
+			return cxFILE_OK;
 	}
 
 	return LoadText(filepath, enc, rp);
 }
 
 bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const RemoteProfile* rp) {
-	// No reason to set doc if we are already there
 	doc_id oldDoc;
 	cxLOCKDOC_READ(m_doc)
 		oldDoc = doc.GetDocument();
 	cxENDLOCK
-	if (di == oldDoc) return true;
+
+	if (di == oldDoc) // No reason to set doc if we are already there
+		return true;
 
 	// If the current doc is an clean draft (no revs & no parent)
 	// we have to remember to delete it after setting the new doc

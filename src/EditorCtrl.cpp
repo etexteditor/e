@@ -6913,7 +6913,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		if (!event.ShiftDown() && !fp.xy_outbound && m_lines.IsSelected() && !m_lines.IsSelectionShadow()) {
 			const vector<interval>& sels = m_lines.GetSelections();
 			for (vector<interval>::const_iterator p = sels.begin(); p != sels.end(); ++p) {
-				if ((int)p->start <= fp.pos && (int)p->end >= fp.pos) {
+				if ((int)p->start <= fp.pos && fp.pos <= (int)p->end) {
 					isDragging = true;
 					if (event.ControlDown() && p->start == p->end) {
 						// ctrl-clicking a zero length selection removes it
@@ -6932,7 +6932,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		if (!isDragging) {
 			// If not multiselecting remove previous selections
 			// Shadow selections are removed if the click is outside
-			if (m_lines.IsSelectionShadow() || (!event.ControlDown() && !event.ShiftDown())) {
+			if (m_lines.IsSelectionShadow() || !(event.ControlDown() || event.ShiftDown())) {
 				if (fp.xy_outbound) m_lines.RemoveAllSelections();
 				else m_lines.RemoveAllSelections(true, fp.pos);
 				m_currentSel = -1;
@@ -6940,13 +6940,10 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 			}
 
 			// Check if we should make new selection
-			if (event.ShiftDown()) {
+			if (event.ShiftDown()) // SHIFT selects from the last point
 				SelectFromMovement(lastpos, fp.pos, false);
-			}
-			else if (event.ControlDown()) {
-				// Make zero length selection
+			else if (event.ControlDown()) // CTRL starts a new multi selection at this point
 				m_currentSel = m_lines.AddSelection(fp.pos, fp.pos);
-			}
 		}
 	}
 
@@ -6954,8 +6951,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 	DrawLayout();
 
-	// Make sure we capure all mouse events
-	// this is released in OnMouseLeftUp()
+	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
 	//wxLogDebug(wxT("EditorCtrl::CaptureMouse() %d"), event.LeftDown());
 	CaptureMouse();
 }
@@ -7011,8 +7007,46 @@ void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {
 	else PopupMenu(&contextMenu);
 }
 
+static bool should_start_drag(const wxPoint& start, const wxPoint& end) {
+	// If no start position was given, we're not dragging.
+	if (start == wxDefaultPosition) return false;
+
+	// Drag metric can be changed by user at any time, so always get it.
+	const int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X);
+	const int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y);
+
+	return (abs(end.x - start.x) > drag_x_threshold) ||
+			  (abs(end.y - start.y) > drag_y_threshold);
+}
+
+// Start drag-and-drop of selected text.
+void EditorCtrl::StartDragSelectedText(void) {
+	wxDropSource dragSource(this);
+	if (m_lines.IsMultiSelected()) {
+		MultilineDataObject* mdo = new MultilineDataObject;
+		const vector<interval>& selections = m_lines.GetSelections();
+		cxLOCKDOC_READ(m_doc)
+			// Get the selected text
+			for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv)
+				mdo->AddText(doc.GetTextPart((*iv).start, (*iv).end));
+		cxENDLOCK
+
+		wxDataObjectComposite compObject;
+		compObject.Add(mdo, true);
+		compObject.Add(new wxTextDataObject(GetSelText()));
+		
+		dragSource.SetData(compObject);
+		dragSource.DoDragDrop(wxDrag_DefaultMove);
+	}
+	else {
+		wxTextDataObject textObject(GetSelText());				
+		dragSource.SetData(textObject);
+		dragSource.DoDragDrop(wxDrag_DefaultMove);
+	}
+}
+
 void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
-	// Get Mouse location
+	// Editor-relative mouse position of this event
 	const wxPoint mpos = ClientPosToEditor(event.GetX(), event.GetY());
 
 	// Close tooltip on motion
@@ -7020,53 +7054,18 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 		m_revTooltip.Hide();
 	}*/
 
-	if (event.LeftIsDown() && HasCapture()) {
-		wxASSERT(m_sel_start >= 0 && m_sel_start <= (int)m_lines.GetLength());
-		wxASSERT(m_sel_end >= 0 && m_sel_end <= (int)m_lines.GetLength());
+	const bool click_and_drag = event.LeftIsDown() && HasCapture();
+	if (click_and_drag) {
+		wxASSERT(0 <= m_sel_start && m_sel_start <= (int)m_lines.GetLength());
+		wxASSERT(0 <= m_sel_end && m_sel_end <= (int)m_lines.GetLength());
 
-		// Find out what is under mouse
-		const full_pos fp = m_lines.ClickOnLine(mpos.x, mpos.y);
 		MakeCaretVisible();
 
 		// Check if we should start dragging
-		if (m_dragStartPos != wxDefaultPosition) {
-			// We will start dragging if we have moved beyond a couple of pixels
-			const int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X);
-			const int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y);
-
-			if (abs(mpos.x - m_dragStartPos.x) > drag_x_threshold ||
-				abs(mpos.y - m_dragStartPos.y) > drag_y_threshold)
-			{
-				wxLogDebug(wxT("Starting text drag"));
-
-				// Start drag
-				wxDropSource dragSource(this);
-				if (m_lines.IsMultiSelected()) {
-					MultilineDataObject* mdo = new MultilineDataObject;
-					const vector<interval>& selections = m_lines.GetSelections();
-					cxLOCKDOC_READ(m_doc)
-						// Get the selected text
-						for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-							mdo->AddText(doc.GetTextPart((*iv).start, (*iv).end));
-						}
-					cxENDLOCK
-
-					wxDataObjectComposite compObject;
-					compObject.Add(mdo, true);
-					compObject.Add(new wxTextDataObject(GetSelText()));
-					
-					dragSource.SetData(compObject);
-					dragSource.DoDragDrop(wxDrag_DefaultMove);
-				}
-				else {
-					wxTextDataObject textObject(GetSelText());				
-					dragSource.SetData(textObject);
-					dragSource.DoDragDrop(wxDrag_DefaultMove);
-				}
-
-				m_dragStartPos = wxDefaultPosition; // reset drag state
-			}
-
+		if (should_start_drag(m_dragStartPos, mpos)) {
+			wxLogDebug(wxT("Starting text drag"));
+			StartDragSelectedText();
+			m_dragStartPos = wxDefaultPosition; // reset drag state
 			return;
 		}
 
@@ -7081,6 +7080,9 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 			DrawLayout();
 		}
 		else {
+			// Find out what is under mouse
+			const full_pos fp = m_lines.ClickOnLine(mpos.x, mpos.y);
+
 			if (m_selMode == SEL_WORD && m_currentSel != -1) {
 				// Extend selection one word at a time
 				const interval iv = GetWordIv(fp.pos);
@@ -7123,7 +7125,7 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 		}
 	}
 	else {
-		if (!m_foldTooltipTimer.IsRunning() && mpos.y >= 0 && mpos.y < m_lines.GetHeight()) {
+		if (!m_foldTooltipTimer.IsRunning() && 0 <= mpos.y && mpos.y < m_lines.GetHeight()) {
 			// Find out what is under mouse
 			const unsigned int line_id = m_lines.GetLineFromYPos(mpos.y);
 

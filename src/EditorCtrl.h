@@ -398,6 +398,7 @@ private:
 	void DoVerticalWheelScroll(wxMouseEvent& event);
 	void DoHorizontalWheelScroll(wxMouseEvent& event);
 
+	void StartDragSelectedText(void);
 
 	// Notification handlers
 	static void OnSetDocument(EditorCtrl* self, void* data, int filter);

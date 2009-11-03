@@ -6495,12 +6495,14 @@ void EditorCtrl::CursorWordRight(bool select) {
 }
 
 void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible) {
-	wxASSERT(oldpos >= 0 && oldpos <= m_lines.GetLength());
-	wxASSERT(newpos >= 0 && newpos <= m_lines.GetLength());
+	wxASSERT(0 <= oldpos && oldpos <= m_lines.GetLength());
+	wxASSERT(0 <= newpos && newpos <= m_lines.GetLength());
 	if (oldpos == newpos) return; // Empty selection
 
 	// If alt key is down do a block selection
-	if (!wxGetKeyState(WXK_ALT)) m_blockKeyState = BLOCKKEY_NONE; // may not have catched keyup
+	if (!wxGetKeyState(WXK_ALT))
+		m_blockKeyState = BLOCKKEY_NONE; // may not have caught keyup
+
 	if (m_blockKeyState != BLOCKKEY_NONE) {
 		if (m_blockKeyState == BLOCKKEY_INIT) {
 			// Get start location
@@ -6519,11 +6521,13 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 
 	int sel = -1;
 
-	if (m_lines.IsSelected()) {
+	if (!m_lines.IsSelected())
+		sel = m_lines.AddSelection(oldpos, newpos);
+	else {
 		// Get the selections
 		const vector<interval>& selections = m_lines.GetSelections();
 
-		// Check if we are at the start or end of a selection
+		// Check if we are at the start or end of a selection, and extend that one.
 		for (unsigned int i = 0; i < selections.size(); ++i) {
 			if (selections[i].end == oldpos) {
 				sel = m_lines.UpdateSelection(i, selections[i].start, newpos);
@@ -6537,13 +6541,13 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 			}
 		}
 
-		// We were not in connection with any current selections
+		// Otherwise, we were not in connection with any current selections so start a new one.
 		m_lines.RemoveAllSelections();
 		sel = m_lines.AddSelection(oldpos, newpos);
 	}
-	else sel = m_lines.AddSelection(oldpos, newpos);
 
-	if (makeVisible && sel != -1) MakeSelectionVisible();
+	if (makeVisible && sel != -1)
+		MakeSelectionVisible();
 }
 
 bool EditorCtrl::IsCaretVisible() {

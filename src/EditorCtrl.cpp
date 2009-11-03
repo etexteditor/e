@@ -6681,6 +6681,7 @@ wxString EditorCtrl::GetFirstSelection() const {
 	cxENDLOCK
 }
 
+// Get the selected text
 wxString EditorCtrl::GetSelText() const {
 	if (!m_lines.IsSelected()) return wxT("");
 
@@ -6688,10 +6689,9 @@ wxString EditorCtrl::GetSelText() const {
 	const vector<interval>& selections = m_lines.GetSelections();
 
 	cxLOCKDOC_READ(m_doc)
-		// Get the selected text
 		for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-			if (iv > selections.begin()) text += wxT('\n'); // Add newline between multiple selections
-
+			if (iv > selections.begin()) // Add newline between multiple selections
+				text += wxT('\n');
 			text += doc.GetTextPart((*iv).start, (*iv).end);
 		}
 	cxENDLOCK

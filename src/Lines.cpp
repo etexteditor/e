@@ -634,10 +634,16 @@ int Lines::UpdateSelection(unsigned int sel_id, unsigned int start, unsigned int
 }
 
 void Lines::RemoveSelection(unsigned int sel_id) {
+	// FS#393 0 Quickly pressing and releasing CTRL and ALT while making a 
+	// selection can cause this function to be called in a way that violates this 
+	// assertion. In that case, we don't want to blow up here.
+	if (selections.empty()) return;
+
 	wxASSERT(!selections.empty() && sel_id < selections.size());
 	selections.erase(selections.begin()+sel_id);
 
-	if (m_lastSel == (int)sel_id) m_lastSel = -1;
+	if (m_lastSel == (int)sel_id)
+		m_lastSel = -1;
 }
 
 void Lines::RemoveAllSelections(bool checkShadow, unsigned int pos) {

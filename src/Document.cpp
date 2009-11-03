@@ -1675,8 +1675,10 @@ search_result Document::FindBackwards(const wxString& searchtext, int start_pos,
 	wxCharBuffer UTF8buffer = wxConvUTF8.cWC2MB(text);
 	unsigned int byte_len = strlen(UTF8buffer);
 	wxCharBuffer UTF8bufferUpper;
-	if (!matchcase) UTF8bufferUpper = wxConvUTF8.cWC2MB(textUpper);
-	wxASSERT(byte_len == strlen(UTF8bufferUpper));
+	if (!matchcase) {
+		UTF8bufferUpper = wxConvUTF8.cWC2MB(textUpper);
+		wxASSERT(byte_len == strlen(UTF8bufferUpper));
+	}
 
 	// Build a dictionary of char-to-first distances in the search string
 	map<char, int> charmap;

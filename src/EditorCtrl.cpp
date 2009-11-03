@@ -6631,7 +6631,24 @@ void EditorCtrl::CursorToNextChar(wxChar c, bool select) {
 
 	search_result sr;
 	cxLOCKDOC_READ(m_doc)
-		sr = doc.Find(c, oldpos, true, GetLength());
+		const unsigned int startpos = doc.GetNextCharPos(oldpos); // don't find current
+		sr = doc.Find(c, startpos, true, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+	
+	// Handle selection
+	if (!select) m_lines.RemoveAllSelections();
+	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
+}
+
+void EditorCtrl::CursorToPrevChar(wxChar c, bool select) {
+	const unsigned int oldpos = GetPos();
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.FindBackwards(c, oldpos, true);
 	cxENDLOCK
 	if (sr.error_code < 0) return; // no match
 

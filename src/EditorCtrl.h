@@ -229,6 +229,7 @@ public:
 	void CursorToLineStart(bool soft=true, bool select=false);
 	void CursorToLineEnd(bool select=false);
 	void CursorToNextChar(wxChar c, bool select=false);
+	void CursorToPrevChar(wxChar c, bool select=false);
 	void GotoMatchingBracket();
 
 	// Search & Replace

@@ -23,7 +23,7 @@
 Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme):
 	dc(dc),
 	m_doc(dw), m_editorCtrl(editorCtrl), NewlineTerminated(false), pos(0), lastpos(0),
-	line(dc, dw, selections, editorCtrl.GetHlBracket(), lastpos, m_isSelShadow, theme),
+	line(dc, dw, selections, m_editorCtrl.GetHlBracket(), lastpos, m_isSelShadow, theme),
 	m_theme(theme), m_lastSel(-1), m_marginChars(0), m_marginPos(0),
 	selections(), m_isSelShadow(false),
 	m_wrapMode(cxWRAP_NONE), ll(NULL), llWrap(line, dw), llNoWrap(line, dw)
@@ -46,16 +46,85 @@ void Lines::Init() {
 	line.Init();
 }
 
+wxString Lines::GetLineIndent(unsigned int lineid) const {
+	if (lineid == 0 && GetLength() == 0) return wxEmptyString;
+	wxASSERT(lineid < GetLineCount());
+
+	unsigned int linestart, lineend;
+	GetLineExtent(lineid, linestart, lineend);
+	if (linestart == lineend) return wxEmptyString;
+
+	wxString indent;
+	cxLOCKDOC_READ(m_doc)
+		doc_byte_iter dbi(doc, linestart);
+		while ((unsigned int)dbi.GetIndex() < lineend) {
+			if (!wxIsspace(*dbi) || *dbi == '\n') break;
+			++dbi;
+		}
+
+		if (linestart < (unsigned int)dbi.GetIndex())
+			indent = doc.GetTextPart(linestart, dbi.GetIndex());
+	cxENDLOCK
+
+	return indent;
+}
+
+unsigned int Lines::GetLineIndentPos(unsigned int lineid) const {
+	if (lineid == 0 && GetLength() == 0) return 0;
+	wxASSERT(lineid < GetLineCount());
+
+	unsigned int linestart, lineend;
+	GetLineExtent(lineid, linestart, lineend);
+	if (linestart == lineend) return 0;
+
+	cxLOCKDOC_READ(m_doc)
+		doc_byte_iter dbi(doc, linestart);
+		while ((unsigned int)dbi.GetIndex() < lineend) {
+			if (!wxIsspace(*dbi) || *dbi == '\n') break;
+			++dbi;
+		}
+		return dbi.GetIndex();
+	cxENDLOCK
+}
+
+unsigned int Lines::GetLineIndentLevel(unsigned int lineid) const {
+	if (lineid == 0 && GetLength() == 0) return 0;
+	wxASSERT(lineid < GetLineCount());
+
+	unsigned int linestart, lineend;
+	GetLineExtent(lineid, linestart, lineend);
+	if (linestart == lineend) return 0;
+
+	unsigned int indent = 0;
+
+	// The level is counted in spaces
+	cxLOCKDOC_READ(m_doc)
+		doc_byte_iter dbi(doc, linestart);
+		while ((unsigned int)dbi.GetIndex() < lineend) {
+			if (*dbi == '\t') {
+				// it is ok to have a few spaces before tab (making one mixed tab)
+				const unsigned int spaces = m_tabWidth - (indent % m_tabWidth);
+				indent += spaces;
+			}
+			else if (*dbi == ' ') indent++;
+			else break;
+			++dbi;
+		}
+	cxENDLOCK
+	return indent;
+}
+
 void Lines::SetLine(unsigned int lineId) {
 	wxASSERT(lineId < ll->size());
 
 	const unsigned int linesize = line.SetLine(ll->offset(lineId), ll->end(lineId));
-
-	// The size we have for this line may have been an approximation
-	// so we update to the real size here. Calculating the extent of
-	// a line can be en expensive operation. so generally we use
-	// quick approximations, and then correct them when we need to
-	// parse the line anyways (like drawing it og getting caret pos).
+	/*
+	 The size we have for this line may have been an approximation so we 
+	 update to the real size here. Calculating the extent of a line can be an 
+	 expensive operation so generally we use quick approximations, 
+	 and then correct them when we need to parse the line anyway
+	 (for instance,  drawing it or getting caret pos).
+	*/
 	ll->update_line_extent(lineId, linesize);
 }
 
@@ -101,13 +170,8 @@ int Lines::GetHeight() const {
 	else return FoldedYPos(ll->height());
 }
 
-int Lines::GetLineHeight() const {
-	return line.GetCharHeight();
-}
-
-unsigned int Lines::GetLength() const {
-	return ll->length();
-}
+int Lines::GetLineHeight() const { return line.GetCharHeight(); }
+unsigned int Lines::GetLength() const { return ll->length(); }
 
 unsigned int Lines::GetLineCount(bool includeVirtual) const {
 	if (includeVirtual && NewlineTerminated) return ll->size()+1;
@@ -124,7 +188,6 @@ void Lines::SetWidth(unsigned int newwidth, unsigned int index) {
 	if (newwidth == line.GetDisplayWidth()) return;
 
 	line.SetWidth(newwidth);
-
 	ll->widthchanged(index);
 	ll->verify();
 }
@@ -140,11 +203,11 @@ int Lines::GetWidth() const {
 void Lines::UpdateFont() {
 	line.UpdateFont();
 	m_marginPos = m_marginChars * line.GetCharWidth();
-
 	ll->invalidate();
 }
 
 void Lines::SetTabWidth(unsigned int width) {
+	this->m_tabWidth = width;
 	line.SetTabWidth(width);
 	ll->invalidate();
 }
@@ -169,6 +232,8 @@ void Lines::SetPos(unsigned int newpos, bool update_lastpos) {
 	// Only set caret if line is valid
 	if (line.GetDisplayWidth()) SetCaretPos();
 
+	// If we set the pos in a folded fold, tell the editor to unfold it.
+	// TODO - Editor should listen for pos changes and do this itself?
 	if (m_editorCtrl.IsPosInFold(pos)) {
 		const unsigned int line_id = GetLineFromCharPos(pos);
 		m_editorCtrl.UnFoldParents(line_id);
@@ -191,9 +256,8 @@ wxPoint Lines::GetCharPos(unsigned int char_pos) {
 
 	// Find the line with the position in it
 	unsigned int posline = ll->find_offset(char_pos);
-	if (posline == ll->size()) {
+	if (posline == ll->size())
 		return cpos; // empty text
-	}
 
 	if (char_pos != ll->end(posline) || (char_pos == ll->length() && !NewlineTerminated)) {
 		// Get position in line
@@ -237,13 +301,11 @@ void Lines::SetCaretPos(bool update) {
 
 		// Move it to correct ypos
 		cpos.y += ll->top(posline);
-
 		wxASSERT(cpos.y < (int)GetUnFoldedHeight());
 	}
 	else {
 		// After newline, go to next line
 		cpos.y = ll->bottom(posline);
-
 		wxASSERT(cpos.y < (int)GetUnFoldedHeight());
 	}
 
@@ -264,7 +326,6 @@ wxRect Lines::GetFoldIndicatorRect(unsigned int line_id) {
 
 bool Lines::IsOverFoldIndicator(const wxPoint& point) {
 	if (point.y < GetHeight()) {
-		// Get the line
 		const unsigned int line_id = GetLineFromYPos(point.y);
 		if (line_id < ll->size()) {
 			const unsigned int top_ypos = GetYPosFromLine(line_id);
@@ -349,7 +410,6 @@ void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int
 bool Lines::IsLineVirtual(unsigned int lineid) const {
 	wxASSERT(lineid >= 0 && lineid <= ll->size());
 	wxASSERT(NewlineTerminated || lineid != ll->size());
-
 	return lineid == ll->size() && NewlineTerminated;
 }
 
@@ -422,7 +482,6 @@ unsigned int Lines::GetLineFromStartPos(unsigned int char_pos) const {
 
 	const unsigned int line_id = ll->find_offset(char_pos) + 1;
 	wxASSERT(ll->offset(line_id) == char_pos);
-
 	return line_id;
 }
 
@@ -475,17 +534,10 @@ int Lines::PrepareYPos(int folded_ypos) {
 	return 0;
 }
 
-void Lines::AddStyler(Styler& styler) {
-	line.AddStyler(styler);
-}
+void Lines::AddStyler(Styler& styler) { line.AddStyler(styler); }
 
-bool Lines::IsSelected() const {
-	return !selections.empty();
-}
-
-bool Lines::IsMultiSelected() const {
-	return selections.size() > 1;
-}
+bool Lines::IsSelected() const { return !selections.empty(); }
+bool Lines::IsMultiSelected() const { return selections.size() > 1; }
 
 bool Lines::IsSelectionMultiline() {
 	if (selections.empty()) return false;
@@ -582,10 +634,16 @@ int Lines::UpdateSelection(unsigned int sel_id, unsigned int start, unsigned int
 }
 
 void Lines::RemoveSelection(unsigned int sel_id) {
+	// FS#393 0 Quickly pressing and releasing CTRL and ALT while making a 
+	// selection can cause this function to be called in a way that violates this 
+	// assertion. In that case, we don't want to blow up here.
+	if (selections.empty()) return;
+
 	wxASSERT(!selections.empty() && sel_id < selections.size());
 	selections.erase(selections.begin()+sel_id);
 
-	if (m_lastSel == (int)sel_id) m_lastSel = -1;
+	if (m_lastSel == (int)sel_id)
+		m_lastSel = -1;
 }
 
 void Lines::RemoveAllSelections(bool checkShadow, unsigned int pos) {
@@ -611,13 +669,8 @@ void Lines::RemoveAllSelections(bool checkShadow, unsigned int pos) {
 	m_lastSel = -1;
 }
 
-const vector<interval>& Lines::GetSelections() const {
-	return selections;
-}
-
-const interval* const Lines::FirstSelection() const {
-	return selections.empty() ? NULL : &(selections[0]);
-}
+const vector<interval>& Lines::GetSelections() const { return selections; }
+const interval* const Lines::FirstSelection() const { return selections.empty() ? NULL : &(selections[0]); }
 
 void Lines::Clear() {
 	ll->clear();
@@ -720,9 +773,7 @@ void Lines::InsertChar(unsigned int pos, const wxChar& newtext, unsigned int byt
 			ll->insert(changedline+1, ll->end(changedline) + linerest);
 		}
 	}
-	else {
-		ll->update(changedline, ll->end(changedline)+byte_len);
-	}
+	else  ll->update(changedline, ll->end(changedline)+byte_len);
 
 	ll->verify(true);
 }
@@ -889,9 +940,7 @@ void Lines::Delete(unsigned int startpos, unsigned int endpos) {
 			ll->remove(firstline, lastline);
 			ll->update(firstline, startpos+rest);
 		}
-		else {
-			wxASSERT(false);
-		}
+		else wxASSERT(false);
 	}
 
 	Verify(true);

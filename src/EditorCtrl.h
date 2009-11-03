@@ -83,9 +83,6 @@ public:
 	bool IsRemote() const {return m_remoteProfile != NULL;};
 	const RemoteProfile* GetRemoteProfile() const {return m_remoteProfile;};
 
-	void SetMate(const wxString& mate) {m_mate = mate;};
-	const wxString& GetMate() const {return m_mate;};
-
 	// Change state
 	void StartChange();
 	void EndChange();
@@ -276,9 +273,6 @@ public:
 	const wxString& GetIndentUnit() const {return m_indent;};
 	void IndentSelectedLines(bool add_indent=true);
 	void DedentSelectedLines() {IndentSelectedLines(false);};
-	wxString GetLineIndent(unsigned int lineid);
-	unsigned int GetLineIndentLevel(unsigned int lineid);
-	unsigned int CountIndent(const wxString& text) const;
 	wxString GetLineIndentFromPos(unsigned int pos);
 	void TabsToSpaces();
 	void SpacesToTabs();
@@ -425,11 +419,13 @@ private:
 	static void OnBundlesReloaded(EditorCtrl* self, void* data, int filter);
 	static void OnSettingsChanged(EditorCtrl* self, void* data, int filter);
 
+	void SetMate(const wxString& mate) {m_mate = mate;}
+	void NotifyParentMate();
 	void ClearRemoteInfo();
 
 public:
 	// Used by GutterControl
-	void DrawLayout(bool isScrolling=false) {wxClientDC dc(this);DrawLayout(dc, isScrolling);};
+	void DrawLayout(bool isScrolling=false);
 
 protected:
 	// Drawing
@@ -494,7 +490,6 @@ protected:
 
 	// Indentation
 	wxString GetRealIndent(unsigned int lineid, bool newline=false);
-	unsigned int GetLineIndentPos(unsigned int lineid);
 
 	bool IsSpaces(unsigned int start, unsigned int end) const;
 	unsigned int CountMatchingChars(wxChar match, unsigned int start, unsigned int end) const;

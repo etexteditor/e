@@ -11,11 +11,6 @@
  *
  ******************************************************************************/
 
-// eApp.cpp: implementation of the eApp class.
-//
-//////////////////////////////////////////////////////////////////////
-
-
 #include "eApp.h"
 
 // Needed to enable XP-Style common controls
@@ -23,12 +18,14 @@
 #pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='X86' publicKeyToken='6595b64144ccf1df'\"")
 #endif
 
+#include <wx/snglinst.h>
 #include <wx/filename.h>
 #include <wx/file.h>
 #include <wx/image.h>
 #include <wx/stdpaths.h>
 #include <wx/clipbrd.h>
 
+#include "Catalyst.h"
 #include "UpdaterThread.h"
 #include "Dispatcher.h"
 #include "plistHandler.h"
@@ -47,10 +44,68 @@
 IMPLEMENT_APP(eApp)
 #endif
 
+// Define this to True in debug mode to use e.cfg from the built .exe path
+// instead of the User's appdata path.
+#define PUT_DEBUG_SETTINGS_IN_EXE_PATH true
 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
+static wxString eApp_ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) {
+	wxString path = cmd;
+	if (path.StartsWith(wxT("LINE="))) {
+		wxString lineStr = path.BeforeFirst(wxT(' '));
+		lineStr = lineStr.substr(5);
+		unsigned long line = 0;
+		lineStr.ToULong(&line);
+		lineNum = line;
+		path = path.AfterFirst(wxT(' '));
+	}
+	if (path.StartsWith(wxT("COL="))) {
+		wxString colStr = path.BeforeFirst(wxT(' '));
+		colStr = colStr.substr(4);
+		unsigned long col = 0;
+		colStr.ToULong(&col);
+		columnNum = col;
+		path = path.AfterFirst(wxT(' '));
+	}
+	return path;
+}
+
+// determine default frame position/size
+static wxRect eApp_DetermineFrameSize() {
+	wxSize scr = wxGetDisplaySize();
+
+	wxRect normal;
+	if (scr.x <= 700) {
+		normal.x = 40 / 2;
+		normal.width = scr.x - 40;
+	}
+	else {
+		normal.x = (scr.x - 700) / 2;
+		normal.width = 700;
+	}
+
+	if (scr.y <= 480) {
+		normal.y = 80 / 2;
+		normal.height = scr.y - 80;
+	}
+	else {
+		normal.height = scr.y - 120;
+		normal.y = (scr.y - normal.height) / 2;
+	}
+
+	return normal;
+}
+
+#ifdef __WXMSW__
+static void SendCommandToServer(HWND hWndRecv, const wxString& cmd) {
+	const wxCharBuffer msg = cmd.mb_str(wxConvUTF8);
+	COPYDATASTRUCT cds;
+	cds.dwData = 0;
+	cds.cbData = strlen( msg.data() )+1;
+	cds.lpData = (void*)msg.data();
+	::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
+}
+#endif
+
 
 BEGIN_EVENT_TABLE(eApp, wxApp)
 	EVT_MENU(ID_UPDATES_AVAILABLE, eApp::OnUpdatesAvailable)
@@ -64,11 +119,10 @@ bool eApp::OnInit() {
 	m_catalyst = NULL;
 	m_pSyntaxHandler = NULL;
 	m_checker = NULL;
-#ifndef __WXMSW__
-	m_server = NULL;
-#endif
 
 #ifdef __WXGTK__
+	m_server = NULL;
+
 	if(false == wxApp::OnInit()) {
 		wxLogError(wxT("Invoking wxInitialize() failed! Exiting..."));
 		return false;
@@ -160,6 +214,7 @@ bool eApp::OnInit() {
 	//wxFileSystem::AddHandler(new wxInternetFSHandler);
 
 	// Set up the database
+
 	m_pCatalyst = new Catalyst(m_appDataPath + wxT("e.db"));
 	m_catalyst = new CatalystWrapper(*m_pCatalyst);
 
@@ -167,7 +222,16 @@ bool eApp::OnInit() {
 	if (m_pCatalyst->IsExpired()) return false;
 
 	// Load Settings
+#ifdef __WXDEBUG__
+	{
+		const wxString& target_path = PUT_DEBUG_SETTINGS_IN_EXE_PATH
+			? m_appPath : m_appDataPath;
+
+		m_settings.Load(target_path);
+	}
+#else
 	m_settings.Load(m_appDataPath);
+#endif
 
 	// Apply options
 	if (clearState) ClearState();
@@ -187,9 +251,8 @@ bool eApp::OnInit() {
 	const size_t framecount = m_settings.GetFrameCount();
 	if (framecount == 0) NewFrame();
 	else {
-		for (size_t i = 0; i < framecount; ++i) {
+		for (size_t i = 0; i < framecount; ++i)
 			OpenFrame(i);
-		}
 	}
 
 	// Open files from command-line options
@@ -215,16 +278,15 @@ bool eApp::OnInit() {
 	// read the corresponding setting.
 	if (checkForUpdate) {
 		m_settings.GetSettingBool(wxT("checkForUpdates"), checkForUpdate);
-		if (checkForUpdate) {
+		if (checkForUpdate)
 			CheckForUpdates(m_settings, GetAppVersion());
-		}
 	}
 
     return true;
 }
 
 EditorFrame* eApp::OpenFrame(size_t frameId) {
-	const wxRect frameSize = DetermineFrameSize();
+	const wxRect frameSize = eApp_DetermineFrameSize();
 	EditorFrame* frame = new EditorFrame( *m_catalyst, frameId, wxT("e"), frameSize, *m_pSyntaxHandler);
 
 	// Show the main window, bringing it to the top.
@@ -242,9 +304,8 @@ EditorFrame* eApp::NewFrame() {
 	// We want to copy settings from currently active frame
 	size_t activeId = 0;
 	EditorFrame* frame = GetTopFrame();
-	if (frame) {
+	if (frame)
 		activeId = m_settings.GetIndexFromFrameSettings(frame->GetFrameSettings());
-	}
 
 	// Create settings for new frame and open
 	const size_t frameId = m_settings.AddFrame(activeId);
@@ -341,17 +402,6 @@ void eApp::ClearLayout() {
 	m_settings.Save();
 }
 
-#ifdef __WXMSW__
-void eApp::SendCommandToServer(HWND hWndRecv, const wxString& cmd) {
-	const wxCharBuffer msg = cmd.mb_str(wxConvUTF8);
-	COPYDATASTRUCT cds;
-	cds.dwData = 0;
-	cds.cbData = strlen( msg.data() )+1;
-	cds.lpData = (void*)msg.data();
-	::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
-}
-#endif
-
 bool eApp::SendArgsToInstance() {
 #ifdef __WXMSW__
 	// Get handle to main frame of running instance
@@ -373,30 +423,22 @@ bool eApp::SendArgsToInstance() {
 
 	// Open files from command-line options
 	if (!m_files.IsEmpty()) {
-		// Open files from command-line options
-		bool isFirst = true;
 		for (unsigned int i = 0; i < m_files.Count(); ++i) {
 			const wxString& arg = m_files[i];
 
 			wxString cmd = wxT("OPEN_FILE ");
 
-			// Add position options
-			if (isFirst) {
+			// Add position options, but only to first file
+			if (i == 0) {
 				if (m_lineNum) cmd += wxString::Format(wxT("LINE=%u "), m_lineNum);
 				if (m_columnNum) cmd += wxString::Format(wxT("COL=%u "), m_columnNum);
-				isFirst = false;
 			}
 
-			if (arg.StartsWith(wxT("txmt:")) ) {
-				cmd += arg;
-			}
+			if (eDocumentPath::IsRemotePath(arg) || arg.StartsWith(wxT("txmt:")) ) cmd += arg;
 			else {
-				if (eDocumentPath::IsRemotePath(arg)) cmd += arg;
-				else {
-					wxFileName path(arg);
-					path.MakeAbsolute();
-					cmd += path.GetFullPath();
-				}
+				wxFileName path(arg);
+				path.MakeAbsolute();
+				cmd += path.GetFullPath();
 			}
 
 			SendCommandToServer(hWndRecv, cmd);
@@ -438,7 +480,8 @@ bool eApp::SendArgsToInstance() {
 		// we want it to invalidate the pointer.
 		connection->SetPointer(&connection);
 
-		if (argc > 1) {
+		if (argc <= 1) connection->Execute(wxT("NEW_WINDOW"));
+		else {
 			// Open files from command-line options
 			bool isFirst = true;
 			for (int i = 1; i < argc; ++i) {
@@ -470,7 +513,6 @@ bool eApp::SendArgsToInstance() {
 				}
 			}
 		}
-		else connection->Execute(wxT("NEW_WINDOW"));
 
 		if (connection) delete connection; // also disconnects
 	}
@@ -487,7 +529,8 @@ void eApp::OnIdle(wxIdleEvent& event) {
 	}
 
 	if (m_pSyntaxHandler) {
-		if (m_pSyntaxHandler->DoIdle()) event.RequestMore();
+		if (m_pSyntaxHandler->DoIdle())
+			event.RequestMore();
 	}
 
 	// Important: wxApp needs to do its idle processing as well
@@ -495,8 +538,8 @@ void eApp::OnIdle(wxIdleEvent& event) {
 }
 
 bool eApp::ExecuteCmd(const wxString& cmd) {
-	wxString result;
-	return ExecuteCmd(cmd, result);
+	wxString ignore_result;
+	return ExecuteCmd(cmd, ignore_result);
 }
 
 bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
@@ -536,7 +579,7 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 		// Extract position vars
 		unsigned int lineNum = 0;
 		unsigned int columnNum = 0;
-		path = ExtractPosArgs(path, lineNum, columnNum);
+		path = eApp_ExtractPosArgs(path, lineNum, columnNum);
 
 		// Open the file
 		const bool res = frame->Open(path, mate);
@@ -620,52 +663,6 @@ bool eApp::ExecuteCmd(const wxString& cmd, wxString& result) {
 	return false;
 }
 
-wxString eApp::ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) const {
-	wxString path = cmd;
-	if (path.StartsWith(wxT("LINE="))) {
-		wxString lineStr = path.BeforeFirst(wxT(' '));
-		lineStr = lineStr.substr(5);
-		unsigned long line = 0;
-		lineStr.ToULong(&line);
-		lineNum = line;
-		path = path.AfterFirst(wxT(' '));
-	}
-	if (path.StartsWith(wxT("COL="))) {
-		wxString colStr = path.BeforeFirst(wxT(' '));
-		colStr = colStr.substr(5);
-		unsigned long col = 0;
-		colStr.ToULong(&col);
-		columnNum = col;
-		path = path.AfterFirst(wxT(' '));
-	}
-	return path;
-}
-
-wxRect eApp::DetermineFrameSize() {
-	wxSize scr = wxGetDisplaySize();
-
-	// determine default frame position/size
-	wxRect normal;
-	if (scr.x <= 700) {
-		normal.x = 40 / 2;
-		normal.width = scr.x - 40;
-	}
-	else {
-		normal.x = (scr.x - 700) / 2;
-		normal.width = 700;
-	}
-	if (scr.y <= 480) {
-		normal.y = 80 / 2;
-		normal.height = scr.y - 80;
-	}
-	else{
-		normal.height = scr.y - 120;
-		normal.y = (scr.y - normal.height) / 2;
-	}
-
-	return normal;
-}
-
 int eApp::OnExit() {
 	// Make sure any data copied to the clipboard stays there after
 	// the app has closed
@@ -696,27 +693,36 @@ int eApp::OnExit() {
 	return 0;
 }
 
-wxString eApp::GetAppTitle() {
-	wxString title;
-	if (this->IsRegistered()) title = _("e");
-	else {
-		int daysleft = this->DaysLeftOfTrial();
+const wxString& eApp::GetAppTitle() {
+	static wxString title = wxEmptyString;
+	static int daysleft = -99;
+
+	// Fill out initial title
+	if (this->IsRegistered()) {
+		if(title == wxEmptyString) {
+			title = _("e");
+#ifdef __WXDEBUG__
+			title += wxT(" [DEBUG]");
+#endif
+		}
+	}
+	else if (title == wxEmptyString || daysleft != this->DaysLeftOfTrial()) {
+		daysleft = this->DaysLeftOfTrial();
 
 		if (daysleft == 1) title = _("e  [UNREGISTERED - 1 DAY LEFT OF TRIAL]");
 		else if (daysleft > 1) title = wxString::Format(wxT("e  [UNREGISTERED - %d DAYS LEFT OF TRIAL]"), daysleft);
 		else title = _("e  [UNREGISTERED - *TRIAL EXPIRED*]");
-	}
 
 #ifdef __WXDEBUG__
-	title += wxT(" [DEBUG]");
+		title += wxT(" [DEBUG]");
 #endif
+	}
 
 	return title;
 }
 
 const wxString& eApp::AppPath() const {return m_appPath;}
 const wxString& eApp::AppDataPath() const {return m_appDataPath;}
-
 
 wxString eApp::CreateTempAppDataFile() {
 	const wxString tempPath = m_appPath + wxT("temp") + wxFILE_SEP_PATH;
@@ -730,11 +736,14 @@ void eApp::OnUpdatesAvailable(wxCommandEvent& WXUNUSED(event)) {
 	m_settings.SetSettingLong(wxT("lastupdatecheck"), now);
 
 	// Ask user if he wants to download new release
-	const int answer = wxMessageBox(_("A new release of e is available.\nDo you wish to go the the website to download it now?"), wxT("Program update!"), wxYES_NO|wxICON_EXCLAMATION, GetTopFrame());
-	if (answer == wxYES) {
-		// Go to website
+	const int answer = wxMessageBox(
+		_("A new release of e is available.\nDo you wish to go the the website to download it now?"),
+		wxT("Program update!"),
+		wxYES_NO|wxICON_EXCLAMATION,
+		GetTopFrame());
+
+	if (answer == wxYES)
 		wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com"));
-	}
 }
 
 void eApp::OnUpdatesChecked(wxCommandEvent& WXUNUSED(event)) {
@@ -783,3 +792,15 @@ eSettings& eGetSettings(void) {
 	eApp& app = wxGetApp();
 	return new AppVersion(app.GetId().ToString(), app.VersionId(), app.IsRegistered(), app.DaysLeftOfTrial());
 }
+
+ const wxLongLong& eApp::GetId() const {
+	 cxLOCK_READ((*m_catalyst)) 
+		 return catalyst.GetId();
+	 cxENDLOCK
+ }
+
+bool eApp::IsRegistered() const {return m_pCatalyst->IsRegistered();}
+int eApp::DaysLeftOfTrial() const {return m_pCatalyst->DaysLeftOfTrial();}
+int eApp::TotalDays() const {return m_pCatalyst->DaysLeftOfTrial();}
+const wxString& eApp::RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();}
+const wxString& eApp::RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();}

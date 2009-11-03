@@ -38,6 +38,46 @@
     #pragma warning(pop)
 #endif
 
+
+class PrefsMatch : public std::unary_function<const tmPrefs*, bool> {
+public:
+	enum PrefType {
+		increaseIndentPattern,
+		decreaseIndentPattern,
+		indentNextLinePattern,
+		unIndentedLinePattern
+	};
+
+	PrefsMatch(PrefType target) : m_target(target) {};
+	bool operator()(const tmPrefs* x) const {
+		switch(m_target) {
+		case increaseIndentPattern:
+			if (!x->increaseIndentPattern.empty()) return true;
+			break;
+		case decreaseIndentPattern:
+			if (!x->decreaseIndentPattern.empty()) return true;
+			break;
+		case indentNextLinePattern:
+			if (!x->indentNextLinePattern.empty()) return true;
+			break;
+		case unIndentedLinePattern:
+			if (!x->unIndentedLinePattern.empty()) return true;
+			break;
+		}
+		return false;
+	};
+private:
+	const PrefType m_target;
+};
+
+	
+class tmSnippet : public tmAction {
+public:
+	bool IsSnippet() const {return true;};
+	virtual ~tmSnippet() {};
+};
+
+
 class DirTraverserSimple : public wxDirTraverser {
 public:
     DirTraverserSimple(wxArrayString& dirs) : m_dirs(dirs) {}
@@ -1401,15 +1441,13 @@ bool TmSyntaxHandler::ParseSnippet(const tmBundle& bundle, unsigned int snippetI
 
 	// Run Environment
 	const char* runEnv = snippetDict.GetString("runEnvironment");
-	if (runEnv && strcmp(runEnv, "windows") == 0) {
+	if (runEnv && strcmp(runEnv, "windows") == 0)
 		snip->isUnix = false;
-	}
 
 	// Key binding
 	const char* binding = snippetDict.GetString("keyEquivalent");
-	if (binding) {
+	if (binding)
 		snip->key = tmKey(wxString(binding, wxConvUTF8));
-	}
 
 	// Add to action tree
 	SelectorParser<tmAction> parser(snip->scope, snip);

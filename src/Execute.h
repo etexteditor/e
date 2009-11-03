@@ -16,7 +16,6 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/file.h>
 	#include <wx/event.h>
 #endif
 

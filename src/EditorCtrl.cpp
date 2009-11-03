@@ -1703,9 +1703,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 						RawDelete(selStart, selEnd);
 						SetPos(selStart);
 
-						if (!output.empty()) {
+						if (!output.empty())
 							m_snippetHandler.StartSnippet(this, output, env, action.bundle);
-						}
 					}
 					break;
 
@@ -1761,9 +1760,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 					mDate.SetMillisecond(0);
 					modDate.SetMillisecond(0);
 
-					if (mDate != modDate) {
+					if (mDate != modDate)
 						LoadText(m_path.GetFullPath());
-					}
 				}
 			}
 		}
@@ -1805,9 +1803,8 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 			}
 		}
 
-		if (text.length() == 1) {
+		if (text.length() == 1)
 			autoPair = AutoPair(pos, text);
-		}
 	}
 
 	// Insert the text
@@ -1824,7 +1821,8 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 		unsigned int pairpos = pos + byte_len;
 		m_lines.SetPos(pairpos);
 
-		if (!autoPair.empty()) {
+		if (autoPair.empty()) m_autopair.AdjustEndsUp(byte_len); // Adjust containing pairs
+		else {
 			// insert paired char
 			unsigned int pair_len = 0;
 			cxLOCKDOC_WRITE(m_doc)
@@ -1834,17 +1832,12 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 			StylersInsert(pairpos, pair_len);  // Update stylers
 			byte_len += pair_len;
 		}
-		else {
-			// Adjust containing pairs
-			m_autopair.AdjustEndsUp(byte_len);
-		}
 	}
 	else {
 		// Ensure carret stays at same position
 		unsigned int caretPos = m_lines.GetPos();
 		if (caretPos > pos) m_lines.SetPos(caretPos + byte_len);
 	}
-
 
 	MarkAsModified();
 	return byte_len;
@@ -1858,9 +1851,8 @@ wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 #ifdef __WXDEBUG__
 	unsigned int debug = 0;
 	if (debug == 1) {
-		for (map<wxString, wxString>::const_iterator i = smartPairs.begin(); i != smartPairs.end(); ++i) {
+		for (map<wxString, wxString>::const_iterator i = smartPairs.begin(); i != smartPairs.end(); ++i)
 			wxLogDebug(wxT("%s -> %s"), i->first.c_str(), i->second.c_str());
-		}
 	}
 #endif
 
@@ -1976,9 +1968,8 @@ void EditorCtrl::MatchBrackets() {
 				if (escaped) return; // current char is escaped
 			cxENDLOCK
 
-			if (count & 1) {
+			if (count & 1)
 				m_bracketHighlight.Set(bracketpos, pos);
-			}
 			else {
 				const unsigned int lineend = m_lines.GetLineEndpos(lineid);
 				cxLOCKDOC_READ(m_doc)
@@ -2177,9 +2168,8 @@ unsigned int EditorCtrl::InsertNewline() {
 				const unsigned int newlinestart = pos + newlinelen;
 
 				// Set correct indentation for new line
-				if (!newindent.empty()) {
+				if (!newindent.empty())
 					byte_len += RawInsert(newlinestart, newindent, false);
-				}
 			}
 		}
 	}
@@ -2293,7 +2283,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 					cxLOCKDOC_READ(m_doc)
 						for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < lineend; ++dbi) {
 							if (*dbi == '\t') {
-							if (spaces == 0) ++curLen;
+								if (spaces == 0) ++curLen;
 								else break; // spaces smaller than tabWidth ends indent
 							}
 							else if (*dbi == ' ') {
@@ -2329,7 +2319,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 							doc_byte_iter dbi(doc, linestart);
 							for (; (unsigned int)dbi.GetIndex() < lineend; ++dbi) {
 								if (*dbi == '\t') {
-								if (spaces == 0) ++end;
+									if (spaces == 0) ++end;
 									else break; // spaces smaller than tabWidth ends indent
 								}
 								else if (*dbi == ' ') {

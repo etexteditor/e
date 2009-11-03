@@ -1818,10 +1818,9 @@ wxDateTime EditorFrame::GetRemoteDate(const wxString& url, const RemoteProfile* 
 	return GetRemoteThread().GetModDate(url, *rp);
 }
 
+// Asks our settings to get or create a matching remote profile.
 const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool withDir) {
 	wxASSERT(eDocumentPath::IsRemotePath(url));
-
-	// Get (or create) matching profile
 	return m_generalSettings.GetRemoteProfileFromUrl(url, withDir);
 }
 
@@ -1832,7 +1831,6 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 
 	// this also updates rp with the new login
 	m_generalSettings.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
-
 	return true;
 }
 

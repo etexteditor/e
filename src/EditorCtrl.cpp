@@ -2667,10 +2667,8 @@ void EditorCtrl::SetPath(const wxString& newpath) {
 	m_tmDirectory.clear();
 
 	// Set the syntax to match the new path
-	if (m_syntaxstyler.UpdateSyntax()) {
-		// Redraw (since syntax for this file has changed)
-		DrawLayout();
-	}
+	if (m_syntaxstyler.UpdateSyntax())
+		DrawLayout(); // Redraw (since syntax for this file has changed)
 }
 
 bool EditorCtrl::IsModified() const {
@@ -3220,10 +3218,8 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		if (m_autopair.BeforeOuterPair(del_end))
 			m_autopair.AdjustIntervalsDown(byte_len);
 
-		if (atCaret) {
-			// Adjust containing pairs
+		if (atCaret) // Adjust containing pairs
 			m_autopair.AdjustEndsDown(byte_len);
-		}
 
 		// Restore shadow selection
 		m_lines.AddSelection(i->start - dl, (i->end - dl) - byte_len);
@@ -3463,9 +3459,8 @@ void EditorCtrl::SelectLines(const vector<unsigned int>& sel_lines) {
 		unsigned int linestart, lineend;
 		m_lines.GetLineExtent(*i, linestart, lineend);
 
-		if (i > sel_lines.begin() && *i == lastline+1 && sel != -1) {
+		if (i > sel_lines.begin() && *i == lastline+1 && sel != -1)
 			m_lines.UpdateSelection(sel, firststart, lineend);
-		}
 		else {
 			sel = m_lines.AddSelection(linestart, lineend);
 			firststart = linestart;
@@ -3830,9 +3825,8 @@ void EditorCtrl::SwapLines(unsigned int line1, unsigned int line2) {
 	const unsigned int lineend2 = m_lines.GetLineEndpos(line2, true);
 
 	// Move top line to end of bottom line
-	if (linestart != lineend) {
+	if (linestart != lineend)
 		RawMove(linestart, lineend, lineend2);
-	}
 
 	if (!m_lines.IsLineVirtual(line2) && linestart2 != lineend2) {
 		const unsigned int offset = lineend - linestart;
@@ -4027,9 +4021,8 @@ void EditorCtrl::Transpose() {
 		}
 
 		// Re-select
-		for (vector<interval>::iterator p = newsel.begin(); p != newsel.end(); ++p) {
+		for (vector<interval>::iterator p = newsel.begin(); p != newsel.end(); ++p)
 			m_lines.AddSelection(p->start, p->end);
-		}
 	}
 
 	Freeze();
@@ -4049,10 +4042,7 @@ void EditorCtrl::DelCurrentLine(bool fromPos) {
 			const unsigned int realend = m_lines.GetLineEndpos(lineid, false);
 			if (pos < realend) Delete(pos, realend);
 		}
-		else {
-			// Delete from pos to end-of-line
-			Delete(pos, lineend);
-		}
+		else Delete(pos, lineend); // Delete from pos to end-of-line
 	}
 	else {
 		// Delete entire line
@@ -4783,9 +4773,8 @@ bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int option
 		if (dir_forward) {
 			// Find first range containing start_pos
 			vector<interval>::const_iterator p = m_searchRanges.begin();
-			for (; p != m_searchRanges.end(); ++p) {
+			for (; p != m_searchRanges.end(); ++p)
 				if (start_pos >= p->start && start_pos < p->end) break;
-			}
 
 			if (p != m_searchRanges.end()) {
 				unsigned int rangestart = start_pos;
@@ -4804,9 +4793,8 @@ bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int option
 		else {
 			// Find first range containing start_pos
 			vector<interval>::reverse_iterator p = m_searchRanges.rbegin();
-			for (; p != m_searchRanges.rend(); ++p) {
+			for (; p != m_searchRanges.rend(); ++p)
 				if (start_pos > p->start && start_pos <= p->end) break;
-			}
 
 			if (p != m_searchRanges.rend()) {
 				unsigned int rangestart = start_pos;
@@ -4904,7 +4892,8 @@ cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
 		// Avoid hitting same zero-length selection
 		if (iv.start == iv.end) {
 			++start_pos;
-			if (start_pos > (int)m_lines.GetLength()) return cxNOT_FOUND;
+			if (start_pos > (int)m_lines.GetLength()) 
+				return cxNOT_FOUND;
 		}
 	}
 	else start_pos = m_lines.GetPos();
@@ -4915,7 +4904,8 @@ cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
 	if (result == cxNOT_FOUND && start_pos > 0) {
 		// Restart search from top
 		start_pos = m_searchRanges.empty() ? 0 : m_searchRanges[0].start;
-		if (DoFind(text, start_pos, options)) result = cxFOUND_AFTER_RESTART;
+		if (DoFind(text, start_pos, options)) 
+			result = cxFOUND_AFTER_RESTART;
 	}
 
 	// Make sure that next search has the new starting point
@@ -5044,9 +5034,8 @@ search_result EditorCtrl::RegExFind(const wxString& searchtext, unsigned int sta
 
 	// Check if we have the regex cached
 	if (m_re) {
-		if (searchtext == m_regex_cache && options == m_options_cache) {
-			// We might want to study the regex the first time we end here
-		}
+		// We might want to study the regex the first time we end here
+		if (searchtext == m_regex_cache && options == m_options_cache) {}
 		else {
 			free(m_re);
 			m_re = NULL;
@@ -5098,6 +5087,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 		&error,     // for error message
 		&erroffset, // for error offset
 		NULL);      // use default character tables
+
 	if (!re) {
 		sr.error_code = -4; // invalid pattern
 		return sr;
@@ -5169,6 +5159,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 		&error,     // for error message
 		&erroffset, // for error offset
 		NULL);      // use default character tables
+
 	if (!re) {
 		sr.error_code = -4; // invalid pattern
 		return sr;
@@ -5219,9 +5210,8 @@ search_result EditorCtrl::RegExFindBackwards(const wxString& searchtext, unsigne
 
 	// Check if we have the regex cached
 	if (m_re) {
-		if (searchtext == m_regex_cache && options == m_options_cache) {
-			// We might want to study the regex the first time we end here
-		}
+		// We might want to study the regex the first time we end here
+		if (searchtext == m_regex_cache && options == m_options_cache) {}
 		else {
 			free(m_re);
 			m_re = NULL;
@@ -5422,10 +5412,8 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 
 		// Get the replacement string
 		wxString textNew;
-		if (!replacetext.empty()) {
-			if (options & FIND_USE_REGEX) textNew = ParseReplaceString(replacetext, captures);
-			else textNew = replacetext;
-		}
+		if (!replacetext.empty())
+			textNew = (options & FIND_USE_REGEX) ? ParseReplaceString(replacetext, captures) : textNew;
 
 		// Delete original
 		if (result.start != result.end) {
@@ -5788,9 +5776,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				{
 					vector<SymbolRef> symbols;
 					m_syntaxstyler.GetSymbols(symbols);
-					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
+					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p)
 						wxLogDebug(wxT("%d-%d -> \"%s\" -> \"%s\""), p->start, p->end, GetText(p->start, p->end).c_str(), p->transform->c_str());
-					}
 				}
 				break;
 
@@ -5826,20 +5813,14 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					const unsigned int currentLine = m_lines.GetCurrentLine();
 					const unsigned int indentPos = m_lines.GetLineIndentPos(currentLine);
 
-					if (indentPos < oldpos) {
-						// Move to first text after indentation
+					if (indentPos < oldpos) // Move to first text after indentation
 						m_lines.SetPos(indentPos);
-					}
 					else {
 						const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
-						if (oldpos == startOfLine) {
-							// Move back to text after indentation
+						if (oldpos == startOfLine) // Move back to text after indentation
 							m_lines.SetPos(indentPos);
-						}
-						else {
-							// Move to start-of-line
+						else // Move to start-of-line
 							m_lines.SetPos(startOfLine);
-						}
 					}
 
 					// Handle selection
@@ -5905,9 +5886,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					// Check if we delete outside zero-width selection
 					if (m_lines.IsSelected()) {
 						const vector<interval>& sels = m_lines.GetSelections();
-						if (sels.size() == 1 && sels[0].start == sels[0].end) {
+						if (sels.size() == 1 && sels[0].IsPoint())
 							m_lines.RemoveAllSelections();
-						}
 					}
 
 					// Handle deletions in snippet
@@ -5944,7 +5924,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 						m_lines.RemoveAllSelections();
 					}
 
-					if (pos >= m_lines.GetLength()) return; // Can't delete at end of text
+					if (pos >= m_lines.GetLength()) 
+						return; // Can't delete at end of text
 
 					unsigned int nextpos;
 					wxChar nextchar;
@@ -6001,9 +5982,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					// Check if we delete outside zero-width selection
 					if (m_lines.IsSelected()) {
 						const vector<interval>& sels = m_lines.GetSelections();
-						if (sels.size() == 1 && sels[0].start == sels[0].end) {
+						if (sels.size() == 1 && sels[0].IsPoint())
 							m_lines.RemoveAllSelections();
-						}
 					}
 
 					// Handle deletions in snippet
@@ -6110,9 +6090,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				//if (key >= WXK_SPECIAL1 && key <= WXK_SPECIAL20) break;
 
 				//if (wxIsprint(c)) { // Normal chars (does not work with 'ae', 'oslash', 'a-circle', etc.??)
-				if ((unsigned int)c > 31) { // Normal chars
+				if ((unsigned int)c > 31) // Normal chars
 					InsertChar(c);
-				}
 				else {
 					event.Skip();
 					return; // do nothing if we don't know the char
@@ -7624,9 +7603,8 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	const int lineoffset = scrollPos - m_lines.GetYPosFromLine(topline);
 
 	// Update lines
-	if (m_lines.NeedIdle()) {
+	if (m_lines.NeedIdle())
 		m_lines.OnIdle();
-	}
 
 	// Update syntax
 	const bool syntaxNeedIdle = m_syntaxstyler.OnIdle();
@@ -7725,9 +7703,8 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 
 	self->m_isResizing = true;
 	self->m_lines.ShowMargin(marginChars);
-	if (self->m_wrapAtMargin && self->m_lines.GetWrapMode() != cxWRAP_NONE) {
+	if (self->m_wrapAtMargin && self->m_lines.GetWrapMode() != cxWRAP_NONE)
 		self->m_lines.SetWidth(self->m_lines.GetMarginPos());
-	}
 	
 	self->scrollPos = self->m_lines.GetYPosFromLine(topline);
 	self->DrawLayout();
@@ -7738,9 +7715,7 @@ void EditorCtrl::OnBundlesReloaded(EditorCtrl* self, void* WXUNUSED(data), int W
 	wxASSERT(self->IsOk());
 
 	// Check if we are editing an item that has been modified
-	if (self->IsBundleItem()) {
-		//TODO: If modified by externally, ask user if he wish to reload
-	}
+	if (self->IsBundleItem()) {} //TODO: If modified externally, prompt user to reload
 
 	// Re-set the syntax
 	// (we have to do this before updating in lines to avoid refs to invalid styles)
@@ -7757,7 +7732,6 @@ void EditorCtrl::OnBundlesReloaded(EditorCtrl* self, void* WXUNUSED(data), int W
 	else self->m_lines.Invalidate();
 
 	self->MarkAsModified();
-
 	self->DrawLayout();
 }
 
@@ -7778,9 +7752,8 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 
 	if (actions.empty()) return false; // no matching shortcut
 	
-	if (actions.size() == 1) {
+	if (actions.size() == 1)
 		DoAction(*actions[0], NULL, false);
-	}
 	else {
 		// Show popup menu
 		const int result = ShowPopupList(actions);
@@ -7976,9 +7949,8 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 			newTabs = true;
 			break;
 		}
-		else if (result >= 1010-1000) {
+		else if (result >= 1010-1000)
 			DoDragCommand(*actions[result-10], filenames[i]);
-		}
 	}
 
 	if (!newTabs) SetFocus();
@@ -8135,13 +8107,11 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 			unsigned char buf[BUFFER_SIZE] = { 0 };
 			const int ret = ::ToAscii(event.m_rawCode, 0, keystate, (WORD *)buf, 0);
 
-			if (m_parentFrame.IsKeyDiagMode()) {
+			if (m_parentFrame.IsKeyDiagMode())
 				Insert(wxString::Format(wxT("\tret=%d\n\tbuf=%d\n"), ret, *buf));
-			}
 
-			if ((ret >= 1) && (((*buf >= 32) && (*buf <= 126)) || ((*buf >= 160) && (*buf <= 255)))) {
+			if ((ret >= 1) && (((32 <= *buf) && (*buf <= 126)) || ((160 <= *buf) && (*buf <= 255))))
 				return false;
-			}
 		}
 #endif
 
@@ -8190,16 +8160,14 @@ void EditorCtrl::Print() {
 
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {
 	vector<unsigned int> folds;
-	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
+	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p)
 		if (p->type == cxFOLD_START_FOLDED) folds.push_back(p->line_id);
-	}
 	return folds;
 }
 
 bool EditorCtrl::HasFoldedFolds() const {
-	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
+	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p)
 		if (p->type == cxFOLD_START_FOLDED) return true;
-	}
 	return false;
 }
 
@@ -8238,13 +8206,11 @@ void EditorCtrl::ParseFoldMarkers() {
 			const bool matchEndMarker = (sr2.error_code > 0);
 
 			if (matchStartMarker) {
-				if (!matchEndMarker) { // starter and ender on same line cancels out
+				if (!matchEndMarker) // starter and ender on same line cancels out
 					m_folds.push_back(cxFold(i, cxFOLD_START, m_lines.GetLineIndentLevel(i)));
-				}
 			}
-			else if (matchEndMarker) {
+			else if (matchEndMarker)
 				m_folds.push_back(cxFold(i, cxFOLD_END, m_lines.GetLineIndentLevel(i)));
-			}
 		}
 
 		lineStart = lineEnd;
@@ -8315,9 +8281,8 @@ void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
 	}
 
 	// Parse the new lines
-	for (unsigned int i = firstline; i <= lastline; ++i) {
+	for (unsigned int i = firstline; i <= lastline; ++i)
 		p = ParseFoldLine(i, p, doRefold);
-	}
 
 	// Adjust line ids in following
 	if (newLines) {
@@ -8358,17 +8323,16 @@ void EditorCtrl::FoldingDelete(unsigned int start, unsigned int WXUNUSED(end)) {
 		if (p->type == cxFOLD_START_FOLDED) doRefold = true;
 		p = m_folds.erase(p);
 	}
-	if (!m_lines.IsLineVirtual(line_id)) {
+
+	if (!m_lines.IsLineVirtual(line_id))
 		p = ParseFoldLine(line_id, p, doRefold);
-	}
 
 	// Remove deleted lines
 	const unsigned int lastline = line_id + newLines;
-	while (p != m_folds.end() && p->line_id <= lastline) {
+	while (p != m_folds.end() && p->line_id <= lastline)
 		p = m_folds.erase(p);
-	}
 
-	// Adjust line id's in following
+	// Adjust line ids in following
 	if (newLines) {
 		while (p != m_folds.end()) {
 			p->line_id -= newLines;
@@ -8416,22 +8380,20 @@ void EditorCtrl::FoldingApplyDiff(const vector<cxLineChange>& linechanges) {
 		}
 		else { // DELETION
 			// Reparse line with partial deletion
-			if (!m_lines.IsLineVirtual(line_id)) {
+			if (!m_lines.IsLineVirtual(line_id))
 				f = ParseFoldLine(line_id, f, doRefold);
-			}
 
 			// Remove deleted lines
 			const unsigned int lastline = line_id - l->lines;
-			while (f != m_folds.end() && f->line_id <= lastline) {
+			while (f != m_folds.end() && f->line_id <= lastline)
 				f = m_folds.erase(f);
-			}
 		}
 
 		// Adjust line id's in following
 		if (l->lines != 0) {
-			for ( ; f != m_folds.end(); ++f) {
+			for (; f != m_folds.end(); ++f)
 				f->line_id += l->lines;
-			}
+
 			m_foldedLines += l->lines;
 		}
 	}
@@ -8461,12 +8423,10 @@ unsigned int EditorCtrl::GetLastLineInFold(const vector<cxFold*>& fStack) const 
 		// Check if end marker matches any starter on the stack (ignore unmatched)
 		for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
 			if (f->indent == (*fr)->indent) {
-				if ((*fr)->line_id == foldLine) {
-					return f->line_id; // end matches current
-				}
-				else if ((*fr)->line_id < foldLine) {
-					return f->line_id-1; // end matches previous (ending fold prematurely)
-				}
+				if ((*fr)->line_id == foldLine) // end matches current
+					return f->line_id; 
+				else if ((*fr)->line_id < foldLine) // end matches previous (ending fold prematurely)
+					return f->line_id-1; 
 				else {
 					// skip subfolds
 					vector<const cxFold*>::iterator fb = (++fr).base();

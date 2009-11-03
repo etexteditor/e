@@ -15,6 +15,7 @@ public:
 	inline void Get(unsigned int& s, unsigned int& e) const {s = start; e = end;}
 
 	inline bool IsPoint(unsigned int p) const { return p == start && p == end; }
+	inline bool IsPoint(void) const { return start == end; }
 
 	unsigned int start;
 	unsigned int end;

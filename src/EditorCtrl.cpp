@@ -1103,14 +1103,16 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 			const wxString& ignorePattern = m_syntaxHandler.GetIndentNonePattern(scope);
 			if (!ignorePattern.empty()) {
 				const search_result res = RegExFind(ignorePattern, linestart, false, NULL, lineend);
-				if (res.error_code > 0) continue;
+				if (res.error_code > 0)
+					continue;
 			}
 
 			// Check if indentation should increase
 			const wxString& increasePattern = m_syntaxHandler.GetIndentIncreasePattern(scope);
 			if (!increasePattern.empty()) {
 				const search_result res = RegExFind(increasePattern, linestart, false, NULL, lineend);
-				if (res.error_code > 0) return m_lines.GetLineIndent(i) + m_indent;
+				if (res.error_code > 0) 
+					return m_lines.GetLineIndent(i) + m_indent;
 			}
 
 			/*// Check if only next line should be indented
@@ -1414,32 +1416,31 @@ bool EditorCtrl::DoTabTrigger(unsigned int wordstart, unsigned int wordend) {
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(wordend);
 	const vector<const tmAction*> actions = m_syntaxHandler.GetActions(trigger, scope);
 
+	if (actions.empty()) return false; // no action found for trigger
+
 	//wxLogDebug(wxT("%s (%u)"), trigger, snippets.size());
-	if (!actions.empty()) {
-		//wxLogDebug(wxT("%s"), actions[0]->content);
+	//wxLogDebug(wxT("%s"), actions[0]->content);
 
-		// Present user with a list of actions
-		int actionIndex = 0;
-		if (actions.size() > 1) {
-			actionIndex = ShowPopupList(actions);
-			if (actionIndex == -1) return true;
-		}
-
-		// Clean up first
-		if (!m_lines.IsSelectionShadow()) RemoveAllSelections();
-		m_currentSel = -1;
-		m_snippetHandler.Clear(); // stop any active snippets
-
-		// Remove the trigger
-		Freeze();
-		RawDelete(wordstart, wordend);
-
-		// Do the Action
-		DoAction(*actions[actionIndex], NULL, true);
-		return true;
+	// Present user with a list of actions
+	int actionIndex = 0;
+	if (actions.size() > 1) {
+		actionIndex = ShowPopupList(actions);
+		if (actionIndex == -1)
+			return true;
 	}
 
-	return false; // no action found for trigger
+	// Clean up first
+	if (!m_lines.IsSelectionShadow()) RemoveAllSelections();
+	m_currentSel = -1;
+	m_snippetHandler.Clear(); // stop any active snippets
+
+	// Remove the trigger
+	Freeze();
+	RawDelete(wordstart, wordend);
+
+	// Do the Action
+	DoAction(*actions[actionIndex], NULL, true);
+	return true;
 }
 
 void EditorCtrl::FilterThroughCommand() {

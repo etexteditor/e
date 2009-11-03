@@ -7322,9 +7322,8 @@ void EditorCtrl::SelectBlock(wxPoint sel_endpoint, bool multi) {
 
 	// Remove previous selection
 	if (multi) {
-		for (vector<unsigned int>::reverse_iterator p = m_blocksel_ids.rbegin(); p != m_blocksel_ids.rend(); ++p) {
+		for (vector<unsigned int>::reverse_iterator p = m_blocksel_ids.rbegin(); p != m_blocksel_ids.rend(); ++p)
 			m_lines.RemoveSelection(*p);
-		}
 		m_blocksel_ids.clear();
 	}
 	else {

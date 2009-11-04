@@ -2341,16 +2341,19 @@ wxString EditorFrame::GetSaveDir() const {
 }
 
 void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
-	// Get the last used dir
-	const wxString lastDir = GetSaveDir();
-
-	wxFileDialog dlg(this, _T("Choose a file"), lastDir, _T(""), EditorFrame::DefaultFileFilters, wxFD_OPEN|wxFD_MULTIPLE);
-	if (dlg.ShowModal() != wxID_OK) return;
-
-	m_settings.SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
-
 	wxArrayString filenames;
-	dlg.GetPaths(filenames);
+	{
+		// Get the last used dir
+		const wxString lastDir = GetSaveDir();
+
+		wxFileDialog dlg(this, _T("Choose a file"), lastDir, _T(""), EditorFrame::DefaultFileFilters, wxFD_OPEN|wxFD_MULTIPLE);
+		if (dlg.ShowModal() != wxID_OK)
+			return;
+
+		m_settings.SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
+
+		dlg.GetPaths(filenames);
+	}
 
 	// Check if we have to conv from a custom encoding
 	wxFontEncoding enc = wxFONTENCODING_SYSTEM;
@@ -2360,11 +2363,32 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 	}
 
 	SetCursor(wxCURSOR_WAIT);
-	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
-		wxFileName newpath = filenames[i];
-		if (!OpenFile(newpath, enc)) break;
-		Update();
+	
+	// Only show progress dialog if more than 3 files
+	wxProgressDialog* progress_window = NULL;
+	const wxString msg = _("Opening selected documents");
+	if (filenames.GetCount() > 3) {
+		progress_window = new wxProgressDialog(wxT("Progress"), msg, filenames.GetCount(), this, wxPD_APP_MODAL|wxPD_SMOOTH);
+		Freeze();
 	}
+
+	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
+		if (progress_window)
+			progress_window->Update(i, msg + wxT("\n") + filenames[i].c_str());
+
+		wxFileName newpath = filenames[i];
+		if (!OpenFile(newpath, enc))
+			break;
+
+		if (!progress_window)
+			Update();
+	}
+
+	if (progress_window) {
+		delete progress_window;
+		Thaw();
+	}
+
 	SetCursor(*wxSTANDARD_CURSOR);
 }
 

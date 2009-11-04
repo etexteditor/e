@@ -12,10 +12,13 @@ int wxListCtrlEx::GetSelectedRow() const {
 	return itemIndex;
 }
 
-void wxListCtrlEx::SetSelectedRow(int selectedRow) {
+void wxListCtrlEx::SetSelectedRow(int selectedRow, bool ensure_visible) {
 	int count = this->GetItemCount();
 	for (int i = 0; i < count; i++) {
 		long flags = (i==selectedRow)?wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED : 0;
 		this->SetItemState(i, flags, wxLIST_STATE_SELECTED|wxLIST_STATE_FOCUSED);
 	}
+
+	if (ensure_visible)
+		this->EnsureVisible(selectedRow);
 }

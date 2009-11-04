@@ -329,6 +329,7 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 						doc.SetProperty(wxT("bundle:scope"), itemDict.wxGetString("scope"));
 					cxENDLOCK
 					m_lines.ReLoadText();
+					m_syntaxstyler.SetSyntax(wxT("Snippet"));
 				}
 				break;
 
@@ -377,6 +378,14 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 						cxENDLOCK
 						m_lines.ReLoadText();
 					}
+
+					// Set initial syntax for commands
+					// If we don't find some other syntax, use MSDOS batch file for Windows commands 
+					// and Bash for UNIX commands
+					if (!m_syntaxstyler.UpdateSyntax())
+						m_syntaxstyler.SetSyntax(itemDict.HasKey("winCommand") 
+							? wxT("MSDOS batch file") 
+							:  wxT("Shell Script (Bash)"));
 				}
 				break;
 
@@ -429,28 +438,6 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 	}
 
 	m_remotePath = bundleUri;
-
-	// AdamV: Can we fold these items up to the above switch?
-	// Set initial syntax
-	switch (m_bundleType) {
-		case BUNDLE_SNIPPET:
-			m_syntaxstyler.SetSyntax(wxT("Snippet"));
-			break;
-		case BUNDLE_COMMAND:
-		case BUNDLE_DRAGCMD:
-			if (!m_syntaxstyler.UpdateSyntax()) {
-				// Use MSDOS batch file for Windows commands, otherwise use Shell Script (Bash)
-				m_syntaxstyler.SetSyntax(itemDict.HasKey("winCommand") 
-					? wxT("MSDOS batch file") 
-					:  wxT("Shell Script (Bash)"));
-			}
-			break;
-		case BUNDLE_LANGUAGE:
-		case BUNDLE_PREF:
-			m_syntaxstyler.SetSyntax(wxT("JSON"));
-			break;
-		default: wxASSERT(false);
-	}
 
 	// Update the panel we're embedded in.
 	m_parentPanel->UpdatePanel();

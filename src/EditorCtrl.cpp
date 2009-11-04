@@ -481,8 +481,8 @@ EditorCtrl::~EditorCtrl() {
 
 // Notify mate that we have finished editing document
 void EditorCtrl::NotifyParentMate() {
-	if (!m_mate.empty()) {
 #ifdef __WXMSW__
+	if (!m_mate.empty()) {
 		HWND hWndRecv = ::FindWindow(wxT("wxWindowClassNR"), m_mate);
 		if (hWndRecv) {
 			const wxString cmd = wxT("DONE");
@@ -495,8 +495,8 @@ void EditorCtrl::NotifyParentMate() {
 			cds.lpData = (void*)msg.data();
 			::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
 		}
-#endif
 	}
+#endif
 }
 
 void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings) {

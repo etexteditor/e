@@ -49,6 +49,31 @@
 // Document Icons
 #include "document.xpm"
 
+// Generates a string appropriate for a Drag Command's TM_MODIFIER_FLAGS
+// Note that we remap Windows modifier keys to the equivalents expected by TextMate commands.
+static wxString get_modifier_key_env() {
+	wxString modifiers;
+	if (wxGetKeyState(WXK_SHIFT))
+		modifiers += wxT("SHIFT");
+
+	if (wxGetKeyState(WXK_ALT)) {
+		if (!modifiers.empty()) modifiers += wxT('|');
+		modifiers += wxT("CONTROL");
+	}
+
+	if (wxGetKeyState(WXK_WINDOWS_LEFT) || wxGetKeyState(WXK_WINDOWS_RIGHT)) {
+		if (!modifiers.empty()) modifiers += wxT('|');
+		modifiers += wxT("OPTION");
+	}
+
+	if (wxGetKeyState(WXK_CONTROL)) {
+		if (!modifiers.empty()) modifiers += wxT('|');
+		modifiers += wxT("COMMAND");
+	}
+
+	return modifiers;
+}
+
 inline bool Isalnum(wxChar c) {
 #ifdef __WXMSW__
 	return ::IsCharAlphaNumeric(c) != 0;
@@ -7801,21 +7826,7 @@ void EditorCtrl::DoDragCommand(const tmDragCommand &cmd, const wxString& path) {
 	else env[wxT("TM_DROPPED_FILE")] = fullPath;
 
 
-	// Modifiers
-	wxString modifiers;
-	if (wxGetKeyState(WXK_SHIFT)) modifiers += wxT("SHIFT");
-	if (wxGetKeyState(WXK_ALT)) {
-		if (!modifiers.empty()) modifiers += wxT('|');
-		modifiers += wxT("CONTROL");
-	}
-	if (wxGetKeyState(WXK_WINDOWS_LEFT) || wxGetKeyState(WXK_WINDOWS_RIGHT)) {
-		if (!modifiers.empty()) modifiers += wxT('|');
-		modifiers += wxT("OPTION");
-	}
-	if (wxGetKeyState(WXK_CONTROL)) {
-		if (!modifiers.empty()) modifiers += wxT('|');
-		modifiers += wxT("COMMAND");
-	}
+	wxString modifiers = get_modifier_key_env();
 	env[wxT("TM_MODIFIER_FLAGS")] = modifiers;
 
 	// Do the command

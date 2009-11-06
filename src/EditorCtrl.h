@@ -253,6 +253,7 @@ public:
 	virtual cxFindResult FindPrevious(const wxString& text, int options=0);
 	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
 	virtual int ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual void SetSearchHighlight(const wxString& pattern, int options=0);
 	virtual void ClearSearchHighlight();
 
 	// SnippetHandler and EditorFrame use 3 of the following methods; may need some more refactoring here to capture that

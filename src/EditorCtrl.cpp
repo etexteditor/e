@@ -633,6 +633,11 @@ void EditorCtrl::DisableHighlight() {
 	//DrawLayout();
 }
 */
+
+void EditorCtrl::SetSearchHighlight(const wxString& pattern, int options) {
+	m_search_hl_styler.SetSearch(pattern, options);
+}
+
 void EditorCtrl::ClearSearchHighlight() {
 	m_search_hl_styler.Clear();
 	DrawLayout();
@@ -963,7 +968,7 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	if (UpdateScrollbars(editorSizeX, size.y)) return; // adding/removing scrollbars send size event
 
 	// Make sure we remove un-needed stylers
-	if (!m_parentFrame.IsSearching())
+	if (!(m_parentFrame.IsSearching() || m_commandHandler.IsSearching()))
 		m_search_hl_styler.Clear(); // Only highlight search terms during search
 
 	// When scrolling, we can just draw the new parts

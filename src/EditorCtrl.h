@@ -200,6 +200,7 @@ public:
 	void Select(unsigned int start, unsigned int end);
 	const vector<interval>& GetSelections() const {return m_lines.GetSelections();};
 	void RemoveAllSelections();
+	void ReverseSelections();
 	wxString GetFirstSelection() const;
 	wxString GetSelFirstLine();
 	wxString GetSelText() const;

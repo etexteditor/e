@@ -4558,6 +4558,48 @@ void EditorCtrl::RemoveAllSelections() {
 	m_currentSel = -1;
 }
 
+void EditorCtrl::ReverseSelections() {
+	if (!m_lines.IsSelected()) return;
+	
+	const vector<interval> oldsel = m_lines.GetSelections();
+	m_lines.RemoveAllSelections();
+
+	if (m_searchRanges.empty()) {
+		unsigned int pos = 0;
+		for (vector<interval>::const_iterator p = oldsel.begin(); p != oldsel.end(); ++p) {
+			m_lines.AddSelection(pos, p->start);
+			pos = p->end;
+		}
+		const unsigned int len = m_lines.GetLength();
+		if (pos < len) {
+			m_lines.AddSelection(pos, len);
+			pos = len;
+		}
+
+		m_lines.SetPos(pos);
+	}
+	else {
+		vector<interval>::const_iterator s = oldsel.begin();
+		for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+			const interval& r = m_searchRanges[i];
+			unsigned int pos = r.start;
+
+			while (s != oldsel.end() && s->end <= r.end) {
+				m_lines.AddSelection(pos, s->start);
+				m_cursors[i] = s->start;
+				pos = s->end;
+				++s;
+			}
+			if (pos < r.end) {
+				m_lines.AddSelection(pos, r.end);
+				m_cursors[i] = r.end;
+			}
+		}
+
+		m_lines.SetPos(m_cursors.back());
+	}
+}
+
 void EditorCtrl::Select(unsigned int start, unsigned int end) {
 	// The positions may come from unverified input
 	// So we have to make sure they are valid

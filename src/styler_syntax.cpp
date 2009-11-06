@@ -79,6 +79,62 @@ void Styler_Syntax::ReStyleSub(const submatch& sm) {
 	}
 }
 
+bool Styler_Syntax::GetNextMatch(const wxString& scope, unsigned int startpos, interval& match, interval& content) const {
+	if(!HaveActiveSyntax()) return false;
+
+	// We only do a very simple scope match
+	const wxString& topScope = m_topMatches.subMatcher->GetName();
+	if (topScope.StartsWith(scope)) {
+		match.start = 0;
+		match.end = m_syntax_end;
+		return true;
+	}
+
+	return GetSubNextMatch(m_topMatches, scope, startpos, match, content);
+}
+
+bool Styler_Syntax::GetSubNextMatch(const submatch& sm, const wxString& scope, unsigned int startpos, interval& match, interval& content) const {
+	for (auto_vector<stxmatch>::const_iterator p = sm.matches.begin(); p != sm.matches.end(); ++p) {
+		stxmatch& m = *(*p);
+		if (m.end <= startpos) continue;
+
+		// We only do a very simple scope match
+		if (m.m_name.StartsWith(scope)) {
+			match.start = m.start;
+			match.end = m.end;
+			content = match;
+
+			// We also want interval for inner contents (if any)
+			if (m.m_matcher && m.m_matcher->IsSpan() && m.subMatch.get()) {
+				match_matcher* startMatcher = ((span_matcher*)m.m_matcher)->GetStartMatcher();
+				match_matcher* endMatcher = ((span_matcher*)m.m_matcher)->GetEndMatcher();
+				const submatch& spansub = *m.subMatch;
+				for (auto_vector<stxmatch>::const_iterator p2 = spansub.matches.begin(); p2 != spansub.matches.end(); ++p2) {
+					stxmatch& m2 = *(*p2);
+					if (m2.m_matcher == startMatcher) content.start = m.start + m2.end;
+					if (m2.m_matcher == endMatcher) content.end = m.start + m2.start;
+				}
+			}
+			return true;
+		}
+
+		// Check if there are submatches
+		if (m.subMatch.get()) {
+			const unsigned int subpos = (startpos > m.start) ? startpos - m.start : 0;
+			if (GetSubNextMatch(*m.subMatch, scope, subpos, match, content)) {
+				match.start += m.start;
+				match.end += m.start;
+				content.start += m.start;
+				content.end += m.start;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
 bool Styler_Syntax::UpdateSyntax() {
 	const cxSyntaxInfo* si = m_syntaxHandler->GetSyntax(m_doc);
 	if (!si) return false; // No new syntax found

@@ -57,6 +57,7 @@ public:
 	void GetTextWithScopes(unsigned int start, unsigned int end, vector<char>& text);
 
 	const deque<interval> GetScopeIntervals(unsigned int pos) const;
+	bool GetNextMatch(const wxString& scope, unsigned int startpos, interval& match, interval& content) const;
 
 	void Clear();
 	void Invalidate();
@@ -133,6 +134,7 @@ private:
 
 	void GetSubScope(unsigned int pos, const submatch& sm, deque<const wxString*>& scopes) const;
 	void GetSubScopeIntervals(unsigned int pos, unsigned int offset, const submatch& sm, deque<interval>& scopes) const;
+	bool GetSubNextMatch(const submatch& sm, const wxString& scope, unsigned int startpos, interval& match, interval& content) const;
 
 	void AddCaptures(matcher& m, stxmatch& sm, unsigned int offset, const SearchInfo& si, int rc, int* ovector);
 	void ReInitSpan(span_matcher& sm, unsigned int start, const SearchInfo& si, int rc=0, int* ovector=NULL);

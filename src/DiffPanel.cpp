@@ -203,3 +203,8 @@ EditorCtrl* DiffPanel::GetActiveEditor()
 {
 	return m_currentEditor;
 }
+
+void DiffPanel::CommandModeEnded() {
+	m_leftEditor->CommandModeEnded();
+	m_rightEditor->CommandModeEnded();
+}

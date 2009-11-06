@@ -171,6 +171,7 @@ public:
 	virtual EditorCtrl* GetActiveEditor();
 	virtual const char** RecommendedIcon() const;
 	virtual void SaveSettings(unsigned int i, eFrameSettings& settings);
+	virtual void CommandModeEnded();
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};

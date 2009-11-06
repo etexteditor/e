@@ -177,6 +177,10 @@ void EditorBundlePanel::SaveSettings(unsigned int i, eFrameSettings& settings) {
 	m_editorCtrl->SaveSettings(i, settings);
 }
 
+void EditorBundlePanel::CommandModeEnded() {
+	m_editorCtrl->CommandModeEnded();
+}
+
 bool EditorBundlePanel::Show(bool show) {
 	// When hiding, we want to hide panel first to avoid flicker
 	bool result = false;

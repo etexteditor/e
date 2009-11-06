@@ -2055,6 +2055,7 @@ void EditorFrame::ShowCommandMode(bool show) {
 	}
 	else {
 		box->Hide(m_commandPanel);
+		editorCtrl->CommandModeEnded();
 		editorCtrl->SetFocus();
 	}
 	box->Layout();

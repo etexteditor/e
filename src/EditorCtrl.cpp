@@ -497,6 +497,11 @@ EditorCtrl* EditorCtrl::GetActiveEditor() { return this; }
 
 const char** EditorCtrl::RecommendedIcon() const { return document_xpm; }
 
+void EditorCtrl::CommandModeEnded() {
+	ClearSearchRange();
+	m_commandHandler.Clear();
+}
+
 void EditorCtrl::ClearRemoteInfo() {
 	if (m_remotePath.empty()) return;
 

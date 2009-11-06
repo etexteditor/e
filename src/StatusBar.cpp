@@ -154,7 +154,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 		if (newEditorCtrl || symbolsChanged || m_pos != pos) {
 			SetStatusText(wxEmptyString, 3);
 			for (std::vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
-				if (m_pos >= p->start) {
+				if (pos >= p->start) {
 					const SymbolRef& sr = *p;
 					SetStatusText(editorCtrl->GetSymbolString(sr), 3);
 					break;

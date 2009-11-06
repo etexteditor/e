@@ -215,20 +215,33 @@ public:
 	void SetPos(int line, int column);
 	void PageUp(bool select=false, int count=1);
 	void PageDown(bool select=false, int count=1);
-	void CursorUp(bool select=false);
-	void CursorDown(bool select=false);
-	void CursorLeft(bool select=false);
-	void CursorRight(bool select=false);
-	void CursorWordLeft(bool select=false);
-	void CursorWordRight(bool select=false);
-	void CursorToHome(bool select=false);
-	void CursorToEnd(bool select=false);
-	void CursorToLine(unsigned int line, bool select=false);
-	void CursorToColumn(unsigned int column, bool select=false);
-	void CursorToLineStart(bool soft=true, bool select=false);
-	void CursorToLineEnd(bool select=false);
-	void CursorToNextChar(wxChar c, bool select=false);
-	void CursorToPrevChar(wxChar c, bool select=false);
+	void CursorUp();
+	void CursorDown();
+	void CursorLeft();
+	void CursorRight();
+	void CursorWordLeft();
+	void CursorWordRight();
+	void CursorToHome();
+	void CursorToEnd();
+	void CursorToLine(unsigned int line);
+	void CursorToColumn(unsigned int column);
+	void CursorToLineStart(bool soft=true);
+	void CursorToLineEnd();
+	void CursorToNextChar(wxChar c);
+	void CursorToPrevChar(wxChar c);
+	void CursorToWordStart(bool bigword);
+	void CursorToWordEnd(bool bigword);
+	void CursorToPrevWordStart(bool bigword);
+	void CursorToNextLine();
+	void CursorToPrevLine();
+	void CursorToNextSentence();
+	void CursorToPrevSentence();
+	void CursorToNextParagraph();
+	void CursorToParagraphStart();
+	void CursorToNextSymbol();
+	void CursorToPrevSymbol();
+	void CursorToNextCurrent();
+	void CursorToPrevCurrent();
 	void GotoMatchingBracket();
 
 	// Search & Replace
@@ -495,6 +508,7 @@ protected:
 	wxString GetAutoPair(unsigned int pos, const wxString& text);
 	wxString AutoPair(unsigned int pos, const wxString& text, bool addToStack=true);
 	void MatchBrackets();
+	bool FindMatchingBracket(unsigned int pos, unsigned int& pos2);
 
 	// Indentation
 	wxString GetRealIndent(unsigned int lineid, bool newline=false);

@@ -18,6 +18,7 @@
 #include <wx/tipwin.h>
 #include <wx/file.h>
 
+#include <set>
 #include <algorithm>
 
 #include "pcre.h"
@@ -1894,26 +1895,50 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 }
 
 void EditorCtrl::GotoMatchingBracket() {
-	if (!m_bracketHighlight.HasInterval()) return;
-
-	const unsigned int pos = m_lines.GetPos();
-	if (!m_bracketHighlight.IsEndPoint(pos)) return;
-
-	m_lines.SetPos(m_bracketHighlight.OtherEndPoint(pos));
-	MakeCaretVisible();
-}
-
-void EditorCtrl::MatchBrackets() {
-	const unsigned int pos = m_lines.GetPos();
-
-	// If no change to document or position, then stop.
-	if (!m_bracketHighlight.UpdateIfChanged(m_changeToken, pos)) return;
-
-	m_bracketHighlight.Clear();
-
+	unsigned int pos = m_lines.GetPos();
 	const unsigned int len = m_lines.GetLength();
 	if (pos == len) return;
 
+	// Get list of brackets
+	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
+	const map<wxString, wxString> smartPairs = m_syntaxHandler.GetSmartTypingPairs(scope);
+
+	// Build a set of end brackets
+	set<wxString> endBrackets;
+	for (map<wxString, wxString>::const_iterator p2 = smartPairs.begin(); p2 != smartPairs.end(); ++p2) {
+		endBrackets.insert(p2->second);
+	}
+
+	// Advance until we hit first start or end bracket
+	bool bracketFound = false;
+	cxLOCKDOC_READ(m_doc)
+		for (; pos < len; pos = doc.GetNextCharPos(pos)) {
+			const wxChar c = doc.GetChar(pos);
+
+			// Check if current char is a start bracket
+			const map<wxString, wxString>::const_iterator p = smartPairs.find(c);
+			if (p != smartPairs.end()) {
+				bracketFound = true;
+				break;
+			}
+
+			// Check if current char is an end bracket
+			const set<wxString>::const_iterator p2 = endBrackets.find(c);
+			if (p2 != endBrackets.end()) {
+				bracketFound = true;
+				break;
+			}
+		}
+	cxENDLOCK
+	if (!bracketFound) return;
+
+	// Move cursor to the matching bracket
+	unsigned int pos2;
+	if (!FindMatchingBracket(pos, pos2)) return;
+	m_lines.SetPos(pos2);
+}
+
+bool EditorCtrl::FindMatchingBracket(unsigned int pos, unsigned int& pos2) {
 	// Get list of brackets
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
 	const map<wxString, wxString> smartPairs = m_syntaxHandler.GetSmartTypingPairs(scope);
@@ -1925,7 +1950,7 @@ void EditorCtrl::MatchBrackets() {
 	cxENDLOCK
 
 	bool searchForward = true;
-	int limit = len;
+	int limit = m_lines.GetLength();
 	char start_bracket = '\0';
 	char end_bracket = '\0';
 
@@ -1955,11 +1980,12 @@ void EditorCtrl::MatchBrackets() {
 						}
 					}
 				}
-				if (escaped) return; // current char is escaped
+				if (escaped) return false; // current char is escaped
 			cxENDLOCK
 
 			if (count & 1) {
-				m_bracketHighlight.Set(bracketpos, pos);
+				pos2 = bracketpos;
+				return true;
 			}
 			else {
 				const unsigned int lineend = m_lines.GetLineEndpos(lineid);
@@ -1970,15 +1996,15 @@ void EditorCtrl::MatchBrackets() {
 						else {
 							if (*dbi == '\\') escaped = true;
 							else if (*dbi == start_bracket) {
-								m_bracketHighlight.Set(pos, dbi.GetIndex());
-								break;
+								pos2 = dbi.GetIndex();
+								return true;
 							}
 						}
 					}
 				cxENDLOCK
 			}
 
-			return;
+			return false;
 		}
 	}
 	else {
@@ -1994,7 +2020,7 @@ void EditorCtrl::MatchBrackets() {
 				break;
 			}
 		}
-		if (!bracketFound) return; // no bracket at pos
+		if (!bracketFound) return false; // no bracket at pos
 	}
 
 	if (searchForward) {
@@ -2010,8 +2036,8 @@ void EditorCtrl::MatchBrackets() {
 					else if (*dbi == end_bracket) {
 						--count;
 						if (count == 0) {
-							m_bracketHighlight.Set(pos, dbi.GetIndex());
-							return;
+							pos2 = dbi.GetIndex();
+							return true;
 						}
 					}
 				}
@@ -2035,8 +2061,8 @@ void EditorCtrl::MatchBrackets() {
 					if (!(esc_count & 1)) {
 						--count;
 						if (count == 0) {
-							m_bracketHighlight.Set(dbi.GetIndex(), pos);
-							return;
+							pos2 = dbi.GetIndex();
+							return true;
 						}
 					}
 				}
@@ -2045,6 +2071,24 @@ void EditorCtrl::MatchBrackets() {
 			}
 		cxENDLOCK
 	}
+	return false;
+}
+
+void EditorCtrl::MatchBrackets() {
+	const unsigned int pos = m_lines.GetPos();
+
+	// If no change to document or position, then stop.
+	if (!m_bracketHighlight.UpdateIfChanged(m_changeToken, pos)) return;
+
+	m_bracketHighlight.Clear();
+
+	if (pos == m_lines.GetLength()) return;
+
+	unsigned int pos2;
+	if (!FindMatchingBracket(pos, pos2)) return;
+
+	if (pos < pos2) m_bracketHighlight.Set(pos, pos2);
+	else  m_bracketHighlight.Set(pos2, pos);
 }
 
 unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
@@ -5882,15 +5926,22 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_LEFT: // Ctrl <-
-				CursorWordLeft(event.ShiftDown() || event.AltDown());
+				CursorWordLeft();
+				if (event.ShiftDown() || event.AltDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				break;
 
 			case WXK_RIGHT: // Ctrl ->
-				CursorWordRight(event.ShiftDown() || event.AltDown());
+				CursorWordRight();
+				if (event.ShiftDown() || event.AltDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				break;
 
 			case WXK_UP: // Ctrl arrow up
-				if (event.ShiftDown() || event.AltDown()) CursorUp(true);
+				if (event.ShiftDown() || event.AltDown()) {
+					CursorUp();
+					SelectFromMovement(oldpos, GetPos());
+				}
 				else {
 					scrollPos = scrollPos - (scrollPos % m_lines.GetLineHeight()) - m_lines.GetLineHeight();
 					if (scrollPos < 0) scrollPos = 0;
@@ -5915,7 +5966,10 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_DOWN: // Ctrl arrow down
-				if (event.ShiftDown() || event.AltDown()) CursorDown(true);
+				if (event.ShiftDown() || event.AltDown()) {
+					CursorDown();
+					SelectFromMovement(oldpos, GetPos());
+				}
 				else {
 					const wxSize size = GetClientSize();
 					scrollPos = scrollPos - (scrollPos % m_lines.GetLineHeight()) + m_lines.GetLineHeight();
@@ -5940,12 +5994,16 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_HOME:
-				CursorToHome(event.ShiftDown());
+				CursorToHome();
+				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
-				CursorToEnd(event.ShiftDown());
+				CursorToEnd();
+				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				lastaction = ACTION_NONE;
 				break;
 
@@ -6038,34 +6096,46 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 			case WXK_LEFT:
 			case WXK_NUMPAD_LEFT:
-				CursorLeft(event.ShiftDown() || event.AltDown());
+				CursorLeft();
+				if (event.ShiftDown() || event.AltDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				break;
 
 			case WXK_RIGHT:
 			case WXK_NUMPAD_RIGHT:
-				CursorRight(event.ShiftDown() || event.AltDown());
+				CursorRight();
+				if (event.ShiftDown() || event.AltDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				break;
 
 			case WXK_UP:
 			case WXK_NUMPAD_UP:
-				CursorUp(event.ShiftDown() || event.AltDown());
+				CursorUp();
+				if (event.ShiftDown() || event.AltDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				break;
 
 			case WXK_DOWN:
 			case WXK_NUMPAD_DOWN:
-				CursorDown(event.ShiftDown() || event.AltDown());
+				CursorDown();
+				if (event.ShiftDown() || event.AltDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				break;
 
 			case WXK_HOME:
 			case WXK_NUMPAD_HOME:
 			case WXK_NUMPAD_BEGIN:
-				CursorToLineStart(true, event.ShiftDown());
+				CursorToLineStart(true);
+				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
 			case WXK_NUMPAD_END:
-				CursorToLineEnd(event.ShiftDown());
+				CursorToLineEnd();
+				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				lastaction = ACTION_NONE;
 				break;
 
@@ -6318,9 +6388,7 @@ void EditorCtrl::PageDown(bool select, int WXUNUSED(count)) {
 	else SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::CursorUp(bool select) {
-	const int oldpos = m_lines.GetPos();
-
+void EditorCtrl::CursorUp() {
 	if (lastaction == ACTION_UP) m_lines.MovePosUp(lastxpos);
 	else {
 		const wxPoint cpos = m_lines.GetCaretPos();
@@ -6328,16 +6396,10 @@ void EditorCtrl::CursorUp(bool select) {
 		m_lines.MovePosUp();
 	}
 
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections(true, m_lines.GetPos());
-	else SelectFromMovement(oldpos, m_lines.GetPos());
-
 	lastaction = ACTION_UP;
 }
 
-void EditorCtrl::CursorDown(bool select) {
-	const int oldpos = m_lines.GetPos();
-
+void EditorCtrl::CursorDown() {
 	if (lastaction == ACTION_DOWN) m_lines.MovePosDown(lastxpos);
 	else {
 		const wxPoint cpos = m_lines.GetCaretPos();
@@ -6345,14 +6407,10 @@ void EditorCtrl::CursorDown(bool select) {
 		m_lines.MovePosDown();
 	}
 
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections(true, m_lines.GetPos());
-	else SelectFromMovement(oldpos, m_lines.GetPos());
-
 	lastaction = ACTION_DOWN;
 }
 
-void EditorCtrl::CursorLeft(bool select) {
+void EditorCtrl::CursorLeft() {
 	const unsigned int pos = m_lines.GetPos();
 	if (pos > 0) {
 		unsigned int prevpos;
@@ -6375,15 +6433,11 @@ void EditorCtrl::CursorLeft(bool select) {
 			prevpos = fold_start;
 
 		m_lines.SetPos(prevpos); // Caret will be moved in DrawLayout()
-
-		// Handle selection
-		if (select) SelectFromMovement(pos, prevpos);
-		else m_lines.RemoveAllSelections(true, prevpos);
 	}
 	lastaction = ACTION_NONE;
 }
 
-void EditorCtrl::CursorRight(bool select) {
+void EditorCtrl::CursorRight() {
 	const unsigned int pos = m_lines.GetPos();
 	if (pos < m_lines.GetLength()) {
 		unsigned int nextpos;
@@ -6408,17 +6462,12 @@ void EditorCtrl::CursorRight(bool select) {
 		}
 
 		m_lines.SetPos(nextpos); // Caret will be moved in DrawLayout()
-
-		// Handle selection
-		if (!select) m_lines.RemoveAllSelections(true, nextpos);
-		else SelectFromMovement(pos, nextpos);
 	}
 	lastaction = ACTION_NONE;
 }
 
-void EditorCtrl::CursorWordLeft(bool select) {
+void EditorCtrl::CursorWordLeft() {
 	unsigned int pos = m_lines.GetPos();
-	const unsigned int oldpos = pos;
 
 	/* State machine:
 		   | a s p  (* marks SetPos)
@@ -6457,14 +6506,10 @@ void EditorCtrl::CursorWordLeft(bool select) {
 			pos = fold_start;
 
 		m_lines.SetPos(pos);
-
-		// Handle selection
-		if (!select) m_lines.RemoveAllSelections(true, pos);
-		else if (oldpos != pos) SelectFromMovement(oldpos, pos);
 	}
 }
 
-void EditorCtrl::CursorWordRight(bool select) {
+void EditorCtrl::CursorWordRight() {
 	unsigned int pos = m_lines.GetPos();
 	const unsigned int oldpos = pos;
 
@@ -6494,24 +6539,14 @@ void EditorCtrl::CursorWordRight(bool select) {
 		pos = fold_end;
 
 	m_lines.SetPos(pos);
-
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections(true, pos);
-	else if (oldpos != pos) SelectFromMovement(oldpos, pos);
 }
 
-void EditorCtrl::CursorToHome(bool select) {
-	const unsigned int oldpos = GetPos();
+void EditorCtrl::CursorToHome() {
 	SetPos(0);
-
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != 0) SelectFromMovement(0, oldpos);
 }
 
-void EditorCtrl::CursorToEnd(bool select) {
+void EditorCtrl::CursorToEnd() {
 	unsigned int pos = GetLength();
-	const unsigned int oldpos = pos;
 
 	// Check if end is in a fold
 	unsigned int fold_start;
@@ -6519,29 +6554,19 @@ void EditorCtrl::CursorToEnd(bool select) {
 		pos = fold_start;
 
 	SetPos(pos);
-
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::CursorToLine(unsigned int line, bool select) {
+void EditorCtrl::CursorToLine(unsigned int line) {
 	if (line == 0) return; // line id's start from 1
-	if (--line >= m_lines.GetLineCount()) return CursorToEnd(select);
+	if (--line >= m_lines.GetLineCount()) return CursorToEnd();
 
-	const unsigned int oldpos = GetPos();
 	m_lines.SetPos(m_lines.GetLineStartpos(line));
-	
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != GetPos()) SelectFromMovement(oldpos, GetPos());
 }
 
-void EditorCtrl::CursorToColumn(unsigned int column, bool select) {
+void EditorCtrl::CursorToColumn(unsigned int column) {
 	if (column == 0) return; // column id's start from 1
 	--column;
 
-	const unsigned int oldpos = m_lines.GetPos();
 	const unsigned int curLine = m_lines.GetCurrentLine();
 	const unsigned int lineStart = m_lines.GetLineStartpos(curLine);
 	const unsigned int lineEnd = m_lines.GetLineEndpos(curLine);
@@ -6551,20 +6576,16 @@ void EditorCtrl::CursorToColumn(unsigned int column, bool select) {
 		newpos = doc.GetValidCharPos(lineStart + column);
 	cxENDLOCK
 	m_lines.SetPos(wxMin(newpos, lineEnd));
-	
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != GetPos()) SelectFromMovement(oldpos, GetPos());
 }
 
-void EditorCtrl::CursorToLineStart(bool soft, bool select) {
+void EditorCtrl::CursorToLineStart(bool soft) {
 	const unsigned int oldpos = GetPos();
 	const unsigned int currentLine = m_lines.GetCurrentLine();
 	const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
 
 	if (!soft) m_lines.SetPos(startOfLine);
 	else {
-		const unsigned int indentPos = GetLineIndentPos(currentLine);
+		const unsigned int indentPos = m_lines.GetLineIndentPos(currentLine);
 
 		if (indentPos < oldpos) {
 			// Move to first text after indentation
@@ -6581,22 +6602,13 @@ void EditorCtrl::CursorToLineStart(bool soft, bool select) {
 			}
 		}
 	}
-
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::CursorToLineEnd(bool select) {
-	const unsigned int oldpos = GetPos();
+void EditorCtrl::CursorToLineEnd() {
 	m_lines.SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
-
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::CursorToNextChar(wxChar c, bool select) {
+void EditorCtrl::CursorToNextChar(wxChar c) {
 	const unsigned int oldpos = GetPos();
 
 	search_result sr;
@@ -6607,13 +6619,9 @@ void EditorCtrl::CursorToNextChar(wxChar c, bool select) {
 	if (sr.error_code < 0) return; // no match
 
 	m_lines.SetPos(sr.start);
-	
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::CursorToPrevChar(wxChar c, bool select) {
+void EditorCtrl::CursorToPrevChar(wxChar c) {
 	const unsigned int oldpos = GetPos();
 
 	search_result sr;
@@ -6623,13 +6631,288 @@ void EditorCtrl::CursorToPrevChar(wxChar c, bool select) {
 	if (sr.error_code < 0) return; // no match
 
 	m_lines.SetPos(sr.start);
-	
-	// Handle selection
-	if (!select) m_lines.RemoveAllSelections();
-	else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible) {
+void EditorCtrl::CursorToWordStart(bool bigword) {
+	unsigned int pos = m_lines.GetPos();
+
+	cxLOCKDOC_READ(m_doc)
+		if (pos < doc.GetLength()) {
+			wxChar prev_char = doc.GetChar(pos);
+			if (bigword) {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if (wxIsspace(prev_char) && (Isalnum(c) || c == wxT('_') || wxIspunct(c))) break;
+					prev_char = c;
+				}
+			}
+			else {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if ((wxIsspace(prev_char) || wxIspunct(prev_char)) && (Isalnum(c) || c == wxT('_'))) break;
+					if (!wxIspunct(prev_char) && wxIspunct(c)) break;
+					prev_char = c;
+				}
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(pos, NULL, &fold_end))
+		pos = fold_end;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToWordEnd(bool bigword) {
+	unsigned int pos = m_lines.GetPos();
+
+	cxLOCKDOC_READ(m_doc)
+		if (pos < doc.GetLength()) {
+			wxChar prev_char = doc.GetChar(pos);
+			if (bigword) {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if ((Isalnum(prev_char) || prev_char == wxT('_') || wxIspunct(prev_char)) && wxIsspace(c)) break;
+					prev_char = c;
+				}
+			}
+			else {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if ((Isalnum(prev_char) || prev_char == wxT('_')) && (wxIsspace(c) || wxIspunct(c))) break;
+					if (wxIspunct(prev_char) && !wxIspunct(c)) break;
+					prev_char = c;
+				}
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(pos, NULL, &fold_end))
+		pos = fold_end;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToPrevWordStart(bool bigword) {
+	unsigned int pos = m_lines.GetPos();
+	if (pos == 0) return;
+
+	cxLOCKDOC_READ(m_doc)
+		pos = doc.GetPrevCharPos(pos);
+		if (pos) {
+			wxChar c = doc.GetChar(pos);
+			unsigned int prev_pos = doc.GetPrevCharPos(pos);
+			if (bigword) {
+				for (;;) {
+					wxChar prev_char = doc.GetChar(prev_pos);
+					if (wxIsspace(prev_char) && (Isalnum(c) || c == wxT('_') || wxIspunct(c))) break;
+
+					c = prev_char;
+					pos = prev_pos;
+					if (pos == 0) break;
+					prev_pos = doc.GetPrevCharPos(pos);
+				}
+			}
+			else {
+				for (;;) {
+					wxChar prev_char = doc.GetChar(prev_pos);
+					if ((Isalnum(c) || c == wxT('_')) && (wxIsspace(prev_char) || wxIspunct(prev_char))) break;
+					if (wxIspunct(c) && !wxIspunct(prev_char)) break;
+
+					c = prev_char;
+					pos = prev_pos;
+					if (pos == 0) break;
+					prev_pos = doc.GetPrevCharPos(pos);
+				}
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_start;
+	if (IsPosInFold(pos, &fold_start))
+		pos = fold_start;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToNextLine() {
+	const unsigned int nextLine = m_lines.GetCurrentLine()+1;
+	if (nextLine >= m_lines.GetLineCount()) return;
+	
+	const unsigned int indentPos = m_lines.GetLineIndentPos(nextLine);
+	m_lines.SetPos(indentPos);
+}
+
+void EditorCtrl::CursorToPrevLine() {
+	const unsigned int currentLine = m_lines.GetCurrentLine();
+	if (currentLine == 0) return;
+	const unsigned int prevLine = currentLine-1;
+	
+	const unsigned int indentPos = m_lines.GetLineIndentPos(prevLine);
+	m_lines.SetPos(indentPos);
+}
+
+void EditorCtrl::CursorToNextSentence() {
+	unsigned int pos = m_lines.GetPos();
+
+	cxLOCKDOC_READ(m_doc)
+		if (pos < doc.GetLength()) {
+			wxChar prev_char = doc.GetChar(pos);
+			bool after = false;
+			for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+				const wxChar c = doc.GetChar(pos);
+				if (prev_char == '.' && wxIsspace(c)) after = true;
+				if (after && !wxIsspace(c)) break;
+				prev_char = c;
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(pos, NULL, &fold_end))
+		pos = fold_end;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToPrevSentence() {
+	unsigned int pos = m_lines.GetPos();
+	if (pos == 0) return;
+
+	cxLOCKDOC_READ(m_doc)
+		pos = doc.GetPrevCharPos(pos);
+		if (pos) {
+			wxChar c = doc.GetChar(pos);
+			unsigned int prev_pos = doc.GetPrevCharPos(pos);
+			unsigned int lastpos = 0;
+			bool after = false;
+			
+			for (;;) {
+				if (!wxIsspace(c)) lastpos = pos;
+
+				wxChar prev_char = doc.GetChar(prev_pos);
+				if (prev_char == '.' && wxIsspace(c)) {
+					if (after && lastpos != 0) {
+						pos = lastpos;
+						break;
+					}
+					else after = true;
+				}
+
+				c = prev_char;
+				pos = prev_pos;
+				if (pos == 0) break;
+				prev_pos = doc.GetPrevCharPos(pos);
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_start;
+	if (IsPosInFold(pos, &fold_start))
+		pos = fold_start;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToNextParagraph() {
+	unsigned int pos = m_lines.GetPos();
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.RegExFind(wxT("\\n\\s*\\n\\s*(?=\\S)"), pos, true, NULL, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.end);
+}
+
+void EditorCtrl::CursorToParagraphStart() {
+	unsigned int pos = m_lines.GetPos();
+	const unsigned int oldpos = pos;
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		const unsigned int startpos = doc.GetPrevCharPos(oldpos); // don't find current
+		sr = doc.RegExFindBackwards(wxT("(\\A|\\n\\s*\\n\\s*)(?=\\S)"), startpos, true);
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.end);
+}
+
+void EditorCtrl::CursorToNextSymbol() {
+	vector<SymbolRef> symbols;
+	GetSymbols(symbols);
+	if (symbols.empty()) return;
+
+	unsigned int pos = m_lines.GetPos();
+	for (std::vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
+		if (p->start > pos) {
+			pos = p->start;
+			break;
+		}
+	}
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToPrevSymbol() {
+	vector<SymbolRef> symbols;
+	GetSymbols(symbols);
+	if (symbols.empty()) return;
+
+	unsigned int pos = m_lines.GetPos();
+	for (std::vector<SymbolRef>::reverse_iterator p = symbols.rbegin(); p != symbols.rend(); ++p) {
+		if (pos > p->start) {
+			pos = p->start;
+			break;
+		}
+	}
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToNextCurrent() {
+	const unsigned int oldpos = GetPos();
+	const interval iv = IsSelected() ? GetSelections()[0] : GetWordIv(oldpos);
+	if (iv.empty()) return;
+
+	const wxString current = GetText(iv.start, iv.end);
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.Find(current, iv.end, true, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+}
+
+void EditorCtrl::CursorToPrevCurrent() {
+	const unsigned int oldpos = GetPos();
+	const interval iv = IsSelected() ? GetSelections()[0] : GetWordIv(oldpos);
+	if (iv.empty()) return;
+
+	const wxString current = GetText(iv.start, iv.end);
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		const unsigned int startpos = doc.GetPrevCharPos(iv.start); // don't find current
+		sr = doc.FindBackwards(current, startpos, true);
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+}
+
+void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible, bool multiSelect) {
 	wxASSERT(oldpos >= 0 && oldpos <= m_lines.GetLength());
 	wxASSERT(newpos >= 0 && newpos <= m_lines.GetLength());
 	if (oldpos == newpos) return; // Empty selection

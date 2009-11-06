@@ -245,8 +245,14 @@ public:
 	search_result RawRegexSearch(const char* regex, unsigned int subjectStart, unsigned int subjectEnd, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	bool FindNextChar(wxChar c, unsigned int start_pos, unsigned int end_pos, interval& iv) const;
+	
+	// Search ranges
+	bool HasSearchRange() const;
 	void SetSearchRange();
 	void ClearSearchRange(bool reset=false);
+	const vector<interval>& GetSearchRange() const;
+	const vector<unsigned int>& GetSearchRangeCursors() const;
+	void SetSearchRangeCursor(size_t cursor, unsigned int pos);
 
 	// Settings
 	void SaveSettings(unsigned int i, eFrameSettings& settings, unsigned int id);
@@ -631,6 +637,7 @@ protected:
 
 	// incremental search trackers
 	vector<interval> m_searchRanges;
+	vector<unsigned int> m_cursors;
 	// start/found are used to track state between Find calls
 	unsigned int m_search_start_pos, m_search_found_pos;
 

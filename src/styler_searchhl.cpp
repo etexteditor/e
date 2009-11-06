@@ -20,8 +20,8 @@
 
 const unsigned int Styler_SearchHL::EXTSIZE = 1000;
 
-Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
-: m_doc(rev), m_lines(lines), m_searchRanges(ranges),
+Styler_SearchHL::Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const std::vector<unsigned int>& cursors, const tmTheme& theme)
+: m_doc(rev), m_lines(lines), m_searchRanges(ranges), m_cursors(cursors),
   m_theme(theme), m_hlcolor(m_theme.searchHighlightColor),
   m_rangeColor(m_theme.shadowColor) 
 {
@@ -55,11 +55,18 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 	const unsigned int rend = sr.GetRunEnd();
 
 	// Style the run with search ranges
-	for (vector<interval>::const_iterator r = m_searchRanges.begin(); r != m_searchRanges.end(); ++r) {
-		if (r->end > rstart && r->start < rend) {
-			unsigned int start = wxMax(rstart, r->start);
-			unsigned int end   = wxMin(rend, r->end);
-			sr.SetBackgroundColor(start, end, m_rangeColor);
+	if (!m_searchRanges.empty()) {
+		for (size_t i = 0;  i < m_searchRanges.size(); ++i) {
+			const interval& r = m_searchRanges[i];
+
+			if (r.end > rstart && r.start < rend) {
+				unsigned int start = wxMax(rstart, r.start);
+				unsigned int end   = wxMin(rend, r.end);
+				sr.SetBackgroundColor(start, end, m_rangeColor);
+
+				//const unsigned int cursor = m_cursors[i];
+				//if (cursor > rstart && cursor < rend) sr.SetBackgroundColor(cursor, cursor, m_hlcolor);
+			}
 		}
 	}
 

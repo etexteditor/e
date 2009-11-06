@@ -136,7 +136,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme),
 
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -185,7 +185,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme),
 	
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -248,7 +248,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme), 
 
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
@@ -4908,10 +4908,26 @@ void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 	Freeze();
 }
 
+bool EditorCtrl::HasSearchRange() const {
+	return !m_searchRanges.empty();
+}
+
 void EditorCtrl::SetSearchRange() {
 	m_searchRanges = m_lines.GetSelections();
 	m_lines.RemoveAllSelections();
-	//if (!m_searchRanges.empty()) SetPos(m_searchRanges[0].start);
+	
+	// Position cursors
+	const unsigned int pos = m_lines.GetPos();
+	m_cursors.resize(m_searchRanges.size());
+	bool atStart = true; // Find out if caret is at start or end of ranges
+	for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
+		if (pos == p->start) break;
+		if (pos == p->end) {atStart = false; break;}
+	}
+	for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+		m_cursors[i] = atStart ? m_searchRanges[i].start : m_searchRanges[i].end;
+	}
+
 	DrawLayout();
 }
 
@@ -4924,7 +4940,21 @@ void EditorCtrl::ClearSearchRange(bool reset) {
 			m_lines.AddSelection(p->start, p->end);
 	}
 	m_searchRanges.clear();
+	m_cursors.clear();
 	DrawLayout();
+}
+
+const vector<interval>& EditorCtrl::GetSearchRange() const {
+	return m_searchRanges;
+}
+
+const vector<unsigned int>& EditorCtrl::GetSearchRangeCursors() const {
+	return m_cursors;
+}
+	
+void EditorCtrl::SetSearchRangeCursor(size_t cursor, unsigned int pos) {
+	wxASSERT(cursor < m_cursors.size());
+	m_cursors[cursor] = pos;
 }
 
 bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int options, bool dir_forward) {
@@ -6951,10 +6981,11 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 void EditorCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 void EditorCtrl::OnFocus(wxFocusEvent& WXUNUSED(event)) {
-	ClearSearchRange(true);
+	if (!m_parentFrame.IsCommandMode()) ClearSearchRange(true);
 }
 
 void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
+	ClearSearchRange();
 	// Remove tooltips
 	/*if (m_revTooltip.IsShown()) {
 		m_revTooltip.Hide();

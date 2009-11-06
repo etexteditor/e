@@ -33,7 +33,7 @@ class Lines;
 
 class Styler_SearchHL : public Styler {
 public:
-	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme);
+	Styler_SearchHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const std::vector<unsigned int>& cursors, const tmTheme& theme);
 	virtual ~Styler_SearchHL() {};
 
 	void Clear();
@@ -56,6 +56,7 @@ private:
 	int m_options;
 	std::vector<interval> m_matches;
 	const std::vector<interval>& m_searchRanges;
+	const std::vector<unsigned int>& m_cursors;
 
 	// Theme variables
 	const tmTheme& m_theme;

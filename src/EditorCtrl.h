@@ -208,7 +208,10 @@ public:
 	void SelectWord(unsigned int pos, bool multiselect=false);
 	void SelectLine(unsigned int lineId, bool multiselect=false);
 	void SelectCurrentLine();
+	void ExtendSelectionToLine(unsigned int sel_id=0);
 	void SelectScope();
+	void SelectScope(const wxString& scope, bool inclusive=true, bool all=false);
+	void SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible=true, bool multiSelect=false);
 
 	// Movement commands
 	void SetPos(unsigned int pos);
@@ -476,7 +479,6 @@ protected:
 	void InsertColumn(const wxArrayString& text, bool select=false);
 	void WrapSelections(const wxString& front, const wxString& back);
 	bool DeleteInShadow(unsigned int pos, bool nextchar=true);
-	void SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible=true);
 	wxString GetNewIndentAfterNewline(unsigned int lineid);
 	interval GetWordIv(unsigned int pos) const;
 

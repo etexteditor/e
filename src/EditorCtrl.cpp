@@ -4772,6 +4772,27 @@ void EditorCtrl::SelectCurrentLine() {
 	SelectLine(m_lines.GetCurrentLine());
 }
 
+void EditorCtrl::ExtendSelectionToLine(unsigned int sel_id) {
+	wxASSERT(sel_id < m_lines.GetSelections().size());
+
+	const unsigned int pos = m_lines.GetPos();
+	unsigned int line_id = m_lines.GetLineFromCharPos(pos);
+	const bool isStart = m_lines.IsLineStart(line_id, pos);
+	const interval& iv = m_lines.GetSelections()[sel_id];
+
+	if (pos > iv.start) {
+		if (isStart) --line_id;
+		const unsigned int end = m_lines.GetLineEndpos(line_id, false);
+		m_lines.UpdateSelection(sel_id, iv.start, end);
+		m_lines.SetPos(end);
+	}
+	else {
+		const unsigned int start = m_lines.GetLineStartpos(line_id);
+		m_lines.UpdateSelection(sel_id, start, iv.end);
+		m_lines.SetPos(start);
+	}
+}
+
 void EditorCtrl::SelectScope() {
 	if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 	unsigned int pos = GetPos();
@@ -6956,12 +6977,58 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 		}
 
 		// We were not in connection with any current selections
-		m_lines.RemoveAllSelections();
+		if (!multiSelect) m_lines.RemoveAllSelections();
 		sel = m_lines.AddSelection(oldpos, newpos);
 	}
 	else sel = m_lines.AddSelection(oldpos, newpos);
 
 	if (makeVisible && sel != -1) MakeSelectionVisible();
+}
+
+void EditorCtrl::SelectScope(const wxString& scope, bool inclusive, bool all) {
+	interval iv;
+	interval iv_inner;
+
+	// We need to be aware of ranges during object searches
+	if (m_searchRanges.empty()) {
+		if (all) {	
+			unsigned int pos = 0;
+			while (m_syntaxstyler.GetNextMatch(scope, pos, iv, iv_inner)) {
+				const interval& v = inclusive ? iv : iv_inner;
+				m_lines.AddSelection(v.start, v.end);
+				pos = iv.end; // continue search from outer end
+			}
+			if (pos != 0) m_lines.SetPos(pos);
+		}
+		else if (m_syntaxstyler.GetNextMatch(scope, m_lines.GetPos(), iv, iv_inner)) {
+			const interval& v = inclusive ? iv : iv_inner;
+			m_lines.AddSelection(v.start, v.end);
+			m_lines.SetPos(v.end);
+		}
+	}
+	else {
+		const unsigned int caretpos = m_lines.GetPos();
+		for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+			const interval& range = m_searchRanges[i];
+			const unsigned int startpos = all ? range.start : m_cursors[i];
+			unsigned int pos = startpos;
+			unsigned int lastend = pos;
+
+			while (m_syntaxstyler.GetNextMatch(scope, pos, iv, iv_inner)) {
+				if (iv.start < range.start) {pos = iv.end; continue;}
+				if (iv.end > range.end) break;
+
+				const interval& v = inclusive ? iv : iv_inner;
+				m_lines.AddSelection(v.start, v.end);
+				lastend = pos = iv.end;  // continue search from outer end
+				if (!all) break;
+			}
+
+			// Set cursors
+			if (lastend != range.start) m_cursors[i] = lastend;
+			if (startpos == caretpos) m_lines.SetPos(lastend); // real caret follow
+		}
+	}
 }
 
 bool EditorCtrl::IsCaretVisible() {

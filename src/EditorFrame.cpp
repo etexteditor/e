@@ -1834,7 +1834,7 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	if (dlg.ShowModal() != wxID_OK)
 		return false;
 
-	// this also updates rp with the new login
+	// This also updates rp with the new login
 	m_generalSettings.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
 	return true;
 }

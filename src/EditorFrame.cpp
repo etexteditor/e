@@ -1913,7 +1913,8 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 			page = bundlePanel;
 			ec = bundlePanel->GetActiveEditor();
 		}
-		else if (!editorCtrl->IsEmpty()) page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
+		else if (!editorCtrl->IsEmpty()) 
+			page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
 	}
 
 	// Load the text (or update with changes)
@@ -1929,7 +1930,8 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 			wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
 		}
 
-		if (ec != editorCtrl) delete page; // clean up
+		if (ec != editorCtrl) 
+			delete page; // clean up
 		return false;
 	}
 

@@ -725,7 +725,8 @@ void EditorFrame::RestoreState() {
 	// Only show progress dialog if more than 3 pages
 	wxProgressDialog* dlg = NULL;
 	const wxString msg = _("Opening documents from last session");
-	if (pagecount > 3) dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
+	if (pagecount > 3)
+		dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
 
 	Freeze();
 	// Remove initial empty document

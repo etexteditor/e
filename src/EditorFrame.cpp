@@ -1796,12 +1796,12 @@ wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp)
 
 bool EditorFrame::UploadFile(const wxString& url, const wxString& buffPath, const RemoteProfile* rp) {
 	while(1) {
-		// Upload file
 		wxBeginBusyCursor();
 		const CURLcode res =  this->GetRemoteThread().UploadAndDate(url, buffPath, *rp);
 		wxEndBusyCursor();
 
-		if (res == CURLE_OK) break; // upload succeded
+		if (res == CURLE_OK)
+			break; // upload succeded
 
 		if (res == CURLE_LOGIN_DENIED) {
 			if (!this->AskRemoteLogin(rp))

@@ -1769,16 +1769,15 @@ bool EditorFrame::OpenRemoteFile(const wxString& url, const RemoteProfile* rp) {
 wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp) {
 	wxASSERT(rp && rp->IsValid());
 
-	// Create temp buffer file
 	const wxString buffPath = GetAppPaths().CreateTempAppDataFile();
 
-	// Download file
 	while(1) {
 		wxBeginBusyCursor();
 		const CURLcode res = GetRemoteThread().Download(url, buffPath, *rp);
 		wxEndBusyCursor();
 
-		if (res == CURLE_OK) break; // download succeded
+		if (res == CURLE_OK)
+			break; // download succeded
 
 		if (res == CURLE_LOGIN_DENIED) {
 			if (!AskRemoteLogin(rp))

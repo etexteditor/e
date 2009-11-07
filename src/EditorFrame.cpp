@@ -1843,7 +1843,7 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromFile(const wxString& filepath, unsigne
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* editorCtrl = GetEditorCtrlFromPage(i);
 
-		// paths on windows are case-insensitive
+		// Paths on windows are case-insensitive
 #ifdef __WXMSW__
 		if (filepath.CmpNoCase(editorCtrl->GetPath()) == 0) { 
 #else

@@ -2043,9 +2043,7 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 	box->Layout();
 }
 
-bool EditorFrame::IsSearching() const {
-	return m_searchPanel->IsShown();
-}
+bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
 
 bool EditorFrame::GetSetting(const wxString& name) const {
 	if (name == wxT("search/highlight")) return m_searchHighlight;

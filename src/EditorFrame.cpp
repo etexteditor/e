@@ -1520,15 +1520,21 @@ bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 	if (eDocumentPath::IsRemotePath(path)) {
 		wxRegEx domain(wxT("^.*://[^/]+$")); // domains don't need ending slash
 
-		if (path.Last() == wxT('/')) return OpenRemoteProjectFromUrl(path);
-		if (domain.Matches(path)) return OpenRemoteProjectFromUrl(path + wxT('/'));
-		if (!OpenRemoteFile(path)) return false;
+		if (path.Last() == wxT('/')) 
+			return OpenRemoteProjectFromUrl(path);
+
+		if (domain.Matches(path)) 
+			return OpenRemoteProjectFromUrl(path + wxT('/'));
+
+		if (!OpenRemoteFile(path))
+			return false;
 
 		Update();
 		return true;
 	}
 
-	if (eDocumentPath::IsBundlePath(path)) return OpenRemoteFile(path);
+	if (eDocumentPath::IsBundlePath(path)) 
+		return OpenRemoteFile(path);
 
 	if (wxDir::Exists(path)) {
 		wxFileName dirPath(path, wxEmptyString);

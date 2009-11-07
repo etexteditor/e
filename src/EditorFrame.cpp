@@ -1140,12 +1140,10 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 				}
 				else {
 					if (fileResult == cxFILE_DOWNLOAD_ERROR) {} // do nothing, download code has reported error
-					else if (fileResult == cxFILE_CONV_ERROR) {
+					else if (fileResult == cxFILE_CONV_ERROR)
 						wxMessageBox(_T("Could not read file: ") + path + _T("\nTry importing with another encoding"), _T("e Error"), wxICON_ERROR);
-					}
-					else {
+					else
 						wxMessageBox(_T("Could not open file: ") + path, _T("e Error"), wxICON_ERROR);
-					}
 
 					// Set status to modified
 					cxLOCK_WRITE(m_catalyst)

@@ -1472,7 +1472,8 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 #endif // __WXMSW__
 
 		if (isBundleItem) {
-			if (!OpenRemoteFile(file)) return false;
+			if (!OpenRemoteFile(file)) 
+				return false;
 		}
 		else if (wxDir::Exists(file)) {
 			wxFileName dirPath(file, wxEmptyString);
@@ -1482,7 +1483,8 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 		else {
 			wxFileName path(file);
 			path.MakeAbsolute();
-			if (!OpenFile(path)) return false;
+			if (!OpenFile(path)) 
+				return false;
 		}
 	}
 

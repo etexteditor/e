@@ -1506,9 +1506,8 @@ void EditorFrame::ReopenFiles(wxArrayString& files, unsigned long firstLine, uns
 		const wxString& arg = files[i];
 		Open(arg, mate);
 
-		if (i == 0) { // The line/column position apply to the first file only.
+		if (i == 0) // The line/column position apply to the first file only.
 			if (firstLine || firstColumn) GotoPos(firstLine, firstColumn);
-		}
 	}
 }
 

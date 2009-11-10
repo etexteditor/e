@@ -1,0 +1,17 @@
+diff -urN wxWidgets-2.8.10/src/gtk/gsockgtk.cpp wxWidgets-2.8.10-gsockpatch/src/gtk/gsockgtk.cpp
+--- wxWidgets-2.8.10/src/gtk/gsockgtk.cpp	2009-03-06 06:11:40.000000000 -0600
++++ wxWidgets-2.8.10-gsockpatch/src/gtk/gsockgtk.cpp	2009-10-25 21:58:35.699962284 -0500
+@@ -15,8 +15,13 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ 
++// newer versions of glib define its own GSocket but we unfortunately use this
++// name in our own (semi-)public header and so can't change it -- rename glib
++// one instead
++#define GSocket GlibGSocket
+ #include <gdk/gdk.h>
+ #include <glib.h>
++#undef GSocket
+ 
+ #include "wx/gsocket.h"
+ #include "wx/unix/gsockunx.h"

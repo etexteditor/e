@@ -4668,6 +4668,20 @@ void EditorCtrl::Select(unsigned int start, unsigned int end) {
 	m_lines.AddSelection(start, end);
 }
 
+void EditorCtrl::AddSelection(unsigned int start, unsigned int end, bool allowEmpty) {
+	// The positions may come from unverified input
+	// So we have to make sure they are valid
+	cxLOCKDOC_READ(m_doc)
+		start = doc.GetValidCharPos(start);
+		if (end > doc.GetLength()) end = doc.GetLength();
+		else if (end != doc.GetLength()) end = doc.GetValidCharPos(end);
+	cxENDLOCK
+	if (start > end) return;
+	if (start == end && !allowEmpty) return;
+
+	m_lines.AddSelection(start, end);
+}
+
 void EditorCtrl::SelectAll() {
 	m_lastScopePos = -1; // invalidate scope selections
 	if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
@@ -6990,51 +7004,322 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 	if (makeVisible && sel != -1) MakeSelectionVisible();
 }
 
-void EditorCtrl::SelectScope(const wxString& scope, bool inclusive, bool all) {
-	interval iv;
-	interval iv_inner;
-
-	// We need to be aware of ranges during object searches
-	if (m_searchRanges.empty()) {
-		if (all) {	
-			unsigned int pos = 0;
-			while (m_syntaxstyler.GetNextMatch(scope, pos, iv, iv_inner)) {
-				const interval& v = inclusive ? iv : iv_inner;
-				m_lines.AddSelection(v.start, v.end);
-				pos = iv.end; // continue search from outer end
-			}
-			if (pos != 0) m_lines.SetPos(pos);
-		}
-		else if (m_syntaxstyler.GetNextMatch(scope, m_lines.GetPos(), iv, iv_inner)) {
-			const interval& v = inclusive ? iv : iv_inner;
-			m_lines.AddSelection(v.start, v.end);
-			m_lines.SetPos(v.end);
-		}
-	}
-	else {
-		const unsigned int caretpos = m_lines.GetPos();
-		for (size_t i = 0; i < m_searchRanges.size(); ++i) {
-			const interval& range = m_searchRanges[i];
-			const unsigned int startpos = all ? range.start : m_cursors[i];
-			unsigned int pos = startpos;
-			unsigned int lastend = pos;
-
-			while (m_syntaxstyler.GetNextMatch(scope, pos, iv, iv_inner)) {
-				if (iv.start < range.start) {pos = iv.end; continue;}
-				if (iv.end > range.end) break;
-
-				const interval& v = inclusive ? iv : iv_inner;
-				m_lines.AddSelection(v.start, v.end);
-				lastend = pos = iv.end;  // continue search from outer end
-				if (!all) break;
-			}
-
-			// Set cursors
-			if (lastend != range.start) m_cursors[i] = lastend;
-			if (startpos == caretpos) m_lines.SetPos(lastend); // real caret follow
-		}
-	}
+bool EditorCtrl::GetNextObjectScope(const wxString& scope, size_t pos, interval& iv, interval& iv_inner) const {
+	return m_syntaxstyler.GetNextMatch(scope, pos, iv, iv_inner);
 }
+
+bool EditorCtrl::GetNextObjectWords(size_t count, size_t pos, interval& iv, interval& iv_inner) const {
+	const unsigned int len = m_lines.GetLength();
+	if (pos == len) return false;
+
+	cxLOCKDOC_READ(m_doc)
+		// Move to start of first word
+		wxChar c = doc.GetChar(pos);
+		if (IsWordChar(c)) {
+			while (pos) {
+				const unsigned int prevpos = doc.GetPrevCharPos(pos);
+				c = doc.GetChar(prevpos);
+				if (!IsWordChar(c)) break;
+				pos = prevpos;
+			}
+		}
+		else {
+			while (pos < len && !IsWordChar(c)) {
+				pos = doc.GetNextCharPos(pos);
+				c = doc.GetChar(pos);
+			}
+			if (pos == len) return false; // no words left
+		}
+
+		iv.start = iv_inner.start = pos;
+		while (pos < len && count > 0) {
+			// Advance to word end
+			c = doc.GetChar(pos);
+			while (pos < len && IsWordChar(c)) {
+				pos = doc.GetNextCharPos(pos);
+				c = doc.GetChar(pos);
+			}
+
+			iv_inner.end = pos;
+
+			// Advance to next word
+			c = doc.GetChar(pos);
+			while (pos < len && !IsWordChar(c)) {
+				pos = doc.GetNextCharPos(pos);
+				c = doc.GetChar(pos);
+			}
+
+			--count;
+		}
+
+		iv.end = pos;
+	cxENDLOCK
+
+	return true;
+}
+
+bool EditorCtrl::GetNextObjectBlock(wxChar brace, size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	char startBrace;
+	char endBrace;
+	switch (brace) {
+	case '{': startBrace = '{'; endBrace = '}'; break;
+	case '(': startBrace = '('; endBrace = ')'; break;
+	case '[': startBrace = '['; endBrace = ']'; break;
+	case '<': startBrace = '<'; endBrace = '>'; break;
+	case '"': startBrace = '"'; endBrace = '"'; break;
+	case '\'': startBrace = '\''; endBrace = '\''; break;
+	default: return false;
+	}
+
+	cxLOCKDOC_READ(m_doc)
+		// Advance to first startbrace
+		doc_byte_iter dbi(doc, pos);
+		while (dbi.GetIndex() < (int)len) {
+			if (*dbi == startBrace) {
+				iv.start = dbi.GetIndex();
+				break;
+			}
+			else if (*dbi == '\\') ++dbi; // jump escaped chars
+			
+			++dbi;
+		}
+
+		// Find endbrace
+		++dbi; // ignore startbrace
+		while (dbi.GetIndex() < (int)len) {
+			// TODO: nesting
+			if (*dbi == endBrace) {
+				iv.end = dbi.GetIndex()+1;
+				iv_inner.Set(iv.start+1, iv.end-1);
+				return true;
+			}
+			else if (*dbi == '\\') ++dbi; // jump escaped chars
+			
+			++dbi;
+		}
+	cxENDLOCK
+
+	return false;
+}
+
+bool EditorCtrl::GetNextObjectSentence(size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	cxLOCKDOC_READ(m_doc)
+		// Find sentence start
+		doc_byte_iter dbi(doc, pos);
+		iv.start = iv_inner.start = 0;
+		if (pos > 0) {
+			--dbi;
+			for (;;) {
+				if (*dbi == '.') {
+					++dbi;
+					// Advance past whitespace
+					while (dbi.GetIndex() < (int)len && isspace(*dbi)) ++dbi;
+					
+					iv.start = iv_inner.start = dbi.GetIndex();
+					break;
+				}
+
+				if (dbi.GetIndex() == 0) break;
+				--dbi;
+			}
+		}
+
+		// Find sentence end
+		dbi.SetIndex(pos);
+		iv.end = iv_inner.end = len;
+		while (dbi.GetIndex() < (int)len) {
+			if (*dbi == '.') {
+				++dbi;
+				iv.end = iv_inner.end = dbi.GetIndex();
+				
+				// Trailing whitespace
+				while (dbi.GetIndex() < (int)len && isspace(*dbi)) {
+					++dbi;
+					iv.end = dbi.GetIndex();
+				}
+
+				// Period may also be used for abbr.
+				if (dbi.GetIndex() < (int)len && islower(*dbi)) continue;
+				else return true;
+			}
+			++dbi;
+		}
+	cxENDLOCK
+
+	return true;
+}
+
+bool EditorCtrl::GetNextObjectParagraph(size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	cxLOCKDOC_READ(m_doc)
+		// Find paragraph start
+		doc_byte_iter dbi(doc, pos);
+		iv.start = iv_inner.start = 0;
+		if (pos > 0) {
+			--dbi;
+			for (;;) {
+				if (*dbi == '\n') {
+					const unsigned int start = dbi.GetIndex()+1;
+					
+					// Advance past any whitespace
+					bool isPara = true;
+					while (dbi.GetIndex() > 0) {
+						if (*dbi == '\n') { // double newline marks paragraph start
+							iv.start = iv_inner.start = start;
+							break;
+						}
+						else if (isspace(*dbi)) --dbi;
+						else {
+							isPara = false;
+							break;
+						}
+					}
+					
+					if (isPara) break;
+				}
+
+				if (dbi.GetIndex() == 0) break;
+				--dbi;
+			}
+		}
+
+		// Find paragraph end
+		dbi.SetIndex(pos);
+		iv.end = iv_inner.end = len;
+		while (dbi.GetIndex() < (int)len) {
+			if (*dbi == '\n') {
+				const unsigned int end = dbi.GetIndex();
+				
+				// Trailing whitespace
+				++dbi;
+				bool isPara = false;
+				while (dbi.GetIndex() < (int)len) {
+					if (*dbi == '\n') isPara = true;
+					else if (!isspace(*dbi)) break;
+					++dbi;
+				}
+
+				if (isPara) {
+					iv_inner.end = end;
+					iv.end = dbi.GetIndex();
+					return true;
+				}
+			}
+			++dbi;
+		}
+	cxENDLOCK
+
+	return true;
+}
+
+bool EditorCtrl::GetContainingObjectString(wxChar brace, size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	char t;
+	switch (brace) {
+	case '"': t = '"'; break;
+	case '\'': t = '\''; break;
+	default: return false;
+	}
+
+	const unsigned int lineid = m_lines.GetCurrentLine();
+	const unsigned int linestart = m_lines.GetLineStartpos(lineid);
+	const unsigned int lineend = m_lines.GetLineEndpos(lineid);
+
+	// count brackets from start of line
+	bool startfound = false;
+	cxLOCKDOC_READ(m_doc)
+		doc_byte_iter dbi(doc, linestart);
+		while (dbi.GetIndex() < (int)lineend) {
+			if (*dbi == t) {
+				const unsigned int p = dbi.GetIndex();
+				if (p > pos) {
+					if (!startfound) return false;
+					else {
+						iv.end = p+1;
+						iv_inner.Set(iv.start+1, p);
+						return true;
+					}
+				}
+				else iv.start = p;
+			}
+			else if (*dbi == '\\') ++dbi; // jump escaped
+
+			++dbi;
+		}
+	cxENDLOCK
+
+	return false;
+}
+
+
+bool EditorCtrl::GetContainingObjectBlock(wxChar brace, size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	wxChar endBrace;
+	switch (brace) {
+	case '{': endBrace = '}'; break;
+	case '(': endBrace = ')'; break;
+	case '[': endBrace = ']'; break;
+	case '<': endBrace = '>'; break;
+	default: return false;
+	}
+
+	// Is first char start brace?
+	bool onBrace = false;
+	cxLOCKDOC_READ(m_doc)
+		const wxChar c = doc.GetChar(pos);
+		if (c == brace) onBrace = true;
+	cxENDLOCK
+	if (onBrace) {
+		unsigned int endpos;
+		if (!FindMatchingBracket(pos, endpos)) return false;
+		iv.Set(pos, endpos+1);
+		iv_inner.Set(pos+1, endpos);
+		return true;
+	}
+
+	cxLOCKDOC_READ(m_doc)
+		unsigned int p = pos;
+		unsigned int endpos = 0;
+		unsigned int count = 0;
+
+		// Advance to first unmatched brace
+		while (p < len) {
+			const wxChar c = doc.GetChar(p);
+			if (c == brace) ++count;
+			else if (c == endBrace) {
+				if (count == 0) { // unmatched endbrace found
+					endpos = p;
+					break;
+				}
+				else --count;
+			}
+			else if (c == '\\') p = doc.GetNextCharPos(p); // jump escaped
+			
+			p = doc.GetNextCharPos(p);
+		}
+		if (endpos == 0) return false;
+		
+		// Backtrace to starter
+		unsigned int startpos;
+		if (!FindMatchingBracket(endpos, startpos)) return false;
+		iv.Set(startpos, endpos+1);
+		iv_inner.Set(startpos+1, endpos);
+		return true;
+	cxENDLOCK
+}
+
 
 bool EditorCtrl::IsCaretVisible() {
 	const wxSize caretsize = caret->GetSize();

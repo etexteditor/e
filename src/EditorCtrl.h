@@ -199,6 +199,7 @@ public:
 	bool IsSelected() const;
 	void SelectAll();
 	void Select(unsigned int start, unsigned int end);
+	void AddSelection(unsigned int start, unsigned int end, bool allowEmpty=false);
 	const vector<interval>& GetSelections() const {return m_lines.GetSelections();};
 	void RemoveAllSelections();
 	void ReverseSelections();
@@ -210,8 +211,16 @@ public:
 	void SelectCurrentLine();
 	void ExtendSelectionToLine(unsigned int sel_id=0);
 	void SelectScope();
-	void SelectScope(const wxString& scope, bool inclusive=true, bool all=false);
 	void SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible=true, bool multiSelect=false);
+
+	// Selection (objects)
+	bool GetNextObjectScope(const wxString& scope, size_t pos, interval& iv, interval& iv_inner) const;
+	bool GetNextObjectWords(size_t count, size_t pos, interval& iv, interval& iv_inner) const;
+	bool GetNextObjectBlock(wxChar c, size_t pos, interval& iv, interval& iv_inner);
+	bool GetNextObjectSentence(size_t pos, interval& iv, interval& iv_inner);
+	bool GetNextObjectParagraph(size_t pos, interval& iv, interval& iv_inner);
+	bool GetContainingObjectString(wxChar c, size_t pos, interval& iv, interval& iv_inner);
+	bool GetContainingObjectBlock(wxChar c, size_t pos, interval& iv, interval& iv_inner);
 
 	// Movement commands
 	void SetPos(unsigned int pos);

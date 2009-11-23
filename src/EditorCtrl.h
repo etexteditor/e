@@ -108,6 +108,7 @@ public:
 	unsigned int GetCurrentLineNumber();
 	unsigned int GetCurrentColumnNumber();
 	unsigned int GetLineFromPos(unsigned int pos) {return m_lines.GetLineFromCharPos(pos);};
+	interval GetLineExtent(unsigned int line_id) {interval iv; m_lines.GetLineExtent(line_id, iv.start, iv.end); return iv;};
 	bool IsLineStart(unsigned int line_id, unsigned int pos) {return m_lines.IsLineStart(line_id, pos);};
 	bool IsLineEnd(unsigned int pos) {return m_lines.IsLineEnd(pos);};
 

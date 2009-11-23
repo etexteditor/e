@@ -349,6 +349,10 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 		if (m_reverse) m_editor.ReverseSelections();
 		EndMovement();
 		break;
+	case state_range:
+		if (c == '\n') SelectRangeEnd();
+		else Clear();
+		break;
 
 	default:
 		wxASSERT(false); // invalid state
@@ -372,6 +376,7 @@ void CommandHandler::EndMovement() {
 		break;
 	case state_search:
 	case state_range:
+		m_count = 0;
 		clearState = false;
 		break;
 	default:
@@ -530,13 +535,35 @@ void CommandHandler::SelectRangeStart() {
 		// Select selections
 	}
 	else if (m_editor.HasSearchRange()) {
-		// Select lines in ranges
+		// Select lines in ranges (relative to range top)
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+		const unsigned int caretpos = m_editor.GetPos();
+
+		for (unsigned i = 0; i < ranges.size(); ++i) {
+			const interval& range = ranges[i];
+			const unsigned int topline = m_editor.GetLineFromPos(range.start);
+			const unsigned int selline = topline + (m_count ? m_count-1 : 0);
+			if (selline >= m_editor.GetLineCount()) break;
+
+			interval iv = m_editor.GetLineExtent(selline);
+			if (iv.start >= range.end) continue;
+
+			// Select the line
+			iv.start = wxMax(range.start, iv.start);
+			iv.end = wxMin(range.end, iv.end);
+			m_editor.AddSelection(iv.start, iv.end);
+
+			// Set cursors
+			if (cursors[i] == caretpos) m_editor.SetPos(iv.end); // real caret follow
+			m_editor.SetSearchRangeCursor(i, iv.end);
+		}
+		EndMovement();
 	}
 	else {
 		// Select lines
 		if (m_count) m_editor.SelectLine(m_count-1);
 		else m_editor.SelectCurrentLine();
-		m_count = 0;
 		EndMovement();
 	}
 }

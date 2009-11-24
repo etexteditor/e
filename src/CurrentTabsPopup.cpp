@@ -103,6 +103,7 @@ BEGIN_EVENT_TABLE(CurrentTabsPopup, wxDialog)
 	EVT_SHOW(CurrentTabsPopup::OnShow)
 	EVT_LEFT_DOWN(CurrentTabsPopup::OnMouseLeftDown)
 	EVT_MOUSE_CAPTURE_LOST(CurrentTabsPopup::OnMouseCaptureLost)
+	EVT_LIST_ITEM_ACTIVATED(ID_TAB_LIST, CurrentTabsPopup::OnItemActivated)
 END_EVENT_TABLE()
 
 void CurrentTabsPopup::OnMouseCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event)) {}

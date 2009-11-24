@@ -31,7 +31,6 @@ public:
 
 private:
 	int GetSelectedRow() const;
-	void SetSelectedRow(int selectedRow);
 
 	DECLARE_EVENT_TABLE();
 	void OnShow(wxShowEvent& event);

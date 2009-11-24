@@ -110,7 +110,9 @@ void CurrentTabsPopup::OnMouseCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(even
 
 void CurrentTabsPopup::OnShow(wxShowEvent& WXUNUSED(event)) {
 	m_list->SetFocus();
-	m_list->SetSelectedRow(0);
+	
+	if (m_selectedTabIndex != -1 && m_selectedTabIndex < (int)m_list->GetItemCount())
+		m_list->SetSelectedRow(m_selectedTabIndex);
 
 	m_list->SetColumnWidth(col_Number, wxLIST_AUTOSIZE);
 	m_list->SetColumnWidth(col_Filename, wxLIST_AUTOSIZE);
@@ -119,9 +121,9 @@ void CurrentTabsPopup::OnShow(wxShowEvent& WXUNUSED(event)) {
 	this->CaptureMouse();
 }
 
-CurrentTabsPopup::CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo):
+CurrentTabsPopup::CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo, int currentTab):
 	wxDialog(parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxNO_BORDER),
-	m_selectedTabIndex(-1)
+	m_selectedTabIndex(currentTab)
 {
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 

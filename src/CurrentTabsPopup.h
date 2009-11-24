@@ -20,7 +20,7 @@ struct OpenTabInfo {
 
 class CurrentTabsPopup: public wxDialog {
 public:
-	CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo);
+	CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo, int currrentTab=-1);
 	~CurrentTabsPopup();
 
 	int GetSelectedTabIndex() const;

@@ -2799,7 +2799,7 @@ void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
 		tabInfo.push_back(new OpenTabInfo(page->GetName(), relativePath));
 	}
 
-	CurrentTabsPopup dialog(this, tabInfo);
+	CurrentTabsPopup dialog(this, tabInfo, m_tabBar->GetSelection());
 	if (dialog.ShowModal() == wxID_OK) {
 		int newTabIndex = dialog.GetSelectedTabIndex();
 		if (newTabIndex != -1 && newTabIndex != m_tabBar->GetSelection())

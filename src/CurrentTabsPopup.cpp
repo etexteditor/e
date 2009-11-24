@@ -108,7 +108,9 @@ END_EVENT_TABLE()
 
 void CurrentTabsPopup::OnMouseCaptureLost(wxMouseCaptureLostEvent& WXUNUSED(event)) {}
 
-void CurrentTabsPopup::OnShow(wxShowEvent& WXUNUSED(event)) {
+void CurrentTabsPopup::OnShow(wxShowEvent& event) {
+	if (!event.GetShow()) return; // avoid double-captures
+
 	m_list->SetFocus();
 	
 	if (m_selectedTabIndex != -1 && m_selectedTabIndex < (int)m_list->GetItemCount())
@@ -149,6 +151,7 @@ CurrentTabsPopup::CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabIn
 
 	mainSizer->Add(m_list, 1, wxEXPAND);
 	SetSizerAndFit(mainSizer);
+	CenterOnParent();
 }
 
 CurrentTabsPopup::~CurrentTabsPopup() {

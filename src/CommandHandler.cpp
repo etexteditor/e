@@ -253,17 +253,13 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 
 			// Modes
 			case WXK_ESCAPE:
+				m_state = state_normal;
 				m_editor.ClearSearchRange();
 				if (m_cmd.empty()) m_editor.RemoveAllSelections();
 				EndMovement();
 				break;
 			case WXK_RETURN:
-				if (m_state == state_range) {
-					if (m_count) {
-						m_editor.CursorToLine(m_count);
-						m_editor.ExtendSelectionToLine();
-					}
-				}
+				if (m_state == state_range) SelectRangeEnd();
 				m_state = state_normal;
 				EndMovement();
 				break;
@@ -348,10 +344,6 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 		SelectObject(c, count, false, true);
 		if (m_reverse) m_editor.ReverseSelections();
 		EndMovement();
-		break;
-	case state_range:
-		if (c == '\n') SelectRangeEnd();
-		else Clear();
 		break;
 
 	default:
@@ -569,6 +561,37 @@ void CommandHandler::SelectRangeStart() {
 }
 
 void CommandHandler::SelectRangeEnd() {
+	if (!m_editor.IsSelected()) return;
+	if (m_count == 0) return;
+
+	if (m_editor.HasSearchRange()) {
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+		const unsigned int caretpos = m_editor.GetPos();
+
+		for (unsigned i = 0; i < ranges.size(); ++i) {
+			const interval& range = ranges[i];
+			const unsigned int topline = m_editor.GetLineFromPos(range.start);
+			const unsigned int selline = topline + (m_count-1);
+			if (selline >= m_editor.GetLineCount()) break;
+
+			interval iv = m_editor.GetLineExtent(selline);
+			if (iv.start >= range.end) continue;
+
+			// Select the lines
+			iv.start = wxMax(range.start, iv.start);
+			iv.end = wxMin(range.end, iv.end);
+			m_editor.AddSelection(iv.start, iv.end);
+
+			// Set cursors
+			if (cursors[i] == caretpos) m_editor.SetPos(iv.end); // real caret follow
+			m_editor.SetSearchRangeCursor(i, iv.end);
+		}
+	}
+	else {
+		m_editor.CursorToLine(m_count);
+		m_editor.ExtendSelectionToLine();
+	}
 }
 
 void CommandHandler::SelectObject(wxChar c, size_t count, bool inclusive, bool all) {

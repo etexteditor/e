@@ -59,6 +59,7 @@ class DiffDirPane;
 class DiffPanel;
 class IEditorSearch;
 class RemoteThread;
+class BundleList;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -520,6 +521,7 @@ private:
 	DiffDirPane* m_diffPane;
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
+	BundleList* m_bundleList;
 
 	// Statusbar
 	StatusBar* m_pStatBar;

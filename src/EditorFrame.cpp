@@ -68,6 +68,7 @@
 #include "CurrentTabsPopup.h"
 #include "eauibook.h"
 #include "DiffDirPane.h"
+#include "BundleList.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -297,7 +298,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
 	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
-	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL),
+	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_bundleList(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
 	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm)
@@ -3177,7 +3178,7 @@ void EditorFrame::ShowWebPreview() {
 void EditorFrame::ShowSymbolList(bool keepOpen) {
 	if (m_symbolList) return; // already shown
 
-	// Create the pane
+	/*// Create the pane
 	m_symbolList = new SymbolList(*this, keepOpen);
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxT("Symbols")).Right().Caption(_("Symbols")).BestSize(wxSize(150,50)); // defaults
@@ -3190,6 +3191,21 @@ void EditorFrame::ShowSymbolList(bool keepOpen) {
 
 	// Add to manager
 	m_frameManager.AddPane(m_symbolList, paneInfo);
+	m_frameManager.Update();*/
+	
+	// Create the pane
+	m_bundleList = new BundleList(*this, keepOpen);
+	wxAuiPaneInfo paneInfo;
+	paneInfo.Name(wxT("Bundle Shortcuts")).Right().Caption(_("Bundle Shortcuts")).BestSize(wxSize(150,50)); // defaults
+
+	// Load pane settings
+	/*wxString panePerspective;
+	m_settings.GetSettingString(wxT("symbol_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showsymbols"), true);
+	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);*/
+
+	// Add to manager
+	m_frameManager.AddPane(m_bundleList, paneInfo);
 	m_frameManager.Update();
 }
 

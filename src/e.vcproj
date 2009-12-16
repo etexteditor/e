@@ -1130,6 +1130,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\BundleList.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\BundleList.h"
+			>
+		</File>
+		<File
 			RelativePath="BundleManager.cpp"
 			>
 		</File>
@@ -1167,6 +1175,10 @@
 		</File>
 		<File
 			RelativePath="ChangeCheckerThread.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ClassDiagram1.cd"
 			>
 		</File>
 		<File

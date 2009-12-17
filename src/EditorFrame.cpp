@@ -3263,6 +3263,7 @@ void EditorFrame::CloseSnippetList() {
 void EditorFrame::RefreshSnippetList() {
 	if (!m_snippetList) return;
 	m_snippetList->UpdateList();
+	m_snippetList->UpdateSearchText();
 }
 
 void EditorFrame::CloseWebPreview() {

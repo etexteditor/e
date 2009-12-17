@@ -31,6 +31,7 @@ public:
 	SnippetList(EditorFrame& services);
 	bool Destroy();
 	void UpdateList();
+	void UpdateSearchText();
 	bool ScopeChanged(const deque<const wxString*> scope);
 	void GetCurrentActions();
 	bool FilterAction(const tmAction*);

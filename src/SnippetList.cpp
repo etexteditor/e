@@ -63,6 +63,11 @@ SnippetList::SnippetList(EditorFrame& services):
 	SetSizer(mainSizer);
 }
 
+void SnippetList::UpdateSearchText() {
+	wxString word = m_editorCtrl->GetCurrentWord();
+	m_searchCtrl->SetValue(word);
+	//m_listBox->Find(word);
+}
 void SnippetList::UpdateList() {
 	GetCurrentActions();
 	

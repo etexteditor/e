@@ -2084,6 +2084,8 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	m_autopair.AdjustEndsDown(del_len);
 
 	MarkAsModified();
+	m_parentFrame.RefreshSnippetList();
+
 	return del_len;
 }
 
@@ -2344,6 +2346,8 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 	lastaction = ACTION_INSERT;
 
 	MarkAsModified();
+
+	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::Insert(const wxString& text) {
@@ -2384,6 +2388,8 @@ void EditorCtrl::Insert(const wxString& text) {
 	}
 
 	MarkAsModified();
+
+	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::Delete(unsigned int start, unsigned int end) {
@@ -2415,6 +2421,8 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 	}
 
 	MarkAsModified();
+
+	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::Commit(const wxString& label, const wxString& desc) {

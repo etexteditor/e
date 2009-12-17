@@ -96,10 +96,6 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 	SetSizer(mainSizer);
 }
 
-void BundleList::GetCurrentActions(std::vector<const tmAction*>& actions) {
-	m_editorCtrl->GetAllActions(actions);
-}
-
 void BundleList::UpdateList() {
 	std::vector<const tmAction*> actionList, filteredActions;
 	GetCurrentActions(actionList);
@@ -128,16 +124,31 @@ void BundleList::UpdateList() {
 	m_listBox->SetAllItems();
 }
 
+void BundleList::GetCurrentActions(std::vector<const tmAction*>& actions) {
+	m_editorCtrl->GetAllActions(actions);
+}
+
 bool BundleList::FilterAction(const tmAction* action) {
-	return !action->trigger.empty(); // && !action->name.empty();
+	return !action->trigger.empty() && action->IsSnippet(); // && !action->name.empty();
+}
+
+bool sortComparator(const tmAction* a, const tmAction* b) {
+	return a->trigger.Lower() < b->trigger.Lower();
 }
 
 void BundleList::FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result) {
+	//remove any actions that are not snippets or dont have a trigger text
 	for(unsigned int c = 0; c < actions.size(); ++c) {
 		if(FilterAction(actions[c])) {
 			result.push_back(actions[c]);
 		}
 	}
+	
+	//sort the actions for convenience
+	sort(result.begin(), result.end(), sortComparator);
+
+	//remove duplicates
+
 }
 
 bool BundleList::Destroy() {

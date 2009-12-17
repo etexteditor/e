@@ -255,7 +255,7 @@ public:
 	const wxString& GetSyntaxName() const {return m_syntaxstyler.GetName();};
 	void SetSyntax(const wxString& syntaxName, bool isManual=false);
 	void AddStyler(Styler& styler) {m_lines.AddStyler(styler);};
-	void GetAllActions(std::vector<const tmAction*>& actions);
+	const deque<const wxString*> GetScope();
 
 	// Indentation
 	const wxString& GetIndentUnit() const {return m_indent;};

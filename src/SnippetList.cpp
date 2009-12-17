@@ -50,6 +50,7 @@ SnippetList::SnippetList(EditorFrame& services, bool keepOpen):
 		m_syntaxHandler(services.GetSyntaxHandler()),
 		m_keepOpen(keepOpen)
 {
+
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_bundleStrings);
@@ -97,15 +98,13 @@ SnippetList::SnippetList(EditorFrame& services, bool keepOpen):
 }
 
 void SnippetList::UpdateList() {
-	std::vector<const tmAction*> actionList, filteredActions;
-	GetCurrentActions(actionList);
-	FilterActions(actionList, filteredActions);
+	GetCurrentActions();
 	
 	m_bundleStrings.Empty();
 	wxString name, trigger, label;
 	const tmAction* action;
-	for(unsigned int c = 0; c < filteredActions.size(); ++c) {
-		/*action = filteredActions[c];
+	for(unsigned int c = 0; c < m_filteredActions.size(); ++c) {
+		/*action = m_filteredActions[c];
 		name = action->name;
 		trigger = action->trigger;
 
@@ -117,15 +116,38 @@ void SnippetList::UpdateList() {
 			label = trigger+wxT(" -> ")+name;
 		}*/
 
-		label = filteredActions[c]->trigger;
+		label = m_filteredActions[c]->trigger;
 
 		m_bundleStrings.Add(label);
 	}
 	m_listBox->SetAllItems();
 }
 
-void SnippetList::GetCurrentActions(std::vector<const tmAction*>& actions) {
-	m_editorCtrl->GetAllActions(actions);
+bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
+	return m_previousScope != scope;
+	//if(scope.size() != previousScope.size()) return false;
+	
+}
+
+void SnippetList::GetCurrentActions() {
+	deque<const wxString*> scope = m_editorCtrl->GetScope();
+	if(ScopeChanged(scope)) {
+		//copy the new scope into the instance variable
+		m_previousScope.clear();
+		deque<const wxString*>::iterator scopeIterator;
+
+		for(scopeIterator = scope.begin(); scopeIterator != scope.end(); ++scopeIterator) {
+			m_previousScope.push_back(*scopeIterator);
+		}
+
+		//get an unfiltered list of the actions
+		m_previousActions.clear();
+		m_syntaxHandler.GetAllActions(scope, m_previousActions);
+
+		//remove duplicate triggers/empty triggers/non-snippets
+		m_filteredActions.clear();
+		FilterActions(m_previousActions, m_filteredActions);
+	}
 }
 
 bool SnippetList::FilterAction(const tmAction* action) {
@@ -225,6 +247,7 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 #endif
 
 void SnippetList::OnSearch(wxCommandEvent& event) {
+	UpdateList();
 	m_listBox->Find(event.GetString());
 }
 

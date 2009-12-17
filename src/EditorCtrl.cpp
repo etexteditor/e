@@ -4151,10 +4151,9 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 };
 
 
-void EditorCtrl::GetAllActions(std::vector<const tmAction*>& actions) {
+const deque<const wxString*> EditorCtrl::GetScope() {
 	int caretPosition = GetPos();
-	const deque<const wxString*> scope = m_syntaxstyler.GetScope(caretPosition);
-	m_syntaxHandler.GetAllActions(scope, actions);
+	return m_syntaxstyler.GetScope(caretPosition);
 };
 
 void EditorCtrl::OnCopy() {

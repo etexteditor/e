@@ -16,8 +16,7 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/panel.h>
-    #include <wx/textctrl.h>
+#include <wx/wx.h>
 #endif
 
 #include "SearchListBox.h"
@@ -26,6 +25,7 @@
 #include "tmAction.h"
 
 #include <vector>
+#include <deque>
 
 class IFrameSymbolService;
 
@@ -34,7 +34,8 @@ public:
 	SnippetList(EditorFrame& services, bool keepOpen=true);
 	bool Destroy();
 	void UpdateList();
-	void GetCurrentActions(std::vector<const tmAction*>& actions);
+	bool ScopeChanged(const deque<const wxString*> scope);
+	void GetCurrentActions();
 	bool FilterAction(const tmAction*);
 	void FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result);
 
@@ -88,6 +89,10 @@ private:
 	// Widgets
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_listBox;
+
+	std::vector<const tmAction*> m_previousActions;
+	std::vector<const tmAction*> m_filteredActions;
+	deque<const wxString*> m_previousScope;
 
 	bool m_keepOpen;
 	wxArrayString m_bundleStrings;

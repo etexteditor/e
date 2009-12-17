@@ -11,6 +11,25 @@
  *
  ******************************************************************************/
 
+/*******************************************************************************
+ * Some general notes about how this works:
+ * It shows a list of all of the snippets for the current syntax.
+ * As the user types, it filters the list based on which snippet's triggers match the word the user typed.
+ * 
+ * To get the list of snippets, it has to get the current 'scope' from the EditorCtrl.
+ * Then it can get a list of all of the snippets in the scope.
+ * The snippets are filtered so empty ones / duplicates are removed.
+ * All of these are stored in instance variables so they only need to be reloaded when the syntax changes.
+ *
+ * To function, the UpdateList and UpdateSearchText methods have to be called from the
+ * EditorFrame and EditorCtrl classes whenever the syntax is changed or the text/cursor
+ * of the document change.
+ *
+ * Alot of this code is copied without modification from SymbolList.cpp.  It would
+ * probably be good eventually to refactor out the common stuff.
+ *
+ ******************************************************************************/
+
 #include "SnippetList.h"
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
@@ -132,14 +151,13 @@ bool sortComparator(const tmAction* a, const tmAction* b) {
 void SnippetList::FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result) {
 	//remove any actions that are not snippets or dont have a trigger text
 	vector<const tmAction*> tmp;
-
 	for(unsigned int c = 0; c < actions.size(); ++c) {
 		if(FilterAction(actions[c])) {
 			tmp.push_back(actions[c]);
 		}
 	}
 	
-	//sort the actions for convenience
+	//sort the actions for convenience and to make removing duplicates easier
 	sort(tmp.begin(), tmp.end(), sortComparator);
 
 	//remove duplicates

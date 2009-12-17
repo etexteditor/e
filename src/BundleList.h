@@ -23,6 +23,7 @@
 #include "SearchListBox.h"
 #include "IEditorSymbols.h"
 #include "EditorFrame.h"
+#include "tmAction.h"
 
 #include <vector>
 
@@ -32,6 +33,10 @@ class BundleList : public wxPanel {
 public:
 	BundleList(EditorFrame& services, bool keepOpen=true);
 	bool Destroy();
+	void UpdateList();
+	void GetCurrentActions(std::vector<const tmAction*>& actions);
+	bool FilterAction(const tmAction*);
+	void FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result);
 
 private:
 	void OnSearch(wxCommandEvent& event);
@@ -76,7 +81,11 @@ private:
 	};
 
 	// Member variables
-	IFrameSymbolService& m_parentFrame;
+	IFrameSymbolService& m_editorFrame;
+	EditorCtrl* m_editorCtrl;
+	TmSyntaxHandler& m_syntaxHandler;
+
+	// Widgets
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_listBox;
 

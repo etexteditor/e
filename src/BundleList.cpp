@@ -40,35 +40,25 @@ BEGIN_EVENT_TABLE(BundleList, wxPanel)
 	EVT_LISTBOX_DCLICK(CTRL_ALIST, BundleList::OnAction)
 END_EVENT_TABLE()
 
+	void GetCurrentActions(std::vector<const tmAction*>& actions);
+	void FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result);
+
 BundleList::BundleList(EditorFrame& services, bool keepOpen):
 	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
-	m_parentFrame(services), 
-	m_keepOpen(keepOpen)
+		m_editorFrame(services),
+		m_editorCtrl(services.GetEditorCtrl()),
+		m_syntaxHandler(services.GetSyntaxHandler()),
+		m_keepOpen(keepOpen)
 {
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_bundleStrings);
 
-	TmSyntaxHandler& m_syntaxHandler = services.GetSyntaxHandler();
+	UpdateList();
+
+	/*
 	PListHandler& plist = m_syntaxHandler.GetPListHandler();
-	
-	m_bundleStrings.Empty();
-	
-	//unsigned int caretPosition = services.GetPosition();
-	EditorCtrl* editorControl = services.GetEditorCtrl();
-	std::vector<const tmAction*> actions;
-
-	//Styler_Syntax syntaxHandler = editorControl.GetSyntaxStyler();
-	//const deque<const wxString*> scope = syntaxHandler.GetScope(caretPosition);
-	//syntaxHandler.GetAllActions(scope, actions);
-	
-	editorControl->GetAllActions(actions);
-
-	for(unsigned int c = 0; c < actions.size(); ++c) {
-		m_bundleStrings.Add(actions[c]->trigger);
-	}
-
-	/*int bundleId = 10;
+	int bundleId = 10;
 	const PListDict infoDict = plist.GetBundleInfo(bundleId);
 	const wxString bundleName = infoDict.wxGetString("name");
 	const vector<unsigned int> snippets =  plist.GetList(BUNDLE_SNIPPET, bundleId);
@@ -94,7 +84,6 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 
 		m_bundleStrings.Add(label);
 	}*/
-	m_listBox->SetAllItems();
 
 	// Add custom event handler (for up/down key events in the search box)
 	m_searchCtrl->Connect(wxEVT_CHAR, wxKeyEventHandler(BundleList::OnSearchChar), NULL, this);
@@ -105,6 +94,50 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 		mainSizer->Add(m_listBox, 1, wxEXPAND);
 
 	SetSizer(mainSizer);
+}
+
+void BundleList::GetCurrentActions(std::vector<const tmAction*>& actions) {
+	m_editorCtrl->GetAllActions(actions);
+}
+
+void BundleList::UpdateList() {
+	std::vector<const tmAction*> actionList, filteredActions;
+	GetCurrentActions(actionList);
+	FilterActions(actionList, filteredActions);
+	
+	m_bundleStrings.Empty();
+	wxString name, trigger, label;
+	const tmAction* action;
+	for(unsigned int c = 0; c < filteredActions.size(); ++c) {
+		/*action = filteredActions[c];
+		name = action->name;
+		trigger = action->trigger;
+
+		if(trigger.empty()) {
+			label = name;
+		} else if(name.empty()) {
+			label = trigger;
+		} else {
+			label = trigger+wxT(" -> ")+name;
+		}*/
+
+		label = filteredActions[c]->trigger;
+
+		m_bundleStrings.Add(label);
+	}
+	m_listBox->SetAllItems();
+}
+
+bool BundleList::FilterAction(const tmAction* action) {
+	return !action->trigger.empty(); // && !action->name.empty();
+}
+
+void BundleList::FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result) {
+	for(unsigned int c = 0; c < actions.size(); ++c) {
+		if(FilterAction(actions[c])) {
+			result.push_back(actions[c]);
+		}
+	}
 }
 
 bool BundleList::Destroy() {

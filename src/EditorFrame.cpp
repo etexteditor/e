@@ -68,7 +68,7 @@
 #include "CurrentTabsPopup.h"
 #include "eauibook.h"
 #include "DiffDirPane.h"
-#include "BundleList.h"
+#include "SnippetList.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -299,7 +299,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
 	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
-	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_bundleList(NULL),
+	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_snippetList(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
 	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm)
@@ -2132,7 +2132,7 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 
 	// "Show Snippet List"
 	wxMenuItem* snItem = GetMenuBar()->FindItem(MENU_SHOWSNIPPETS);
-	if (snItem) snItem->Check(m_bundleList != NULL);
+	if (snItem) snItem->Check(m_snippetList != NULL);
 
 	// "Highlight Authors"
 	wxMenuItem* hlItem = GetMenuBar()->FindItem(MENU_HL_USERS);
@@ -3147,8 +3147,8 @@ void EditorFrame::OnMenuShowSymbols(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuShowSnippets(wxCommandEvent& event) {
-	if (event.IsChecked()) ShowBundleList();
-	else CloseBundleList();
+	if (event.IsChecked()) ShowSnippetList();
+	else CloseSnippetList();
 }
 
 void EditorFrame::OnMenuSymbols(wxCommandEvent& WXUNUSED(event)) {
@@ -3223,13 +3223,13 @@ void EditorFrame::CloseSymbolList() {
 	m_frameManager.Update();
 }
 
-void EditorFrame::ShowBundleList(bool keepOpen) {
-	if (m_bundleList) return; // already shown
+void EditorFrame::ShowSnippetList(bool keepOpen) {
+	if (m_snippetList) return; // already shown
 	
 	// Create the pane
-	m_bundleList = new BundleList(*this, keepOpen);
+	m_snippetList = new SnippetList(*this, keepOpen);
 	wxAuiPaneInfo paneInfo;
-	paneInfo.Name(wxT("Bundle Shortcuts")).Right().Caption(_("Bundle Shortcuts")).BestSize(wxSize(150,50)); // defaults
+	paneInfo.Name(wxT("Snippet Shortcuts")).Right().Caption(_("Snippet Shortcuts")).BestSize(wxSize(150,50)); // defaults
 
 	// Load pane settings
 	/*wxString panePerspective;
@@ -3238,14 +3238,14 @@ void EditorFrame::ShowBundleList(bool keepOpen) {
 	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);*/
 
 	// Add to manager
-	m_frameManager.AddPane(m_bundleList, paneInfo);
+	m_frameManager.AddPane(m_snippetList, paneInfo);
 	m_frameManager.Update();
 }
 
-void EditorFrame::CloseBundleList() {
-	if (!m_bundleList) return; // already closed
+void EditorFrame::CloseSnippetList() {
+	if (!m_snippetList) return; // already closed
 
-	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_bundleList);
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_snippetList);
 
 	// Save pane settings
 	/*const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
@@ -3253,10 +3253,10 @@ void EditorFrame::CloseBundleList() {
 	m_settings.SetSettingBool(wxT("showsymbols"), false);*/
 
 	// Delete the symbol pane
-	m_frameManager.DetachPane(m_bundleList);
-	m_bundleList->Hide();
-	m_bundleList->Destroy();
-	m_bundleList = NULL;
+	m_frameManager.DetachPane(m_snippetList);
+	m_snippetList->Hide();
+	m_snippetList->Destroy();
+	m_snippetList = NULL;
 	m_frameManager.Update();
 }
 
@@ -3312,8 +3312,8 @@ void EditorFrame::OnPaneClose(wxAuiManagerEvent& event) {
 		// so we don't want aui to do any close handling
 		event.Veto();
 	}
-	else if (event.GetPane()->window == m_bundleList) {
-		CloseBundleList();
+	else if (event.GetPane()->window == m_snippetList) {
+		CloseSnippetList();
 
 		// We have already deleted the window
 		// so we don't want aui to do any close handling

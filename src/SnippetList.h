@@ -11,8 +11,8 @@
  *
  ******************************************************************************/
 
-#ifndef __BUNDLELIST_H__
-#define __BUNDLELIST_H__
+#ifndef __SNIPPETLIST_H__
+#define __SNIPPETLIST_H__
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
@@ -29,9 +29,9 @@
 
 class IFrameSymbolService;
 
-class BundleList : public wxPanel {
+class SnippetList : public wxPanel {
 public:
-	BundleList(EditorFrame& services, bool keepOpen=true);
+	SnippetList(EditorFrame& services, bool keepOpen=true);
 	bool Destroy();
 	void UpdateList();
 	void GetCurrentActions(std::vector<const tmAction*>& actions);
@@ -93,4 +93,4 @@ private:
 	wxArrayString m_bundleStrings;
 };
 
-#endif // __BUNDLELIST_H__
+#endif // __SNIPPETLIST_H__

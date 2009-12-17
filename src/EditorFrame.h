@@ -59,7 +59,7 @@ class DiffDirPane;
 class DiffPanel;
 class IEditorSearch;
 class RemoteThread;
-class BundleList;
+class SnippetList;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -270,8 +270,8 @@ public:
 	virtual void CloseSymbolList();
 
 	// Snippet List (pane)
-	void ShowBundleList(bool keepOpen=true);
-	virtual void CloseBundleList();
+	void ShowSnippetList(bool keepOpen=true);
+	virtual void CloseSnippetList();
 
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
@@ -527,7 +527,7 @@ private:
 	DiffDirPane* m_diffPane;
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
-	BundleList* m_bundleList;
+	SnippetList* m_snippetList;
 
 	// Statusbar
 	StatusBar* m_pStatBar;

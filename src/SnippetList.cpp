@@ -11,7 +11,7 @@
  *
  ******************************************************************************/
 
-#include "BundleList.h"
+#include "SnippetList.h"
 #include "IFrameSymbolService.h"
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
@@ -34,16 +34,16 @@ enum {
 	CTRL_ALIST
 };
 
-BEGIN_EVENT_TABLE(BundleList, wxPanel)
-	EVT_TEXT(CTRL_SEARCH, BundleList::OnSearch)
-	EVT_TEXT_ENTER(CTRL_SEARCH, BundleList::OnAction)
-	EVT_LISTBOX_DCLICK(CTRL_ALIST, BundleList::OnAction)
+BEGIN_EVENT_TABLE(SnippetList, wxPanel)
+	EVT_TEXT(CTRL_SEARCH, SnippetList::OnSearch)
+	EVT_TEXT_ENTER(CTRL_SEARCH, SnippetList::OnAction)
+	EVT_LISTBOX_DCLICK(CTRL_ALIST, SnippetList::OnAction)
 END_EVENT_TABLE()
 
 	void GetCurrentActions(std::vector<const tmAction*>& actions);
 	void FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result);
 
-BundleList::BundleList(EditorFrame& services, bool keepOpen):
+SnippetList::SnippetList(EditorFrame& services, bool keepOpen):
 	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
 		m_editorFrame(services),
 		m_editorCtrl(services.GetEditorCtrl()),
@@ -86,7 +86,7 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 	}*/
 
 	// Add custom event handler (for up/down key events in the search box)
-	m_searchCtrl->Connect(wxEVT_CHAR, wxKeyEventHandler(BundleList::OnSearchChar), NULL, this);
+	m_searchCtrl->Connect(wxEVT_CHAR, wxKeyEventHandler(SnippetList::OnSearchChar), NULL, this);
 
 	// Create Layout
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -96,7 +96,7 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 	SetSizer(mainSizer);
 }
 
-void BundleList::UpdateList() {
+void SnippetList::UpdateList() {
 	std::vector<const tmAction*> actionList, filteredActions;
 	GetCurrentActions(actionList);
 	FilterActions(actionList, filteredActions);
@@ -124,11 +124,11 @@ void BundleList::UpdateList() {
 	m_listBox->SetAllItems();
 }
 
-void BundleList::GetCurrentActions(std::vector<const tmAction*>& actions) {
+void SnippetList::GetCurrentActions(std::vector<const tmAction*>& actions) {
 	m_editorCtrl->GetAllActions(actions);
 }
 
-bool BundleList::FilterAction(const tmAction* action) {
+bool SnippetList::FilterAction(const tmAction* action) {
 	return !action->trigger.empty() && action->IsSnippet(); // && !action->name.empty();
 }
 
@@ -136,7 +136,7 @@ bool sortComparator(const tmAction* a, const tmAction* b) {
 	return a->trigger.Lower() < b->trigger.Lower();
 }
 
-void BundleList::FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result) {
+void SnippetList::FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result) {
 	//remove any actions that are not snippets or dont have a trigger text
 	std::vector<const tmAction*> tmp;
 
@@ -166,7 +166,7 @@ void BundleList::FilterActions(std::vector<const tmAction*>& actions, std::vecto
 	}
 }
 
-bool BundleList::Destroy() {
+bool SnippetList::Destroy() {
 	// delayed destruction: the panel will be deleted during the next idle
     // loop iteration
     if ( !wxPendingDelete.Member(this) )
@@ -224,11 +224,11 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 }
 #endif
 
-void BundleList::OnSearch(wxCommandEvent& event) {
+void SnippetList::OnSearch(wxCommandEvent& event) {
 	m_listBox->Find(event.GetString());
 }
 
-void BundleList::OnSearchChar(wxKeyEvent& event) {
+void SnippetList::OnSearchChar(wxKeyEvent& event) {
 	switch ( event.GetKeyCode() )
     {
 	case WXK_UP:
@@ -247,7 +247,7 @@ void BundleList::OnSearchChar(wxKeyEvent& event) {
     event.Skip();
 }
 
-void BundleList::OnAction(wxCommandEvent& WXUNUSED(event)) {
+void SnippetList::OnAction(wxCommandEvent& WXUNUSED(event)) {
 	if(m_listBox->GetSelectedCount() != 1) return;
 
 	/*
@@ -269,18 +269,18 @@ void BundleList::OnAction(wxCommandEvent& WXUNUSED(event)) {
 
 // --- ActionList --------------------------------------------------------
 
-BEGIN_EVENT_TABLE(BundleList::ActionList, SearchListBox)
-	EVT_LEFT_DOWN(BundleList::ActionList::OnLeftDown)
+BEGIN_EVENT_TABLE(SnippetList::ActionList, SearchListBox)
+	EVT_LEFT_DOWN(SnippetList::ActionList::OnLeftDown)
 END_EVENT_TABLE()
 
-BundleList::ActionList::ActionList(wxWindow* parent, wxWindowID id, const wxArrayString& actions):
+SnippetList::ActionList::ActionList(wxWindow* parent, wxWindowID id, const wxArrayString& actions):
 	SearchListBox(parent, id), 
 	m_actions(actions)
 {
 	SetAllItems();
 }
 
-void BundleList::ActionList::SetAllItems() {
+void SnippetList::ActionList::SetAllItems() {
 	m_items.clear();
 
 	Freeze();
@@ -303,7 +303,7 @@ void BundleList::ActionList::SetAllItems() {
 	Thaw();
 }
 
-void BundleList::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void SnippetList::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
 	const bool isCurrent = IsCurrent(n);
 
 	if (isCurrent) dc.SetTextForeground(m_hlTextColor);
@@ -317,7 +317,7 @@ void BundleList::ActionList::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) 
 	DrawItemText(dc, rect, name, hl, isCurrent);
 }
 
-void BundleList::ActionList::Find(const wxString& searchtext, bool refresh) {
+void SnippetList::ActionList::Find(const wxString& searchtext, bool refresh) {
 	m_searchText = searchtext; // cache for later updates
 
 	if (searchtext.empty()) {
@@ -363,13 +363,13 @@ void BundleList::ActionList::Find(const wxString& searchtext, bool refresh) {
 	Thaw();
 }
 
-int BundleList::ActionList::GetSelectedAction() const {
+int SnippetList::ActionList::GetSelectedAction() const {
 	const int sel = GetSelection();
 	if (sel == -1) return wxNOT_FOUND;
 	else return m_items[sel].id;
 }
 
-void BundleList::ActionList::OnLeftDown(wxMouseEvent& event)
+void SnippetList::ActionList::OnLeftDown(wxMouseEvent& event)
 {
     const int item = HitTest(event.GetPosition());
     if ( item != wxNOT_FOUND )

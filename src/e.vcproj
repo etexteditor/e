@@ -1130,14 +1130,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\BundleList.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\BundleList.h"
-			>
-		</File>
-		<File
 			RelativePath="BundleManager.cpp"
 			>
 		</File>
@@ -1507,6 +1499,14 @@
 		</File>
 		<File
 			RelativePath="ShellContextMenu.h"
+			>
+		</File>
+		<File
+			RelativePath=".\SnippetList.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SnippetList.h"
 			>
 		</File>
 		<File

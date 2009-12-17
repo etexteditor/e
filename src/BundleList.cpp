@@ -138,17 +138,32 @@ bool sortComparator(const tmAction* a, const tmAction* b) {
 
 void BundleList::FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result) {
 	//remove any actions that are not snippets or dont have a trigger text
+	std::vector<const tmAction*> tmp;
+
 	for(unsigned int c = 0; c < actions.size(); ++c) {
 		if(FilterAction(actions[c])) {
-			result.push_back(actions[c]);
+			tmp.push_back(actions[c]);
 		}
 	}
 	
 	//sort the actions for convenience
-	sort(result.begin(), result.end(), sortComparator);
+	sort(tmp.begin(), tmp.end(), sortComparator);
 
 	//remove duplicates
-
+	if(tmp.size() > 1) {
+		const tmAction* previous = tmp[0];
+		result.push_back(previous);
+		for(unsigned int c = 1; c < tmp.size(); c++) {
+			if(previous->trigger != tmp[c]->trigger) {
+				previous = tmp[c];
+				result.push_back(previous);
+			}
+		}
+	} else {
+		if(tmp.size() == 1) {
+			result.push_back(tmp[0]);
+		}
+	}
 }
 
 bool BundleList::Destroy() {

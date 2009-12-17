@@ -272,6 +272,7 @@ public:
 	// Snippet List (pane)
 	void ShowSnippetList();
 	virtual void CloseSnippetList();
+	void RefreshSnippetList();
 
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};

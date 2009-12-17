@@ -4148,6 +4148,8 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 
 	DrawLayout();
 	MarkAsModified();
+
+	m_parentFrame.RefreshSnippetList();
 };
 
 

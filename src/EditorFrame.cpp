@@ -3178,7 +3178,7 @@ void EditorFrame::ShowWebPreview() {
 void EditorFrame::ShowSymbolList(bool keepOpen) {
 	if (m_symbolList) return; // already shown
 
-	/*// Create the pane
+	// Create the pane
 	m_symbolList = new SymbolList(*this, keepOpen);
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxT("Symbols")).Right().Caption(_("Symbols")).BestSize(wxSize(150,50)); // defaults
@@ -3191,21 +3191,6 @@ void EditorFrame::ShowSymbolList(bool keepOpen) {
 
 	// Add to manager
 	m_frameManager.AddPane(m_symbolList, paneInfo);
-	m_frameManager.Update();*/
-	
-	// Create the pane
-	m_bundleList = new BundleList(*this, keepOpen);
-	wxAuiPaneInfo paneInfo;
-	paneInfo.Name(wxT("Bundle Shortcuts")).Right().Caption(_("Bundle Shortcuts")).BestSize(wxSize(150,50)); // defaults
-
-	// Load pane settings
-	/*wxString panePerspective;
-	m_settings.GetSettingString(wxT("symbol_pane"), panePerspective);
-	m_settings.SetSettingBool(wxT("showsymbols"), true);
-	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);*/
-
-	// Add to manager
-	m_frameManager.AddPane(m_bundleList, paneInfo);
 	m_frameManager.Update();
 }
 

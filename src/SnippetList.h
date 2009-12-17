@@ -20,24 +20,21 @@
 #endif
 
 #include "SearchListBox.h"
-#include "IEditorSymbols.h"
 #include "EditorFrame.h"
 #include "tmAction.h"
 
 #include <vector>
 #include <deque>
 
-class IFrameSymbolService;
-
 class SnippetList : public wxPanel {
 public:
-	SnippetList(EditorFrame& services, bool keepOpen=true);
+	SnippetList(EditorFrame& services);
 	bool Destroy();
 	void UpdateList();
 	bool ScopeChanged(const deque<const wxString*> scope);
 	void GetCurrentActions();
 	bool FilterAction(const tmAction*);
-	void FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result);
+	void FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result);
 
 private:
 	void OnSearch(wxCommandEvent& event);
@@ -62,7 +59,7 @@ private:
 		class aItem {
 		public:
 			aItem() : id(0), action(NULL), rank(0) {};
-			aItem(unsigned int id, const wxString* a, const std::vector<unsigned int>& hl)
+			aItem(unsigned int id, const wxString* a, const vector<unsigned int>& hl)
 				: id(id), action(a), hlChars(hl), rank(SearchListBox::CalcRank(hl)) {};
 			bool operator<(const aItem& ai) const {
 				if (rank < ai.rank) return true;
@@ -72,17 +69,17 @@ private:
 			}
 			unsigned int id;
 			const wxString* action;
-			std::vector<unsigned int> hlChars;
+			vector<unsigned int> hlChars;
 			unsigned int rank;
 		};
 
 		const wxArrayString& m_actions;
-		std::vector<aItem> m_items;
+		vector<aItem> m_items;
 		wxString m_searchText;
 	};
 
 	// Member variables
-	IFrameSymbolService& m_editorFrame;
+	EditorFrame& m_editorFrame;
 	EditorCtrl* m_editorCtrl;
 	TmSyntaxHandler& m_syntaxHandler;
 
@@ -90,11 +87,10 @@ private:
 	wxTextCtrl* m_searchCtrl;
 	ActionList* m_listBox;
 
-	std::vector<const tmAction*> m_previousActions;
-	std::vector<const tmAction*> m_filteredActions;
+	vector<const tmAction*> m_previousActions;
+	vector<const tmAction*> m_filteredActions;
 	deque<const wxString*> m_previousScope;
 
-	bool m_keepOpen;
 	wxArrayString m_bundleStrings;
 };
 

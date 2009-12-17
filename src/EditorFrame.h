@@ -270,7 +270,7 @@ public:
 	virtual void CloseSymbolList();
 
 	// Snippet List (pane)
-	void ShowSnippetList(bool keepOpen=true);
+	void ShowSnippetList();
 	virtual void CloseSnippetList();
 
 	// DirWatcher & RemoteThread

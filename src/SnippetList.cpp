@@ -12,7 +12,6 @@
  ******************************************************************************/
 
 #include "SnippetList.h"
-#include "IFrameSymbolService.h"
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
 #include "SnippetHandler.h"
@@ -40,15 +39,11 @@ BEGIN_EVENT_TABLE(SnippetList, wxPanel)
 	EVT_LISTBOX_DCLICK(CTRL_ALIST, SnippetList::OnAction)
 END_EVENT_TABLE()
 
-	void GetCurrentActions(std::vector<const tmAction*>& actions);
-	void FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result);
-
-SnippetList::SnippetList(EditorFrame& services, bool keepOpen):
+SnippetList::SnippetList(EditorFrame& services):
 	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
 		m_editorFrame(services),
 		m_editorCtrl(services.GetEditorCtrl()),
-		m_syntaxHandler(services.GetSyntaxHandler()),
-		m_keepOpen(keepOpen)
+		m_syntaxHandler(services.GetSyntaxHandler())
 {
 
 	// Create ctrls
@@ -56,35 +51,6 @@ SnippetList::SnippetList(EditorFrame& services, bool keepOpen):
 	m_listBox = new ActionList(this, CTRL_ALIST, m_bundleStrings);
 
 	UpdateList();
-
-	/*
-	PListHandler& plist = m_syntaxHandler.GetPListHandler();
-	int bundleId = 10;
-	const PListDict infoDict = plist.GetBundleInfo(bundleId);
-	const wxString bundleName = infoDict.wxGetString("name");
-	const vector<unsigned int> snippets =  plist.GetList(BUNDLE_SNIPPET, bundleId);
-	
-	for (unsigned int n = 0; n < snippets.size(); ++n) {
-		const unsigned int snippetId = snippets[n];
-
-		const PListDict snipDict = plist.Get(BUNDLE_SNIPPET, bundleId, snippetId);
-		const wxString snipName = snipDict.wxGetString("name");
-		const wxString uuid = snipDict.wxGetString("uuid");
-		const wxString trigger = snipDict.wxGetString("tabTrigger");
-
-		wxString label = trigger+wxT(" -> ")+snipName;
-
-		printf("%s\n", snipName);
-		int i = 0;
-		while (i < snipDict.GetSize()) {
-			const char* key = snipDict.GetKey(i);
-			const char* value = snipDict.GetString(key);
-			printf("%s=%s\n", key, value);
-			++i;
-		}
-
-		m_bundleStrings.Add(label);
-	}*/
 
 	// Add custom event handler (for up/down key events in the search box)
 	m_searchCtrl->Connect(wxEVT_CHAR, wxKeyEventHandler(SnippetList::OnSearchChar), NULL, this);
@@ -158,9 +124,9 @@ bool sortComparator(const tmAction* a, const tmAction* b) {
 	return a->trigger.Lower() < b->trigger.Lower();
 }
 
-void SnippetList::FilterActions(std::vector<const tmAction*>& actions, std::vector<const tmAction*>& result) {
+void SnippetList::FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result) {
 	//remove any actions that are not snippets or dont have a trigger text
-	std::vector<const tmAction*> tmp;
+	vector<const tmAction*> tmp;
 
 	for(unsigned int c = 0; c < actions.size(); ++c) {
 		if(FilterAction(actions[c])) {
@@ -196,55 +162,6 @@ bool SnippetList::Destroy() {
 
 	return true;
 }
-#if 0
-void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
-	EditorChangeType newStatus;
-	IEditorSymbols* editorSymbols = dynamic_cast<IEditorSymbols*>(m_parentFrame.GetEditorAndChangeType(this->m_editorChangeState, newStatus));
-
-	// If we lost the editor, or there was no change, then do nothing.
-	if(!editorSymbols || (newStatus == ECT_NO_CHANGE)) return;
-
-	bool newEditor = (newStatus == ECT_NEW_EDITOR);
-	this->m_editorSymbols = editorSymbols;
-
-	// Reload symbols
-	m_symbols.clear();
-	m_symbolStrings.Empty();
-	const int res = m_editorSymbols->GetSymbols(m_symbols);
-	if (res == 1) {
-		// reload symbol strings
-		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-			const SymbolRef& sr = *p;
-			m_symbolStrings.Add(m_editorSymbols->GetSymbolString(sr));
-		}
-		m_listBox->SetAllItems();
-	}
-	else if (res == 2) { // DEBUG: double implementation to view path in crash dump (remove when bug is solved)
-		// reload symbol strings
-		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
-			const SymbolRef& sr = *p;
-			m_symbolStrings.Add(m_editorSymbols->GetSymbolString(sr));
-		}
-		m_listBox->SetAllItems();
-	}
-	else {
-		m_listBox->SetAllItems(); // clear list
-		return;
-	}
-
-	// Save the change state for next time around, reseting the change token if we have a new editor.
-	this->m_editorChangeState = editorSymbols->GetChangeState();
-	if (newEditor) this->m_editorChangeState.changeToken = 0;
-
-	// Keep scrollpos so we can stay at the same pos
-	const unsigned int scrollPos = m_listBox->GetScrollPos(wxVERTICAL);
-
-	// Set current symbol
-	if (!m_symbols.empty()) {
-		if (!newEditor) 	m_listBox->SetScrollPos(wxVERTICAL, scrollPos);
-	}
-}
-#endif
 
 void SnippetList::OnSearch(wxCommandEvent& event) {
 	UpdateList();
@@ -261,8 +178,7 @@ void SnippetList::OnSearchChar(wxKeyEvent& event) {
 		m_listBox->SelectNext();
 		return;
 	case WXK_ESCAPE:
-		//if (event.ShiftDown()) m_parentFrame.CloseSymbolList();
-		//if (m_editorSymbols) m_parentFrame.FocusEditor(); //m_editorCtrl->SetFocus();
+		if (event.ShiftDown()) m_editorFrame.CloseSnippetList();
 		return;
 	}
 
@@ -273,21 +189,18 @@ void SnippetList::OnSearchChar(wxKeyEvent& event) {
 void SnippetList::OnAction(wxCommandEvent& WXUNUSED(event)) {
 	if(m_listBox->GetSelectedCount() != 1) return;
 
-	/*
 	const int hit = m_listBox->GetSelectedAction();
 
-	if (hit != wxNOT_FOUND && hit < (int)m_symbols.size()) {
-		// Go to symbol
-		m_editorSymbols->GotoSymbolPos(m_symbols[hit].start);
+	if (hit != wxNOT_FOUND && hit < (int)m_filteredActions.size()) {
+		//m_editorSymbols->GotoSymbolPos(m_symbols[hit].start);
+		//TODO: if they click on the snippet, run it?
 
-		// Close symbollist if user holds down shift or "m_keepOpen" is false.
-		if (!m_keepOpen || wxGetKeyState(WXK_SHIFT)) {
-			m_parentFrame.CloseSymbolList();
-		}
-		else if (!m_searchCtrl->IsEmpty()) {
+		if (wxGetKeyState(WXK_SHIFT)) {
+			m_editorFrame.CloseSnippetList();
+		} else if (!m_searchCtrl->IsEmpty()) {
 			m_searchCtrl->Clear();
 		}
-	}*/
+	}
 }
 
 // --- ActionList --------------------------------------------------------

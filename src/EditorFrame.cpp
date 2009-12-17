@@ -3223,11 +3223,11 @@ void EditorFrame::CloseSymbolList() {
 	m_frameManager.Update();
 }
 
-void EditorFrame::ShowSnippetList(bool keepOpen) {
+void EditorFrame::ShowSnippetList() {
 	if (m_snippetList) return; // already shown
 	
 	// Create the pane
-	m_snippetList = new SnippetList(*this, keepOpen);
+	m_snippetList = new SnippetList(*this);
 	wxAuiPaneInfo paneInfo;
 	paneInfo.Name(wxT("Snippet Shortcuts")).Right().Caption(_("Snippet Shortcuts")).BestSize(wxSize(150,50)); // defaults
 

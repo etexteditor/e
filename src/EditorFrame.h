@@ -113,6 +113,7 @@ public:
 		MENU_INCOMMING_TOOLBAR,
 		MENU_SHOWPROJECT,
 		MENU_SHOWSYMBOLS,
+		MENU_SHOWSNIPPETS,
 		MENU_SHIFT_PROJECT_FOCUS,
 		MENU_PREVIEW,
 		MENU_STATUSBAR,
@@ -268,6 +269,10 @@ public:
 	void ShowSymbolList(bool keepOpen=true);
 	virtual void CloseSymbolList();
 
+	// Snippet List (pane)
+	void ShowBundleList(bool keepOpen=true);
+	virtual void CloseBundleList();
+
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
 
@@ -407,6 +412,7 @@ private:
 	void OnMenuCommit(wxCommandEvent& event);
 	void OnMenuShowProject(wxCommandEvent& event);
 	void OnMenuShowSymbols(wxCommandEvent& event);
+	void OnMenuShowSnippets(wxCommandEvent& event);
 	void OnMenuSymbols(wxCommandEvent& event);
 	void OnMenuRevisionHistory(wxCommandEvent& event);
 	void OnMenuUndoHistory(wxCommandEvent& event);

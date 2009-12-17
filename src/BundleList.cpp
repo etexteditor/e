@@ -52,12 +52,27 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 	TmSyntaxHandler& m_syntaxHandler = services.GetSyntaxHandler();
 	PListHandler& plist = m_syntaxHandler.GetPListHandler();
 	
-	int bundleId = 10;
+	m_bundleStrings.Empty();
+	
+	//unsigned int caretPosition = services.GetPosition();
+	EditorCtrl* editorControl = services.GetEditorCtrl();
+	std::vector<const tmAction*> actions;
+
+	//Styler_Syntax syntaxHandler = editorControl.GetSyntaxStyler();
+	//const deque<const wxString*> scope = syntaxHandler.GetScope(caretPosition);
+	//syntaxHandler.GetAllActions(scope, actions);
+	
+	editorControl->GetAllActions(actions);
+
+	for(unsigned int c = 0; c < actions.size(); ++c) {
+		m_bundleStrings.Add(actions[c]->trigger);
+	}
+
+	/*int bundleId = 10;
 	const PListDict infoDict = plist.GetBundleInfo(bundleId);
 	const wxString bundleName = infoDict.wxGetString("name");
 	const vector<unsigned int> snippets =  plist.GetList(BUNDLE_SNIPPET, bundleId);
 	
-	m_bundleStrings.Empty();
 	for (unsigned int n = 0; n < snippets.size(); ++n) {
 		const unsigned int snippetId = snippets[n];
 
@@ -78,7 +93,7 @@ BundleList::BundleList(EditorFrame& services, bool keepOpen):
 		}
 
 		m_bundleStrings.Add(label);
-	}
+	}*/
 	m_listBox->SetAllItems();
 
 	// Add custom event handler (for up/down key events in the search box)

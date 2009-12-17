@@ -4150,6 +4150,13 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	MarkAsModified();
 };
 
+
+void EditorCtrl::GetAllActions(std::vector<const tmAction*>& actions) {
+	int caretPosition = GetPos();
+	const deque<const wxString*> scope = m_syntaxstyler.GetScope(caretPosition);
+	m_syntaxHandler.GetAllActions(scope, actions);
+};
+
 void EditorCtrl::OnCopy() {
 	wxString copytext;
 	if (m_lines.IsSelected()) copytext = GetSelText();

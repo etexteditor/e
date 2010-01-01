@@ -45,6 +45,7 @@ private:
 	void EndMovement();
 
 	void DoSearch(size_t count, int keyCode, wxChar c);
+	void NextMatch(size_t count, bool forward=true);
 	
 	void SelectRangeStart();
 	void SelectRangeEnd();
@@ -81,6 +82,7 @@ private:
 	bool m_select;
 	wxString m_cmd;
 	size_t m_searchPos;
+	size_t m_lastSearchPos;
 	wxString m_search;
 	std::vector<unsigned int> m_cursors;
 	bool m_reverse;

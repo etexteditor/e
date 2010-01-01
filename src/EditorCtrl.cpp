@@ -5088,6 +5088,32 @@ void EditorCtrl::SetSearchRangeCursor(size_t cursor, unsigned int pos) {
 	m_cursors[cursor] = pos;
 }
 
+search_result EditorCtrl::SearchDirect(const wxString& pattern, int options, size_t startpos, size_t endpos) const {
+	const bool regex = (options & FIND_USE_REGEX) != 0;
+	const bool matchcase = (options & FIND_MATCHCASE) != 0;;
+	const bool forward = (options & FIND_REVERSE) == 0;
+
+	// Direct interface to document search
+	cxLOCKDOC_READ(m_doc)
+		if (regex) {
+			if (forward) return doc.RegExFind(pattern, startpos, matchcase, NULL, endpos);
+			else {
+				search_result sr = doc.RegExFindBackwards(pattern, startpos, matchcase);
+				if (sr.start < endpos) sr.error_code = -1;
+				return sr;
+			}
+		}
+		else {
+			if (forward) return doc.Find(pattern, startpos, matchcase, endpos);
+			else {
+				search_result sr = doc.FindBackwards(pattern, startpos, matchcase);
+				if (sr.start < endpos) sr.error_code = -1;
+				return sr;
+			}
+		}
+	cxENDLOCK
+}
+
 bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int options, bool dir_forward) {
 	wxASSERT(start_pos >= 0 && start_pos <= m_lines.GetLength());
 	bool matchcase = options & FIND_MATCHCASE;

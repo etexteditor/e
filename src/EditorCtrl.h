@@ -267,6 +267,7 @@ public:
 	virtual void ClearSearchHighlight();
 
 	// SnippetHandler and EditorFrame use 3 of the following methods; may need some more refactoring here to capture that
+	search_result SearchDirect(const wxString& pattern, int options, size_t startpos, size_t endpos=0) const;
 	wxString ParseReplaceString(const wxString& replacetext, const map<unsigned int,interval>& captures, const vector<char>* source=NULL) const;
 	search_result RegExFind(const pcre* re, const pcre_extra* study, unsigned int start_pos, map<unsigned int,interval> *captures, unsigned int end_pos, int search_options=0) const;
 	search_result RegExFind(const wxString& searchtext, unsigned int start_pos, bool matchcase, map<unsigned int,interval> *captures=NULL, unsigned int end_pos=0) const;

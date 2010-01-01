@@ -214,6 +214,14 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 			case '%':
 				DoMovement(count, mem_fun_ref(&EditorCtrl::GotoMatchingBracket));
 				break;
+			case 'n':
+				NextMatch(count, true);
+				EndMovement();
+				break;
+			case 'N':
+				NextMatch(count, false);
+				EndMovement();
+				break;
 
 			// Selection
 			case ',':
@@ -396,7 +404,8 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 	case '/':
 		// keep selection but move caret to end
 		if (m_editor.IsSelected()) {
-			m_editor.SetPos(m_editor.GetSelections()[0].end);
+			m_lastSearchPos = m_editor.GetSelections()[0].end;
+			m_editor.SetPos(m_lastSearchPos);
 		}
 		Clear();
 		return;
@@ -416,9 +425,115 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 
 	if (startpos == m_searchPos) return; // no matches
 
+	m_lastSearchPos = startpos;
 	m_editor.SetPos(startpos);
 	m_editor.Select(startpos, endpos);
 	m_editor.SetSearchHighlight(m_search, FIND_USE_REGEX);
+}
+
+void CommandHandler::NextMatch(size_t count, bool forward) {
+	wxString pattern;
+	bool regex = true;
+	bool select = true;
+	bool usesel = false;
+	size_t pos = m_editor.GetPos();
+
+	// Get pattern and startpos
+	if (m_editor.IsSelected()) {
+		if (!m_search.empty() && m_lastSearchPos == pos) {
+			pattern = m_search;
+		}
+		else {
+			// search for selection content 
+			pattern = m_editor.GetFirstSelection();
+			usesel = true;
+			regex = false;
+		}
+		pos = m_editor.GetSelections()[0].end;
+	}
+	else if (!m_search.empty()) {
+		pattern = m_search;
+		select = false;
+	}
+	else return; // nothing to search after
+
+	// Set options
+	int options = FIND_MATCHCASE;
+	if (regex) options |= FIND_USE_REGEX;
+	if (!forward) options |= FIND_REVERSE;
+
+	if (m_editor.HasSearchRange()) {
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+
+		// Copy old selections before removing them
+		const vector<interval> selections = m_editor.GetSelections();
+		m_editor.RemoveAllSelections();
+	
+		// Go to next match in each range
+		for (size_t i = 0; i < ranges.size(); ++i) {
+			const interval& iv = ranges[i];
+			const size_t cpos = cursors[i];
+
+			// Get pattern from selection if no search pattern
+			if (usesel) {
+				bool haspattern = false;
+				for (vector<interval>::const_iterator p = selections.begin(); p != selections.end(); ++p) {
+					if (p->start == cpos || p->end == cpos) {
+						pattern = m_editor.GetText(p->start, p->end);
+						haspattern = true;
+						break;
+					}
+				}
+				if (!haspattern) continue;
+			}
+
+			// Do the search
+			size_t startpos = cpos;
+			size_t endpos = cpos;
+			const size_t limit = forward ? iv.end : iv.start;
+			for (size_t n = 0; n < count; ++n) {
+				const size_t searchpos = forward ? endpos : startpos;
+				const search_result sr = m_editor.SearchDirect(pattern, options, searchpos, limit);
+				if (sr.error_code < 0) return; // no matches
+				if (!select && n == 0 && sr.start == pos) ++count; // avoid reselect
+				
+				startpos = sr.start;
+				endpos = sr.end;
+			}
+
+			// Show result
+			if (select)	m_editor.AddSelection(startpos, endpos);
+			const size_t newcpos = select ? endpos : startpos;
+			if (cpos == pos) {
+				m_editor.SetPos(newcpos);
+				m_lastSearchPos = newcpos;
+			}
+			m_editor.SetSearchRangeCursor(i, newcpos);
+		}
+	}
+	else {
+		// Do the search
+		size_t startpos = pos;
+		size_t endpos = pos;
+		for (size_t i = 0; i < count; ++i) {
+			const size_t searchpos = forward ? endpos : startpos;
+			const search_result sr = m_editor.SearchDirect(pattern, options, searchpos);
+			if (sr.error_code < 0) return; // no matches
+			if (!select && i == 0 && sr.start == pos) ++count; // avoid reselect
+			
+			startpos = sr.start;
+			endpos = sr.end;
+		}
+
+		// Show result
+		if (select) m_editor.Select(startpos, endpos);
+		const size_t newcpos = select ? endpos : startpos;
+		m_editor.SetPos(newcpos);
+		m_lastSearchPos = newcpos;
+	}
+
+	m_editor.SetSearchHighlight(pattern, regex ? FIND_USE_REGEX : 0);
 }
 
 template<class Op> void CommandHandler::DoMovement(size_t count, const Op& f) {

@@ -725,7 +725,7 @@ const wxString& eApp::AppPath() const {return m_appPath;}
 const wxString& eApp::AppDataPath() const {return m_appDataPath;}
 
 wxString eApp::CreateTempAppDataFile() {
-	const wxString tempPath = m_appPath + wxT("temp") + wxFILE_SEP_PATH;
+	const wxString tempPath = m_appDataPath + wxT("temp") + wxFILE_SEP_PATH;
 	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
 	return wxFileName::CreateTempFileName(tempPath);
 }

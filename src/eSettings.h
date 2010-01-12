@@ -16,7 +16,7 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/string.h>
+#include <wx/string.h>
 #endif
 
 #include "jsonval.h"
@@ -24,7 +24,7 @@
 #include "auto_vector.h"
 #include "ISettings.h"
 
-// pre-declarations
+
 class RemoteProfile;
 
 enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
@@ -133,8 +133,8 @@ public:
 
 private:
 	// Recent files (support functions)
-	void AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max);
-	void GetRecents(const wxJSONValue& jarray, wxArrayString& recents) const;
+	static void AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max);
+	static void GetRecents(const wxJSONValue& jarray, wxArrayString& recents);
 
 	// Remote profile (support functions)
 	RemoteProfile* DoGetRemoteProfile(size_t profile_id);

@@ -1,3 +1,28 @@
+24-nov-2009 - 1.0.41
+  o Fix: symbols in statusbar was out of sync
+
+  o Several improvements to CurrentTabs Popup. [adamv]
+  
+  o If opening > 3 files w/ File>Open, show a progress box. [adamv]
+
+  o If only one completion is found, auto-complete it. [adamv]
+
+  o Allow scrolling of tabs with mouse wheel. [adamv]
+  
+  o Enable restart of find-previous. [adamv]
+  
+  o FS#374 - Fix 'select' EditorCtrl select context menu. [adamv]
+  
+  o FS#181 - Column count in status bar now factors in tabs. [adamv]
+  
+  o FS#15 - Show project-relative path in GotoFileDlg. [adamv]
+
+  o FS#383 - Fix F12 command window toggle breaks after Ctrl-R [adamv]
+  
+  o FS#393 - Don't modify the selection if none exists. [adamv]
+  
+  o Lots of minor bugfixes.
+
 16-oct-2009 - 1.0.40
   o Added Multi Window support.
   

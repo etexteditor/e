@@ -50,6 +50,31 @@
 // Document Icons
 #include "document.xpm"
 
+// Generates a string appropriate for a Drag Command's TM_MODIFIER_FLAGS
+// Note that we remap Windows modifier keys to the equivalents expected by TextMate commands.
+static wxString get_modifier_key_env() {
+	wxString modifiers;
+	if (wxGetKeyState(WXK_SHIFT))
+		modifiers += wxT("SHIFT");
+
+	if (wxGetKeyState(WXK_ALT)) {
+		if (!modifiers.empty()) modifiers += wxT('|');
+		modifiers += wxT("CONTROL");
+	}
+
+	if (wxGetKeyState(WXK_WINDOWS_LEFT) || wxGetKeyState(WXK_WINDOWS_RIGHT)) {
+		if (!modifiers.empty()) modifiers += wxT('|');
+		modifiers += wxT("OPTION");
+	}
+
+	if (wxGetKeyState(WXK_CONTROL)) {
+		if (!modifiers.empty()) modifiers += wxT('|');
+		modifiers += wxT("COMMAND");
+	}
+
+	return modifiers;
+}
+
 inline bool Isalnum(wxChar c) {
 #ifdef __WXMSW__
 	return ::IsCharAlphaNumeric(c) != 0;
@@ -89,7 +114,7 @@ private:
 
 enum ShellOutput {soDISCARD, soREPLACESEL, soREPLACEDOC, soINSERT, soSNIPPET, soHTML, soTOOLTIP, soNEWDOC};
 
-enum EDITORCTL_IDS {
+enum EditorCtrl_IDs {
 	TIMER_FOLDTOOLTIP = 100,
 	ID_LEFTSCROLL
 };
@@ -232,7 +257,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_syntaxstyler.UpdateSyntax();
 
 	// Init Folding
-	FoldingInvalidate();
+	FoldingClear();
 }
 
 
@@ -288,7 +313,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	Init();
 
 	// Init Folding
-	FoldingInvalidate();
+	FoldingClear();
 }
 
 void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings, unsigned int subid) {
@@ -324,7 +349,7 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 	// Set the syntax to match the new path
 	if (syntax.empty()) {
 		m_syntaxstyler.UpdateSyntax();
-		FoldingInvalidate(); // Init Folding
+		FoldingClear(); // Init Folding
 	}
 	else SetSyntax(syntax);
 
@@ -460,8 +485,8 @@ EditorCtrl::~EditorCtrl() {
 
 // Notify mate that we have finished editing document
 void EditorCtrl::NotifyParentMate() {
-	if (!m_mate.empty()) {
 #ifdef __WXMSW__
+	if (!m_mate.empty()) {
 		HWND hWndRecv = ::FindWindow(wxT("wxWindowClassNR"), m_mate);
 		if (hWndRecv) {
 			const wxString cmd = wxT("DONE");
@@ -474,8 +499,8 @@ void EditorCtrl::NotifyParentMate() {
 			cds.lpData = (void*)msg.data();
 			::SendMessage(hWndRecv, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds );
 		}
-#endif
 	}
+#endif
 }
 
 void EditorCtrl::SaveSettings(unsigned int i, eFrameSettings& settings) {
@@ -1092,14 +1117,16 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 			const wxString& ignorePattern = m_syntaxHandler.GetIndentNonePattern(scope);
 			if (!ignorePattern.empty()) {
 				const search_result res = RegExFind(ignorePattern, linestart, false, NULL, lineend);
-				if (res.error_code > 0) continue;
+				if (res.error_code > 0)
+					continue;
 			}
 
 			// Check if indentation should increase
 			const wxString& increasePattern = m_syntaxHandler.GetIndentIncreasePattern(scope);
 			if (!increasePattern.empty()) {
 				const search_result res = RegExFind(increasePattern, linestart, false, NULL, lineend);
-				if (res.error_code > 0) return m_lines.GetLineIndent(i) + m_indent;
+				if (res.error_code > 0) 
+					return m_lines.GetLineIndent(i) + m_indent;
 			}
 
 			/*// Check if only next line should be indented
@@ -1403,32 +1430,31 @@ bool EditorCtrl::DoTabTrigger(unsigned int wordstart, unsigned int wordend) {
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(wordend);
 	const vector<const tmAction*> actions = m_syntaxHandler.GetActions(trigger, scope);
 
+	if (actions.empty()) return false; // no action found for trigger
+
 	//wxLogDebug(wxT("%s (%u)"), trigger, snippets.size());
-	if (!actions.empty()) {
-		//wxLogDebug(wxT("%s"), actions[0]->content);
+	//wxLogDebug(wxT("%s"), actions[0]->content);
 
-		// Present user with a list of actions
-		int actionIndex = 0;
-		if (actions.size() > 1) {
-			actionIndex = ShowPopupList(actions);
-			if (actionIndex == -1) return true;
-		}
-
-		// Clean up first
-		if (!m_lines.IsSelectionShadow()) RemoveAllSelections();
-		m_currentSel = -1;
-		m_snippetHandler.Clear(); // stop any active snippets
-
-		// Remove the trigger
-		Freeze();
-		RawDelete(wordstart, wordend);
-
-		// Do the Action
-		DoAction(*actions[actionIndex], NULL, true);
-		return true;
+	// Present user with a list of actions
+	int actionIndex = 0;
+	if (actions.size() > 1) {
+		actionIndex = ShowPopupList(actions);
+		if (actionIndex == -1)
+			return true;
 	}
 
-	return false; // no action found for trigger
+	// Clean up first
+	if (!m_lines.IsSelectionShadow()) RemoveAllSelections();
+	m_currentSel = -1;
+	m_snippetHandler.Clear(); // stop any active snippets
+
+	// Remove the trigger
+	Freeze();
+	RawDelete(wordstart, wordend);
+
+	// Do the Action
+	DoAction(*actions[actionIndex], NULL, true);
+	return true;
 }
 
 void EditorCtrl::FilterThroughCommand() {
@@ -1691,9 +1717,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 						RawDelete(selStart, selEnd);
 						SetPos(selStart);
 
-						if (!output.empty()) {
+						if (!output.empty())
 							m_snippetHandler.StartSnippet(this, output, env, action.bundle);
-						}
 					}
 					break;
 
@@ -1749,9 +1774,8 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 					mDate.SetMillisecond(0);
 					modDate.SetMillisecond(0);
 
-					if (mDate != modDate) {
+					if (mDate != modDate)
 						LoadText(m_path.GetFullPath());
-					}
 				}
 			}
 		}
@@ -1793,9 +1817,8 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 			}
 		}
 
-		if (text.length() == 1) {
+		if (text.length() == 1)
 			autoPair = AutoPair(pos, text);
-		}
 	}
 
 	// Insert the text
@@ -1812,7 +1835,8 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 		unsigned int pairpos = pos + byte_len;
 		m_lines.SetPos(pairpos);
 
-		if (!autoPair.empty()) {
+		if (autoPair.empty()) m_autopair.AdjustEndsUp(byte_len); // Adjust containing pairs
+		else {
 			// insert paired char
 			unsigned int pair_len = 0;
 			cxLOCKDOC_WRITE(m_doc)
@@ -1822,17 +1846,12 @@ unsigned int EditorCtrl::RawInsert(unsigned int pos, const wxString& text, bool 
 			StylersInsert(pairpos, pair_len);  // Update stylers
 			byte_len += pair_len;
 		}
-		else {
-			// Adjust containing pairs
-			m_autopair.AdjustEndsUp(byte_len);
-		}
 	}
 	else {
 		// Ensure carret stays at same position
 		unsigned int caretPos = m_lines.GetPos();
 		if (caretPos > pos) m_lines.SetPos(caretPos + byte_len);
 	}
-
 
 	MarkAsModified();
 	return byte_len;
@@ -1846,9 +1865,8 @@ wxString EditorCtrl::GetAutoPair(unsigned int pos, const wxString& text) {
 #ifdef __WXDEBUG__
 	unsigned int debug = 0;
 	if (debug == 1) {
-		for (map<wxString, wxString>::const_iterator i = smartPairs.begin(); i != smartPairs.end(); ++i) {
+		for (map<wxString, wxString>::const_iterator i = smartPairs.begin(); i != smartPairs.end(); ++i)
 			wxLogDebug(wxT("%s -> %s"), i->first.c_str(), i->second.c_str());
-		}
 	}
 #endif
 
@@ -2208,9 +2226,8 @@ unsigned int EditorCtrl::InsertNewline() {
 				const unsigned int newlinestart = pos + newlinelen;
 
 				// Set correct indentation for new line
-				if (!newindent.empty()) {
+				if (!newindent.empty())
 					byte_len += RawInsert(newlinestart, newindent, false);
-				}
 			}
 		}
 	}
@@ -2324,7 +2341,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 					cxLOCKDOC_READ(m_doc)
 						for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < lineend; ++dbi) {
 							if (*dbi == '\t') {
-							if (spaces == 0) ++curLen;
+								if (spaces == 0) ++curLen;
 								else break; // spaces smaller than tabWidth ends indent
 							}
 							else if (*dbi == ' ') {
@@ -2360,7 +2377,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 							doc_byte_iter dbi(doc, linestart);
 							for (; (unsigned int)dbi.GetIndex() < lineend; ++dbi) {
 								if (*dbi == '\t') {
-								if (spaces == 0) ++end;
+									if (spaces == 0) ++end;
 									else break; // spaces smaller than tabWidth ends indent
 								}
 								else if (*dbi == ' ') {
@@ -2897,10 +2914,8 @@ void EditorCtrl::SetPath(const wxString& newpath) {
 	m_tmDirectory.clear();
 
 	// Set the syntax to match the new path
-	if (m_syntaxstyler.UpdateSyntax()) {
-		// Redraw (since syntax for this file has changed)
-		DrawLayout();
-	}
+	if (m_syntaxstyler.UpdateSyntax())
+		DrawLayout(); // Redraw (since syntax for this file has changed)
 }
 
 bool EditorCtrl::IsModified() const {
@@ -2959,12 +2974,14 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 			if (isRemoteItem) {
 				if (!rp) rp = m_parentFrame.GetRemoteProfile(filepath, false);
 				const wxDateTime fileDate = m_parentFrame.GetRemoteThread().GetModDate(filepath, *rp);
-				if (modifiedDate == fileDate) doReload = false; // No need to reload unchanged file
+				if (modifiedDate == fileDate)
+					doReload = false; // No need to reload unchanged file
 				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
 			}
 			else {
 				const wxFileName path(filepath);
-				if (path.FileExists() && modifiedDate == path.GetModificationTime()) doReload = false; // No need to reload unchanged file
+				if (path.FileExists() && modifiedDate == path.GetModificationTime())
+					doReload = false; // No need to reload unchanged file
 				else wxLogDebug(wxT("file %s needs to be reloaded"), filepath.c_str());
 			}
 		}
@@ -2991,19 +3008,22 @@ cxFileResult EditorCtrl::OpenFile(const wxString& filepath, wxFontEncoding enc, 
 			}
 		}
 #endif
-		if (!doReload) return cxFILE_OK;
+
+		if (!doReload)
+			return cxFILE_OK;
 	}
 
 	return LoadText(filepath, enc, rp);
 }
 
 bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const RemoteProfile* rp) {
-	// No reason to set doc if we are already there
 	doc_id oldDoc;
 	cxLOCKDOC_READ(m_doc)
 		oldDoc = doc.GetDocument();
 	cxENDLOCK
-	if (di == oldDoc) return true;
+
+	if (di == oldDoc) // No reason to set doc if we are already there
+		return true;
 
 	// If the current doc is an clean draft (no revs & no parent)
 	// we have to remember to delete it after setting the new doc
@@ -3094,7 +3114,7 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 	UpdateParentPanels();
 
 	// Notify that we have changed document
-	const doc_id docId = di; // AdamV: Does this exist just to be on the stack in bug reports?
+	const doc_id docId = di; // just to be on the stack in bug reports
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), this, m_parentFrame.GetId());
 
 	return true;
@@ -3186,7 +3206,7 @@ void EditorCtrl::StylersClear() {
 void EditorCtrl::StylersInvalidate() {
 	m_search_hl_styler.Invalidate();
 	m_syntaxstyler.Invalidate();
-	FoldingInvalidate();
+	FoldingClear();
 }
 
 void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
@@ -3450,10 +3470,8 @@ bool EditorCtrl::DeleteInShadow(unsigned int pos, bool nextchar) {
 		if (m_autopair.BeforeOuterPair(del_end))
 			m_autopair.AdjustIntervalsDown(byte_len);
 
-		if (atCaret) {
-			// Adjust containing pairs
+		if (atCaret) // Adjust containing pairs
 			m_autopair.AdjustEndsDown(byte_len);
-		}
 
 		// Restore shadow selection
 		m_lines.AddSelection(i->start - dl, (i->end - dl) - byte_len);
@@ -3693,9 +3711,8 @@ void EditorCtrl::SelectLines(const vector<unsigned int>& sel_lines) {
 		unsigned int linestart, lineend;
 		m_lines.GetLineExtent(*i, linestart, lineend);
 
-		if (i > sel_lines.begin() && *i == lastline+1 && sel != -1) {
+		if (i > sel_lines.begin() && *i == lastline+1 && sel != -1)
 			m_lines.UpdateSelection(sel, firststart, lineend);
-		}
 		else {
 			sel = m_lines.AddSelection(linestart, lineend);
 			firststart = linestart;
@@ -4060,9 +4077,8 @@ void EditorCtrl::SwapLines(unsigned int line1, unsigned int line2) {
 	const unsigned int lineend2 = m_lines.GetLineEndpos(line2, true);
 
 	// Move top line to end of bottom line
-	if (linestart != lineend) {
+	if (linestart != lineend)
 		RawMove(linestart, lineend, lineend2);
-	}
 
 	if (!m_lines.IsLineVirtual(line2) && linestart2 != lineend2) {
 		const unsigned int offset = lineend - linestart;
@@ -4257,9 +4273,8 @@ void EditorCtrl::Transpose() {
 		}
 
 		// Re-select
-		for (vector<interval>::iterator p = newsel.begin(); p != newsel.end(); ++p) {
+		for (vector<interval>::iterator p = newsel.begin(); p != newsel.end(); ++p)
 			m_lines.AddSelection(p->start, p->end);
-		}
 	}
 
 	Freeze();
@@ -4279,10 +4294,7 @@ void EditorCtrl::DelCurrentLine(bool fromPos) {
 			const unsigned int realend = m_lines.GetLineEndpos(lineid, false);
 			if (pos < realend) Delete(pos, realend);
 		}
-		else {
-			// Delete from pos to end-of-line
-			Delete(pos, lineend);
-		}
+		else Delete(pos, lineend); // Delete from pos to end-of-line
 	}
 	else {
 		// Delete entire line
@@ -4388,7 +4400,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	wxEndBusyCursor();
 
 	// We also have to reparse the foldings
-	FoldingInvalidate();
+	FoldingClear();
 
 	MarkAsModified(); // flush symbol cache
 
@@ -5146,9 +5158,8 @@ bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int option
 		if (dir_forward) {
 			// Find first range containing start_pos
 			vector<interval>::const_iterator p = m_searchRanges.begin();
-			for (; p != m_searchRanges.end(); ++p) {
+			for (; p != m_searchRanges.end(); ++p)
 				if (start_pos >= p->start && start_pos < p->end) break;
-			}
 
 			if (p != m_searchRanges.end()) {
 				unsigned int rangestart = start_pos;
@@ -5167,9 +5178,8 @@ bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int option
 		else {
 			// Find first range containing start_pos
 			vector<interval>::reverse_iterator p = m_searchRanges.rbegin();
-			for (; p != m_searchRanges.rend(); ++p) {
+			for (; p != m_searchRanges.rend(); ++p)
 				if (start_pos > p->start && start_pos <= p->end) break;
-			}
 
 			if (p != m_searchRanges.rend()) {
 				unsigned int rangestart = start_pos;
@@ -5267,7 +5277,8 @@ cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
 		// Avoid hitting same zero-length selection
 		if (iv.start == iv.end) {
 			++start_pos;
-			if (start_pos > (int)m_lines.GetLength()) return cxNOT_FOUND;
+			if (start_pos > (int)m_lines.GetLength()) 
+				return cxNOT_FOUND;
 		}
 	}
 	else start_pos = m_lines.GetPos();
@@ -5278,7 +5289,8 @@ cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
 	if (result == cxNOT_FOUND && start_pos > 0) {
 		// Restart search from top
 		start_pos = m_searchRanges.empty() ? 0 : m_searchRanges[0].start;
-		if (DoFind(text, start_pos, options)) result = cxFOUND_AFTER_RESTART;
+		if (DoFind(text, start_pos, options)) 
+			result = cxFOUND_AFTER_RESTART;
 	}
 
 	// Make sure that next search has the new starting point
@@ -5407,9 +5419,8 @@ search_result EditorCtrl::RegExFind(const wxString& searchtext, unsigned int sta
 
 	// Check if we have the regex cached
 	if (m_re) {
-		if (searchtext == m_regex_cache && options == m_options_cache) {
-			// We might want to study the regex the first time we end here
-		}
+		// We might want to study the regex the first time we end here
+		if (searchtext == m_regex_cache && options == m_options_cache) {}
 		else {
 			free(m_re);
 			m_re = NULL;
@@ -5461,6 +5472,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 		&error,     // for error message
 		&erroffset, // for error offset
 		NULL);      // use default character tables
+
 	if (!re) {
 		sr.error_code = -4; // invalid pattern
 		return sr;
@@ -5532,6 +5544,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& 
 		&error,     // for error message
 		&erroffset, // for error offset
 		NULL);      // use default character tables
+
 	if (!re) {
 		sr.error_code = -4; // invalid pattern
 		return sr;
@@ -5582,9 +5595,8 @@ search_result EditorCtrl::RegExFindBackwards(const wxString& searchtext, unsigne
 
 	// Check if we have the regex cached
 	if (m_re) {
-		if (searchtext == m_regex_cache && options == m_options_cache) {
-			// We might want to study the regex the first time we end here
-		}
+		// We might want to study the regex the first time we end here
+		if (searchtext == m_regex_cache && options == m_options_cache) {}
 		else {
 			free(m_re);
 			m_re = NULL;
@@ -5785,10 +5797,8 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 
 		// Get the replacement string
 		wxString textNew;
-		if (!replacetext.empty()) {
-			if (options & FIND_USE_REGEX) textNew = ParseReplaceString(replacetext, captures);
-			else textNew = replacetext;
-		}
+		if (!replacetext.empty())
+			textNew = (options & FIND_USE_REGEX) ? ParseReplaceString(replacetext, captures) : textNew;
 
 		// Delete original
 		if (result.start != result.end) {
@@ -6149,9 +6159,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				{
 					vector<SymbolRef> symbols;
 					m_syntaxstyler.GetSymbols(symbols);
-					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
+					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p)
 						wxLogDebug(wxT("%d-%d -> \"%s\" -> \"%s\""), p->start, p->end, GetText(p->start, p->end).c_str(), p->transform->c_str());
-					}
 				}
 				break;
 
@@ -6275,9 +6284,8 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				//if (key >= WXK_SPECIAL1 && key <= WXK_SPECIAL20) break;
 
 				//if (wxIsprint(c)) { // Normal chars (does not work with 'ae', 'oslash', 'a-circle', etc.??)
-				if ((unsigned int)c > 31) { // Normal chars
+				if ((unsigned int)c > 31) // Normal chars
 					InsertChar(c);
-				}
 				else {
 					event.Skip();
 					return; // do nothing if we don't know the char
@@ -6979,12 +6987,14 @@ void EditorCtrl::CursorToPrevCurrent() {
 }
 
 void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible, bool multiSelect) {
-	wxASSERT(oldpos >= 0 && oldpos <= m_lines.GetLength());
-	wxASSERT(newpos >= 0 && newpos <= m_lines.GetLength());
+	wxASSERT(0 <= oldpos && oldpos <= m_lines.GetLength());
+	wxASSERT(0 <= newpos && newpos <= m_lines.GetLength());
 	if (oldpos == newpos) return; // Empty selection
 
 	// If alt key is down do a block selection
-	if (!wxGetKeyState(WXK_ALT)) m_blockKeyState = BLOCKKEY_NONE; // may not have catched keyup
+	if (!wxGetKeyState(WXK_ALT))
+		m_blockKeyState = BLOCKKEY_NONE; // may not have caught keyup
+
 	if (m_blockKeyState != BLOCKKEY_NONE) {
 		if (m_blockKeyState == BLOCKKEY_INIT) {
 			// Get start location
@@ -7003,11 +7013,13 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 
 	int sel = -1;
 
-	if (m_lines.IsSelected()) {
+	if (!m_lines.IsSelected())
+		sel = m_lines.AddSelection(oldpos, newpos);
+	else {
 		// Get the selections
 		const vector<interval>& selections = m_lines.GetSelections();
 
-		// Check if we are at the start or end of a selection
+		// Check if we are at the start or end of a selection, and extend that one.
 		for (unsigned int i = 0; i < selections.size(); ++i) {
 			if (selections[i].end == oldpos) {
 				sel = m_lines.UpdateSelection(i, selections[i].start, newpos);
@@ -7021,13 +7033,13 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 			}
 		}
 
-		// We were not in connection with any current selections
+		// Otherwise, we were not in connection with any current selections so start a new one.
 		if (!multiSelect) m_lines.RemoveAllSelections();
 		sel = m_lines.AddSelection(oldpos, newpos);
 	}
-	else sel = m_lines.AddSelection(oldpos, newpos);
 
-	if (makeVisible && sel != -1) MakeSelectionVisible();
+	if (makeVisible && sel != -1)
+		MakeSelectionVisible();
 }
 
 bool EditorCtrl::GetNextObjectScope(const wxString& scope, size_t pos, interval& iv, interval& iv_inner) const {
@@ -7478,6 +7490,7 @@ wxString EditorCtrl::GetFirstSelection() const {
 	cxENDLOCK
 }
 
+// Get the selected text
 wxString EditorCtrl::GetSelText() const {
 	if (!m_lines.IsSelected()) return wxT("");
 
@@ -7485,10 +7498,9 @@ wxString EditorCtrl::GetSelText() const {
 	const vector<interval>& selections = m_lines.GetSelections();
 
 	cxLOCKDOC_READ(m_doc)
-		// Get the selected text
 		for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-			if (iv > selections.begin()) text += wxT('\n'); // Add newline between multiple selections
-
+			if (iv > selections.begin()) // Add newline between multiple selections
+				text += wxT('\n');
 			text += doc.GetTextPart((*iv).start, (*iv).end);
 		}
 	cxENDLOCK
@@ -7740,7 +7752,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		if (!event.ShiftDown() && !fp.xy_outbound && m_lines.IsSelected() && !m_lines.IsSelectionShadow()) {
 			const vector<interval>& sels = m_lines.GetSelections();
 			for (vector<interval>::const_iterator p = sels.begin(); p != sels.end(); ++p) {
-				if ((int)p->start <= fp.pos && (int)p->end >= fp.pos) {
+				if ((int)p->start <= fp.pos && fp.pos <= (int)p->end) {
 					isDragging = true;
 					if (event.ControlDown() && p->start == p->end) {
 						// ctrl-clicking a zero length selection removes it
@@ -7759,7 +7771,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 		if (!isDragging) {
 			// If not multiselecting remove previous selections
 			// Shadow selections are removed if the click is outside
-			if (m_lines.IsSelectionShadow() || (!event.ControlDown() && !event.ShiftDown())) {
+			if (m_lines.IsSelectionShadow() || !(event.ControlDown() || event.ShiftDown())) {
 				if (fp.xy_outbound) m_lines.RemoveAllSelections();
 				else m_lines.RemoveAllSelections(true, fp.pos);
 				m_currentSel = -1;
@@ -7767,13 +7779,10 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 			}
 
 			// Check if we should make new selection
-			if (event.ShiftDown()) {
+			if (event.ShiftDown()) // SHIFT selects from the last point
 				SelectFromMovement(lastpos, fp.pos, false);
-			}
-			else if (event.ControlDown()) {
-				// Make zero length selection
+			else if (event.ControlDown()) // CTRL starts a new multi selection at this point
 				m_currentSel = m_lines.AddSelection(fp.pos, fp.pos);
-			}
 		}
 	}
 
@@ -7781,8 +7790,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 	DrawLayout();
 
-	// Make sure we capure all mouse events
-	// this is released in OnMouseLeftUp()
+	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
 	//wxLogDebug(wxT("EditorCtrl::CaptureMouse() %d"), event.LeftDown());
 	CaptureMouse();
 }
@@ -7838,8 +7846,46 @@ void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {
 	else PopupMenu(&contextMenu);
 }
 
+static bool should_start_drag(const wxPoint& start, const wxPoint& end) {
+	// If no start position was given, we're not dragging.
+	if (start == wxDefaultPosition) return false;
+
+	// Drag metric can be changed by user at any time, so always get it.
+	const int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X);
+	const int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y);
+
+	return (abs(end.x - start.x) > drag_x_threshold) ||
+			  (abs(end.y - start.y) > drag_y_threshold);
+}
+
+// Start drag-and-drop of selected text.
+void EditorCtrl::StartDragSelectedText(void) {
+	wxDropSource dragSource(this);
+	if (m_lines.IsMultiSelected()) {
+		MultilineDataObject* mdo = new MultilineDataObject;
+		const vector<interval>& selections = m_lines.GetSelections();
+		cxLOCKDOC_READ(m_doc)
+			// Get the selected text
+			for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv)
+				mdo->AddText(doc.GetTextPart((*iv).start, (*iv).end));
+		cxENDLOCK
+
+		wxDataObjectComposite compObject;
+		compObject.Add(mdo, true);
+		compObject.Add(new wxTextDataObject(GetSelText()));
+		
+		dragSource.SetData(compObject);
+		dragSource.DoDragDrop(wxDrag_DefaultMove);
+	}
+	else {
+		wxTextDataObject textObject(GetSelText());				
+		dragSource.SetData(textObject);
+		dragSource.DoDragDrop(wxDrag_DefaultMove);
+	}
+}
+
 void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
-	// Get Mouse location
+	// Editor-relative mouse position of this event
 	const wxPoint mpos = ClientPosToEditor(event.GetX(), event.GetY());
 
 	// Close tooltip on motion
@@ -7847,53 +7893,18 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 		m_revTooltip.Hide();
 	}*/
 
-	if (event.LeftIsDown() && HasCapture()) {
-		wxASSERT(m_sel_start >= 0 && m_sel_start <= (int)m_lines.GetLength());
-		wxASSERT(m_sel_end >= 0 && m_sel_end <= (int)m_lines.GetLength());
+	const bool click_and_drag = event.LeftIsDown() && HasCapture();
+	if (click_and_drag) {
+		wxASSERT(0 <= m_sel_start && m_sel_start <= (int)m_lines.GetLength());
+		wxASSERT(0 <= m_sel_end && m_sel_end <= (int)m_lines.GetLength());
 
-		// Find out what is under mouse
-		const full_pos fp = m_lines.ClickOnLine(mpos.x, mpos.y);
 		MakeCaretVisible();
 
 		// Check if we should start dragging
-		if (m_dragStartPos != wxDefaultPosition) {
-			// We will start dragging if we have moved beyond a couple of pixels
-			const int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X);
-			const int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y);
-
-			if (abs(mpos.x - m_dragStartPos.x) > drag_x_threshold ||
-				abs(mpos.y - m_dragStartPos.y) > drag_y_threshold)
-			{
-				wxLogDebug(wxT("Starting text drag"));
-
-				// Start drag
-				wxDropSource dragSource(this);
-				if (m_lines.IsMultiSelected()) {
-					MultilineDataObject* mdo = new MultilineDataObject;
-					const vector<interval>& selections = m_lines.GetSelections();
-					cxLOCKDOC_READ(m_doc)
-						// Get the selected text
-						for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-							mdo->AddText(doc.GetTextPart((*iv).start, (*iv).end));
-						}
-					cxENDLOCK
-
-					wxDataObjectComposite compObject;
-					compObject.Add(mdo, true);
-					compObject.Add(new wxTextDataObject(GetSelText()));
-					
-					dragSource.SetData(compObject);
-					dragSource.DoDragDrop(wxDrag_DefaultMove);
-				}
-				else {
-					wxTextDataObject textObject(GetSelText());				
-					dragSource.SetData(textObject);
-					dragSource.DoDragDrop(wxDrag_DefaultMove);
-				}
-
-				m_dragStartPos = wxDefaultPosition; // reset drag state
-			}
-
+		if (should_start_drag(m_dragStartPos, mpos)) {
+			wxLogDebug(wxT("Starting text drag"));
+			StartDragSelectedText();
+			m_dragStartPos = wxDefaultPosition; // reset drag state
 			return;
 		}
 
@@ -7908,6 +7919,9 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 			DrawLayout();
 		}
 		else {
+			// Find out what is under mouse
+			const full_pos fp = m_lines.ClickOnLine(mpos.x, mpos.y);
+
 			if (m_selMode == SEL_WORD && m_currentSel != -1) {
 				// Extend selection one word at a time
 				const interval iv = GetWordIv(fp.pos);
@@ -7950,7 +7964,7 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 		}
 	}
 	else {
-		if (!m_foldTooltipTimer.IsRunning() && mpos.y >= 0 && mpos.y < m_lines.GetHeight()) {
+		if (!m_foldTooltipTimer.IsRunning() && 0 <= mpos.y && mpos.y < m_lines.GetHeight()) {
 			// Find out what is under mouse
 			const unsigned int line_id = m_lines.GetLineFromYPos(mpos.y);
 
@@ -8122,9 +8136,8 @@ void EditorCtrl::SelectBlock(wxPoint sel_endpoint, bool multi) {
 
 	// Remove previous selection
 	if (multi) {
-		for (vector<unsigned int>::reverse_iterator p = m_blocksel_ids.rbegin(); p != m_blocksel_ids.rend(); ++p) {
+		for (vector<unsigned int>::reverse_iterator p = m_blocksel_ids.rbegin(); p != m_blocksel_ids.rend(); ++p)
 			m_lines.RemoveSelection(*p);
-		}
 		m_blocksel_ids.clear();
 	}
 	else {
@@ -8430,9 +8443,8 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	const int lineoffset = scrollPos - m_lines.GetYPosFromLine(topline);
 
 	// Update lines
-	if (m_lines.NeedIdle()) {
+	if (m_lines.NeedIdle())
 		m_lines.OnIdle();
-	}
 
 	// Update syntax
 	const bool syntaxNeedIdle = m_syntaxstyler.OnIdle();
@@ -8531,9 +8543,8 @@ void EditorCtrl::OnSettingsChanged(EditorCtrl* self, void* WXUNUSED(data), int W
 
 	self->m_isResizing = true;
 	self->m_lines.ShowMargin(marginChars);
-	if (self->m_wrapAtMargin && self->m_lines.GetWrapMode() != cxWRAP_NONE) {
+	if (self->m_wrapAtMargin && self->m_lines.GetWrapMode() != cxWRAP_NONE)
 		self->m_lines.SetWidth(self->m_lines.GetMarginPos());
-	}
 	
 	self->scrollPos = self->m_lines.GetYPosFromLine(topline);
 	self->DrawLayout();
@@ -8544,9 +8555,7 @@ void EditorCtrl::OnBundlesReloaded(EditorCtrl* self, void* WXUNUSED(data), int W
 	wxASSERT(self->IsOk());
 
 	// Check if we are editing an item that has been modified
-	if (self->IsBundleItem()) {
-		//TODO: If modified by externally, ask user if he wish to reload
-	}
+	if (self->IsBundleItem()) {} //TODO: If modified externally, prompt user to reload
 
 	// Re-set the syntax
 	// (we have to do this before updating in lines to avoid refs to invalid styles)
@@ -8563,7 +8572,6 @@ void EditorCtrl::OnBundlesReloaded(EditorCtrl* self, void* WXUNUSED(data), int W
 	else self->m_lines.Invalidate();
 
 	self->MarkAsModified();
-
 	self->DrawLayout();
 }
 
@@ -8584,9 +8592,8 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 
 	if (actions.empty()) return false; // no matching shortcut
 	
-	if (actions.size() == 1) {
+	if (actions.size() == 1)
 		DoAction(*actions[0], NULL, false);
-	}
 	else {
 		// Show popup menu
 		const int result = ShowPopupList(actions);
@@ -8626,21 +8633,7 @@ void EditorCtrl::DoDragCommand(const tmDragCommand &cmd, const wxString& path) {
 	else env[wxT("TM_DROPPED_FILE")] = fullPath;
 
 
-	// Modifiers
-	wxString modifiers;
-	if (wxGetKeyState(WXK_SHIFT)) modifiers += wxT("SHIFT");
-	if (wxGetKeyState(WXK_ALT)) {
-		if (!modifiers.empty()) modifiers += wxT('|');
-		modifiers += wxT("CONTROL");
-	}
-	if (wxGetKeyState(WXK_WINDOWS_LEFT) || wxGetKeyState(WXK_WINDOWS_RIGHT)) {
-		if (!modifiers.empty()) modifiers += wxT('|');
-		modifiers += wxT("OPTION");
-	}
-	if (wxGetKeyState(WXK_CONTROL)) {
-		if (!modifiers.empty()) modifiers += wxT('|');
-		modifiers += wxT("COMMAND");
-	}
+	wxString modifiers = get_modifier_key_env();
 	env[wxT("TM_MODIFIER_FLAGS")] = modifiers;
 
 	// Do the command
@@ -8796,9 +8789,8 @@ void EditorCtrl::OnDragDrop(const wxArrayString& filenames) {
 			newTabs = true;
 			break;
 		}
-		else if (result >= 1010-1000) {
+		else if (result >= 1010-1000)
 			DoDragCommand(*actions[result-10], filenames[i]);
-		}
 	}
 
 	if (!newTabs) SetFocus();
@@ -8955,13 +8947,11 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 			unsigned char buf[BUFFER_SIZE] = { 0 };
 			const int ret = ::ToAscii(event.m_rawCode, 0, keystate, (WORD *)buf, 0);
 
-			if (m_parentFrame.IsKeyDiagMode()) {
+			if (m_parentFrame.IsKeyDiagMode())
 				Insert(wxString::Format(wxT("\tret=%d\n\tbuf=%d\n"), ret, *buf));
-			}
 
-			if ((ret >= 1) && (((*buf >= 32) && (*buf <= 126)) || ((*buf >= 160) && (*buf <= 255)))) {
+			if ((ret >= 1) && (((32 <= *buf) && (*buf <= 126)) || ((160 <= *buf) && (*buf <= 255))))
 				return false;
-			}
 		}
 #endif
 
@@ -9010,16 +9000,14 @@ void EditorCtrl::Print() {
 
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {
 	vector<unsigned int> folds;
-	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
+	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p)
 		if (p->type == cxFOLD_START_FOLDED) folds.push_back(p->line_id);
-	}
 	return folds;
 }
 
 bool EditorCtrl::HasFoldedFolds() const {
-	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p) {
+	for (vector<cxFold>::const_iterator p = m_folds.begin(); p != m_folds.end(); ++p)
 		if (p->type == cxFOLD_START_FOLDED) return true;
-	}
 	return false;
 }
 
@@ -9027,10 +9015,6 @@ void EditorCtrl::FoldingClear() {
 	m_folds.clear();
 	m_foldedLines = 0;
 	m_foldLineCount = 0;
-}
-
-void EditorCtrl::FoldingInvalidate() {
-	FoldingClear();
 }
 
 void EditorCtrl::ParseFoldMarkers() {
@@ -9062,13 +9046,11 @@ void EditorCtrl::ParseFoldMarkers() {
 			const bool matchEndMarker = (sr2.error_code > 0);
 
 			if (matchStartMarker) {
-				if (!matchEndMarker) { // starter and ender on same line cancels out
+				if (!matchEndMarker) // starter and ender on same line cancels out
 					m_folds.push_back(cxFold(i, cxFOLD_START, m_lines.GetLineIndentLevel(i)));
-				}
 			}
-			else if (matchEndMarker) {
+			else if (matchEndMarker)
 				m_folds.push_back(cxFold(i, cxFOLD_END, m_lines.GetLineIndentLevel(i)));
-			}
 		}
 
 		lineStart = lineEnd;
@@ -9139,9 +9121,8 @@ void EditorCtrl::FoldingInsert(unsigned int pos, unsigned int len) {
 	}
 
 	// Parse the new lines
-	for (unsigned int i = firstline; i <= lastline; ++i) {
+	for (unsigned int i = firstline; i <= lastline; ++i)
 		p = ParseFoldLine(i, p, doRefold);
-	}
 
 	// Adjust line ids in following
 	if (newLines) {
@@ -9182,17 +9163,16 @@ void EditorCtrl::FoldingDelete(unsigned int start, unsigned int WXUNUSED(end)) {
 		if (p->type == cxFOLD_START_FOLDED) doRefold = true;
 		p = m_folds.erase(p);
 	}
-	if (!m_lines.IsLineVirtual(line_id)) {
+
+	if (!m_lines.IsLineVirtual(line_id))
 		p = ParseFoldLine(line_id, p, doRefold);
-	}
 
 	// Remove deleted lines
 	const unsigned int lastline = line_id + newLines;
-	while (p != m_folds.end() && p->line_id <= lastline) {
+	while (p != m_folds.end() && p->line_id <= lastline)
 		p = m_folds.erase(p);
-	}
 
-	// Adjust line id's in following
+	// Adjust line ids in following
 	if (newLines) {
 		while (p != m_folds.end()) {
 			p->line_id -= newLines;
@@ -9240,22 +9220,20 @@ void EditorCtrl::FoldingApplyDiff(const vector<cxLineChange>& linechanges) {
 		}
 		else { // DELETION
 			// Reparse line with partial deletion
-			if (!m_lines.IsLineVirtual(line_id)) {
+			if (!m_lines.IsLineVirtual(line_id))
 				f = ParseFoldLine(line_id, f, doRefold);
-			}
 
 			// Remove deleted lines
 			const unsigned int lastline = line_id - l->lines;
-			while (f != m_folds.end() && f->line_id <= lastline) {
+			while (f != m_folds.end() && f->line_id <= lastline)
 				f = m_folds.erase(f);
-			}
 		}
 
 		// Adjust line id's in following
 		if (l->lines != 0) {
-			for ( ; f != m_folds.end(); ++f) {
+			for (; f != m_folds.end(); ++f)
 				f->line_id += l->lines;
-			}
+
 			m_foldedLines += l->lines;
 		}
 	}
@@ -9285,12 +9263,10 @@ unsigned int EditorCtrl::GetLastLineInFold(const vector<cxFold*>& fStack) const 
 		// Check if end marker matches any starter on the stack (ignore unmatched)
 		for (vector<const cxFold*>::reverse_iterator fr = foldStack.rbegin(); fr != foldStack.rend(); ++fr) {
 			if (f->indent == (*fr)->indent) {
-				if ((*fr)->line_id == foldLine) {
-					return f->line_id; // end matches current
-				}
-				else if ((*fr)->line_id < foldLine) {
-					return f->line_id-1; // end matches previous (ending fold prematurely)
-				}
+				if ((*fr)->line_id == foldLine) // end matches current
+					return f->line_id; 
+				else if ((*fr)->line_id < foldLine) // end matches previous (ending fold prematurely)
+					return f->line_id-1; 
 				else {
 					// skip subfolds
 					vector<const cxFold*>::iterator fb = (++fr).base();

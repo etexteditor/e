@@ -731,7 +731,8 @@ void EditorFrame::RestoreState() {
 	// Only show progress dialog if more than 3 pages
 	wxProgressDialog* dlg = NULL;
 	const wxString msg = _("Opening documents from last session");
-	if (pagecount > 3) dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
+	if (pagecount > 3)
+		dlg = new wxProgressDialog(wxT("Progress"), msg, pagecount, this, wxPD_APP_MODAL|wxPD_SMOOTH);
 
 	Freeze();
 	// Remove initial empty document
@@ -1146,12 +1147,10 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 				}
 				else {
 					if (fileResult == cxFILE_DOWNLOAD_ERROR) {} // do nothing, download code has reported error
-					else if (fileResult == cxFILE_CONV_ERROR) {
+					else if (fileResult == cxFILE_CONV_ERROR)
 						wxMessageBox(_T("Could not read file: ") + path + _T("\nTry importing with another encoding"), _T("e Error"), wxICON_ERROR);
-					}
-					else {
+					else
 						wxMessageBox(_T("Could not open file: ") + path, _T("e Error"), wxICON_ERROR);
-					}
 
 					// Set status to modified
 					cxLOCK_WRITE(m_catalyst)
@@ -1480,7 +1479,8 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 #endif // __WXMSW__
 
 		if (isBundleItem) {
-			if (!OpenRemoteFile(file)) return false;
+			if (!OpenRemoteFile(file)) 
+				return false;
 		}
 		else if (wxDir::Exists(file)) {
 			wxFileName dirPath(file, wxEmptyString);
@@ -1490,7 +1490,8 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 		else {
 			wxFileName path(file);
 			path.MakeAbsolute();
-			if (!OpenFile(path)) return false;
+			if (!OpenFile(path)) 
+				return false;
 		}
 	}
 
@@ -1512,9 +1513,8 @@ void EditorFrame::ReopenFiles(wxArrayString& files, unsigned long firstLine, uns
 		const wxString& arg = files[i];
 		Open(arg, mate);
 
-		if (i == 0) { // The line/column position apply to the first file only.
+		if (i == 0) // The line/column position apply to the first file only.
 			if (firstLine || firstColumn) GotoPos(firstLine, firstColumn);
-		}
 	}
 }
 
@@ -1527,15 +1527,21 @@ bool EditorFrame::Open(const wxString& path, const wxString& mate) {
 	if (eDocumentPath::IsRemotePath(path)) {
 		wxRegEx domain(wxT("^.*://[^/]+$")); // domains don't need ending slash
 
-		if (path.Last() == wxT('/')) return OpenRemoteProjectFromUrl(path);
-		if (domain.Matches(path)) return OpenRemoteProjectFromUrl(path + wxT('/'));
-		if (!OpenRemoteFile(path)) return false;
+		if (path.Last() == wxT('/')) 
+			return OpenRemoteProjectFromUrl(path);
+
+		if (domain.Matches(path)) 
+			return OpenRemoteProjectFromUrl(path + wxT('/'));
+
+		if (!OpenRemoteFile(path))
+			return false;
 
 		Update();
 		return true;
 	}
 
-	if (eDocumentPath::IsBundlePath(path)) return OpenRemoteFile(path);
+	if (eDocumentPath::IsBundlePath(path)) 
+		return OpenRemoteFile(path);
 
 	if (wxDir::Exists(path)) {
 		wxFileName dirPath(path, wxEmptyString);
@@ -1769,16 +1775,15 @@ bool EditorFrame::OpenRemoteFile(const wxString& url, const RemoteProfile* rp) {
 wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp) {
 	wxASSERT(rp && rp->IsValid());
 
-	// Create temp buffer file
 	const wxString buffPath = GetAppPaths().CreateTempAppDataFile();
 
-	// Download file
 	while(1) {
 		wxBeginBusyCursor();
 		const CURLcode res = GetRemoteThread().Download(url, buffPath, *rp);
 		wxEndBusyCursor();
 
-		if (res == CURLE_OK) break; // download succeded
+		if (res == CURLE_OK)
+			break; // download succeded
 
 		if (res == CURLE_LOGIN_DENIED) {
 			if (!AskRemoteLogin(rp))
@@ -1797,12 +1802,12 @@ wxString EditorFrame::DownloadFile(const wxString& url, const RemoteProfile* rp)
 
 bool EditorFrame::UploadFile(const wxString& url, const wxString& buffPath, const RemoteProfile* rp) {
 	while(1) {
-		// Upload file
 		wxBeginBusyCursor();
 		const CURLcode res =  this->GetRemoteThread().UploadAndDate(url, buffPath, *rp);
 		wxEndBusyCursor();
 
-		if (res == CURLE_OK) break; // upload succeded
+		if (res == CURLE_OK)
+			break; // upload succeded
 
 		if (res == CURLE_LOGIN_DENIED) {
 			if (!this->AskRemoteLogin(rp))
@@ -1824,10 +1829,9 @@ wxDateTime EditorFrame::GetRemoteDate(const wxString& url, const RemoteProfile* 
 	return GetRemoteThread().GetModDate(url, *rp);
 }
 
+// Asks our settings to get or create a matching remote profile.
 const RemoteProfile* EditorFrame::GetRemoteProfile(const wxString& url, bool withDir) {
 	wxASSERT(eDocumentPath::IsRemotePath(url));
-
-	// Get (or create) matching profile
 	return m_generalSettings.GetRemoteProfileFromUrl(url, withDir);
 }
 
@@ -1836,9 +1840,8 @@ bool EditorFrame::AskRemoteLogin(const RemoteProfile* rp) {
 	if (dlg.ShowModal() != wxID_OK)
 		return false;
 
-	// this also updates rp with the new login
+	// This also updates rp with the new login
 	m_generalSettings.SetRemoteProfileLogin(rp, dlg.GetUsername(), dlg.GetPassword(), dlg.GetSaveProfile());
-
 	return true;
 }
 
@@ -1846,7 +1849,7 @@ EditorCtrl* EditorFrame::GetEditorCtrlFromFile(const wxString& filepath, unsigne
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* editorCtrl = GetEditorCtrlFromPage(i);
 
-		// paths on windows are case-insensitive
+		// Paths on windows are case-insensitive
 #ifdef __WXMSW__
 		if (filepath.CmpNoCase(editorCtrl->GetPath()) == 0) { 
 #else
@@ -1916,7 +1919,8 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 			page = bundlePanel;
 			ec = bundlePanel->GetActiveEditor();
 		}
-		else if (!editorCtrl->IsEmpty()) page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
+		else if (!editorCtrl->IsEmpty()) 
+			page = ec = new EditorCtrl(m_catalyst, bitmap, m_tabBar, *this);
 	}
 
 	// Load the text (or update with changes)
@@ -1932,7 +1936,8 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 			wxMessageBox(msg, _T("e Error"), wxICON_ERROR);
 		}
 
-		if (ec != editorCtrl) delete page; // clean up
+		if (ec != editorCtrl) 
+			delete page; // clean up
 		return false;
 	}
 
@@ -2044,9 +2049,7 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 	box->Layout();
 }
 
-bool EditorFrame::IsSearching() const {
-	return m_searchPanel->IsShown();
-}
+bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
 
 void EditorFrame::ShowCommandMode(bool show) {
 	if (show) {
@@ -2368,16 +2371,19 @@ wxString EditorFrame::GetSaveDir() const {
 }
 
 void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
-	// Get the last used dir
-	const wxString lastDir = GetSaveDir();
-
-	wxFileDialog dlg(this, _T("Choose a file"), lastDir, _T(""), EditorFrame::DefaultFileFilters, wxFD_OPEN|wxFD_MULTIPLE);
-	if (dlg.ShowModal() != wxID_OK) return;
-
-	m_settings.SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
-
 	wxArrayString filenames;
-	dlg.GetPaths(filenames);
+	{
+		// Get the last used dir
+		const wxString lastDir = GetSaveDir();
+
+		wxFileDialog dlg(this, _T("Choose a file"), lastDir, _T(""), EditorFrame::DefaultFileFilters, wxFD_OPEN|wxFD_MULTIPLE);
+		if (dlg.ShowModal() != wxID_OK)
+			return;
+
+		m_settings.SetSettingString(wxT("last_open_dir"), dlg.GetDirectory());
+
+		dlg.GetPaths(filenames);
+	}
 
 	// Check if we have to conv from a custom encoding
 	wxFontEncoding enc = wxFONTENCODING_SYSTEM;
@@ -2387,11 +2393,32 @@ void EditorFrame::OnMenuOpen(wxCommandEvent& event) {
 	}
 
 	SetCursor(wxCURSOR_WAIT);
-	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
-		wxFileName newpath = filenames[i];
-		if (!OpenFile(newpath, enc)) break;
-		Update();
+	
+	// Only show progress dialog if more than 3 files
+	wxProgressDialog* progress_window = NULL;
+	const wxString msg = _("Opening selected documents");
+	if (filenames.GetCount() > 3) {
+		progress_window = new wxProgressDialog(wxT("Progress"), msg, filenames.GetCount(), this, wxPD_APP_MODAL|wxPD_SMOOTH);
+		Freeze();
 	}
+
+	for (unsigned int i = 0; i < filenames.GetCount(); ++i) {
+		if (progress_window)
+			progress_window->Update(i, msg + wxT("\n") + filenames[i].c_str());
+
+		wxFileName newpath = filenames[i];
+		if (!OpenFile(newpath, enc))
+			break;
+
+		if (!progress_window)
+			Update();
+	}
+
+	if (progress_window) {
+		delete progress_window;
+		Thaw();
+	}
+
 	SetCursor(*wxSTANDARD_CURSOR);
 }
 
@@ -2802,7 +2829,7 @@ void EditorFrame::OnTabsShowDropdown(wxCommandEvent& WXUNUSED(event)) {
 		tabInfo.push_back(new OpenTabInfo(page->GetName(), relativePath));
 	}
 
-	CurrentTabsPopup dialog(this, tabInfo);
+	CurrentTabsPopup dialog(this, tabInfo, m_tabBar->GetSelection());
 	if (dialog.ShowModal() == wxID_OK) {
 		int newTabIndex = dialog.GetSelectedTabIndex();
 		if (newTabIndex != -1 && newTabIndex != m_tabBar->GetSelection())

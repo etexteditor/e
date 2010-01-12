@@ -3,7 +3,7 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-   #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 #include <vector>
@@ -20,36 +20,23 @@ struct OpenTabInfo {
 
 class CurrentTabsPopup: public wxDialog {
 public:
-	CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo);
+	CurrentTabsPopup(wxWindow* parent, const std::vector<OpenTabInfo*>& tabInfo, int currrentTab=-1);
 	~CurrentTabsPopup();
 
 	int GetSelectedTabIndex() const;
 
+	bool WrapToNextItem(bool full_service=false);
+	bool WrapToPrevItem(bool full_service=false);
+	void SelectRow(int row);
+
 private:
-	enum Columns {
-		Number = 0,
-		Filename,
-		Path,
-		ColumnCount
-	};
-
 	int GetSelectedRow() const;
-	void SetSelectedRow(int selectedRow);
-
-	class ListEventHandler : public wxEvtHandler {
-	public:
-		ListEventHandler(CurrentTabsPopup* parent);
-
-	private:
-		DECLARE_EVENT_TABLE();
-		void OnChar(wxKeyEvent& event);
-		void OnItemActivated(wxListEvent& event);
-
-		CurrentTabsPopup* m_parent;
-	};
 
 	DECLARE_EVENT_TABLE();
 	void OnShow(wxShowEvent& event);
+	void OnMouseLeftDown(wxMouseEvent& event);
+	void OnMouseCaptureLost(wxMouseCaptureLostEvent& event);
+	void OnItemActivated(wxListEvent& event);
 
 	wxListCtrlEx* m_list;
 	int m_selectedTabIndex;

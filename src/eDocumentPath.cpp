@@ -15,11 +15,9 @@ eDocumentPath::~eDocumentPath(void){}
 bool eDocumentPath::MakeWritable(const wxString& path) {
 #ifdef __WXMSW__
 		DWORD dwAttrs = ::GetFileAttributes(path);
-		if (dwAttrs & FILE_ATTRIBUTE_READONLY) {
-			dwAttrs &= ~FILE_ATTRIBUTE_READONLY;
-			return SetFileAttributes(path, dwAttrs) != 0;
-		}
-		else return true;
+		if (!(dwAttrs & FILE_ATTRIBUTE_READONLY)) return true;
+		dwAttrs &= ~FILE_ATTRIBUTE_READONLY;
+		return SetFileAttributes(path, dwAttrs) != 0;
 #else
         // Get protection
 		struct stat s;
@@ -28,6 +26,14 @@ bool eDocumentPath::MakeWritable(const wxString& path) {
 		return res == 0;
 #endif
 }
+
+#ifdef __WXMSW__
+bool eDocumentPath::MakeHidden(const wxString& path) {
+	DWORD dwAttrs = ::GetFileAttributes(path);
+	if (dwAttrs & FILE_ATTRIBUTE_HIDDEN) return true;
+	return ::SetFileAttributes(path, dwAttrs | FILE_ATTRIBUTE_HIDDEN) != 0;
+}
+#endif
 
 FILE_PERMISSIONS eDocumentPath::GetPermissions(const wxString& path) {
 #ifdef __WXMSW__

@@ -1,7 +1,7 @@
 #ifndef _EAUINOTEBOOK_H_
 #define _EAUINOTEBOOK_H_
 
-#include "wx/aui/auibook.h"
+#include <wx/aui/auibook.h>
 
 class eAuiNotebook : public wxAuiNotebook {
 public:

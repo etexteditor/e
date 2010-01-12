@@ -56,9 +56,14 @@ _extract_and_patch()
   # Apply patches
   echo "Applying patches..."
   echo
+	echo "---- Applying metakit patches ----"
   patch -Np1 -d metakit < patches/metakit.patch
+	echo "---- Applying tinyxml patches ----"
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
+	echo "---- Applying wxwidget patches ----"
+  patch -Np1 -d wxwidgets < patches/wxWidgets-gsock.patch
+	echo "---- Applying webkit patches ----"
   patch -Np1 -d webkit < patches/webkit/remove-targets.patch
   patch -Np1 -d webkit < patches/webkit/fully-static.patch
   patch -Np0 -d webkit < patches/webkit/vis_hidden.patch

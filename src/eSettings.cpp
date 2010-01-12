@@ -12,13 +12,17 @@
  ******************************************************************************/
 
 #include "eSettings.h"
-#include "jsonreader.h"
-#include "jsonwriter.h"
-#include <wx/wfstream.h>
-#include "RemoteThread.h"
-#include <wx/regex.h>
 
 #include <vector>
+
+#include <wx/wfstream.h>
+#include <wx/regex.h>
+
+#include "Strings.h"
+#include "jsonreader.h"
+#include "jsonwriter.h"
+#include "RemoteThread.h"
+
 
 eSettings::eSettings() {}
 
@@ -38,13 +42,8 @@ void eSettings::Load(const wxString& appDataPath) {
 	const int numErrors = reader.Parse(fstream, &m_jsonRoot);
 	if ( numErrors > 0 )  {
 		// if there are errors in the JSON document, print the errors
-		wxString msg = _("Invalid JSON in settings:\n");
 		const wxArrayString& errors = reader.GetErrors();
-		for ( int i = 0; i < numErrors; i++ )  {
-			msg += wxT('\n');
-			msg += errors[i];
-		}
-
+		wxString msg = _("Invalid JSON in settings:\n\n") + wxJoin(errors, wxT('\n'), '\0');
 		wxMessageBox(msg, _("Syntax error"), wxICON_ERROR|wxOK);
 		return;
 	}
@@ -75,9 +74,8 @@ void eSettings::Load(const wxString& appDataPath) {
 		}
 
 		// Copy general settings
-		if (m_jsonRoot.HasMember(wxT("settings"))) {
+		if (m_jsonRoot.HasMember(wxT("settings")))
 			frame[wxT("settings")] = m_jsonRoot[wxT("settings")];
-		}
 	}
 }
 
@@ -87,14 +85,13 @@ bool eSettings::Save() {
 	//// Add back to the JSON object any settings we store internally
 	// Environmental Variables
 	wxJSONValue envNode;
-	for (map<wxString,wxString>::const_iterator p = env.begin(); p != env.end(); ++p) {
+	for (map<wxString,wxString>::const_iterator p = env.begin(); p != env.end(); ++p)
 		envNode[p->first] = p->second;
-	}
 
 	m_jsonRoot[wxT("env")] = envNode;
 
 
-	// Open (or create) the settings file
+	// Open or create the settings file
 	wxFileOutputStream fstream(m_path);
 	if (!fstream.IsOk()) {
 		wxMessageBox(_("Could not open settings file."), _("File error"), wxICON_ERROR|wxOK);
@@ -107,9 +104,7 @@ bool eSettings::Save() {
 	return true;
 }
 
-bool eSettings::IsEmpty() const {
-	return !m_jsonRoot.IsObject();
-}
+bool eSettings::IsEmpty() const { return !m_jsonRoot.IsObject(); }
 
 unsigned int eSettings::GetFrameCount() const {
 	if (!m_jsonRoot.HasMember(wxT("frames"))) return 0;
@@ -196,9 +191,8 @@ int eSettings::GetIndexFromFrameSettings(const eFrameSettings& fs) const {
 	wxJSONValue frames = m_jsonRoot.ItemAt(wxT("frames"));
 	if (frames.Size() == 0) return -1;
 
-	for (int i = 0; i < frames.Size(); ++i) {
+	for (int i = 0; i < frames.Size(); ++i)
 		if (frames[i].GetRefData() == fs.GetRefData()) return i;
-	}
 
 	return -1; // not found
 }
@@ -309,7 +303,7 @@ void eSettings::GetRecentProjects(wxArrayString& recentprojects) const {
 }
 
 void eSettings::GetRecentDiffs(wxArrayString& recentdiffs, SubPage sp) const {
-	const wxJSONValue recents = (sp == SP_LEFT) ? m_jsonRoot.ItemAt(wxT("recentDiffsLeft")) : m_jsonRoot.ItemAt(wxT("recentDiffsRight"));
+	const wxJSONValue recents = m_jsonRoot.ItemAt((sp == SP_LEFT) ? wxT("recentDiffsLeft") : wxT("recentDiffsRight"));
 	GetRecents(recents, recentdiffs);
 }
 
@@ -333,20 +327,20 @@ void eSettings::AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t 
 	jsonArray.Insert(0, value);
 
 	// Make sure we have no more than max entries
-	if (jsonArray.Size() > (int)max) jsonArray.Remove(max);
+	if (jsonArray.Size() > (int)max)
+		jsonArray.Remove(max);
 }
 
-void eSettings::GetRecents(const wxJSONValue& jarray, wxArrayString& recents) const {
-	for (int i = 0; i < jarray.Size(); ++i) {
+void eSettings::GetRecents(const wxJSONValue& jarray, wxArrayString& recents) {
+	for (int i = 0; i < jarray.Size(); ++i)
 		recents.Add(jarray.ItemAt(i).AsString());
-	}
 }
 
 RemoteProfile* eSettings::DoGetRemoteProfile(size_t profile_id)  {
 	// Check if profile is already in cache
-	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p) {
-		if ((*p)->m_id == (int)profile_id) return *p;
-	}
+	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p)
+		if ((*p)->m_id == (int)profile_id)
+			return *p;
 
 	// Get the profile
 	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
@@ -378,7 +372,6 @@ wxString eSettings::GetRemoteProfileName(size_t profile_id) const {
 	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
 	wxASSERT((int)profile_id < remotes.Size());
 	const wxJSONValue profile = remotes.ItemAt(profile_id);
-	
 	return profile.ItemAt(wxT("name")).AsString();
 }
 
@@ -418,9 +411,7 @@ void eSettings::SetRemoteProfile(size_t profile_id, const RemoteProfile& profile
 	}
 }
 
-const RemoteProfile* eSettings::GetRemoteProfile(size_t profile_id) {
-	return DoGetRemoteProfile(profile_id);
-}
+const RemoteProfile* eSettings::GetRemoteProfile(size_t profile_id) { return DoGetRemoteProfile(profile_id); }
 
 const RemoteProfile* eSettings::GetRemoteProfileFromUrl(const wxString& url, bool withDir) {
 	// Split url up in elements
@@ -437,15 +428,18 @@ const RemoteProfile* eSettings::GetRemoteProfileFromUrl(const wxString& url, boo
 	// See if we can find a matching profile in cache
 	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p) {
 		RemoteProfile* rp = (*p);
-		if (rp->IsActive() && rp->m_address == address && rp->m_protocol == protocol) {
-			if (!username.empty() && rp->m_username != username) continue;
-			if (withDir && StripSlashes(rp->m_dir) != sDir) continue;
-			if (!pwd.empty() && rp->m_pwd != pwd) {
-				rp->m_pwd = pwd; // Password may have changed
-				if (!rp->IsTemp()) SaveRemoteProfile(rp);
-			}
-			return rp;
+
+		if (!rp->IsActive()) continue;
+		if (! (rp->m_address == address && rp->m_protocol == protocol) ) continue;
+		if (!username.empty() && rp->m_username != username) continue;
+		if (withDir && StripSlashes(rp->m_dir) != sDir) continue;
+
+		if (!pwd.empty() && rp->m_pwd != pwd) {
+			rp->m_pwd = pwd; // Password may have changed
+			if (!rp->IsTemp())
+				SaveRemoteProfile(rp);
 		}
+		return rp;
 	}
 
 	// See if we can find a matching profile in settings
@@ -491,9 +485,9 @@ void eSettings::SetRemoteProfileLogin(const RemoteProfile* profile, const wxStri
 
 	// Get non-const pointer from cache
 	RemoteProfile* rp = NULL;
-	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p) {
+	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p)
 		if (*p == profile) rp = *p;
-	}
+
 	wxASSERT(rp);
 
 	// Set the new login. This means that the profile will
@@ -502,9 +496,8 @@ void eSettings::SetRemoteProfileLogin(const RemoteProfile* profile, const wxStri
 	rp->m_pwd = pwd;
 
 	// Save if profile is in db or user has indicated that it should be saved
-	if (!rp->IsTemp() || toDb) {
+	if (!rp->IsTemp() || toDb)
 		SaveRemoteProfile(rp); // set profile with new login
-	}
 }
 
 void eSettings::DeleteRemoteProfile(size_t profile_id) {
@@ -516,8 +509,10 @@ void eSettings::DeleteRemoteProfile(size_t profile_id) {
 
 	// In cache; deactivate profile and adjust id's of rest
 	for (auto_vector<RemoteProfile>::iterator p = m_tempRemotes.begin(); p != m_tempRemotes.end(); ++p) {
-		if ((*p)->m_id == (int)profile_id) (*p)->Deactivate();
-		else if ((*p)->m_id > (int)profile_id) --((*p)->m_id);
+		if ((*p)->m_id == (int)profile_id)
+			(*p)->Deactivate();
+		else if ((*p)->m_id > (int)profile_id)
+			--((*p)->m_id);
 	}
 }
 
@@ -594,7 +589,8 @@ bool eSettings::AddSearch(const wxString& pattern, bool isRegex, bool matchCase)
 	searches.Insert(0, item);
 
 	// Limit number of items to save
-	if (searches.Size() > 20) searches.Remove(searches.Size()-1);
+	if (searches.Size() > 20)
+		searches.Remove(searches.Size()-1);
 
 	return true;
 }
@@ -632,7 +628,8 @@ bool eSettings::AddReplace(const wxString& pattern) {
 	replacements.Insert(0, pattern);
 
 	// Limit number of items to save
-	if (replacements.Size() > 20) replacements.Remove(replacements.Size()-1);
+	if (replacements.Size() > 20)
+		replacements.Remove(replacements.Size()-1);
 
 	return true;
 }
@@ -772,16 +769,14 @@ void eFrameSettings::SetPageSettings(size_t page_id, const wxString& path, doc_i
 	// Set folds
 	wxJSONValue& foldsArray = page[wxT("folds")];
 	if (!foldsArray.IsArray()) foldsArray.SetType(wxJSONTYPE_ARRAY);
-	for (vector<unsigned int>::const_iterator p = folds.begin(); p != folds.end(); ++p) {
+	for (vector<unsigned int>::const_iterator p = folds.begin(); p != folds.end(); ++p)
 		foldsArray.Append(*p);
-	}
 
 	// Set bookmarks
 	wxJSONValue& bookmarksArray = page[wxT("bookmarks")];
 	if (!bookmarksArray.IsArray()) bookmarksArray.SetType(wxJSONTYPE_ARRAY);
-	for (vector<cxBookmark>::const_iterator b = bookmarks.begin(); b != bookmarks.end(); ++b) {
+	for (vector<cxBookmark>::const_iterator b = bookmarks.begin(); b != bookmarks.end(); ++b)
 		bookmarksArray.Append(b->line_id);
-	}
 }
 
 void eFrameSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp) const {
@@ -804,15 +799,13 @@ void eFrameSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di,
 
 	// Set folds
 	const wxJSONValue foldsArray = page.ItemAt(wxT("folds"));
-	for (int f = 0; f < foldsArray.Size(); ++f) {
+	for (int f = 0; f < foldsArray.Size(); ++f)
 		folds.push_back(foldsArray.ItemAt(f).AsInt());
-	}
 
 	// Set bookmarks
 	const wxJSONValue bookmarksArray = page.ItemAt(wxT("bookmarks"));
-	for (int b = 0; b < bookmarksArray.Size(); ++b) {
+	for (int b = 0; b < bookmarksArray.Size(); ++b)
 		bookmarks.push_back(bookmarksArray.ItemAt(b).AsInt());
-	}
 }
 
 bool eFrameSettings::IsPageDiff(size_t page_id) const {
@@ -848,9 +841,7 @@ doc_id eFrameSettings::GetPageDoc(size_t page_id, SubPage sp) const {
 	return di;
 }
 
-void eFrameSettings::DeleteAllPageSettings() {
-	m_jsonRoot.Remove(wxT("pages"));
-}
+void eFrameSettings::DeleteAllPageSettings() { m_jsonRoot.Remove(wxT("pages")); }
 
 void eFrameSettings::DeletePageSettings(size_t page_id) {
 	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));

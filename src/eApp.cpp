@@ -138,8 +138,8 @@ bool eApp::OnInit() {
 
 	// App info
 	const wxString appId = wxString::Format(wxT("eApp-%s"), wxGetUserId().c_str());
-	m_version_id = 206;  // <-------------- INTERNAL VERSION NUMBER
-	m_version_name =  wxT("1.0.40"); // <-- VERSION NAME
+	m_version_id = 209;  // <-------------- INTERNAL VERSION NUMBER
+	m_version_name =  wxT("1.0.42a"); // <-- VERSION NAME
 
 	// Option vars
 	m_lineNum = 0;
@@ -725,7 +725,7 @@ const wxString& eApp::AppPath() const {return m_appPath;}
 const wxString& eApp::AppDataPath() const {return m_appDataPath;}
 
 wxString eApp::CreateTempAppDataFile() {
-	const wxString tempPath = m_appPath + wxT("temp") + wxFILE_SEP_PATH;
+	const wxString tempPath = m_appDataPath + wxT("temp") + wxFILE_SEP_PATH;
 	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
 	return wxFileName::CreateTempFileName(tempPath);
 }

@@ -74,6 +74,8 @@ void CommandPanel::OnCloseButton(wxCommandEvent& WXUNUSED(evt)) {
 
 void CommandPanel::OnIdle(wxIdleEvent& WXUNUSED(evt)) {
 	const EditorCtrl* editor = m_parentFrame.GetEditorCtrl();
+	if (!editor) return;
+
 	const size_t selectionCount = editor->GetSelections().size();
 	const size_t rangeCount = editor->GetSearchRange().size();
 	if (selectionCount == m_selectionCount && rangeCount == m_rangeCount) return;

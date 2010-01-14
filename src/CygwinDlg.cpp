@@ -100,7 +100,7 @@ void* CygwinInstallThread::Entry() {
 		// Make sure it get eventual proxy settings from IE
 		wxFileName::Mkdir(cygPath + wxT("\\etc\\setup\\"), 0777, wxPATH_MKDIR_FULL);
 		wxFile file(cygPath + wxT("\\etc\\setup\\last-connection"), wxFile::write);
-		file.Write(wxT("IE"));
+		if (file.IsOpened()) file.Write(wxT("IE"));
 
 	}
 	const wxString supportPath = m_appPath + wxT("Support\\bin");

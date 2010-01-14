@@ -102,6 +102,37 @@ wxString eDocumentPath::s_cygPath;
 wxString eDocumentPath::s_cygdrivePrefix = wxT("/cygdrive/");
 
 // Reads a value from the Cygwin registry key, trying both HKLM and HKCU.
+// In Cygwin 1.7 only the install location is in registry
+wxString read_cygwin17_registry_key(const wxString &default_value = wxEmptyString) {
+	const wxString key = wxT("rootdir");
+	wxString value;
+
+	// Check "current user" ('just me').
+	{
+		wxRegKey cygKey(wxT("HKEY_CURRENT_USER\\SOFTWARE\\Cygwin\\setup"));
+		if( cygKey.Exists()  && cygKey.HasValue(key)) {
+			cygKey.QueryValue(key, value);
+		}
+	}
+
+	if (!value.empty())
+		return value;
+	
+	// Also check in "local machine", the "install for everyone" location.
+	{
+		wxRegKey cygKey(wxT("HKEY_LOCAL_MACHINE\\SOFTWARE\\Cygwin\\setup"));
+		if( cygKey.Exists() && cygKey.HasValue(key)) {
+			cygKey.QueryValue(key, value);
+		}
+	}
+
+	if (!value.empty())
+		return value;
+
+	return default_value;
+}
+
+// Reads a value from the Cygwin registry key, trying both HKLM and HKCU.
 wxString read_cygwin15_registry_key(const wxString &key_path, const wxString &key, const wxString &default_value = wxEmptyString) {
 	wxString value;
 
@@ -131,6 +162,10 @@ wxString read_cygwin15_registry_key(const wxString &key_path, const wxString &ke
 }
 
 wxString eDocumentPath::GetCygwinDir() {
+	const wxString path = read_cygwin17_registry_key();
+	if (!path.empty()) return path;
+
+	// There might be an older cygwin version installed
 	return read_cygwin15_registry_key(wxT("mounts v2\\/"), wxT("native"));
 }
 

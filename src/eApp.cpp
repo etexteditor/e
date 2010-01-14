@@ -46,7 +46,7 @@ IMPLEMENT_APP(eApp)
 
 // Define this to True in debug mode to use e.cfg from the built .exe path
 // instead of the User's appdata path.
-#define PUT_DEBUG_SETTINGS_IN_EXE_PATH true
+#define PUT_DEBUG_SETTINGS_IN_EXE_PATH false
 
 static wxString eApp_ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) {
 	wxString path = cmd;
@@ -138,8 +138,8 @@ bool eApp::OnInit() {
 
 	// App info
 	const wxString appId = wxString::Format(wxT("eApp-%s"), wxGetUserId().c_str());
-	m_version_id = 209;  // <-------------- INTERNAL VERSION NUMBER
-	m_version_name =  wxT("1.0.42a"); // <-- VERSION NAME
+	m_version_id = 210;  // <-------------- INTERNAL VERSION NUMBER
+	m_version_name =  wxT("1.0.42b"); // <-- VERSION NAME
 
 	// Option vars
 	m_lineNum = 0;

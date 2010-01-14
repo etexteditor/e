@@ -59,6 +59,7 @@ private:
 		state_normal,
 		state_visual,
 		state_delete,
+		state_copy,
 		state_findchar,
 		state_findchar_reverse,
 		state_search,
@@ -77,6 +78,7 @@ private:
 
 	// state
 	State m_state;
+	State m_endState;
 	size_t m_count;
 	size_t m_count2;
 	bool m_select;

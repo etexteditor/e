@@ -56,6 +56,7 @@ bool CommandHandler::IsSearching() const {
 
 void CommandHandler::Clear() {
 	m_state = state_normal;
+	m_endState = state_normal;
 	m_count = 0;
 	m_count2 = 0;
 	m_select = false;
@@ -87,6 +88,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 	case state_normal:
 	case state_visual:
 	case state_delete:
+	case state_copy:
 	case state_range:
 		{
 			switch (c) {
@@ -109,7 +111,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 	}
 
 	// count should be product of counts or at least 1
-	const size_t count = (m_count || m_count)
+	const size_t count = (m_count || m_count2)
 							? ((m_count && m_count2)
 								? m_count * m_count2
 								: m_count + m_count2)
@@ -120,6 +122,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 	case state_normal:
 	case state_visual:
 	case state_delete:
+	case state_copy:
 	case state_range:
 		{	
 			switch (c) {
@@ -247,7 +250,16 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				break;
 
 			// Commands
-			case 'd':
+			case 'd': // delete
+				// handle 'dd' shortcut
+				if (m_state == state_delete) {
+					m_editor.SelectCurrentLine();
+					m_editor.Delete();
+					m_editor.ReDraw();
+					Clear();
+					break;
+				}
+
 				if (selected) {
 					m_editor.Delete();
 					m_editor.ReDraw();
@@ -255,8 +267,47 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				}
 				else {
 					m_count2 = m_count; m_count = 0; // prepare for secondary count
-					m_state = state_delete;
+					m_state = m_endState = state_delete;
+					m_select = true;
 				}
+				break;
+			case 'p': // paste
+				for (size_t i = 0; i < count; ++i) {
+					m_editor.OnPaste();
+				}
+				m_editor.ReDraw();
+				Clear();
+				break;
+			case 'y': // copy
+				// handle 'yy' shortcut
+				if (m_state == state_copy) {
+					m_editor.SelectCurrentLine();
+					m_editor.OnCopy();
+					m_editor.RemoveAllSelections();
+					Clear();
+					break;
+				}
+
+				if (selected) m_editor.OnCopy();
+				else {
+					m_count2 = m_count; m_count = 0; // prepare for secondary count
+					m_state = m_endState =state_copy;
+					m_select = true;
+				}
+				break;
+			case 'x':
+				m_select = true;
+				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorRight));
+				m_editor.Delete();
+				m_editor.ReDraw();
+				Clear();
+				break;
+			case 'X':
+				m_select = true;
+				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorLeft));
+				m_editor.Delete();
+				m_editor.ReDraw();
+				Clear();
 				break;
 
 			// Modes
@@ -291,13 +342,19 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				break;
 			case '/':
 				m_state = state_search;
-				m_searchPos = m_editor.GetPos();
 				m_search.clear();
+
+				// Cache start positions
+				m_searchPos = m_editor.GetPos();
+				m_cursors = m_editor.GetSearchRangeCursors();
 				break;
 			case '?':
 				m_state = state_search_reverse;
-				m_searchPos = m_editor.GetPos();
 				m_search.clear();
+
+				// Cache start positions
+				m_searchPos = m_editor.GetPos();
+				m_cursors = m_editor.GetSearchRangeCursors();
 				break;
 
 			default:
@@ -365,22 +422,33 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 void CommandHandler::EndMovement() {
 	bool clearState = true;
 
+	// Complex movements keep some state until done
 	switch (m_state) {
-	case state_delete:
-		if (m_editor.IsSelected()) m_editor.Delete();
-		break;
 	case state_visual:
-		// reset counts but keep rest of state
-		m_count = m_count2 = 0;
-		clearState = false;
-		break;
 	case state_search:
 	case state_range:
-		m_count = 0;
+		m_count = m_count2 = 0;
 		clearState = false;
 		break;
 	default:
 		break; // do nothing
+	}
+
+	// Commands need to wait till all movements are complete
+	if (clearState && m_endState != state_normal) {
+		if (m_editor.IsSelected()) {
+			switch (m_endState) {
+			case state_delete:
+				m_editor.Delete();
+				break;
+			case state_copy:
+				m_editor.OnCopy();
+				m_editor.RemoveAllSelections();
+				break;
+			default:
+				break; // do nothing
+			}
+		}
 	}
 
 	m_editor.MakeCaretVisible();
@@ -391,6 +459,10 @@ void CommandHandler::EndMovement() {
 void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 	switch (keyCode) {
 	case WXK_RETURN:
+		if (m_endState == state_normal)
+			m_editor.RemoveAllSelections();
+		m_state = state_normal;
+		return;
 	case WXK_ESCAPE:
 		m_editor.RemoveAllSelections();
 		Clear();
@@ -413,22 +485,50 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 		m_search += c;
 	}
 
-	size_t startpos = m_searchPos;
-	size_t endpos = m_searchPos;
-	for (size_t i = 0; i < count; ++i) {
-		const search_result sr = m_editor.RegExFind(m_search, endpos, true);
-		if (sr.error_code < 0) break;
-		
-		startpos = sr.start;
-		endpos = sr.end;
+	if (m_editor.HasSearchRange()) {
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		m_editor.RemoveAllSelections();
+
+		// Search in each range
+		for (size_t r = 0; r < ranges.size(); ++r) {
+			const interval& iv = ranges[r];
+			const size_t searchstart = m_cursors[r];
+			
+			search_result sr = {-1, searchstart, searchstart};
+			for (size_t i = 0; i < count; ++i) {
+				sr = m_editor.SearchDirect(m_search, FIND_MATCHCASE|FIND_USE_REGEX, sr.end, iv.end);
+				if (sr.error_code < 0) break;
+			}
+			if (sr.error_code < 0) continue; // no matches
+
+			// Move cursor
+			m_editor.SetSearchRangeCursor(r, sr.start);
+			if (searchstart == m_editor.GetPos()) m_editor.SetPos(sr.start);
+
+			// If movement is part of a command we want to highlight the
+			// movement rather than the match
+			if (m_endState == state_normal) m_editor.AddSelection(sr.start, sr.end, true);
+			else m_editor.AddSelection(searchstart, sr.start, true);
+		}
+	}
+	else {
+		search_result sr = {-1, m_searchPos, m_searchPos};
+		for (size_t i = 0; i < count; ++i) {
+			sr = m_editor.RegExFind(m_search, sr.end, true);
+			if (sr.error_code < 0) break;
+		}
+		if (sr.error_code < 0) return; // no matches
+
+		m_lastSearchPos = sr.start;
+		m_editor.SetPos(sr.start);
+
+		// If movement is part of a command we want to highlight the
+		// movement rather than the match
+		if (m_endState == state_normal) m_editor.Select(sr.start, sr.end);
+		else m_editor.Select(m_searchPos, sr.start);
 	}
 
-	if (startpos == m_searchPos) return; // no matches
-
-	m_lastSearchPos = startpos;
-	m_editor.SetPos(startpos);
-	m_editor.Select(startpos, endpos);
-	m_editor.SetSearchHighlight(m_search, FIND_USE_REGEX);
+	m_editor.SetSearchHighlight(m_search, FIND_MATCHCASE|FIND_USE_REGEX);
 }
 
 void CommandHandler::NextMatch(size_t count, bool forward) {

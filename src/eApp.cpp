@@ -46,7 +46,7 @@ IMPLEMENT_APP(eApp)
 
 // Define this to True in debug mode to use e.cfg from the built .exe path
 // instead of the User's appdata path.
-#define PUT_DEBUG_SETTINGS_IN_EXE_PATH true
+#define PUT_DEBUG_SETTINGS_IN_EXE_PATH false
 
 static wxString eApp_ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) {
 	wxString path = cmd;

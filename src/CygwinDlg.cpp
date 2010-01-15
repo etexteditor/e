@@ -100,26 +100,30 @@ void* CygwinInstallThread::Entry() {
 		// Make sure it get eventual proxy settings from IE
 		wxFileName::Mkdir(cygPath + wxT("\\etc\\setup\\"), 0777, wxPATH_MKDIR_FULL);
 		wxFile file(cygPath + wxT("\\etc\\setup\\last-connection"), wxFile::write);
-		file.Write(wxT("IE"));
+		if (file.IsOpened()) file.Write(wxT("IE"));
 
 	}
 	const wxString supportPath = m_appPath + wxT("Support\\bin");
 	const wxString packages = wxT("curl,wget,tidy,perl,python,ruby,file,libiconv");
 
-	const wxString cmd = wxString::Format(wxT("%s\\cygwin-setup-p.exe"), supportPath);
+	const wxString cmd = wxString::Format(wxT("%s\\setup.exe"), supportPath);
 	wxString options;
 	if (m_mode == cxCYGWIN_AUTO) {
-		options = wxString::Format(wxT("--quiet-mode --site http://mirrors.dotsrc.org/cygwin/ --package %s  --root \"%s\""), packages, cygPath);
+		options = wxString::Format(wxT("--quiet-mode --no-shortcuts --site http://mirrors.dotsrc.org/cygwin/ --packages %s  --root \"%s\""), packages, cygPath);
 	}
 	else {
-		options = wxString::Format(wxT("--package %s"), packages);
+		options = wxString::Format(wxT("--packages %s"), packages);
 	}
 
 	// Run Setup
 	// We have to use ShellExecute to enable Vista UAC elevation
-	SHELLEXECUTEINFO sei = { sizeof(sei) };
-    sei.fMask = SEE_MASK_NOASYNC|SEE_MASK_NOCLOSEPROCESS;
-    sei.nShow = SW_SHOWNORMAL;
+	const wxString verb = wxT("runas");
+	SHELLEXECUTEINFO sei;
+    ZeroMemory(&sei, sizeof(sei));
+    sei.cbSize = sizeof(SHELLEXECUTEINFOW);
+    sei.fMask  = SEE_MASK_NOASYNC|SEE_MASK_NOCLOSEPROCESS;
+    sei.nShow  = SW_SHOWNORMAL;
+	sei.lpVerb = verb.c_str();
     sei.lpFile = cmd.c_str();
 	sei.lpParameters = options.c_str();
 	if (!::ShellExecuteEx(&sei)) return NULL;

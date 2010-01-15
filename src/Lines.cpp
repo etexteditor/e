@@ -634,7 +634,7 @@ int Lines::UpdateSelection(unsigned int sel_id, unsigned int start, unsigned int
 }
 
 void Lines::RemoveSelection(unsigned int sel_id) {
-	// FS#393 0 Quickly pressing and releasing CTRL and ALT while making a 
+	// FS#393 Quickly pressing and releasing CTRL and ALT while making a 
 	// selection can cause this function to be called in a way that violates this 
 	// assertion. In that case, we don't want to blow up here.
 	if (selections.empty()) return;
@@ -724,13 +724,13 @@ void Lines::ReLoadText() {
 	ll->NewOffsets();
 
 	// Check if we end with a newline
-	if (m_doc.GetLength()) {
+	if (m_doc.GetLength() == 0 ) NewlineTerminated = false;
+	else {
 		cxLOCKDOC_READ(m_doc)
 			const wxChar lastChar = doc.GetChar(doc.GetValidCharPos(doc.GetLength()-1));
 			NewlineTerminated = (lastChar == '\n');
 		cxENDLOCK
 	}
-	else NewlineTerminated = false;
 }
 
 void Lines::InsertChar(unsigned int pos, const wxChar& newtext, unsigned int byte_len) {
@@ -769,9 +769,8 @@ void Lines::InsertChar(unsigned int pos, const wxChar& newtext, unsigned int byt
 	// Insert the char
 	if (newtext == '\n') {
 		ll->update(changedline, pos+byte_len);
-		if (linerest > 0) {
+		if (linerest > 0)
 			ll->insert(changedline+1, ll->end(changedline) + linerest);
-		}
 	}
 	else  ll->update(changedline, ll->end(changedline)+byte_len);
 
@@ -842,7 +841,6 @@ void Lines::Insert(unsigned int pos, unsigned int byte_len) {
 	int lastline = inspos;
 	if(!newlines.empty()) {
 		ll->insertlines(inspos, newlines);
-
 		lastline += (int)newlines.size(); // set to line after last changed line
 	}
 

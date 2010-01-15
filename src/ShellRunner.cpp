@@ -83,6 +83,13 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 
 		env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
 		execCmd = s_bashCmd;
+
+#ifdef __WXMSW__
+		// Cygwin needs to be able to handle windows paths
+		wxString cygvar;
+		if (env.GetEnv(wxT("CYGWIN"), cygvar)) env.SetEnv(wxT("CYGWIN"), cygvar + wxT(" nodosfilewarning"));
+		else env.SetEnv(wxT("CYGWIN"), wxT("nodosfilewarning"));
+#endif
 	}
 #ifdef __WXMSW__
 	else {

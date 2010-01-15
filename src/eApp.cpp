@@ -46,7 +46,7 @@ IMPLEMENT_APP(eApp)
 
 // Define this to True in debug mode to use e.cfg from the built .exe path
 // instead of the User's appdata path.
-#define PUT_DEBUG_SETTINGS_IN_EXE_PATH true
+#define PUT_DEBUG_SETTINGS_IN_EXE_PATH false
 
 static wxString eApp_ExtractPosArgs(const wxString& cmd, unsigned int& lineNum, unsigned int& columnNum) {
 	wxString path = cmd;
@@ -138,8 +138,8 @@ bool eApp::OnInit() {
 
 	// App info
 	const wxString appId = wxString::Format(wxT("eApp-%s"), wxGetUserId().c_str());
-	m_version_id = 207;  // <-------------- INTERNAL VERSION NUMBER
-	m_version_name =  wxT("1.0.41"); // <-- VERSION NAME
+	m_version_id = 210;  // <-------------- INTERNAL VERSION NUMBER
+	m_version_name =  wxT("1.0.42b"); // <-- VERSION NAME
 
 	// Option vars
 	m_lineNum = 0;
@@ -725,7 +725,7 @@ const wxString& eApp::AppPath() const {return m_appPath;}
 const wxString& eApp::AppDataPath() const {return m_appDataPath;}
 
 wxString eApp::CreateTempAppDataFile() {
-	const wxString tempPath = m_appPath + wxT("temp") + wxFILE_SEP_PATH;
+	const wxString tempPath = m_appDataPath + wxT("temp") + wxFILE_SEP_PATH;
 	if (!wxDirExists(tempPath)) wxMkdir(tempPath);
 	return wxFileName::CreateTempFileName(tempPath);
 }

@@ -399,6 +399,7 @@ private:
 	void DoVerticalWheelScroll(wxMouseEvent& event);
 	void DoHorizontalWheelScroll(wxMouseEvent& event);
 
+	void StartDragSelectedText(void);
 
 	// Notification handlers
 	static void OnSetDocument(EditorCtrl* self, void* data, int filter);
@@ -491,7 +492,6 @@ protected:
 
 	// Folding
 	void FoldingClear();
-	void FoldingInvalidate();
 	void FoldingInsert(unsigned int pos, unsigned int length);
 	void FoldingDelete(unsigned int start, unsigned int end);
 	void FoldingApplyDiff(const vector<cxLineChange>& linechanges);

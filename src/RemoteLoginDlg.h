@@ -16,19 +16,18 @@
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
-	#include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 class RemoteLoginDlg : public wxDialog {
 public:
 	RemoteLoginDlg(wxWindow *parent, const wxString& username, const wxString& site, bool askToSave);
 
-	wxString GetUsername() const {return m_profileUsername->GetValue();};
-	wxString GetPassword() const {return m_profilePassword->GetValue();};
-	bool GetSaveProfile() const {return m_saveProfile->IsChecked();};
+	virtual wxString GetUsername() const;
+	virtual wxString GetPassword() const;
+	virtual bool GetSaveProfile() const;
 
 private:
-	// Ctrls
 	wxTextCtrl* m_profileUsername;
 	wxTextCtrl* m_profilePassword;
 	wxCheckBox* m_saveProfile;

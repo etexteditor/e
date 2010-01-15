@@ -5,6 +5,10 @@
 #include "tinyxml.h"
 #include "EasyPlistWriter.h"
 
+#ifdef __WXMSW__
+#include "eDocumentPath.h"
+#endif
+
 cxProjectInfo::cxProjectInfo(): isRoot(false), hasFilters(false) {};
 
 cxProjectInfo::cxProjectInfo(const cxProjectInfo& info) {
@@ -70,9 +74,8 @@ static bool projectinfo_match(const wxString& path, const wxArrayString& include
 	}
 
 	for (unsigned int i = 0; i < excludes.GetCount(); ++i) {
-		if (wxMatchWild(excludes[i], path, false)) {
+		if (wxMatchWild(excludes[i], path, false))
 			return false;
-		}
 	}
 
 	return true;
@@ -85,7 +88,6 @@ bool cxProjectInfo::IsFileIncluded(const wxString& file_name) const {
 bool cxProjectInfo::IsDirectoryIncluded(const wxString& dir_name) const {
 	return projectinfo_match(dir_name, includeDirs, excludeDirs);
 }
-
 
 bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool onlyFilters) {
 	wxFileName projectPath(path, wxEmptyString);
@@ -140,9 +142,7 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 						const char* pattern = child->GetText();
 						if (pattern) filterArray->Add(wxString(pattern, wxConvUTF8));
 					}
-					else {
-						wxASSERT(false);
-					}
+					else wxASSERT(false);
 				}
 
 				filter = array; // jump over value
@@ -163,9 +163,8 @@ bool cxProjectInfo::Load(const wxFileName& rootPath, const wxString& path, bool 
 				if (strcmp(val->Value(), "string") != 0) return false; // invalid dict
 				const char* value = val->GetText();
 
-				if (key) {
+				if (key)
 					this->env[wxString(key, wxConvUTF8)] = value ? wxString(value, wxConvUTF8) : *wxEmptyString;
-				}
 
 				env = val; // jump over value
 			}
@@ -246,7 +245,6 @@ void cxProjectInfo::Save(const wxString& rootPath) const {
 	eprj.Save(filepath);
 
 #ifdef __WXMSW__
-	DWORD dwAttrs = ::GetFileAttributes(filepath.c_str());
-	::SetFileAttributes(filepath.c_str(), dwAttrs | FILE_ATTRIBUTE_HIDDEN);
+	eDocumentPath::MakeHidden(filepath);
 #endif //__WXMSW__
 }

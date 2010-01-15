@@ -13,8 +13,9 @@
 
 #include "RemoteLoginDlg.h"
 
-RemoteLoginDlg::RemoteLoginDlg(wxWindow *parent, const wxString& username, const wxString& site, bool askToSave)
-: wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {
+RemoteLoginDlg::RemoteLoginDlg(wxWindow *parent, const wxString& username, const wxString& site, bool askToSave):
+	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+{
 	SetTitle (_("Login failed"));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -48,21 +49,19 @@ RemoteLoginDlg::RemoteLoginDlg(wxWindow *parent, const wxString& username, const
 		mainSizer->Add(CreateButtonSizer(wxOK|wxCANCEL), 0, wxEXPAND|wxALL, 5);
 	}
 
-	if (!askToSave) mainSizer->Hide(m_saveProfile);
-	if (!username.empty()) {
+	if (!askToSave)
+		mainSizer->Hide(m_saveProfile);
+
+	if (username.empty()) m_profileUsername->SetFocus();
+	else {
 		m_profileUsername->SetValue(username);
 		m_profilePassword->SetFocus();
 	}
-	else m_profileUsername->SetFocus();
 
 	SetSizerAndFit(mainSizer);
 	Centre();
 }
 
-
-
-
-
-
-
-
+wxString RemoteLoginDlg::GetUsername() const { return m_profileUsername->GetValue(); }
+wxString RemoteLoginDlg::GetPassword() const { return m_profilePassword->GetValue(); }
+bool RemoteLoginDlg::GetSaveProfile() const { return m_saveProfile->IsChecked(); }

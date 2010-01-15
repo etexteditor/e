@@ -36,6 +36,7 @@ public:
 	static bool SetPermissions(const wxString& path, FILE_PERMISSIONS permissions);
 
 #ifdef __WXMSW__
+	static bool MakeHidden(const wxString& path);
 
 	static wxString GetCygwinDir();
 	static wxString GetCygdrivePrefix();

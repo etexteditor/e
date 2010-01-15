@@ -461,7 +461,7 @@ EditorFrame::~EditorFrame() {
 
 // Loads settings that end up as member variables
 void EditorFrame::InitMemberSettings() {
-	if (!m_generalSettings.GetSettingInt(wxT("wrapmode"), (int&)m_wrapMode)) {
+	if (!m_settings.GetSettingInt(wxT("wrapmode"), (int&)m_wrapMode)) {
 		// fallback to old settings format
 		bool wordwrap = cxWRAP_NORMAL;
 		if (m_generalSettings.GetSettingBool(wxT("wordwrap"), wordwrap))
@@ -476,11 +476,11 @@ void EditorFrame::InitMemberSettings() {
 	regKey.SetValue(wxT("ww"), ww);
 #endif // __WXMSW__
 
-	if (!m_generalSettings.GetSettingBool(wxT("showgutter"), m_showGutter)) m_showGutter = true;
-	if (!m_generalSettings.GetSettingBool(wxT("hl_users"), m_userHighlight)) m_userHighlight = true;
-	if (!m_generalSettings.GetSettingBool(wxT("softtabs"), m_softTabs)) m_softTabs = false;
-	if (!m_generalSettings.GetSettingInt(wxT("tabwidth"), m_tabWidth)) m_tabWidth = 4;
-	if (!m_generalSettings.GetSettingBool(wxT("showindent"), m_showIndent)) m_showIndent = false;
+	if (!m_settings.GetSettingBool(wxT("showgutter"), m_showGutter)) m_showGutter = true;
+	if (!m_settings.GetSettingBool(wxT("hl_users"), m_userHighlight)) m_userHighlight = true;
+	if (!m_settings.GetSettingBool(wxT("softtabs"), m_softTabs)) m_softTabs = false;
+	if (!m_settings.GetSettingInt(wxT("tabwidth"), m_tabWidth)) m_tabWidth = 4;
+	if (!m_settings.GetSettingBool(wxT("showindent"), m_showIndent)) m_showIndent = false;
 }
 
 void EditorFrame::InitStatusbar() {
@@ -2062,7 +2062,7 @@ void EditorFrame::SetSoftTab(bool isSoft)  {
 	if (isSoft == m_softTabs) return;
 
 	// Save setting
-	m_generalSettings.SetSettingBool(wxT("softtabs"), isSoft);
+	m_settings.SetSettingBool(wxT("softtabs"), isSoft);
 	m_softTabs = isSoft;
 
 	// update all editor pages
@@ -2077,7 +2077,7 @@ void EditorFrame::SetTabWidth(unsigned int width) {
 	if ((int)width == m_tabWidth) return;
 
 	// Save setting
-	m_generalSettings.SetSettingInt(wxT("tabwidth"), width);
+	m_settings.SetSettingInt(wxT("tabwidth"), width);
 	m_tabWidth = width;
 
 	// Invalidate all editor pages

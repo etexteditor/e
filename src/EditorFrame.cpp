@@ -2062,7 +2062,7 @@ void EditorFrame::SetSoftTab(bool isSoft)  {
 	if (isSoft == m_softTabs) return;
 
 	// Save setting
-	m_settings.SetSettingBool(wxT("softtabs"), isSoft);
+	m_generalSettings.SetSettingBool(wxT("softtabs"), isSoft);
 	m_softTabs = isSoft;
 
 	// update all editor pages
@@ -2077,7 +2077,7 @@ void EditorFrame::SetTabWidth(unsigned int width) {
 	if ((int)width == m_tabWidth) return;
 
 	// Save setting
-	m_settings.SetSettingInt(wxT("tabwidth"), width);
+	m_generalSettings.SetSettingInt(wxT("tabwidth"), width);
 	m_tabWidth = width;
 
 	// Invalidate all editor pages

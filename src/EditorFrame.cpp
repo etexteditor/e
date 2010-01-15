@@ -420,6 +420,13 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 			if (showsymbols) ShowSymbolList();
 		}
 
+		// Check if we should show snippet list
+		{
+			bool showsnippets = false;
+			m_settings.GetSettingBool(wxT("showsnippets"), showsnippets);
+			if (showsnippets) ShowSnippetList();
+		}
+
 		m_frameManager.Update();
 
 		InitAccelerators();
@@ -3235,10 +3242,10 @@ void EditorFrame::ShowSnippetList() {
 	paneInfo.Name(wxT("Snippet Shortcuts")).Right().Caption(_("Snippet Shortcuts")).BestSize(wxSize(150,50)); // defaults
 
 	// Load pane settings
-	/*wxString panePerspective;
-	m_settings.GetSettingString(wxT("symbol_pane"), panePerspective);
-	m_settings.SetSettingBool(wxT("showsymbols"), true);
-	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);*/
+	wxString panePerspective;
+	m_settings.GetSettingString(wxT("snippet_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showsnippets"), true);
+	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);
 
 	// Add to manager
 	m_frameManager.AddPane(m_snippetList, paneInfo);
@@ -3251,11 +3258,11 @@ void EditorFrame::CloseSnippetList() {
 	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_snippetList);
 
 	// Save pane settings
-	/*const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
-	m_settings.SetSettingString(wxT("symbol_pane"), panePerspective);
-	m_settings.SetSettingBool(wxT("showsymbols"), false);*/
+	const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+	m_settings.SetSettingString(wxT("snippet_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showsnippets"), false);
 
-	// Delete the symbol pane
+	// Delete the snippet pane
 	m_frameManager.DetachPane(m_snippetList);
 	m_snippetList->Hide();
 	m_snippetList->Destroy();
@@ -3655,6 +3662,16 @@ void EditorFrame::SaveState() {
 		const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
 		m_settings.SetSettingString(wxT("symbol_pane"), panePerspective);
 		m_settings.SetSettingBool(wxT("showsymbols"), true);
+	}
+
+	// Save snippet list layout
+	if (m_snippetList) {
+		wxAuiPaneInfo& pane = m_frameManager.GetPane(m_snippetList);
+
+		// Save pane settings
+		const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+		m_settings.SetSettingString(wxT("snippet_pane"), panePerspective);
+		m_settings.SetSettingBool(wxT("showsnippets"), true);
 	}
 
 	m_settings.SetSettingBool(wxT("showproject"), projectPane.IsShown());

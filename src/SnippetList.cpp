@@ -69,7 +69,7 @@ SnippetList::SnippetList(EditorFrame& services):
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_bundleStrings);
 
-	UpdateList();
+	// UpdateList();
 
 	// Add custom event handler (for up/down key events in the search box)
 	m_searchCtrl->Connect(wxEVT_CHAR, wxKeyEventHandler(SnippetList::OnSearchChar), NULL, this);
@@ -120,6 +120,9 @@ bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
 }
 
 void SnippetList::GetCurrentActions() {
+	if(m_editorFrame.GetEditorCtrl() != NULL)
+		m_editorCtrl = m_editorFrame.GetEditorCtrl();
+
 	deque<const wxString*> scope = m_editorCtrl->GetScope();
 	if(ScopeChanged(scope)) {
 		//copy the new scope into the instance variable

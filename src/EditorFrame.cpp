@@ -420,13 +420,6 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 			if (showsymbols) ShowSymbolList();
 		}
 
-		// Check if we should show snippet list
-		{
-			bool showsnippets = false;
-			m_settings.GetSettingBool(wxT("showsnippets"), showsnippets);
-			if (showsnippets) ShowSnippetList();
-		}
-
 		m_frameManager.Update();
 
 		InitAccelerators();
@@ -442,6 +435,13 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		AddTab();
 	}
 	Thaw();
+
+		// Check if we should show snippet list
+		{
+			bool showsnippets = false;
+			m_settings.GetSettingBool(wxT("showsnippets"), showsnippets);
+			if (showsnippets) ShowSnippetList();
+		}
 
 	// Make sure that we get notified when the document changes
 	dispatcher.SubscribeC(wxT("DOC_NEWREVISION"), (CALL_BACK)OnDocChange, this);

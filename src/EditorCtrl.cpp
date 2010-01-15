@@ -7450,7 +7450,7 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
 	const wxSize size = GetClientSize();
 	int pos = scrollPos;
-	const int rotation = event.GetWheelRotation();
+	const double rotation = event.GetWheelRotation();
 
 	if (event.GetLinesPerAction() == (int)UINT_MAX) { // signifies to scroll a page
 		wxScrollWinEvent newEvent;
@@ -7460,11 +7460,11 @@ void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
         ProcessEvent(newEvent);
 		return;
 	}
-
+	
 	if (rotation == 0) return;
 
-	const int linescount = (rotation / event.GetWheelDelta()) * event.GetLinesPerAction();
-	pos = pos - (pos % m_lines.GetLineHeight()) - (m_lines.GetLineHeight() * linescount);
+	const double linescount = (rotation / ((double)event.GetWheelDelta())) * ((double)event.GetLinesPerAction());
+	pos = pos - (m_lines.GetLineHeight() * linescount);
 
 	if (rotation > 0) pos = max(pos, 0); // up
 	else if (rotation < 0) pos = min(pos, m_lines.GetHeight() - size.y); // down

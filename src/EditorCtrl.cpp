@@ -2101,7 +2101,6 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	m_autopair.AdjustEndsDown(del_len);
 
 	MarkAsModified();
-	m_parentFrame.RefreshSnippetList();
 
 	return del_len;
 }
@@ -2362,8 +2361,6 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 	lastaction = ACTION_INSERT;
 
 	MarkAsModified();
-
-	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::Insert(const wxString& text) {
@@ -2404,8 +2401,6 @@ void EditorCtrl::Insert(const wxString& text) {
 	}
 
 	MarkAsModified();
-
-	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::Delete(unsigned int start, unsigned int end) {
@@ -2437,8 +2432,6 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 	}
 
 	MarkAsModified();
-
-	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::Commit(const wxString& label, const wxString& desc) {
@@ -6130,6 +6123,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	// adding/removing scrollbars. So we just check if the
 	// caret has been pushed out of the view.
 	if (MakeCaretVisible()) DrawLayout();
+	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::DoCommand(int c) {
@@ -6974,6 +6968,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
 	//wxLogDebug(wxT("EditorCtrl::CaptureMouse() %d"), event.LeftDown());
 	CaptureMouse();
+	m_parentFrame.RefreshSnippetList();
 }
 
 void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {

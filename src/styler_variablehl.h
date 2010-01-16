@@ -42,9 +42,10 @@ public:
 	void SetCurrentWord(const wxString& text, bool click, unsigned int cursosPosition, int key);
 	void Style(StyleRun& sr);
 
-	int Styler_VariableHL::GetStyleType(unsigned int start, unsigned int end);
-	bool Styler_VariableHL::IsCurrentWord(unsigned int start, unsigned int end);
-	bool Styler_VariableHL::IsArrowKey(int key);
+	bool ShouldStyle();
+	int GetStyleType(unsigned int start, unsigned int end);
+	bool IsCurrentWord(unsigned int start, unsigned int end);
+	bool IsArrowKey(int key);
 
 	// Handle document changes
 	void ApplyDiff(const std::vector<cxChange>& changes);

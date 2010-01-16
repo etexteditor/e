@@ -10,13 +10,7 @@
  * KIND, either express or implied.
  *
  ******************************************************************************/
-/**
-Make it into subclass.
-Pass in current cursor position so the current word is not highlighted as typing.
--Check if the character before or after is a alphanumeric.
-Change the highlight color.
-Add a setting to disable it.
-*/
+
 #include "styler_variablehl.h"
 
 #include "StyleRun.h"
@@ -107,10 +101,14 @@ bool Styler_VariableHL::IsArrowKey(int key) {
 	return false;
 }
 
-void Styler_VariableHL::Style(StyleRun& sr) {
+bool Styler_VariableHL::ShouldStyle() {
 	bool shouldStyle = false;
 	m_settings.GetSettingBool(wxT("highlightVariables"), shouldStyle);
-	if(!shouldStyle) return;
+	return shouldStyle;
+}
+
+void Styler_VariableHL::Style(StyleRun& sr) {
+	if(!ShouldStyle()) return;
 
 	const unsigned int rstart =  sr.GetRunStart();
 	const unsigned int rend = sr.GetRunEnd();

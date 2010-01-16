@@ -25,8 +25,8 @@ Add a setting to disable it.
 
 const unsigned int Styler_VariableHL::EXTSIZE = 1000;
 
-Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
-: m_doc(rev), m_lines(lines), m_theme(theme), 
+Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings)
+: m_doc(rev), m_lines(lines), m_theme(theme), m_settings(settings),
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor) ,
   m_click(false), m_cursorPosition(0), m_key(-1)
@@ -108,6 +108,10 @@ bool Styler_VariableHL::IsArrowKey(int key) {
 }
 
 void Styler_VariableHL::Style(StyleRun& sr) {
+	bool shouldStyle = false;
+	m_settings.GetSettingBool(wxT("highlightVariables"), shouldStyle);
+	if(!shouldStyle) return;
+
 	const unsigned int rstart =  sr.GetRunStart();
 	const unsigned int rend = sr.GetRunEnd();
 

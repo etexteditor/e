@@ -22,6 +22,7 @@
 
 #include "Catalyst.h"
 #include "styler.h"
+#include "eSettings.h"
 
 #include <vector>
 
@@ -33,7 +34,7 @@ class Lines;
 
 class Styler_VariableHL : public Styler {
 public:
-	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme);
+	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings);
 	virtual ~Styler_VariableHL() {};
 
 	void Clear();
@@ -56,6 +57,7 @@ private:
 	const Lines& m_lines;
 	wxString m_text;
 	std::vector<interval> m_matches;
+	eSettings& m_settings;
 
 	bool m_click;
 	unsigned int m_cursorPosition;

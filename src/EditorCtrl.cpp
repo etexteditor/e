@@ -162,7 +162,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_lines(mdc, m_doc, *this, m_theme),
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -211,7 +211,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_lines(mdc, m_doc, *this, m_theme),
 	
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -274,7 +274,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_lines(mdc, m_doc, *this, m_theme), 
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 

@@ -48,6 +48,7 @@ enum {
 	CTRL_MARGINSPIN,
 	CTRL_ATOMICSAVE,
 	CTRL_LASTTAB,
+	CTRL_HIGHLIGHTVARIABLES,
 	CTRL_LINEENDING,
 	CTRL_ENCODING,
 	CTRL_BOM,
@@ -70,6 +71,7 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_CHECKBOX(CTRL_AUTOUPDATE, SettingsDlg::OnCheckCheckForUpdates)
 	EVT_CHECKBOX(CTRL_ATOMICSAVE, SettingsDlg::OnCheckAtomicSave)
 	EVT_CHECKBOX(CTRL_LASTTAB, SettingsDlg::OnCheckLastTab)
+	EVT_CHECKBOX(CTRL_HIGHLIGHTVARIABLES, SettingsDlg::OnCheckHighlightVariables)
 	EVT_SPINCTRL(CTRL_MARGINSPIN, SettingsDlg::OnMarginSpin) 
 	EVT_COMBOBOX(CTRL_LINEENDING, SettingsDlg::OnComboEol)
 	EVT_COMBOBOX(CTRL_ENCODING, SettingsDlg::OnComboEncoding)
@@ -179,6 +181,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
 	wxCheckBox* atomicSave = new wxCheckBox(settingsPage, CTRL_ATOMICSAVE, _("Atomic save"));
 	wxCheckBox* lastTab = new wxCheckBox(settingsPage, CTRL_LASTTAB, _("Go to last active tab on Ctrl-Tab"));
+	wxCheckBox* highlightVariables = new wxCheckBox(settingsPage, CTRL_HIGHLIGHTVARIABLES, _("Highlight occurances of a variable when clicked."));
 
 	wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
 		settingsSizer->Add(autoPair, 0, wxALL, 5);
@@ -192,6 +195,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 		settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
 		settingsSizer->Add(atomicSave, 0, wxALL, 5);
 		settingsSizer->Add(lastTab, 0, wxALL, 5);
+		settingsSizer->Add(highlightVariables, 0, wxALL, 5);
 	settingsPage->SetSizer(settingsSizer);
 
 	// Settings defaults.
@@ -203,6 +207,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	bool doWrapMargin = false;
 	bool noAtomicSave = false;
 	bool doLastTab = false;
+	bool doHighlightVariables = false;
 	int marginChars = 80;  
 
 	m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
@@ -214,6 +219,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	m_settings.GetSettingInt(wxT("marginChars"), marginChars);
 	m_settings.GetSettingBool(wxT("disable_atomic_save"), noAtomicSave);
 	m_settings.GetSettingBool(wxT("gotoLastTab"), doLastTab);
+	m_settings.GetSettingBool(wxT("highlightVariables"), doHighlightVariables);
 
 	// Update ctrls
 	autoPair->SetValue(doAutoPair);
@@ -229,6 +235,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	}
 	atomicSave->SetValue(!noAtomicSave);
 	lastTab->SetValue(doLastTab);
+	highlightVariables->SetValue(doHighlightVariables);
 
 	return settingsPage;
 }
@@ -572,4 +579,8 @@ void SettingsDlg::OnCheckAtomicSave(wxCommandEvent& event) {
 
 void SettingsDlg::OnCheckLastTab(wxCommandEvent& event) {
 	m_settings.SetSettingBool(wxT("gotoLastTab"), event.IsChecked());
+}
+
+void SettingsDlg::OnCheckHighlightVariables(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("highlightVariables"), event.IsChecked());
 }

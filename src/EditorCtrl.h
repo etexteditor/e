@@ -24,6 +24,7 @@
 #include "Catalyst.h"
 #include "Lines.h"
 #include "styler_searchhl.h"
+#include "styler_variablehl.h"
 #include "styler_syntax.h"
 #include "SnippetHandler.h"
 #include "key_hook.h"
@@ -489,6 +490,7 @@ protected:
 	void StylersInvalidate();
 	void StylersInsert(unsigned int pos, unsigned int length);
 	void StylersDelete(unsigned int start, unsigned int end);
+	void RefreshVariableHighlighter();
 
 	// Folding
 	void FoldingClear();
@@ -523,6 +525,7 @@ protected:
 	Lines m_lines;
 
 	Styler_SearchHL m_search_hl_styler;
+	Styler_VariableHL m_variable_hl_styler;
 	Styler_Syntax m_syntaxstyler;
 
 	wxTimer m_foldTooltipTimer;

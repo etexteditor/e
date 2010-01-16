@@ -1554,6 +1554,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\styler_variablehl.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\styler_variablehl.h"
+			>
+		</File>
+		<File
 			RelativePath="StyleRun.cpp"
 			>
 		</File>

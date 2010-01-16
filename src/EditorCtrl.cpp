@@ -162,6 +162,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_lines(mdc, m_doc, *this, m_theme),
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -210,6 +211,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_lines(mdc, m_doc, *this, m_theme),
 	
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -272,6 +274,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_lines(mdc, m_doc, *this, m_theme), 
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
@@ -432,6 +435,7 @@ void EditorCtrl::Init() {
 	//m_lines.AddStyler(m_usersStyler);
 	m_lines.AddStyler(m_syntaxstyler);
 	m_lines.AddStyler(m_search_hl_styler);
+	m_lines.AddStyler(m_variable_hl_styler);
 
 	// Set initial tabsize
 	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
@@ -2895,6 +2899,7 @@ void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	m_syntaxstyler.ApplyDiff(linechanges);
 	FoldingApplyDiff(linechanges);
 	m_search_hl_styler.ApplyDiff(changes);
+	m_variable_hl_styler.ApplyDiff(changes);
 	if (!changes.empty()) bookmarks.ApplyChanges(changes);
 
 	// Move caret to position of first change
@@ -2953,6 +2958,7 @@ interval EditorCtrl::UndoSelection(const cxDiffEntry& de) {
 
 void EditorCtrl::StylersClear() {
 	m_search_hl_styler.Clear();
+	m_variable_hl_styler.Clear();
 	m_syntaxstyler.Clear();
 	FoldingClear();
 }
@@ -4160,6 +4166,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 
 	DrawLayout();
 	MarkAsModified();
+
 
 	m_parentFrame.RefreshSnippetList();
 };
@@ -6115,6 +6122,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	}
 
 	MakeCaretVisible();
+	RefreshVariableHighlighter();
 
 	// Draw the updated view
 	DrawLayout();
@@ -6962,7 +6970,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	}
 
 	m_tripleClicks.Reset();
-
+	RefreshVariableHighlighter();
 	DrawLayout();
 
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
@@ -8173,6 +8181,16 @@ void EditorCtrl::Print() {
 }
 
 #endif  //__WXDEBUG__
+
+void EditorCtrl::RefreshVariableHighlighter() {
+	wxString word = GetCurrentWord();
+	wxLogDebug(word);
+	if(word.Len() == 0) {
+		m_variable_hl_styler.Clear();
+	} else {
+		m_variable_hl_styler.SetCurrentWord(word);
+	}
+}
 
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {
 	vector<unsigned int> folds;

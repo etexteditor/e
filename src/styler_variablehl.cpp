@@ -26,9 +26,10 @@ Add a setting to disable it.
 const unsigned int Styler_VariableHL::EXTSIZE = 1000;
 
 Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme)
-: m_doc(rev), m_lines(lines),
-  m_theme(theme), m_hlcolor(m_theme.shadowColor),
-  m_rangeColor(m_theme.searchHighlightColor) 
+: m_doc(rev), m_lines(lines), m_theme(theme), 
+  m_selectionHighlightColor(m_theme.selectionColor),
+  m_searchHighlightColor(m_theme.searchHighlightColor) ,
+  m_click(false), m_cursorPosition(0), m_key(-1)
 {
 	Clear(); // Make sure all variables are empty
 }
@@ -46,11 +47,64 @@ void Styler_VariableHL::Invalidate() {
 	m_search_end = 0;
 }
 
-void Styler_VariableHL::SetCurrentWord(const wxString& text) {
+void Styler_VariableHL::SetCurrentWord(const wxString& text, bool click, unsigned int cursorPosition, int key) {
 	if (text != m_text) {
 		Clear();
 		m_text = text;
 	}
+
+	//These should always be updated.
+	//The user could hit the arrow up key to move to a new word, in which case the highlighting should change
+	m_click = click;
+	m_cursorPosition = cursorPosition;
+	m_key = key;
+}
+
+// Returns 0 for no style
+// Returns 1 for 'select' background color
+// Returns 2 for 'search' background color
+int Styler_VariableHL::GetStyleType(unsigned int start, unsigned int end) {
+	if(m_click) return 1;
+	if(IsArrowKey(m_key)) {
+		return 1;
+	} else {
+		if(IsCurrentWord(start, end)) {
+			return 0;
+		} else {
+			return 1;
+		}
+	}
+}
+
+bool Styler_VariableHL::IsCurrentWord(unsigned int start, unsigned int end) {
+	return start <= m_cursorPosition && end >= m_cursorPosition;
+}
+
+bool Styler_VariableHL::IsArrowKey(int key) {
+	switch(key) {
+		case WXK_LEFT:
+		case WXK_RIGHT:
+		case WXK_UP:
+		case WXK_NUMPAD_UP:
+		case WXK_DOWN:
+		case WXK_NUMPAD_DOWN:
+		case WXK_HOME:
+		case WXK_NUMPAD_HOME:
+		case WXK_NUMPAD_BEGIN:
+		case WXK_END:
+		case WXK_NUMPAD_END:
+		case WXK_PAGEUP:
+		case WXK_NUMPAD_PAGEUP:
+		case WXK_PAGEDOWN:
+		case WXK_NUMPAD_PAGEDOWN:
+		case WXK_RETURN:
+		case WXK_NUMPAD_ENTER:
+		case WXK_TAB:
+		case WXK_NUMPAD_TAB:
+		case WXK_ESCAPE:
+			return true;
+	}
+	return false;
 }
 
 void Styler_VariableHL::Style(StyleRun& sr) {
@@ -113,8 +167,14 @@ void Styler_VariableHL::Style(StyleRun& sr) {
 			unsigned int start = wxMax(rstart, p->start);
 			unsigned int end   = wxMin(rend, p->end);
 
-			sr.SetBackgroundColor(start, end, m_hlcolor);
-			sr.SetShowHidden(start, end, true);
+			int styleType = GetStyleType(start, end);
+			if(styleType == 1) {
+				sr.SetBackgroundColor(start, end, m_selectionHighlightColor);
+				sr.SetShowHidden(start, end, true);
+			} else if(styleType == 2) {
+				sr.SetBackgroundColor(start, end, m_searchHighlightColor);
+				sr.SetShowHidden(start, end, true);
+			}
 		}
 	}
 }
@@ -161,7 +221,7 @@ void Styler_VariableHL::DoSearch(unsigned int start, unsigned int end, bool from
 				nextChar = doc.GetChar(result.end);
 				if(isAlphaNumeric(nextChar)) skip = true;
 			}
-			wxLogDebug(wxT("%d %d |%c| |%c|"), result.start, result.end, doc.GetChar(result.start), doc.GetChar(result.end));
+			//wxLogDebug(wxT("%d %d |%c| |%c|"), result.start, result.end, doc.GetChar(result.start), doc.GetChar(result.end));
 		cxENDLOCK
 
 		if (result.error_code < 0 || result.start >= end) break;

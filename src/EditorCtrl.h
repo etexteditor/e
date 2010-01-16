@@ -490,7 +490,7 @@ protected:
 	void StylersInvalidate();
 	void StylersInsert(unsigned int pos, unsigned int length);
 	void StylersDelete(unsigned int start, unsigned int end);
-	void RefreshVariableHighlighter();
+	void RefreshVariableHighlighter(bool click, int key);
 
 	// Folding
 	void FoldingClear();

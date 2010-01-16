@@ -6122,7 +6122,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	}
 
 	MakeCaretVisible();
-	RefreshVariableHighlighter();
+	RefreshVariableHighlighter(false, key);
 
 	// Draw the updated view
 	DrawLayout();
@@ -6970,7 +6970,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	}
 
 	m_tripleClicks.Reset();
-	RefreshVariableHighlighter();
+	RefreshVariableHighlighter(true, -1);
 	DrawLayout();
 
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
@@ -8182,13 +8182,13 @@ void EditorCtrl::Print() {
 
 #endif  //__WXDEBUG__
 
-void EditorCtrl::RefreshVariableHighlighter() {
+void EditorCtrl::RefreshVariableHighlighter(bool click, int key) {
 	wxString word = GetCurrentWord();
 	wxLogDebug(word);
 	if(word.Len() == 0) {
 		m_variable_hl_styler.Clear();
 	} else {
-		m_variable_hl_styler.SetCurrentWord(word);
+		m_variable_hl_styler.SetCurrentWord(word, click, m_lines.GetPos(), key);
 	}
 }
 

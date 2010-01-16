@@ -38,8 +38,12 @@ public:
 
 	void Clear();
 	void Invalidate();
-	void SetCurrentWord(const wxString& text);
+	void SetCurrentWord(const wxString& text, bool click, unsigned int cursosPosition, int key);
 	void Style(StyleRun& sr);
+
+	int Styler_VariableHL::GetStyleType(unsigned int start, unsigned int end);
+	bool Styler_VariableHL::IsCurrentWord(unsigned int start, unsigned int end);
+	bool Styler_VariableHL::IsArrowKey(int key);
 
 	// Handle document changes
 	void ApplyDiff(const std::vector<cxChange>& changes);
@@ -53,10 +57,14 @@ private:
 	wxString m_text;
 	std::vector<interval> m_matches;
 
+	bool m_click;
+	unsigned int m_cursorPosition;
+	int m_key;
+
 	// Theme variables
 	const tmTheme& m_theme;
-	const wxColour& m_hlcolor;
-	const wxColour& m_rangeColor;
+	const wxColour& m_searchHighlightColor;
+	const wxColour& m_selectionHighlightColor;
 
 	unsigned int m_search_start;
 	unsigned int m_search_end;

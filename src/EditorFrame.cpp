@@ -436,13 +436,6 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 	}
 	Thaw();
 
-		// Check if we should show snippet list
-		{
-			bool showsnippets = false;
-			m_settings.GetSettingBool(wxT("showsnippets"), showsnippets);
-			if (showsnippets) ShowSnippetList();
-		}
-
 	// Make sure that we get notified when the document changes
 	dispatcher.SubscribeC(wxT("DOC_NEWREVISION"), (CALL_BACK)OnDocChange, this);
 	dispatcher.SubscribeC(wxT("DOC_UPDATEREVISION"), (CALL_BACK)OnDocChange, this);
@@ -822,6 +815,15 @@ void EditorFrame::RestoreState() {
 
 	// Set last active tab to current
 	m_lastActiveTab = m_tabBar->GetSelection();
+
+	//The Snippet handler would occasionally segfault when it was initialized in its previous place.
+	//Moving it after the above call to SetSyntax seems to fix the problem
+	// Check if we should show snippet list
+	{
+		bool showsnippets = false;
+		m_settings.GetSettingBool(wxT("showsnippets"), showsnippets);
+		if (showsnippets) ShowSnippetList();
+	}
 
 #endif // __WXMSW__
 }

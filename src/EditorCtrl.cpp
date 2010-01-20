@@ -5417,8 +5417,9 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 
 		// Get the replacement string
 		wxString textNew;
-		if (!replacetext.empty())
-			textNew = (options & FIND_USE_REGEX) ? ParseReplaceString(replacetext, captures) : textNew;
+		if (!replacetext.empty()) {
+			textNew = (options & FIND_USE_REGEX) ? ParseReplaceString(replacetext, captures) : replacetext;
+		}
 
 		// Delete original
 		if (result.start != result.end) {

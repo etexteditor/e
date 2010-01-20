@@ -2966,12 +2966,14 @@ void EditorCtrl::StylersClear() {
 void EditorCtrl::StylersInvalidate() {
 	m_search_hl_styler.Invalidate();
 	m_syntaxstyler.Invalidate();
+	m_variable_hl_styler.Invalidate();
 	FoldingClear();
 }
 
 void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
 	m_search_hl_styler.Insert(pos, length);
 	m_syntaxstyler.Insert(pos, length);
+	m_variable_hl_styler.Insert(pos, length);
 	FoldingInsert(pos, length);
 	bookmarks.InsertChars(pos, length);
 }
@@ -2979,6 +2981,7 @@ void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
 void EditorCtrl::StylersDelete(unsigned int start, unsigned int end) {
 	m_search_hl_styler.Delete(start, end);
 	m_syntaxstyler.Delete(start, end);
+	m_variable_hl_styler.Delete(start, end);
 	FoldingDelete(start, end);
 	bookmarks.DeleteChars(start, end);
 }

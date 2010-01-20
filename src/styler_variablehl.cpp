@@ -251,9 +251,120 @@ void Styler_VariableHL::DoSearch(unsigned int start, unsigned int end, bool from
 	}
 }
 
-//the insert and delete functions are unnecessary
-//Style is called every time the mouse is moved and a key is pressed.
-//That means, every time the user inserts or deletes a character, Style will be called via the Onchar event handler
+void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
+	wxASSERT(0 <= pos && pos < m_doc.GetLength());
+	wxASSERT(0 <= length && pos+length <= m_doc.GetLength());
+	if (m_text.empty()) return;
+
+	// Adjust start & end
+	if (m_search_start >= pos) m_search_start += length;
+	if (m_search_end > pos)	m_search_end += length;
+	else return; // Change outside search area
+
+	unsigned int search_start = m_search_start;
+
+	if (!m_matches.empty()) {
+		if (pos >= m_matches.back().end) {
+			// Do a new search from end of last match
+			DoSearch(search_start, m_search_end, true);
+			return;
+		}
+
+		// Find first match containing or bigger than pos
+		bool is_first = true;
+		vector<interval>::iterator p = m_matches.begin();
+		while (p != m_matches.end()) {
+			if (p->end > pos) {
+				// Remember first valid match before pos
+				if (is_first) {
+					if (p != m_matches.begin()) search_start = (p-1)->end;
+					is_first = false;
+				}
+
+				if (p->start < pos) {
+					// pos inside match. Delete and continue
+					p = m_matches.erase(p);
+					if (p != m_matches.end()) continue; // new iterator
+					else break;
+				}
+				else {
+					// Move match to correct position
+					p->start += length;
+					p->end += length;
+				}
+			}
+			++p;
+		}
+	}
+
+	// Do a new search starting from end of first match before pos
+	DoSearch(search_start, m_search_end, false);
+}
+
+void Styler_VariableHL::Delete(unsigned int start_pos, unsigned int end_pos) {
+	wxASSERT(0 <= start_pos && start_pos <= m_doc.GetLength());
+	if (m_text.empty()) return;
+
+	if (start_pos == end_pos) return;
+	wxASSERT(end_pos > start_pos);
+
+	// Check if we have deleted the entire document
+	if (m_doc.GetLength() == 0) {
+		Invalidate();
+		return;
+	}
+
+	// Adjust start & end
+	unsigned int length = end_pos - start_pos;
+	if (m_search_start >= start_pos) {
+		if (m_search_start > end_pos) m_search_start -= length;
+		else m_search_start = start_pos;
+	}
+	if (m_search_end > start_pos) {
+		if (m_search_end > end_pos) m_search_end -= length;
+		else m_search_end = start_pos;
+	}
+	else return; // Change after search area, no need to re-search
+
+	unsigned int search_start = m_search_start;
+
+	if (!m_matches.empty()) {
+		if (start_pos >= m_matches.back().end) {
+			// Do a new search from end of last match
+			DoSearch(search_start, m_search_end, true);
+			return;
+		}
+
+		// Find matches touched by deletion and remove those. Update all following
+		bool is_first = true;
+		vector<interval>::iterator p = m_matches.begin();
+		while (p != m_matches.end()) {
+			if (p->end > start_pos) {
+				// Remember first valid match before pos
+				if (is_first) {
+					if (p != m_matches.begin()) search_start = (p-1)->end;
+					is_first = false;
+				}
+
+				if (p->start < end_pos) {
+					// pos inside match. Delete and continue
+					p = m_matches.erase(p);
+					if (p != m_matches.end()) continue; // new iterator
+					else break;
+				}
+				else {
+					// Move match to correct position
+					p->start -= length;
+					p->end -= length;
+				}
+			}
+			++p;
+		}
+	}
+
+	// Do a new search starting from end of first match before pos
+	DoSearch(search_start, m_search_end, false);
+}
 
 void Styler_VariableHL::ApplyDiff(const vector<cxChange>& WXUNUSED(changes)) {
 	Invalidate();

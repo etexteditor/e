@@ -48,6 +48,8 @@ public:
 	bool IsArrowKey(int key);
 
 	// Handle document changes
+	void Insert(unsigned int pos, unsigned int length);
+	void Delete(unsigned int start_pos, unsigned int end_pos);
 	void ApplyDiff(const std::vector<cxChange>& changes);
 
 private:

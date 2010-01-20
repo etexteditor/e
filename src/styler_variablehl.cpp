@@ -58,14 +58,14 @@ void Styler_VariableHL::SetCurrentWord(const wxString& text, bool click, unsigne
 // Returns 1 for 'select' background color
 // Returns 2 for 'search' background color
 int Styler_VariableHL::GetStyleType(unsigned int start, unsigned int end) {
-	if(m_click) return 1;
+	if(m_click) return 2;
 	if(IsArrowKey(m_key)) {
-		return 1;
+		return 2;
 	} else {
 		if(IsCurrentWord(start, end)) {
 			return 0;
 		} else {
-			return 1;
+			return 2;
 		}
 	}
 }

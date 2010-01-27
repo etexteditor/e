@@ -3357,22 +3357,53 @@ void EditorCtrl::DeleteSelections() {
 	unsigned int pos = m_lines.GetPos();
 
 	const vector<interval>& selections = m_lines.GetSelections();
+	const bool hasRanges = HasSearchRange();
 
-	int dl = 0;
+	size_t dl = 0;
 	for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-		if (iv->start < iv->end) {
-			cxLOCKDOC_WRITE(m_doc)
-				doc.Delete((*iv).start-dl, (*iv).end-dl);
-			cxENDLOCK
-			m_lines.Delete((*iv).start-dl, (*iv).end-dl);
-			StylersDelete((*iv).start-dl, (*iv).end-dl);
-		}
+		if (iv->start == iv->end) continue;
+
+		const size_t start = iv->start - dl;
+		const size_t end = iv->end - dl;
+		const size_t len = iv->end - iv->start;
+
+		cxLOCKDOC_WRITE(m_doc)
+			doc.Delete(start, end);
+		cxENDLOCK
+		m_lines.Delete(start, end);
+		StylersDelete(start, end);
 
 		// Update caret position
-		if (pos >= (*iv).start-dl && pos <= (*iv).end-dl) pos = (*iv).start-dl;
-		else if (pos > (*iv).end-dl) pos -= (*iv).end - (*iv).start;
+		if (pos >= start && pos <= end) pos = start;
+		else if (pos > end) pos -= len;
 
-		dl += (*iv).end - (*iv).start;
+		if (hasRanges) {
+			// Find range containing deletion
+			for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+				interval& r = m_searchRanges[i];
+				if (end <= r.end) {
+					// Adjust cursor
+					size_t& c = m_cursors[i];
+					if (c == end) c = start;
+					else if (c > end) c -= len;
+
+					// Adjust range len
+					r.end -= len;
+
+					// Adjust all following ranges
+					++i;
+					for (; i < m_searchRanges.size(); ++i) {
+						m_searchRanges[i].start -= len;
+						m_searchRanges[i].end -= len;
+						m_cursors[i] -= len;
+					}
+					break;
+				}
+			}
+
+		}
+
+		dl += len;
 	}
 
 	m_lines.RemoveAllSelections();
@@ -5078,9 +5109,9 @@ void EditorCtrl::ClearSearchRange(bool reset) {
 	if (m_searchRanges.empty()) return;
 
 	if (reset && !m_lines.IsSelected()) {
-		// Reset selection
-		for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p)
-			m_lines.AddSelection(p->start, p->end);
+		// Reset selection to cursors
+		for (vector<unsigned int>::const_iterator p = m_cursors.begin(); p != m_cursors.end(); ++p)
+			m_lines.AddSelection(*p, *p);
 	}
 	m_searchRanges.clear();
 	m_cursors.clear();
@@ -5935,7 +5966,10 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 }
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {
-	if (m_parentFrame.IsCommandMode() && m_commandHandler.ProcessCommand(event)) return;
+	if (m_parentFrame.IsCommandMode()) {
+		if (m_commandHandler.ProcessCommand(event)) return;
+		ClearSearchRange(); // Most non-commandmode commands are not range aware
+	}
 
 	wxString modifiers;
 	if (event.ControlDown()) modifiers += wxT("CTRL-");

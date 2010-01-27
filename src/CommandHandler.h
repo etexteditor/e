@@ -42,7 +42,7 @@ public:
 	};
 
 private:
-	void EndMovement();
+	void EndMovement(bool redraw=true);
 
 	void DoSearch(size_t count, int keyCode, wxChar c);
 	void NextMatch(size_t count, bool forward=true);
@@ -51,7 +51,7 @@ private:
 	void SelectRangeEnd();
 	void SelectObject(wxChar c, size_t count, bool inclusive=true, bool all=false);
 
-	template<class Op> void DoMovement(size_t count, const Op& f);
+	template<class Op> void DoMovement(size_t count, const Op& f, bool redraw=true);
 
 	void DoSelectObject(bool inclusive, bool all, const TextObjectTraverser& getnextobject);
 
@@ -59,6 +59,7 @@ private:
 		state_normal,
 		state_visual,
 		state_delete,
+		state_change,
 		state_copy,
 		state_findchar,
 		state_findchar_reverse,

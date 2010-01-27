@@ -124,6 +124,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 	case state_delete:
 	case state_copy:
 	case state_range:
+	case state_change:
 		{	
 			switch (c) {
 			// Movements
@@ -234,6 +235,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				if (!selected) break;
 				// Enter selection
 				m_editor.SetSearchRange();
+				Clear();
 				break;
 			case 'V':
 				m_state = state_select_all;
@@ -298,15 +300,19 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 			case 'x':
 				m_select = true;
 				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorRight));
-				m_editor.Delete();
-				m_editor.ReDraw();
+				if (m_editor.IsSelected()) {
+					m_editor.Delete();
+					m_editor.ReDraw();
+				}
 				Clear();
 				break;
 			case 'X':
 				m_select = true;
 				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorLeft));
-				m_editor.Delete();
-				m_editor.ReDraw();
+				if (m_editor.IsSelected()) {
+					m_editor.Delete();
+					m_editor.ReDraw();
+				}
 				Clear();
 				break;
 
@@ -323,16 +329,45 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				EndMovement();
 				break;
 			case 'i':
+				m_editor.ClearSearchRange(true);
 				m_parentFrame.ShowCommandMode(false);
 				Clear();
 				return true;
 			case 'I':
-				m_editor.CursorToLineStart(true);
+				DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), true));
+				m_editor.ClearSearchRange(true);
 				m_parentFrame.ShowCommandMode(false);
 				Clear();
 				return true;
 			case 'A':
-				m_editor.CursorToLineEnd();
+				DoMovement(1, mem_fun_ref(&EditorCtrl::CursorToLineEnd));
+				m_editor.ClearSearchRange(true);
+				m_parentFrame.ShowCommandMode(false);
+				Clear();
+				return true;
+			case 'c':
+				if (m_state == state_change) {
+					// Change current line
+					m_select = false;
+					DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), true), false);
+					m_select = true;
+					DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToLineEnd), false);
+					if (m_editor.IsSelected()) m_editor.Delete();
+					m_editor.ClearSearchRange(true);
+					m_parentFrame.ShowCommandMode(false);
+					Clear();
+					m_editor.ReDraw();
+					return true;
+				}
+
+				m_state = m_endState = state_change;
+				m_select = true;
+				break;
+			case 'C':
+				m_select = true;
+				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToLineEnd));
+				if (m_editor.IsSelected()) m_editor.Delete();
+				m_editor.ClearSearchRange(true);
 				m_parentFrame.ShowCommandMode(false);
 				Clear();
 				return true;
@@ -419,7 +454,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 	return true;
 }
 
-void CommandHandler::EndMovement() {
+void CommandHandler::EndMovement(bool redraw) {
 	bool clearState = true;
 
 	// Complex movements keep some state until done
@@ -427,6 +462,7 @@ void CommandHandler::EndMovement() {
 	case state_visual:
 	case state_search:
 	case state_range:
+	case state_change:
 		m_count = m_count2 = 0;
 		clearState = false;
 		break;
@@ -445,6 +481,11 @@ void CommandHandler::EndMovement() {
 				m_editor.OnCopy();
 				m_editor.RemoveAllSelections();
 				break;
+			case state_change:
+				if (m_editor.IsSelected()) m_editor.Delete();
+				m_editor.ClearSearchRange(true);
+				m_parentFrame.ShowCommandMode(false);
+				break;
 			default:
 				break; // do nothing
 			}
@@ -452,7 +493,7 @@ void CommandHandler::EndMovement() {
 	}
 
 	m_editor.MakeCaretVisible();
-	m_editor.ReDraw();
+	if (redraw) m_editor.ReDraw();
 	if (clearState) Clear();
 }
 
@@ -470,7 +511,7 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 	case WXK_BACK:
 		if (!m_search.empty()) {
 			m_search.erase(m_search.length()-1);
-			m_cmd.erase(m_cmd.length()-2); // also remove backspace
+			m_cmd.erase(m_cmd.length()-1);
 		}
 		break;
 	case '/':
@@ -487,6 +528,7 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 
 	if (m_editor.HasSearchRange()) {
 		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& lastCursors = m_editor.GetSearchRangeCursors();
 		m_editor.RemoveAllSelections();
 
 		// Search in each range
@@ -502,8 +544,9 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 			if (sr.error_code < 0) continue; // no matches
 
 			// Move cursor
+			const size_t cpos = m_editor.GetPos();
+			if (lastCursors[r] == cpos) m_editor.SetPos(sr.start);
 			m_editor.SetSearchRangeCursor(r, sr.start);
-			if (searchstart == m_editor.GetPos()) m_editor.SetPos(sr.start);
 
 			// If movement is part of a command we want to highlight the
 			// movement rather than the match
@@ -636,7 +679,7 @@ void CommandHandler::NextMatch(size_t count, bool forward) {
 	m_editor.SetSearchHighlight(pattern, regex ? FIND_USE_REGEX : 0);
 }
 
-template<class Op> void CommandHandler::DoMovement(size_t count, const Op& f) {
+template<class Op> void CommandHandler::DoMovement(size_t count, const Op& f, bool redraw) {
 	const unsigned int pos = m_editor.GetPos();
 
 	if (m_editor.HasSearchRange()) {
@@ -683,7 +726,7 @@ template<class Op> void CommandHandler::DoMovement(size_t count, const Op& f) {
 		else m_editor.RemoveAllSelections();
 	}
 
-	EndMovement();
+	EndMovement(redraw);
 }
 
 void CommandHandler::DoSelectObject(bool inclusive, bool all, const TextObjectTraverser& getnextobject) {

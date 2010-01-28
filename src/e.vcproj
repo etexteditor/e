@@ -1538,6 +1538,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\styler_htmlhl.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\styler_htmlhl.h"
+			>
+		</File>
+		<File
 			RelativePath="styler_searchhl.cpp"
 			>
 		</File>

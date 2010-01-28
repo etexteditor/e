@@ -163,6 +163,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
+	m_html_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -212,6 +213,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
+	m_html_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
@@ -275,6 +277,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
+	m_html_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
@@ -436,6 +439,7 @@ void EditorCtrl::Init() {
 	m_lines.AddStyler(m_syntaxstyler);
 	m_lines.AddStyler(m_search_hl_styler);
 	m_lines.AddStyler(m_variable_hl_styler);
+	m_lines.AddStyler(m_html_hl_styler);
 
 	// Set initial tabsize
 	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
@@ -2900,6 +2904,7 @@ void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	FoldingApplyDiff(linechanges);
 	m_search_hl_styler.ApplyDiff(changes);
 	m_variable_hl_styler.ApplyDiff(changes);
+	m_html_hl_styler.ApplyDiff(changes);
 	if (!changes.empty()) bookmarks.ApplyChanges(changes);
 
 	// Move caret to position of first change
@@ -2959,6 +2964,7 @@ interval EditorCtrl::UndoSelection(const cxDiffEntry& de) {
 void EditorCtrl::StylersClear() {
 	m_search_hl_styler.Clear();
 	m_variable_hl_styler.Clear();
+	m_html_hl_styler.Clear();
 	m_syntaxstyler.Clear();
 	FoldingClear();
 }
@@ -2966,6 +2972,7 @@ void EditorCtrl::StylersClear() {
 void EditorCtrl::StylersInvalidate() {
 	m_search_hl_styler.Invalidate();
 	m_syntaxstyler.Invalidate();
+	m_html_hl_styler.Invalidate();
 	m_variable_hl_styler.Invalidate();
 	FoldingClear();
 }
@@ -2974,6 +2981,7 @@ void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
 	m_search_hl_styler.Insert(pos, length);
 	m_syntaxstyler.Insert(pos, length);
 	m_variable_hl_styler.Insert(pos, length);
+	m_html_hl_styler.Insert(pos, length);
 	FoldingInsert(pos, length);
 	bookmarks.InsertChars(pos, length);
 }
@@ -2982,6 +2990,7 @@ void EditorCtrl::StylersDelete(unsigned int start, unsigned int end) {
 	m_search_hl_styler.Delete(start, end);
 	m_syntaxstyler.Delete(start, end);
 	m_variable_hl_styler.Delete(start, end);
+	m_html_hl_styler.Delete(start, end);
 	FoldingDelete(start, end);
 	bookmarks.DeleteChars(start, end);
 }
@@ -6127,6 +6136,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 	MakeCaretVisible();
 	RefreshVariableHighlighter(false, key);
+	RefreshHtmlHighlighter();
 
 	// Draw the updated view
 	DrawLayout();
@@ -6975,6 +6985,7 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 	m_tripleClicks.Reset();
 	RefreshVariableHighlighter(true, -1);
+	RefreshHtmlHighlighter();
 	DrawLayout();
 
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
@@ -8194,6 +8205,10 @@ void EditorCtrl::RefreshVariableHighlighter(bool click, int key) {
 	} else {
 		m_variable_hl_styler.SetCurrentWord(word, click, m_lines.GetPos(), key);
 	}
+}
+
+void EditorCtrl::RefreshHtmlHighlighter() {
+	m_html_hl_styler.UpdateCursorPosition(m_lines.GetPos());
 }
 
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {

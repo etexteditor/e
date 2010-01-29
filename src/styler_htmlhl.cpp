@@ -101,14 +101,14 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxC
 	m_brackets.clear();
 	
 	unsigned int index = 0;
-	for(unsigned int c = start; c < end; c++) {
+	for(unsigned int c = start; c < end; ++c) {
 		switch(data[c]) {
 			case '<':
 			case '>':
 				//now we have the index of a bracket inside the search range
 			
 				//add any items in buffer that are before this bracket
-				for(; index < buffer.size(); index++) {
+				for(; index < buffer.size(); ++index) {
 					if(buffer[index] < c) {
 						m_brackets.push_back(buffer[index]);
 					} else {
@@ -123,7 +123,8 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxC
 		}
 	}
 
-	for(; index < buffer.size(); index++) {
+	//add any existing brackets that occur after the last bracket from the new text
+	for(; index < buffer.size(); ++index) {
 		m_brackets.push_back(buffer[index]);
 	}
 }
@@ -150,26 +151,26 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 	m_tags.clear();
 	vector<unsigned int> buffer;
 	bool haveOpenBracket = false;
-	int openBracketIndex = -1, closeBracketIndex = -1;
+	int openBracketIndex = -1, closeBracketIndex = -1, size = (int)m_brackets.size();
 	
 	//copy the existing brackets to a temporary array so we can add them in order, in linear time
-	for (vector<unsigned int>::iterator p = m_brackets.begin(); p != m_brackets.end(); ++p) {
+	for(int c = 0; c < size; ++c) {
 		if(haveOpenBracket) {
-			if(data[*p] == '>') {
-				closeBracketIndex = *p;
+			if(data[c] == '>') {
+				closeBracketIndex = c;
 				if(IsValidTag(openBracketIndex, closeBracketIndex, data)) {
 					TagInterval i = TagInterval(openBracketIndex, closeBracketIndex, data);	
 					m_tags.push_back(i);
 				}
 				haveOpenBracket = false;
 			} else {
-				openBracketIndex = *p;
+				openBracketIndex = c;
 			}
 		} else {
-			if(data[*p] == '>') {
+			if(data[c] == '>') {
 				
 			} else {
-				openBracketIndex = *p;
+				openBracketIndex = c;
 				haveOpenBracket = true;
 			}
 		}
@@ -183,18 +184,18 @@ int Styler_HtmlHL::FindMatchingTag(const wxChar* data) {
 
 	if(currentTag.isClosingTag) {
 		//search in reverse to find the matching opening tag	
-		for(int i = m_currentTag-1; i >= 0; --i) {
-			if(SameTag(m_tags[i], currentTag, data)) {
-				stack += m_tags[i].isClosingTag ? 1 : -1;
-				if(stack == 0) return i;
+		for(int c = m_currentTag-1; c >= 0; --c) {
+			if(SameTag(m_tags[c], currentTag, data)) {
+				stack += m_tags[c].isClosingTag ? 1 : -1;
+				if(stack == 0) return c;
 			}
 		}
 	} else {
 		//search forward to find the matching closing tag
-		for(int i = m_currentTag+1; i < size; ++i) {
-			if(SameTag(m_tags[i], currentTag, data)) {
-				stack += m_tags[i].isClosingTag ? -1 : 1;
-				if(stack == 0) return i;
+		for(int c = m_currentTag+1; c < size; ++c) {
+			if(SameTag(m_tags[c], currentTag, data)) {
+				stack += m_tags[c].isClosingTag ? -1 : 1;
+				if(stack == 0) return c;
 			}
 		}
 	}
@@ -204,10 +205,10 @@ int Styler_HtmlHL::FindMatchingTag(const wxChar* data) {
 
 int Styler_HtmlHL::FindCurrentTag() {
 	int size = (int) m_tags.size();
-	for(int i = 0; i < size; ++i) {
-		if(m_tags[i].end < m_cursorPosition) continue;
-		if(m_tags[i].start > m_cursorPosition) return -1;
-		return i;
+	for(int c = 0; c < size; ++c) {
+		if(m_tags[c].end < m_cursorPosition) continue;
+		if(m_tags[c].start > m_cursorPosition) return -1;
+		return c;
 	}
 	return -1;
 }
@@ -279,7 +280,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	int count = m_brackets.size();
 
 	//update all the brackets to point to their new locations
-	for(int c = 0; c < count; c++) {
+	for(int c = 0; c < count; ++c) {
 		if(m_brackets[c] >= start) {
 			m_brackets[c] += length;
 		}
@@ -312,7 +313,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 
 	//update all the brackets to point to their new locations
 	//remove any brackets that were inside the deleted text
-	for(int c = 0; c < count; c++) {
+	for(int c = 0; c < count; ++c) {
 		if(m_brackets[c] >= start) {
 			if(m_brackets[c] < end) {
 				m_brackets.erase(m_brackets.begin()+c);

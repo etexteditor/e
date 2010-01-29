@@ -25,7 +25,7 @@ inline bool isAlphaNumeric(wxChar c) {
 #endif
 }
 
-Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings)
+Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, eSettings& settings)
 : m_doc(rev), m_lines(lines), m_theme(theme), m_settings(settings),
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor)
@@ -168,7 +168,7 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 int Styler_HtmlHL::FindMatchingTag(const wxChar* data) {
 	if(m_currentTag < 0) return -1;
 	TagInterval currentTag = m_tags[m_currentTag];
-	int stack = 1;
+	int stack = 1, size = (int)m_tags.size();
 
 	if(currentTag.isClosingTag) {
 		//search in reverse to find the matching opening tag	
@@ -180,7 +180,7 @@ int Styler_HtmlHL::FindMatchingTag(const wxChar* data) {
 		}
 	} else {
 		//search forward to find the matching closing tag
-		for(int i = m_currentTag+1; i < m_tags.size(); ++i) {
+		for(int i = m_currentTag+1; i < size; ++i) {
 			if(SameTag(m_tags[i], currentTag, data)) {
 				stack += m_tags[i].isClosingTag ? -1 : 1;
 				if(stack == 0) return i;
@@ -192,7 +192,8 @@ int Styler_HtmlHL::FindMatchingTag(const wxChar* data) {
 }
 
 int Styler_HtmlHL::FindCurrentTag() {
-	for(int i = 0; i < m_tags.size(); ++i) {
+	int size = (int) m_tags.size();
+	for(int i = 0; i < size; ++i) {
 		if(m_tags[i].end < m_cursorPosition) continue;
 		if(m_tags[i].start > m_cursorPosition) return -1;
 		return i;

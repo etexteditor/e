@@ -42,7 +42,7 @@ public:
 		TagInterval(unsigned int start, unsigned int end, const wxChar* data);
 	};
 
-	Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings);
+	Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, eSettings& settings);
 	virtual ~Styler_HtmlHL() {};
 
 	void Clear();

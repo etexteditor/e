@@ -30,19 +30,39 @@ Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, con
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor)
 {
-	Clear(); // Make sure all variables are empty
+	initialParse = false;
+	m_cursorPosition = m_lines.GetPos();
 }
 
 void Styler_HtmlHL::Clear() {
+	Reparse();
 }
 
 void Styler_HtmlHL::Invalidate() {
+	//Reparse();
+}
+
+void Styler_HtmlHL::Reparse() {
+	initialParse = true;
+
+	cxLOCKDOC_READ(m_doc)
+		wxString text = doc.GetText();
+		const wxChar* data = text.c_str();
+		FindAllBrackets(data);
+		FindTags(data);
+		m_currentTag = FindCurrentTag();
+		m_closingTag = FindClosingTag(data);
+	cxENDLOCK
 }
 
 void Styler_HtmlHL::UpdateCursorPosition(unsigned int pos) {
 	m_cursorPosition = pos;
 	m_currentTag = FindCurrentTag();
-	
+	cxLOCKDOC_READ(m_doc)
+		wxString text = doc.GetText();
+		const wxChar* data = text.c_str();
+		m_closingTag = FindClosingTag(data);
+	cxENDLOCK
 }
 
 void Styler_HtmlHL::FindAllBrackets(const wxChar* data) {
@@ -69,7 +89,7 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxC
 				//add any items in buffer that are before this bracket
 				for(; index < buffer.size(); index++) {
 					if(buffer[index] < c) {
-						m_brackets.push_back(c);
+						m_brackets.push_back(buffer[index]);
 					} else {
 						break;
 					}
@@ -80,6 +100,10 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxC
 				
 			break;
 		}
+	}
+
+	for(; index < buffer.size(); index++) {
+		m_brackets.push_back(buffer[index]);
 	}
 }
 
@@ -195,16 +219,7 @@ Styler_HtmlHL::TagInterval::TagInterval(unsigned int start, unsigned int end, co
 }
 
 void Styler_HtmlHL::Style(StyleRun& sr) {
-	cxLOCKDOC_READ(m_doc)
-		wxString text = doc.GetText();
-		const wxChar* data = doc.GetText().data();
-		wxChar c = data[0];
-		const wxChar* _data = text.c_str();
-		wxChar _c = _data[0];
-		FindAllBrackets(_data);
-		FindTags(_data);
-		m_closingTag = FindClosingTag(_data);
-	cxENDLOCK
+	if(!initialParse) Reparse();
 
 	if(m_closingTag >= 0) {
 		const unsigned int rstart =  sr.GetRunStart();
@@ -301,14 +316,61 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 }
 
 
-void Styler_HtmlHL::Insert(unsigned int pos, unsigned int length) {
+void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
+	unsigned int end = start+length;
+	int count = m_brackets.size();
 
+	//update all the brackets to point to their new locations
+	for(int c = 0; c < count; c++) {
+		if(m_brackets[c] >= start) {
+			m_brackets[c] += length;
+		}
+	}
+
+	//do a search for any new brackets inside of the inserted text
+	cxLOCKDOC_READ(m_doc)
+		wxString text = doc.GetText();
+		const wxChar* data = text.c_str();
+		FindBrackets(start, end, data);
+
+		//we always need to recreate the tags list from scratch
+		//it is much to difficult to take care of all the cases that could result
+		FindTags(data);
+		m_currentTag = FindCurrentTag();
+		m_closingTag = FindClosingTag(data);
+	cxENDLOCK
 }
 
-void Styler_HtmlHL::Delete(unsigned int start_pos, unsigned int end_pos) {
+void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
+	int count = m_brackets.size();
+	int length = end - start;
 
+	//update all the brackets to point to their new locations
+	//remove any brackets that were inside the deleted text
+	for(int c = 0; c < count; c++) {
+		if(m_brackets[c] >= start) {
+			if(m_brackets[c] < end) {
+				m_brackets.erase(m_brackets.begin()+c);
+				count--;
+				c--;
+			} else {
+				m_brackets[c] -= length;
+			}
+		}
+	}
+
+	cxLOCKDOC_READ(m_doc)
+		wxString text = doc.GetText();
+		const wxChar* data = text.c_str();
+
+		//we always need to recreate the tags list from scratch
+		//it is much to difficult to take care of all the cases that could result
+		FindTags(data);
+		m_currentTag = FindCurrentTag();
+		m_closingTag = FindClosingTag(data);
+	cxENDLOCK
 }
 
 void Styler_HtmlHL::ApplyDiff(const std::vector<cxChange>& changes) {
-
+	Reparse();
 }

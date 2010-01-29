@@ -51,6 +51,7 @@ public:
 	void UpdateCursorPosition(unsigned int pos);
 	void Style(StyleRun& sr);
 	
+	void Reparse();
 	bool IsValidTag(unsigned int start, unsigned int end, const wxChar* data);
 	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const wxChar* data);
 	void FindBrackets(unsigned int start, unsigned int end, const wxChar* data);
@@ -69,8 +70,9 @@ private:
 	const DocumentWrapper& m_doc;
 	const Lines& m_lines;
 	eSettings& m_settings;
+
 	unsigned int m_cursorPosition;
-	
+	bool initialParse;
 	int m_currentTag, m_closingTag;
 	std::vector<unsigned int> m_brackets;
 	std::vector<TagInterval> m_tags;

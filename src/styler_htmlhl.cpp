@@ -167,21 +167,25 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 int Styler_HtmlHL::FindClosingTag(const wxChar* data) {
 	if(m_currentTag < 0) return -1;
 	TagInterval currentTag = m_tags[m_currentTag];
-	if(currentTag.isClosingTag) return -1;
 	
-	TagInterval* tag;
 	int stack = 1;
-	
-	int i = 0;
-	for (vector<TagInterval>::iterator p = m_tags.begin(); p != m_tags.end(); ++p) {
-		tag = &(*p);
-		if(tag->start > currentTag.end) {
-			if(SameTag(*tag, currentTag, data)) {
-				stack += tag->isClosingTag ? -1 : 1;
+
+	if(currentTag.isClosingTag) {
+		//search in reverse to find the matching opening tag	
+		for(int i = m_currentTag-1; i >= 0; --i) {
+			if(SameTag(m_tags[i], currentTag, data)) {
+				stack += m_tags[i].isClosingTag ? 1 : -1;
 				if(stack == 0) return i;
 			}
 		}
-		i++;
+	} else {
+		//search forward to find the matching closing tag
+		for(int i = m_currentTag+1; i < m_tags.size(); ++i) {
+			if(SameTag(m_tags[i], currentTag, data)) {
+				stack += m_tags[i].isClosingTag ? -1 : 1;
+				if(stack == 0) return i;
+			}
+		}
 	}
 	
 	return -1;

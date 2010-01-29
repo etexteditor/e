@@ -25,6 +25,15 @@ inline bool isAlphaNumeric(wxChar c) {
 #endif
 }
 
+/**
+ * This features highlights matching html tags in a document.
+ * To do this efficiently, it maintains a list of all the brackets (< and >) in a document.
+ * When text is inserted or deleted, only the changed brackets must be added/removed to the list,
+ * thus avooiding a costly full document scan.
+ * Each time the document is changed, this list of brackets is scanned to find pairs that form a valid tag.
+ * When the cursor moves in any way, only the list of tags needs to be scanned to find 
+ * the tag that is currently in focus, and its matching tag, if any.
+ */
 Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, eSettings& settings)
 : m_doc(rev), m_lines(lines), m_theme(theme), m_settings(settings),
   m_selectionHighlightColor(m_theme.selectionColor),

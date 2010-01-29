@@ -40,7 +40,6 @@ public:
 		bool isClosingTag;
 		
 		TagInterval(unsigned int start, unsigned int end, const wxChar* data);
-		TagInterval() {};
 	};
 
 	Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings);
@@ -58,7 +57,7 @@ public:
 	void FindBrackets(unsigned int start, unsigned int end, const wxChar* data);
 	void FindAllBrackets(const wxChar* data);
 	void FindTags(const wxChar* data);
-	int FindClosingTag(const wxChar* data);
+	int FindMatchingTag(const wxChar* data);
 	int FindCurrentTag();
 
 	// Handle document changes
@@ -74,7 +73,7 @@ private:
 
 	unsigned int m_cursorPosition;
 	bool initialParse;
-	int m_currentTag, m_closingTag;
+	int m_currentTag, m_matchingTag;
 	std::vector<unsigned int> m_brackets;
 	std::vector<TagInterval> m_tags;
 

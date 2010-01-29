@@ -46,7 +46,8 @@ void Styler_HtmlHL::Invalidate() {
 bool Styler_HtmlHL::ShouldStyle() {
 	bool shouldStyle = false;
 	m_settings.GetSettingBool(wxT("highlightHtml"), shouldStyle);
-	//force the styler to reparse the whole document the next time
+
+	//force the styler to reparse the whole document the next time it is enabled
 	if(!shouldStyle) initialParse = false;
 	return shouldStyle;
 }
@@ -60,7 +61,7 @@ void Styler_HtmlHL::Reparse() {
 		FindAllBrackets(data);
 		FindTags(data);
 		m_currentTag = FindCurrentTag();
-		m_closingTag = FindClosingTag(data);
+		m_matchingTag = FindMatchingTag(data);
 	cxENDLOCK
 }
 
@@ -70,7 +71,7 @@ void Styler_HtmlHL::UpdateCursorPosition(unsigned int pos) {
 	cxLOCKDOC_READ(m_doc)
 		wxString text = doc.GetText();
 		const wxChar* data = text.c_str();
-		m_closingTag = FindClosingTag(data);
+		m_matchingTag = FindMatchingTag(data);
 	cxENDLOCK
 }
 
@@ -164,10 +165,9 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 	}
 }
 
-int Styler_HtmlHL::FindClosingTag(const wxChar* data) {
+int Styler_HtmlHL::FindMatchingTag(const wxChar* data) {
 	if(m_currentTag < 0) return -1;
 	TagInterval currentTag = m_tags[m_currentTag];
-	
 	int stack = 1;
 
 	if(currentTag.isClosingTag) {
@@ -192,14 +192,11 @@ int Styler_HtmlHL::FindClosingTag(const wxChar* data) {
 }
 
 int Styler_HtmlHL::FindCurrentTag() {
-	int i = -1;
-	for (vector<TagInterval>::iterator p = m_tags.begin(); p != m_tags.end(); ++p) {
-		i++;
-		if(p->end < m_cursorPosition) continue;
-		if(p->start > m_cursorPosition) return -1;
+	for(int i = 0; i < m_tags.size(); ++i) {
+		if(m_tags[i].end < m_cursorPosition) continue;
+		if(m_tags[i].start > m_cursorPosition) return -1;
 		return i;
 	}
-	
 	return -1;
 }
 
@@ -236,10 +233,10 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 
 	if(!initialParse) Reparse();
 
-	if(m_closingTag >= 0) {
+	if(m_matchingTag >= 0) {
 		const unsigned int rstart =  sr.GetRunStart();
 		const unsigned int rend = sr.GetRunEnd();
-		TagInterval closingTag = m_tags[m_closingTag];
+		TagInterval closingTag = m_tags[m_matchingTag];
 		unsigned int start = closingTag.start+2, end = closingTag.end;
 		
 		if (start > rend) return;
@@ -247,7 +244,7 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 		// Check for overlap (or zero-length sel at start-of-line)
 		if ((end > rstart && start < rend) || (start == end && end == rstart)) {
 			start = wxMax(rstart, start);
-			end   = wxMin(rend, end);
+			end = wxMin(rend, end);
 
 			if(start > end) return;
 
@@ -255,79 +252,6 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 			sr.SetShowHidden(start, end, true);
 		}
 	}
-#if 0
-	if(!ShouldStyle()) return;
-
-	const unsigned int rstart =  sr.GetRunStart();
-	const unsigned int rend = sr.GetRunEnd();
-
-	// No need for more styling if no search text
-	if (m_text.empty()) return;
-
-	// Extend stylerun start/end to get better search results (round up to whole EXTSIZEs)
-	unsigned int sr_start = rstart> 100 ? rstart - 100 : 0;
-	const unsigned int ext_end = ((rend/EXTSIZE) * EXTSIZE) + EXTSIZE;
-	unsigned int sr_end = ext_end < m_lines.GetLength() ? ext_end : m_lines.GetLength();
-
-	// Make sure the extended positions are valid
-	cxLOCKDOC_READ(m_doc)
-		sr_start = doc.GetValidCharPos(sr_start);
-		if (sr_end != m_lines.GetLength()) sr_end = doc.GetValidCharPos(sr_end);
-	cxENDLOCK
-
-	//wxLogDebug(wxT("Style %u %u"), rstart, rend);
-	//wxLogDebug(wxT(" %u %u - %u %u"), sr_start, sr_end, m_search_start, m_search_end);
-	// Check if we need to do a new search
-	if (sr_start < m_search_start || m_search_end < sr_end) {
-		// Check if there is overlap so we can just extend the search area
-		if (sr_end > m_search_start && sr_start < m_search_end) {
-			sr_start = wxMin(sr_start, m_search_start);
-			sr_end = wxMax(sr_end, m_search_end);
-		}
-		else {
-			// Else we have to move it
-			m_matches.clear();
-			m_search_start = 0;
-			m_search_end = 0;
-		}
-
-		//wxLogDebug(wxT(" %u %u - %u %u"), sr_start, sr_end, m_search_start, m_search_end);
-
-		// Do the search
-		if (sr_start < m_search_start) {
-			// Search from top
-			DoSearch(sr_start, sr_end);
-		}
-		else if (sr_end > m_search_end) {
-			// Search from bottom
-			DoSearch(sr_start, sr_end, true);
-		}
-		else wxASSERT(false);
-
-		m_search_start = sr_start;
-		m_search_end = sr_end;
-	}
-
-	// Style the run with matches
-	for (vector<interval>::iterator p = m_matches.begin(); p != m_matches.end(); ++p) {
-		if (p->start > rend) break;
-
-		// Check for overlap (or zero-length sel at start-of-line)
-		if ((p->end > rstart && p->start < rend) || (p->start == p->end && p->end == rstart)) {
-			unsigned int start = wxMax(rstart, p->start);
-			unsigned int end   = wxMin(rend, p->end);
-
-			int styleType = GetStyleType(start, end);
-			if(styleType == 1) {
-				sr.SetBackgroundColor(start, end, m_selectionHighlightColor);
-				sr.SetShowHidden(start, end, true);
-			} else if(styleType == 2) {
-				sr.SetBackgroundColor(start, end, m_searchHighlightColor);
-				sr.SetShowHidden(start, end, true);
-			}
-		}
-	}
-#endif
 }
 
 
@@ -359,7 +283,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 		//it is much to difficult to take care of all the cases that could result
 		FindTags(data);
 		m_currentTag = FindCurrentTag();
-		m_closingTag = FindClosingTag(data);
+		m_matchingTag = FindMatchingTag(data);
 	cxENDLOCK
 }
 
@@ -396,7 +320,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 		//it is much to difficult to take care of all the cases that could result
 		FindTags(data);
 		m_currentTag = FindCurrentTag();
-		m_closingTag = FindClosingTag(data);
+		m_matchingTag = FindMatchingTag(data);
 	cxENDLOCK
 }
 

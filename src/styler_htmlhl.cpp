@@ -44,11 +44,13 @@ Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, con
 }
 
 void Styler_HtmlHL::Clear() {
-	Reparse();
+	initialParse = false;
 }
 
 void Styler_HtmlHL::Invalidate() {
 	initialParse = false;
+	//This causes a segfault when opening a new document.
+	//Setting initialParse to false will cause it to call Reparse when Style is called next.
 	//Reparse();
 }
 

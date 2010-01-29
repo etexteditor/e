@@ -44,7 +44,7 @@ Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, con
 }
 
 void Styler_HtmlHL::Clear() {
-	initialParse = false;
+	Reparse();
 }
 
 void Styler_HtmlHL::Invalidate() {
@@ -149,28 +149,28 @@ bool Styler_HtmlHL::IsValidTag(unsigned int start, unsigned int end, const wxCha
 //when inserting/removing a character, i should be able to ignore any brackets before the insertion, i should be able to just add those tags right back in to m_tags
 void Styler_HtmlHL::FindTags(const wxChar* data) {
 	m_tags.clear();
-	vector<unsigned int> buffer;
 	bool haveOpenBracket = false;
-	int openBracketIndex = -1, closeBracketIndex = -1, size = (int)m_brackets.size();
+	int openBracketIndex = -1, closeBracketIndex = -1, size = (int)m_brackets.size(), index;
 	
 	//copy the existing brackets to a temporary array so we can add them in order, in linear time
 	for(int c = 0; c < size; ++c) {
+		index = m_brackets[c];
 		if(haveOpenBracket) {
-			if(data[c] == '>') {
-				closeBracketIndex = c;
+			if(data[index] == '>') {
+				closeBracketIndex = index;
 				if(IsValidTag(openBracketIndex, closeBracketIndex, data)) {
 					TagInterval i = TagInterval(openBracketIndex, closeBracketIndex, data);	
 					m_tags.push_back(i);
 				}
 				haveOpenBracket = false;
 			} else {
-				openBracketIndex = c;
+				openBracketIndex = index;
 			}
 		} else {
-			if(data[c] == '>') {
+			if(data[index] == '>') {
 				
 			} else {
-				openBracketIndex = c;
+				openBracketIndex = index;
 				haveOpenBracket = true;
 			}
 		}

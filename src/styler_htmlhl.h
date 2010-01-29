@@ -51,6 +51,7 @@ public:
 	void UpdateCursorPosition(unsigned int pos);
 	void Style(StyleRun& sr);
 	
+	bool ShouldStyle();
 	void Reparse();
 	bool IsValidTag(unsigned int start, unsigned int end, const wxChar* data);
 	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const wxChar* data);

@@ -39,7 +39,16 @@ void Styler_HtmlHL::Clear() {
 }
 
 void Styler_HtmlHL::Invalidate() {
+	initialParse = false;
 	//Reparse();
+}
+
+bool Styler_HtmlHL::ShouldStyle() {
+	bool shouldStyle = false;
+	m_settings.GetSettingBool(wxT("highlightHtml"), shouldStyle);
+	//force the styler to reparse the whole document the next time
+	if(!shouldStyle) initialParse = false;
+	return shouldStyle;
 }
 
 void Styler_HtmlHL::Reparse() {
@@ -219,6 +228,8 @@ Styler_HtmlHL::TagInterval::TagInterval(unsigned int start, unsigned int end, co
 }
 
 void Styler_HtmlHL::Style(StyleRun& sr) {
+	if(!ShouldStyle()) return;
+
 	if(!initialParse) Reparse();
 
 	if(m_closingTag >= 0) {
@@ -317,6 +328,13 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 
 
 void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
+	if(!ShouldStyle()) return;
+
+	if(!initialParse) {
+		Reparse();
+		return;
+	}
+
 	unsigned int end = start+length;
 	int count = m_brackets.size();
 
@@ -342,6 +360,13 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 }
 
 void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
+	if(!ShouldStyle()) return;
+
+	if(!initialParse) {
+		Reparse();
+		return;
+	}
+
 	int count = m_brackets.size();
 	int length = end - start;
 

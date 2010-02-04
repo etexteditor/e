@@ -25,9 +25,6 @@
  * EditorFrame and EditorCtrl classes whenever the syntax is changed or the text/cursor
  * of the document change.
  *
- * Alot of this code is copied without modification from SymbolList.cpp.  It would
- * probably be good eventually to refactor out the common stuff.
- *
  ******************************************************************************/
 
 #include "SnippetList.h"
@@ -46,19 +43,13 @@
 
 using namespace std;
 
-// Ctrl id's
-enum {
-	CTRL_SEARCH,
-	CTRL_ALIST
-};
-
 SnippetList::SnippetList(EditorFrame& services):
 	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
 		m_editorFrame(services),
 		m_editorCtrl(services.GetEditorCtrl()),
 		m_syntaxHandler(services.GetSyntaxHandler())
 {
-	m_listBox = new ActionList(this, CTRL_ALIST, m_bundleStrings);
+	m_listBox = new ActionList(this, 0, m_bundleStrings);
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 	mainSizer->Add(m_listBox, 1, wxEXPAND);
 	SetSizer(mainSizer);
@@ -69,6 +60,7 @@ void SnippetList::UpdateSearchText() {
 	UpdateList();
 	m_listBox->Find(word);
 }
+
 void SnippetList::UpdateList() {
 	GetCurrentActions();
 	
@@ -85,8 +77,6 @@ void SnippetList::UpdateList() {
 
 bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
 	return m_previousScope != scope;
-	//if(scope.size() != previousScope.size()) return false;
-	
 }
 
 void SnippetList::GetCurrentActions() {
@@ -98,7 +88,6 @@ void SnippetList::GetCurrentActions() {
 		//copy the new scope into the instance variable
 		m_previousScope.clear();
 		deque<const wxString*>::iterator scopeIterator;
-
 		for(scopeIterator = scope.begin(); scopeIterator != scope.end(); ++scopeIterator) {
 			m_previousScope.push_back(*scopeIterator);
 		}
@@ -130,7 +119,7 @@ void SnippetList::FilterActions(vector<const tmAction*>& actions, vector<const t
 		}
 	}
 	
-	//sort the actions for convenience and to make removing duplicates easier
+	//sort the actions for convenience and to make removing duplicates easier and faster
 	sort(tmp.begin(), tmp.end(), sortComparator);
 
 	//remove duplicates
@@ -151,8 +140,7 @@ void SnippetList::FilterActions(vector<const tmAction*>& actions, vector<const t
 }
 
 bool SnippetList::Destroy() {
-	// delayed destruction: the panel will be deleted during the next idle
-    // loop iteration
+	// delayed destruction: the panel will be deleted during the next idle loop iteration
     if ( !wxPendingDelete.Member(this) )
         wxPendingDelete.Append(this);
 

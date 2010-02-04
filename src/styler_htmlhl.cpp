@@ -88,6 +88,10 @@ void Styler_HtmlHL::UpdateCursorPosition(unsigned int pos) {
 }
 
 void Styler_HtmlHL::SelectParentTag() {
+	//The Insert/Delete methods return if the highlight html option is not checked.
+	//This feature can still work without that, and it probably should.  However, we need to parse the doc to find the tags first.
+	if(!ShouldStyle()) Reparse();
+
 	cxLOCKDOC_READ(m_doc)
 		wxString text = doc.GetText();
 		const wxChar* data = text.c_str();

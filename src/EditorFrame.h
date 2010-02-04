@@ -96,6 +96,7 @@ public:
 		MENU_SELECTLINE,
 		MENU_SELECTSCOPE,
 		MENU_SELECTFOLD,
+		MENU_SELECTTAG,
 		MENU_SYNTAX,
 		MENU_EDIT_THEME,
 		MENU_SETTINGS,
@@ -387,6 +388,7 @@ private:
 	void OnMenuSelectLine(wxCommandEvent& event);
 	void OnMenuSelectScope(wxCommandEvent& event);
 	void OnMenuSelectFold(wxCommandEvent& event);
+	void OnMenuSelectTag(wxCommandEvent& event);
 	void OnMenuEditTheme(wxCommandEvent& event);
 	void OnMenuSettings(wxCommandEvent& event);
 	void OnMenuFilter(wxCommandEvent& event);

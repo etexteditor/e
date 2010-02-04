@@ -23,6 +23,7 @@
 #include "Catalyst.h"
 #include "styler.h"
 #include "eSettings.h"
+class EditorCtrl;
 
 #include <vector>
 
@@ -37,17 +38,18 @@ public:
 	class TagInterval {
 	public:
 		unsigned int start, end, tagNameEnd;
-		bool isClosingTag;
+		bool isClosingTag, isSelfClosingTag;
 		
 		TagInterval(unsigned int start, unsigned int end, const wxChar* data);
 	};
 
-	Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, eSettings& settings);
+	Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl);
 	virtual ~Styler_HtmlHL() {};
 
 	void Clear();
 	void Invalidate();
 	void UpdateCursorPosition(unsigned int pos);
+	void SelectParentTag();
 	void Style(StyleRun& sr);
 	
 	bool ShouldStyle();
@@ -57,8 +59,9 @@ public:
 	void FindBrackets(unsigned int start, unsigned int end, const wxChar* data);
 	void FindAllBrackets(const wxChar* data);
 	void FindTags(const wxChar* data);
-	int FindMatchingTag(const wxChar* data);
+	int FindMatchingTag(const wxChar* data, int tag);
 	int FindCurrentTag();
+	int FindParentClosingTag(unsigned int searchPosition);
 
 	// Handle document changes
 	void Insert(unsigned int pos, unsigned int length);
@@ -70,6 +73,7 @@ private:
 	const DocumentWrapper& m_doc;
 	const Lines& m_lines;
 	eSettings& m_settings;
+	EditorCtrl& m_editorCtrl;
 
 	unsigned int m_cursorPosition;
 	bool initialParse;

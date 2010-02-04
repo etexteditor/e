@@ -204,6 +204,7 @@ public:
 	void SelectLine(unsigned int lineId, bool multiselect=false);
 	void SelectCurrentLine();
 	void SelectScope();
+	void SelectParentTag();
 
 	// Movement commands
 	void SetPos(unsigned int pos);

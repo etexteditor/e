@@ -150,6 +150,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_SELECTLINE, EditorFrame::OnMenuSelectLine)
 	EVT_MENU(MENU_SELECTSCOPE, EditorFrame::OnMenuSelectScope)
 	EVT_MENU(MENU_SELECTFOLD, EditorFrame::OnMenuSelectFold)
+	EVT_MENU(MENU_SELECTTAG, EditorFrame::OnMenuSelectTag)
 
 	EVT_MENU(wxID_FIND, EditorFrame::OnMenuFind)
 	EVT_MENU(MENU_FIND_IN_PROJECT, EditorFrame::OnMenuFindInProject)
@@ -578,6 +579,7 @@ void EditorFrame::InitMenus() {
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
 		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
+		selectMenu->Append(MENU_SELECTTAG, _("Tag &Content\tCtrl+,"), _("Select Parent Tag Content"));
 		editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
 
 	editMenu->AppendSeparator();
@@ -2662,6 +2664,11 @@ void EditorFrame::OnMenuSelectScope(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuSelectFold(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->SelectFold();
+	editorCtrl->ReDraw();
+}
+
+void EditorFrame::OnMenuSelectTag(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->SelectParentTag();
 	editorCtrl->ReDraw();
 }
 

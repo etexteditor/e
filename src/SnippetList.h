@@ -38,24 +38,15 @@ public:
 	void FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result);
 
 private:
-	void OnSearch(wxCommandEvent& event);
-	void OnAction(wxCommandEvent& event);
-	void OnSearchChar(wxKeyEvent& event);
-	DECLARE_EVENT_TABLE();
 
 	class ActionList : public SearchListBox {
 	public:
 		ActionList(wxWindow* parent, wxWindowID id, const wxArrayString& actions);
 		void SetAllItems();
-
 		void Find(const wxString& text, bool refresh=true);
-		int GetSelectedAction() const;
 
 	private:
 		void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const;
-
-		void OnLeftDown(wxMouseEvent& event);
-		DECLARE_EVENT_TABLE();
 
 		class aItem {
 		public:
@@ -85,7 +76,6 @@ private:
 	TmSyntaxHandler& m_syntaxHandler;
 
 	// Widgets
-	wxTextCtrl* m_searchCtrl;
 	ActionList* m_listBox;
 
 	vector<const tmAction*> m_previousActions;

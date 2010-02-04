@@ -52,59 +52,29 @@ enum {
 	CTRL_ALIST
 };
 
-BEGIN_EVENT_TABLE(SnippetList, wxPanel)
-	EVT_TEXT(CTRL_SEARCH, SnippetList::OnSearch)
-	EVT_TEXT_ENTER(CTRL_SEARCH, SnippetList::OnAction)
-	EVT_LISTBOX_DCLICK(CTRL_ALIST, SnippetList::OnAction)
-END_EVENT_TABLE()
-
 SnippetList::SnippetList(EditorFrame& services):
 	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
 		m_editorFrame(services),
 		m_editorCtrl(services.GetEditorCtrl()),
 		m_syntaxHandler(services.GetSyntaxHandler())
 {
-
-	// Create ctrls
-	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	m_listBox = new ActionList(this, CTRL_ALIST, m_bundleStrings);
-
-	// UpdateList();
-
-	// Add custom event handler (for up/down key events in the search box)
-	m_searchCtrl->Connect(wxEVT_CHAR, wxKeyEventHandler(SnippetList::OnSearchChar), NULL, this);
-
-	// Create Layout
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
-		mainSizer->Add(m_searchCtrl, 0, wxEXPAND);
-		mainSizer->Add(m_listBox, 1, wxEXPAND);
-
+	mainSizer->Add(m_listBox, 1, wxEXPAND);
 	SetSizer(mainSizer);
 }
 
 void SnippetList::UpdateSearchText() {
 	wxString word = m_editorCtrl->GetCurrentWord();
-	m_searchCtrl->SetValue(word);
-	//m_listBox->Find(word);
+	UpdateList();
+	m_listBox->Find(word);
 }
 void SnippetList::UpdateList() {
 	GetCurrentActions();
 	
 	m_bundleStrings.Empty();
 	wxString name, trigger, label;
-	const tmAction* action;
 	for(unsigned int c = 0; c < m_filteredActions.size(); ++c) {
-		/*action = m_filteredActions[c];
-		name = action->name;
-		trigger = action->trigger;
-
-		if(trigger.empty()) {
-			label = name;
-		} else if(name.empty()) {
-			label = trigger;
-		} else {
-			label = trigger+wxT(" -> ")+name;
-		}*/
 
 		label = m_filteredActions[c]->trigger;
 
@@ -144,7 +114,7 @@ void SnippetList::GetCurrentActions() {
 }
 
 bool SnippetList::FilterAction(const tmAction* action) {
-	return !action->trigger.empty() && action->IsSnippet(); // && !action->name.empty();
+	return !action->trigger.empty(); // && action->IsSnippet(); // && !action->name.empty();
 }
 
 bool sortComparator(const tmAction* a, const tmAction* b) {
@@ -189,51 +159,7 @@ bool SnippetList::Destroy() {
 	return true;
 }
 
-void SnippetList::OnSearch(wxCommandEvent& event) {
-	UpdateList();
-	m_listBox->Find(event.GetString());
-}
-
-void SnippetList::OnSearchChar(wxKeyEvent& event) {
-	switch ( event.GetKeyCode() )
-    {
-	case WXK_UP:
-		m_listBox->SelectPrev();
-		return;
-	case WXK_DOWN:
-		m_listBox->SelectNext();
-		return;
-	case WXK_ESCAPE:
-		if (event.ShiftDown()) m_editorFrame.CloseSnippetList();
-		return;
-	}
-
-	// no, we didn't process it
-    event.Skip();
-}
-
-void SnippetList::OnAction(wxCommandEvent& WXUNUSED(event)) {
-	if(m_listBox->GetSelectedCount() != 1) return;
-
-	const int hit = m_listBox->GetSelectedAction();
-
-	if (hit != wxNOT_FOUND && hit < (int)m_filteredActions.size()) {
-		//m_editorSymbols->GotoSymbolPos(m_symbols[hit].start);
-		//TODO: if they click on the snippet, run it?
-
-		if (wxGetKeyState(WXK_SHIFT)) {
-			m_editorFrame.CloseSnippetList();
-		} else if (!m_searchCtrl->IsEmpty()) {
-			m_searchCtrl->Clear();
-		}
-	}
-}
-
 // --- ActionList --------------------------------------------------------
-
-BEGIN_EVENT_TABLE(SnippetList::ActionList, SearchListBox)
-	EVT_LEFT_DOWN(SnippetList::ActionList::OnLeftDown)
-END_EVENT_TABLE()
 
 SnippetList::ActionList::ActionList(wxWindow* parent, wxWindowID id, const wxArrayString& actions):
 	SearchListBox(parent, id), 
@@ -323,27 +249,4 @@ void SnippetList::ActionList::Find(const wxString& searchtext, bool refresh) {
 		RefreshAll();
 	}
 	Thaw();
-}
-
-int SnippetList::ActionList::GetSelectedAction() const {
-	const int sel = GetSelection();
-	if (sel == -1) return wxNOT_FOUND;
-	else return m_items[sel].id;
-}
-
-void SnippetList::ActionList::OnLeftDown(wxMouseEvent& event)
-{
-    const int item = HitTest(event.GetPosition());
-    if ( item != wxNOT_FOUND )
-    {
-		SetSelection(item);
-
-		// We want to process single clicks like dclick/enter
-        wxCommandEvent e(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED, GetId());
-        e.SetEventObject(this);
-        e.SetInt(item);
-
-        (void)GetEventHandler()->ProcessEvent(e);
-	}
-	else event.Skip();
 }

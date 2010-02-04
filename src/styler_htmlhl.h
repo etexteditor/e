@@ -36,7 +36,7 @@ class Styler_HtmlHL : public Styler {
 public:
 	class TagInterval {
 	public:
-		unsigned int start, end;
+		unsigned int start, end, tagNameEnd;
 		bool isClosingTag;
 		
 		TagInterval(unsigned int start, unsigned int end, const wxChar* data);

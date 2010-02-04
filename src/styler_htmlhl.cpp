@@ -227,7 +227,12 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const w
 		c = data[openIndex];
 		
 		//once we hit non-alphanumber characters, then the tags have not differred so far, so it is valid
-		if(!isAlphaNumeric(c)) return true;		
+		if(!isAlphaNumeric(c)) {
+			//save the position of the end of the tag name so we dont have to recompute it when we highlight the tag later
+			openTag.tagNameEnd = openIndex;
+			closeTag.tagNameEnd = closeIndex;
+			return true;		
+		}
 		
 		if(c != data[closeIndex]) return false;
 		
@@ -237,7 +242,7 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const w
 }
 
 Styler_HtmlHL::TagInterval::TagInterval(unsigned int start, unsigned int end, const wxChar* data) :
- start(start), end(end), isClosingTag(data[start+1]=='/')
+ start(start), end(end), tagNameEnd(0), isClosingTag(data[start+1]=='/')
  {
 }
 
@@ -251,6 +256,10 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 		const unsigned int rend = sr.GetRunEnd();
 		TagInterval closingTag = m_tags[m_matchingTag];
 		unsigned int start = closingTag.start+2, end = closingTag.end;
+		if(!closingTag.isClosingTag) {
+			start = closingTag.start + 1;
+			end = closingTag.tagNameEnd;
+		}
 		
 		if (start > rend) return;
 
@@ -337,6 +346,6 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 	cxENDLOCK
 }
 
-void Styler_HtmlHL::ApplyDiff(const std::vector<cxChange>& changes) {
+void Styler_HtmlHL::ApplyDiff(const std::vector<cxChange>& WXUNUSED(changes)) {
 	Reparse();
 }

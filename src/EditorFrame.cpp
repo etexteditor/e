@@ -1276,6 +1276,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	// Notify that we are editing a new document
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 	UpdateTabMenu();
+	SaveState();
 }
 
 ITabPage* EditorFrame::GetPage(size_t idx) {
@@ -2055,6 +2056,7 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 		editorCtrl->SetFocus();
 	}
 	box->Layout();
+	SaveState();
 }
 
 bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
@@ -3062,6 +3064,7 @@ void EditorFrame::TogglePane(wxWindow* targetPane, bool showPane) {
 	wxAuiPaneInfo& pane = m_frameManager.GetPane(targetPane);
 	pane.Show(showPane);
 	m_frameManager.Update();
+	m_generalSettings.AutoSave();
 }
 
 void EditorFrame::OnMenuRevisionHistory(wxCommandEvent& event) {
@@ -3622,6 +3625,8 @@ void EditorFrame::SaveSize() {
 
 void EditorFrame::SaveState() {
 	//This functions makes a lot of calls to change the settings.  It is silly to write them every time, so instead we do it once at the very end.
+	//Moreover, if we enter SaveState via OnIdle, then we shouldn't write the settings to a file, as it gets to be a little too much.
+	bool previousValue = m_generalSettings.shouldSave;
 	m_generalSettings.shouldSave = false;
 
 	// NOTE: When adding settings, remember to also add them to eApp::ClearState()
@@ -3696,7 +3701,7 @@ void EditorFrame::SaveState() {
 	// Only save once if window is inactive
 	if (!IsActive()) m_needStateSave = false;
 
-	m_generalSettings.shouldSave = true;
+	m_generalSettings.shouldSave = previousValue;
 	m_generalSettings.AutoSave(); 
 }
 
@@ -3706,7 +3711,9 @@ void EditorFrame::OnIdle(wxIdleEvent& event) {
 
 	//wxLogDebug(wxT("EditorFrame::OnIdle"));
 
-	//SaveState();
+	m_generalSettings.shouldSave = false;
+	SaveState();
+	m_generalSettings.shouldSave = true;
 
 	event.Skip();
 }
@@ -3753,8 +3760,7 @@ bool EditorFrame::CloseTab(unsigned int tab_id, bool removetab) {
 
 	Thaw(); // optimize redrawing
 
-	//When a tab is removed there appear to be no calls to eSettings, so AutoSave was never getting called.
-	m_generalSettings.AutoSave();
+	SaveState();
 
 	return result;
 }
@@ -3795,6 +3801,8 @@ void EditorFrame::OnCloseOtherTabs(wxCommandEvent& WXUNUSED(event)) {
 
 	// The TabBar should ensure that the last page is selected
 	wxASSERT(m_tabBar->GetPageCount() == 1 && editorCtrl == GetEditorCtrlFromPage(0));
+
+	SaveState();
 }
 
 void EditorFrame::OnCloseAllTabs(wxCommandEvent& WXUNUSED(event)) {

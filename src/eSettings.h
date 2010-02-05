@@ -24,7 +24,7 @@
 #include "auto_vector.h"
 #include "ISettings.h"
 
-
+class eApp;
 class RemoteProfile;
 
 enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
@@ -32,6 +32,8 @@ enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
 class eFrameSettings {
 public:
 	eFrameSettings(wxJSONValue& framesettings);
+
+	void AutoSave();
 
 	// Get setting values
 	bool GetSettingBool(const wxString& name, bool& value) const;
@@ -67,6 +69,7 @@ public:
 	
 	void Load(const wxString& path);
 	bool Save();
+	void AutoSave();
 	bool IsEmpty() const;
 
 	// Get setting values
@@ -131,6 +134,10 @@ public:
 	// Environmental variables
 	map<wxString, wxString> env;
 
+	// If this is false, calls to SetSetting* will not write the settings to a file
+	bool shouldSave;
+	void SetApp(eApp* app);
+
 private:
 	// Recent files (support functions)
 	static void AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max);
@@ -144,6 +151,9 @@ private:
 	wxString m_path;
 	wxJSONValue m_jsonRoot;
 	auto_vector<RemoteProfile> m_tempRemotes; // cache for remote profiles
+
+	eApp* m_app;
+	bool haveApp;
 };
 
 eSettings& eGetSettings(void);

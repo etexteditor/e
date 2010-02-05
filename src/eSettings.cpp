@@ -23,8 +23,14 @@
 #include "jsonwriter.h"
 #include "RemoteThread.h"
 
+#include "eApp.h"
+#include "Catalyst.h"
 
-eSettings::eSettings() {}
+
+eSettings::eSettings() {
+	shouldSave = false;
+	haveApp = true;
+}
 
 void eSettings::Load(const wxString& appDataPath) {
 	m_path = appDataPath + wxT("e.cfg");
@@ -138,6 +144,7 @@ unsigned int eSettings::AddFrame(unsigned int top) {
 		if (s.HasMember(wxT("topwin/y"))) s[wxT("topwin/y")] = s[wxT("topwin/y")].AsInt()+50;
 	}
 
+	AutoSave();
 	return frames.Size()-1;
 }
 
@@ -154,12 +161,16 @@ void eSettings::RemoveFrame(unsigned int frameId) {
 		frame.Remove(wxT("pages"));
 	}
 	else frames.Remove(frameId);
+	
+	AutoSave();
 }
 
 void eSettings::RemoveFrame(const eFrameSettings& fs) {
 	const int frameId = GetIndexFromFrameSettings(fs);
 	if (frameId > -1)
 		RemoveFrame(frameId);
+	
+	AutoSave();
 }
 
 void eSettings::DeleteAllFrameSettings(int top) {
@@ -183,6 +194,8 @@ void eSettings::DeleteAllFrameSettings(int top) {
 	eFrameSettings frmSettings = GetFrameSettings(0);
 	frmSettings.RemoveSetting(wxT("topwin/tablayout"));
 	frmSettings.RemoveSetting(wxT("topwin/page_id"));
+	
+	AutoSave();
 }
 
 int eSettings::GetIndexFromFrameSettings(const eFrameSettings& fs) const {
@@ -216,6 +229,7 @@ bool eSettings::GetSettingBool(const wxString& name, bool& value) const {
 void eSettings::SetSettingBool(const wxString& name, bool value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value;
+	AutoSave();
 }
 
 bool eSettings::GetSettingInt(const wxString& name, int& value) const {
@@ -234,6 +248,7 @@ bool eSettings::GetSettingInt(const wxString& name, int& value) const {
 void eSettings::SetSettingInt(const wxString& name, int value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value;
+	AutoSave();
 }
 
 bool eSettings::GetSettingLong(const wxString& name, wxLongLong& value) const {
@@ -252,6 +267,7 @@ bool eSettings::GetSettingLong(const wxString& name, wxLongLong& value) const {
 void eSettings::SetSettingLong(const wxString& name, const wxLongLong& value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value.GetValue();
+	AutoSave();
 }
 
 bool eSettings::GetSettingString(const wxString& name, wxString& value) const {
@@ -270,26 +286,31 @@ bool eSettings::GetSettingString(const wxString& name, wxString& value) const {
 void eSettings::SetSettingString(const wxString& name, const wxString& value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value;
+	AutoSave();
 }
 
 void eSettings::RemoveSetting(const wxString& name) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings.Remove(name);
+	AutoSave();
 }
 
 void eSettings::AddRecentFile(const wxString& path) {
 	wxJSONValue& recentFiles = m_jsonRoot[wxT("recentFiles")];
 	AddToRecent(path, recentFiles, 10);
+	AutoSave();
 }
 
 void eSettings::AddRecentProject(const wxString& path) {
 	wxJSONValue& recentProjects = m_jsonRoot[wxT("recentProjects")];
 	AddToRecent(path, recentProjects, 10);
+	AutoSave();
 }
 
 void eSettings::AddRecentDiff(const wxString& path, SubPage sp) {
 	wxJSONValue& recentProjects = (sp == SP_LEFT) ? m_jsonRoot[wxT("recentDiffsLeft")] : m_jsonRoot[wxT("recentDiffsRight")];
 	AddToRecent(path, recentProjects, 10);
+	AutoSave();
 }
 
 void eSettings::GetRecentFiles(wxArrayString& recentfiles) const {
@@ -379,6 +400,7 @@ size_t eSettings::AddRemoteProfile(const RemoteProfile& profile) {
 	wxJSONValue& remotes = m_jsonRoot[wxT("remoteProfiles")];
 	const size_t profile_id = remotes.Size();
 	SetRemoteProfile(profile_id, profile);
+	AutoSave();
 	return profile_id;
 }
 
@@ -406,9 +428,12 @@ void eSettings::SetRemoteProfile(size_t profile_id, const RemoteProfile& profile
 		if ((*p)->m_id == (int)profile_id) {
 			*(*p) = profile;
 			(*p)->m_id = profile_id;
+			AutoSave();
 			return;
 		}
 	}
+	
+	AutoSave();
 }
 
 const RemoteProfile* eSettings::GetRemoteProfile(size_t profile_id) { return DoGetRemoteProfile(profile_id); }
@@ -498,6 +523,8 @@ void eSettings::SetRemoteProfileLogin(const RemoteProfile* profile, const wxStri
 	// Save if profile is in db or user has indicated that it should be saved
 	if (!rp->IsTemp() || toDb)
 		SaveRemoteProfile(rp); // set profile with new login
+
+	AutoSave();
 }
 
 void eSettings::DeleteRemoteProfile(size_t profile_id) {
@@ -514,6 +541,8 @@ void eSettings::DeleteRemoteProfile(size_t profile_id) {
 		else if ((*p)->m_id > (int)profile_id)
 			--((*p)->m_id);
 	}
+
+	AutoSave();
 }
 
 void eSettings::SaveRemoteProfile(RemoteProfile* rp) {
@@ -568,7 +597,8 @@ bool eSettings::AddSearch(const wxString& pattern, bool isRegex, bool matchCase)
 		if (last.ItemAt(wxT("pattern")).AsString() == pattern) {
 			// We can ignore repeated top insertions, but options may have changed
 			if (last[wxT("isRegex")].AsBool() != isRegex) last[wxT("isRegex")] = isRegex;
-			if (last[wxT("matchCase")].AsBool() != matchCase) last[wxT("matchCase")] = matchCase;			
+			if (last[wxT("matchCase")].AsBool() != matchCase) last[wxT("matchCase")] = matchCase;		
+			AutoSave();	
 			return false;
 		}
 
@@ -592,6 +622,7 @@ bool eSettings::AddSearch(const wxString& pattern, bool isRegex, bool matchCase)
 	if (searches.Size() > 20)
 		searches.Remove(searches.Size()-1);
 
+	AutoSave();
 	return true;
 }
 
@@ -631,6 +662,7 @@ bool eSettings::AddReplace(const wxString& pattern) {
 	if (replacements.Size() > 20)
 		replacements.Remove(replacements.Size()-1);
 
+	AutoSave();
 	return true;
 }
 
@@ -670,7 +702,24 @@ bool eSettings::AddFilterCommand(const wxString& command) {
 	// Limit number of items to save
 	if (values.Size() > 20) values.Remove(values.Size()-1);
 
+	AutoSave();
 	return true;
+}
+
+void eSettings::SetApp(eApp* app) {
+	m_app = app;
+	haveApp = true;
+}
+
+void eSettings::AutoSave() {
+	if(shouldSave) {
+		//Saving the settings doesn't really save them.  It writes them to the .cfg file, but e will just ignore that file the next time unless catalyst.commit is called.
+		Save();
+		wxLogDebug(haveApp ? wxT("HAVE APP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") : wxT("DONT HAVE APP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+		if(haveApp) {
+			m_app->CatalystCommit();
+		}
+	}
 }
 
 // ---- eFrameSettings ---------------------------------------------------------
@@ -680,6 +729,7 @@ eFrameSettings::eFrameSettings(wxJSONValue& framesettings): m_jsonRoot(framesett
 void eFrameSettings::RemoveSetting(const wxString& name) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings.Remove(name);
+	AutoSave();
 }
 
 bool eFrameSettings::GetSettingBool(const wxString& name, bool& value) const {
@@ -701,6 +751,7 @@ bool eFrameSettings::GetSettingBool(const wxString& name, bool& value) const {
 void eFrameSettings::SetSettingBool(const wxString& name, bool value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value;
+	AutoSave();
 }
 
 bool eFrameSettings::GetSettingInt(const wxString& name, int& value) const {
@@ -719,6 +770,7 @@ bool eFrameSettings::GetSettingInt(const wxString& name, int& value) const {
 void eFrameSettings::SetSettingInt(const wxString& name, int value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value;
+	AutoSave();
 }
 
 bool eFrameSettings::GetSettingString(const wxString& name, wxString& value) const {
@@ -737,6 +789,7 @@ bool eFrameSettings::GetSettingString(const wxString& name, wxString& value) con
 void eFrameSettings::SetSettingString(const wxString& name, const wxString& value) {
 	wxJSONValue& settings = m_jsonRoot[wxT("settings")];
 	settings[name] = value;
+	AutoSave();
 }
 
 size_t eFrameSettings::GetPageCount() const {
@@ -777,6 +830,8 @@ void eFrameSettings::SetPageSettings(size_t page_id, const wxString& path, doc_i
 	if (!bookmarksArray.IsArray()) bookmarksArray.SetType(wxJSONTYPE_ARRAY);
 	for (vector<cxBookmark>::const_iterator b = bookmarks.begin(); b != bookmarks.end(); ++b)
 		bookmarksArray.Append(b->line_id);
+
+	AutoSave();
 }
 
 void eFrameSettings::GetPageSettings(size_t page_id, wxString& path, doc_id& di, int& pos, int& topline, wxString& syntax, vector<unsigned int>& folds, vector<unsigned int>& bookmarks, SubPage sp) const {
@@ -841,10 +896,18 @@ doc_id eFrameSettings::GetPageDoc(size_t page_id, SubPage sp) const {
 	return di;
 }
 
-void eFrameSettings::DeleteAllPageSettings() { m_jsonRoot.Remove(wxT("pages")); }
+void eFrameSettings::DeleteAllPageSettings() { 
+	m_jsonRoot.Remove(wxT("pages")); 
+	AutoSave();
+}
 
 void eFrameSettings::DeletePageSettings(size_t page_id) {
 	wxJSONValue& pages = m_jsonRoot.Item(wxT("pages"));
 	wxASSERT((int)page_id < pages.Size());
 	pages.Remove(page_id);
+	AutoSave();
+}
+
+void eFrameSettings::AutoSave() {
+	eGetSettings().AutoSave();
 }

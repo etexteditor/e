@@ -3621,6 +3621,9 @@ void EditorFrame::SaveSize() {
 }
 
 void EditorFrame::SaveState() {
+	//This functions makes a lot of calls to change the settings.  It is silly to write them every time, so instead we do it once at the very end.
+	m_generalSettings.shouldSave = false;
+
 	// NOTE: When adding settings, remember to also add them to eApp::ClearState()
 	if (!m_needStateSave) return;
 	if (!editorCtrl) return;
@@ -3692,6 +3695,9 @@ void EditorFrame::SaveState() {
 
 	// Only save once if window is inactive
 	if (!IsActive()) m_needStateSave = false;
+
+	m_generalSettings.shouldSave = true;
+	m_generalSettings.AutoSave(); 
 }
 
 void EditorFrame::OnIdle(wxIdleEvent& event) {
@@ -3700,7 +3706,8 @@ void EditorFrame::OnIdle(wxIdleEvent& event) {
 
 	//wxLogDebug(wxT("EditorFrame::OnIdle"));
 
-	SaveState();
+	//SaveState();
+
 	event.Skip();
 }
 
@@ -3745,6 +3752,9 @@ bool EditorFrame::CloseTab(unsigned int tab_id, bool removetab) {
 	if (m_tabBar->GetPageCount() == 0) AddTab();
 
 	Thaw(); // optimize redrawing
+
+	//When a tab is removed there appear to be no calls to eSettings, so AutoSave was never getting called.
+	m_generalSettings.AutoSave();
 
 	return result;
 }

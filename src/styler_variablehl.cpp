@@ -19,7 +19,7 @@
 
 const unsigned int Styler_VariableHL::EXTSIZE = 1000;
 
-Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings)
+Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& WXUNUSED(ranges), const tmTheme& theme, eSettings& settings)
 : m_doc(rev), m_lines(lines), m_theme(theme), m_settings(settings),
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor) ,

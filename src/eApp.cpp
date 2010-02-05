@@ -282,7 +282,19 @@ bool eApp::OnInit() {
 			CheckForUpdates(m_settings, GetAppVersion());
 	}
 
+	m_settings.SetApp(this);
+
+	//There is no need to save the previously saved settings.
+	m_settings.shouldSave = true;
+	//m_settings.Save();
+
     return true;
+}
+
+void eApp::CatalystCommit() {
+	cxLOCK_WRITE((*m_catalyst))
+		catalyst.Commit();
+	cxENDLOCK
 }
 
 EditorFrame* eApp::OpenFrame(size_t frameId) {

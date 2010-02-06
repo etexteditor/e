@@ -28,7 +28,8 @@
 
 
 eSettings::eSettings() {
-	shouldSave = false;
+	//block it initially until the app is initialized
+	m_blockCount = 1;
 	haveApp = true;
 }
 
@@ -712,14 +713,26 @@ void eSettings::SetApp(eApp* app) {
 }
 
 void eSettings::AutoSave() {
-	if(shouldSave) {
+	if(ShouldSave()) {
 		//Saving the settings doesn't really save them.  It writes them to the .cfg file, but e will just ignore that file the next time unless catalyst.commit is called.
 		Save();
-		wxLogDebug(haveApp ? wxT("HAVE APP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") : wxT("DONT HAVE APP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
 		if(haveApp) {
 			m_app->CatalystCommit();
 		}
 	}
+}
+
+//These functions act as a simple mutex so that inside of certain functions we can block the object from writing the settings to a file.  Then at the end of the function we can call save once.
+bool eSettings::ShouldSave() {
+	return m_blockCount <= 0;
+}
+
+void eSettings::DontSave() {
+	m_blockCount++; 
+}
+
+void eSettings::AllowSave() {
+	m_blockCount--;
 }
 
 // ---- eFrameSettings ---------------------------------------------------------

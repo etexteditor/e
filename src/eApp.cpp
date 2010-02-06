@@ -285,7 +285,7 @@ bool eApp::OnInit() {
 	m_settings.SetApp(this);
 
 	//There is no need to save the previously saved settings.
-	m_settings.shouldSave = true;
+	m_settings.AllowSave();
 	//m_settings.Save();
 
     return true;

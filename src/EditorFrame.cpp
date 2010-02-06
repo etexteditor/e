@@ -1276,10 +1276,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	// Notify that we are editing a new document
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 	UpdateTabMenu();
-	//When the editor is initalizing, if we try to call SaveState, it will clear out the tab settings
-	if(m_generalSettings.ShouldSave()) {
-		SaveState(); 
-	}
+	m_generalSettings.AutoSave();
 }
 
 ITabPage* EditorFrame::GetPage(size_t idx) {
@@ -1965,7 +1962,7 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 		AddTab(page);
 	} else {
 		//if AddTab is not called, then SaveState will never get called.
-		if(m_generalSettings.ShouldSave()) SaveState();
+		m_generalSettings.AutoSave();
 	}
 	UpdateWindowTitle();
 	editorCtrl->ReDraw();
@@ -2062,7 +2059,7 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 		editorCtrl->SetFocus();
 	}
 	box->Layout();
-	SaveState();
+	m_generalSettings.AutoSave();
 }
 
 bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
@@ -3717,9 +3714,17 @@ void EditorFrame::OnIdle(wxIdleEvent& event) {
 
 	//wxLogDebug(wxT("EditorFrame::OnIdle"));
 
+	//SaveState updates the variables for the e.cfg file.
+	//Computing that and writing the file are somewhat expensive operations.
+	//So, first we disable SaveState from writing the file at all.
+	//Then, if any other function as called m_generalSettings.AutoSave, a boolean will be set to true, which just marks the settings as requiring a save.
+	//It is actually saved in OnIdle so the editor is more responsive.
 	m_generalSettings.DontSave();
 	SaveState();
 	m_generalSettings.AllowSave();
+
+	//Writing the file can be expensive.  Rather than doing it when an action actually occurrs, this does it when the editor is idle so the editor is more responsive.
+	m_generalSettings.DoAutoSave();
 
 	event.Skip();
 }
@@ -3781,7 +3786,7 @@ void EditorFrame::OnTabClosed(wxAuiNotebookEvent& WXUNUSED(event)) {
 	if (m_tabBar->GetPageCount() == 0) AddTab();
 
 	UpdateTabMenu();
-	SaveState();
+	m_generalSettings.AutoSave();
 }
 
 void EditorFrame::OnDoCloseTab(wxCommandEvent& WXUNUSED(event)) {
@@ -3869,8 +3874,8 @@ bool EditorFrame::DeletePage(unsigned int page_id, bool removetab) {
 	}
 
 	if (removetab) m_tabBar->DeletePage(page_id);
-	
-	SaveState();
+
+	m_generalSettings.AutoSave();
 
 	return true;
 }

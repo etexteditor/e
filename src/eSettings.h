@@ -69,7 +69,6 @@ public:
 	
 	void Load(const wxString& path);
 	bool Save();
-	void AutoSave();
 	bool IsEmpty() const;
 
 	// Get setting values
@@ -138,6 +137,8 @@ public:
 	bool ShouldSave();
 	void DontSave();
 	void AllowSave();
+	void AutoSave();
+	void DoAutoSave();
 	void SetApp(eApp* app);
 
 private:
@@ -156,6 +157,7 @@ private:
 
 	eApp* m_app;
 	bool haveApp;
+	bool needSave;
 	int m_blockCount;
 };
 

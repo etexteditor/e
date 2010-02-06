@@ -30,6 +30,7 @@
 eSettings::eSettings() {
 	//block it initially until the app is initialized
 	m_blockCount = 1;
+	needSave = false;
 	haveApp = true;
 }
 
@@ -712,14 +713,21 @@ void eSettings::SetApp(eApp* app) {
 	haveApp = true;
 }
 
+//AutoSave just marks eSettings as requiring a save.  Then, in the OnIdle event we will perform the actual save because it is quite slow.
 void eSettings::AutoSave() {
-	if(ShouldSave()) {
-		//Saving the settings doesn't really save them.  It writes them to the .cfg file, but e will just ignore that file the next time unless catalyst.commit is called.
-		Save();
-		if(haveApp) {
-			m_app->CatalystCommit();
-		}
+	needSave = needSave || ShouldSave();
+}
+
+void eSettings::DoAutoSave() {
+	if(!needSave) return;
+
+	//Saving the settings doesn't really save them.  It writes them to the .cfg file, but e will just ignore that file the next time unless catalyst.commit is called.
+	Save();
+	if(haveApp) {
+		m_app->CatalystCommit();
 	}
+
+	needSave = false;
 }
 
 //These functions act as a simple mutex so that inside of certain functions we can block the object from writing the settings to a file.  Then at the end of the function we can call save once.

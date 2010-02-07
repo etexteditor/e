@@ -323,7 +323,7 @@ void DocHistory::DrawLayout(wxDC& dc) {
 	// Resize & scroll the versiontree (positioned right of Timeline)
 	m_pTree->Move(timelinesize.x, 0);
 	m_pTree->SetSize(wxSize(treesize.x, size.y));
-	m_pTree->Scroll(m_scrollPos);
+	m_pTree->ScrollVertical(m_scrollPos);
 
 	m_xposDesc = timelinesize.x + treesize.x;
 	const int textwidth = size.x - m_xposDesc;

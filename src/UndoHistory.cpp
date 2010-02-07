@@ -490,9 +490,9 @@ void UndoHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 	const size_t item_id = (int)event.GetItem();
 	if ((int)item_id == m_selectedNode) return;
 
-	if (IsSelectionMode()) { // Selective undo
-		if (!m_editorCtrl) return;
+	if (!m_editorCtrl) return;
 
+	if (IsSelectionMode()) { // Selective undo
 		const cxDiffEntry& de = m_rangeHistory[item_id];
 
 		// Do the undo and make sure the history does not get update
@@ -500,11 +500,6 @@ void UndoHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 		m_range = m_editorCtrl->UndoSelection(de);
 		m_editorCtrl->ReDraw();
 		m_ignoreUpdates = false;
-
-		// Select the clicked version
-		m_selectedNode = item_id;
-		m_pTree->Select(m_selectedNode);
-		m_needRedrawing = true;
 	}
 	else if (m_sourceDoc.IsDraft()) {
 		const doc_id clicked_doc(DRAFT, m_sourceDoc.document_id, (int)item_id);
@@ -522,6 +517,11 @@ void UndoHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 			GetEventHandler()->ProcessEvent(evt);
 		}
 	}
+
+	// Select the clicked version
+	m_selectedNode = item_id;
+	m_pTree->Select(m_selectedNode);
+	m_needRedrawing = true;
 }
 
 void UndoHistory::OnVersionTreeContextMenu(VersionTreeEvent& event) {

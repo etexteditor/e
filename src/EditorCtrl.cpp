@@ -6205,7 +6205,8 @@ void EditorCtrl::Redo() {
 	}
 	else if (childlist.size() > 1) {
 		// Show dialog with undo history so user can choose branch
-		RedoDlg dlg(this, m_catalyst, GetId(), currentDoc);
+		//ajpalkovic: This was segfaulting when it was allocated on the stack.  Adding new made some of the segfaults stop.
+		new RedoDlg(this, &m_parentFrame, m_catalyst, GetId(), currentDoc);
 	}
 }
 

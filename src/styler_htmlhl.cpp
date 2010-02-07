@@ -128,12 +128,12 @@ void Styler_HtmlHL::SelectParentTag() {
 
 void Styler_HtmlHL::FindAllBrackets(const wxChar* data) {
 	m_brackets.clear();
-	FindBrackets(0, m_doc.GetLength()-1, data);
+	FindBrackets(0, m_doc.GetLength(), data);
 }
 
 void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxChar* data) {
 	vector<unsigned int> buffer;
-	
+
 	//copy the existing brackets to a temporary array so we can add them in order, in linear time
 	for (vector<unsigned int>::iterator p = m_brackets.begin(); p != m_brackets.end(); ++p) {
 		buffer.push_back(*p);

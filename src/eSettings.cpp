@@ -28,7 +28,6 @@
 
 
 eSettings::eSettings() {
-	//block it initially until the app is initialized
 	needSave = false;
 	haveApp = true;
 }

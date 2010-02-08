@@ -76,7 +76,7 @@ void SnippetList::UpdateList() {
 }
 
 bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
-	return m_previousScope != scope;
+	return m_previousScope.empty() || m_previousScope != scope;
 }
 
 void SnippetList::GetCurrentActions() {

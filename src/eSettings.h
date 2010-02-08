@@ -133,6 +133,9 @@ public:
 	// Environmental variables
 	map<wxString, wxString> env;
 
+	bool ShouldSave();
+	void DontSave();
+	void AllowSave();
 	void AutoSave();
 	void DoAutoSave();
 	void SetApp(eApp* app);
@@ -154,6 +157,7 @@ private:
 	eApp* m_app;
 	bool haveApp;
 	bool needSave;
+	int m_blockCount;
 };
 
 eSettings& eGetSettings(void);

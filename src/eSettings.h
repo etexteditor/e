@@ -133,10 +133,6 @@ public:
 	// Environmental variables
 	map<wxString, wxString> env;
 
-	// If this is false, calls to SetSetting* will not write the settings to a file
-	bool ShouldSave();
-	void DontSave();
-	void AllowSave();
 	void AutoSave();
 	void DoAutoSave();
 	void SetApp(eApp* app);
@@ -158,7 +154,6 @@ private:
 	eApp* m_app;
 	bool haveApp;
 	bool needSave;
-	int m_blockCount;
 };
 
 eSettings& eGetSettings(void);

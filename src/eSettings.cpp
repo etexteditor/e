@@ -29,7 +29,6 @@
 
 eSettings::eSettings() {
 	//block it initially until the app is initialized
-	m_blockCount = 1;
 	needSave = false;
 	haveApp = true;
 }
@@ -715,7 +714,7 @@ void eSettings::SetApp(eApp* app) {
 
 //AutoSave just marks eSettings as requiring a save.  Then, in the OnIdle event we will perform the actual save because it is quite slow.
 void eSettings::AutoSave() {
-	needSave = needSave || ShouldSave();
+	needSave = true;
 }
 
 void eSettings::DoAutoSave() {
@@ -728,19 +727,6 @@ void eSettings::DoAutoSave() {
 	}
 
 	needSave = false;
-}
-
-//These functions act as a simple mutex so that inside of certain functions we can block the object from writing the settings to a file.  Then at the end of the function we can call save once.
-bool eSettings::ShouldSave() {
-	return m_blockCount <= 0;
-}
-
-void eSettings::DontSave() {
-	m_blockCount++; 
-}
-
-void eSettings::AllowSave() {
-	m_blockCount--;
 }
 
 // ---- eFrameSettings ---------------------------------------------------------

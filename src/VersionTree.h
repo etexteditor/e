@@ -36,7 +36,7 @@ public:
 	void MakeNodeVisible(size_t node_id, bool doCenter=false);
 
 	void ScrollVertical(int pos);
-	void ScrollHorizontal(int pos);
+	void Scroll(int xpos, int ypos);
 	int GetVerticalScrollPos() const {return verticalScrollPos;};
 	int GetHorizontalScrollPos() const {return horizontalScrollPos;};
 	void UpdateTree();

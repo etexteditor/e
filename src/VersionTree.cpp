@@ -269,70 +269,34 @@ void VersionTree::UpdateTree() {
 }
 
 void VersionTree::ScrollVertical(int pos) {
-	if (pos == verticalScrollPos) return;
-
-	const wxSize size = GetClientSize();
-	wxRect rect;
-
-	if (needRedrawing) {
-		verticalScrollPos = pos;
-		rect = wxRect(horizontalScrollPos,verticalScrollPos,size.x,size.y);
-	}
-	else {
-		// If there is overlap, then move the image
-		if (pos + size.y > verticalScrollPos && pos < verticalScrollPos + size.y) {
-			const int top = wxMax(pos, verticalScrollPos);
-			const int bottom = wxMin(pos, verticalScrollPos) + size.y;
-			const int overlap_height = bottom - top;
-			mdc.Blit(horizontalScrollPos, (top - verticalScrollPos) + (verticalScrollPos - pos),  size.x, overlap_height, &mdc, 0, top - verticalScrollPos);
-
-			const int new_height = size.y - overlap_height;
-			const int newtop = (top == pos) ? bottom : pos;
-			verticalScrollPos = pos;
-			rect = wxRect(horizontalScrollPos,newtop,size.x,new_height);
-		}
-		else {
-			verticalScrollPos = pos;
-			rect = wxRect(horizontalScrollPos,verticalScrollPos,size.x,size.y);
-		}
-	}
-	DrawTree(rect);
-
-	// Copy updated MemoryDC to Display
-	wxClientDC dc(this);
-	dc.Blit(0, 0,  size.x, size.y, &mdc, 0, 0);
-
-	needRedrawing = false;
+    Scroll(horizontalScrollPos, pos);
 }
 
-void VersionTree::ScrollHorizontal(int pos) {
-	if (pos == horizontalScrollPos) return;
+void VersionTree::Scroll(int xpos, int ypos) {
+    if(xpos == horizontalScrollPos && ypos == verticalScrollPos) return;
 
 	const wxSize size = GetClientSize();
 	wxRect rect;
 
-	if (needRedrawing) {
-		horizontalScrollPos = pos;
-		rect = wxRect(horizontalScrollPos,verticalScrollPos,size.x,size.y);
-	}
-	else {
+    rect = wxRect(xpos,ypos,size.x,size.y);
+    //If the user scrolls horizontally, then we just do a full redraw.  There is no way to shift the image both left and up and then do a redraw on a six sided region.
+	if (!needRedrawing && xpos == horizontalScrollPos) {
 		// If there is overlap, then move the image
-		if (pos + size.x > horizontalScrollPos && pos < horizontalScrollPos + size.x) {
-			const int left = wxMax(pos, horizontalScrollPos);
-			const int right = wxMin(pos, horizontalScrollPos) + size.x;
-			const int overlap_width = right - left;
-			mdc.Blit((left - horizontalScrollPos) + (horizontalScrollPos - pos), verticalScrollPos,  overlap_width, size.y, &mdc, left-horizontalScrollPos, verticalScrollPos);
+		if (ypos + size.y > verticalScrollPos && ypos < verticalScrollPos + size.y) {
+			const int top = wxMax(ypos, verticalScrollPos);
+			const int bottom = wxMin(ypos, verticalScrollPos) + size.y;
+			const int overlap_height = bottom - top;
+			mdc.Blit(0, (top - verticalScrollPos) + (verticalScrollPos - ypos),  treeWidth, overlap_height, &mdc, 0, top - verticalScrollPos);
 
-			const int new_width = size.y - overlap_width;
-			const int newleft = (left == pos) ? right : pos;
-			horizontalScrollPos = pos;
-			rect = wxRect(newleft, verticalScrollPos, new_width, size.y);
+			const int new_height = size.y - overlap_height;
+			const int newtop = (top == ypos) ? bottom : ypos;
+			rect = wxRect(horizontalScrollPos,newtop,size.x,new_height);
 		}
-		else {
-			horizontalScrollPos = pos;
-			rect = wxRect(horizontalScrollPos,verticalScrollPos,size.x,size.y);
-		}
+		
 	}
+	verticalScrollPos = ypos;
+	horizontalScrollPos = xpos;
+
 	DrawTree(rect);
 
 	// Copy updated MemoryDC to Display

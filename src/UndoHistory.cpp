@@ -168,13 +168,15 @@ void UndoHistory::DrawLayout(wxDC& dc) {
 	m_treeWidth = m_pTree->GetWidth();
 
 	wxRect rect;
+	//If an image is moved both horizontally and vertically, then there is no way to capture the area to be redrawn in a single rectangle.
+	//So, this optimization is only used if the vertical scrollbar is used.
 	if (m_isScrolling) {
 		// If there is overlap, then move the image
 		if (m_verticalScrollPos + size.y > m_oldVerticalScrollPos && m_verticalScrollPos < m_oldVerticalScrollPos + size.y) {
 			const int top = wxMax(m_verticalScrollPos, m_oldVerticalScrollPos);
 			const int bottom = wxMin(m_verticalScrollPos, m_oldVerticalScrollPos) + size.y;
 			const int overlap_height = bottom - top;
-			m_mdc.Blit(m_horizontalScrollPos, (top - m_oldVerticalScrollPos) + (m_oldVerticalScrollPos - m_verticalScrollPos),  size.x, overlap_height, &m_mdc, 0, top - m_oldVerticalScrollPos);
+			m_mdc.Blit(m_horizontalScrollPos, (top - m_oldVerticalScrollPos) + (m_oldVerticalScrollPos - m_verticalScrollPos),  size.x, overlap_height, &m_mdc, m_horizontalScrollPos, top - m_oldVerticalScrollPos);
 
 			const int new_height = size.y - overlap_height;
 			const int newtop = (top == m_verticalScrollPos) ? bottom : m_verticalScrollPos;
@@ -223,8 +225,7 @@ void UndoHistory::DrawLayout(wxDC& dc) {
 	// Resize & scroll the versiontree
 	const wxSize treesize = m_pTree->GetBestSize();
 	m_pTree->SetSize(wxSize(treesize.x, size.y));
-	m_pTree->ScrollVertical(m_verticalScrollPos);
-	m_pTree->ScrollHorizontal(m_horizontalScrollPos);
+	m_pTree->Scroll(m_horizontalScrollPos, m_verticalScrollPos);
 
 	// Calculate visible node-range
 	const int topnode = rect.y ? (rect.y-1) / (m_lineHeight) : 0;
@@ -477,7 +478,7 @@ void UndoHistory::OnScroll(wxScrollWinEvent& event) {
 		if (pos != m_horizontalScrollPos) {
 			m_oldHorizontalScrollPos = m_horizontalScrollPos;
 			m_horizontalScrollPos = pos;
-			m_isScrolling = true;
+			m_isScrolling = false;
 
 			wxClientDC dc(this);
 			DrawLayout(dc);

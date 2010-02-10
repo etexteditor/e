@@ -5426,7 +5426,6 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 			cxLOCKDOC_WRITE(m_doc)
 				doc.Delete(result.start, result.end);
 			cxENDLOCK
-			//m_lines.Delete(result.start, result.end);
 		}
 
 		// Insert replacement
@@ -5434,8 +5433,8 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 			cxLOCKDOC_WRITE(m_doc)
 				byte_len = doc.Insert(result.start, textNew);
 			cxENDLOCK
-			//m_lines.Insert(result.start, byte_len);
 		}
+		else byte_len = 0;
 
 		// Adjust searchranges
 		if (!m_searchRanges.empty()) {
@@ -5458,6 +5457,11 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 				if (start_pos == doc.GetLength()) break;
 			}
 		cxENDLOCK
+
+		// We also want to avoid infinite loop when replacing a possible
+		// zero-len match with nothing
+		if (result.start == result.end && byte_len == 0) ++start_pos;
+
 	}
 	cxLOCKDOC_WRITE(m_doc)
 		doc.EndChange();

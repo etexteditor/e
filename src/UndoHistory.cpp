@@ -69,6 +69,10 @@ UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int w
 	m_dispatcher.SubscribeC(wxT("DOC_COMMITED"), (CALL_BACK)OnDocCommited, this);
 }
 
+void UndoHistory::SetEditorCtrl(EditorCtrl* ctrl) {
+	m_editorCtrl = ctrl;
+}
+
 UndoHistory::~UndoHistory() {
 	m_dispatcher.UnSubscribe(wxT("WIN_CLOSEPAGE"), (CALL_BACK)OnClosePage, this);
 	m_dispatcher.UnSubscribe(wxT("WIN_CHANGEDOC"), (CALL_BACK)OnChangeDoc, this);

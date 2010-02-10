@@ -31,6 +31,7 @@ public:
 	UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	~UndoHistory();
 
+	void SetEditorCtrl(EditorCtrl* ctrl);
 	void Clear();
 	void SetDocument(const doc_id& di, bool doCenter=false);
 

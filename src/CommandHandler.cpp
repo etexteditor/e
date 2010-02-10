@@ -232,17 +232,14 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				SelectRangeStart();
 				break;
 			case '\\':
-				if (!selected) break;
-				// Enter selection
-				m_editor.SetSearchRange();
-				Clear();
-				break;
-			case 'V':
-				m_state = state_select_all;
+				if (selected) EnterSelections(count);
 				break;
 			case 'Y':
-				m_state = state_select_all;
 				m_reverse = true;
+				//fall-through
+			case 'V':
+				if (selected) m_state = state_filter_sels;
+				else m_state = state_select_all;
 				break;
 			case 'a':
 				m_state = state_object;
@@ -298,22 +295,67 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				}
 				break;
 			case 'x':
-				m_select = true;
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorRight));
-				if (m_editor.IsSelected()) {
-					m_editor.Delete();
+				if (selected) {
+					SelectLikeMatch();
 					m_editor.ReDraw();
+				}
+				else {
+					m_select = true;
+					DoMovement(count, mem_fun_ref(&EditorCtrl::CursorRight));
+					if (m_editor.IsSelected()) {
+						m_editor.Delete();
+						m_editor.ReDraw();
+					}
 				}
 				Clear();
 				break;
 			case 'X':
-				m_select = true;
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorLeft));
-				if (m_editor.IsSelected()) {
-					m_editor.Delete();
+				if (selected) {
+					SelectLikeMatch();
+					m_editor.ReverseSelections();
 					m_editor.ReDraw();
 				}
+				else {
+					m_select = true;
+					DoMovement(count, mem_fun_ref(&EditorCtrl::CursorLeft));
+					if (m_editor.IsSelected()) {
+						m_editor.Delete();
+						m_editor.ReDraw();
+					}
+				}
 				Clear();
+				break;
+			case 'o':
+				if (selected) {
+					CursorToOpposite();
+					m_editor.ReDraw();
+					Clear();
+					break;
+				}
+				else if (!m_editor.HasSearchRange()) {
+					// Insert line below current
+					m_editor.CursorToLineEnd();
+					m_editor.InsertNewline();
+					m_parentFrame.ShowCommandMode(false);
+					Clear();
+					return true;
+				}
+			case 'O':
+				if (!selected && !m_editor.HasSearchRange()) {
+					// Insert line above current
+					m_editor.CursorToLineStart();
+					m_editor.InsertNewline();
+					m_editor.CursorLeft();
+					m_parentFrame.ShowCommandMode(false);
+					Clear();
+					return true;
+				}
+			case 'r':
+				if (selected) {
+					m_buffer.clear();
+					m_state = state_replace;
+				}
+				else m_state = state_replacechar;
 				break;
 
 			// Modes
@@ -416,6 +458,14 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 			EndMovement();
 		}
 		break;
+	case state_search_all:
+		DoSearchAll(c, uc);
+		m_editor.ReDraw();
+		break;
+	case state_search_lines:
+		DoSearchLines(c, uc);
+		m_editor.ReDraw();
+		break;
 	case state_object:
 		SelectObject(c, count, true);
 		EndMovement();
@@ -432,8 +482,34 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 		case 't':
 			m_state = state_select_all_object_inner;
 			break;
+		case '/':
+			// find pattern
+			m_search.clear();
+			m_searchPos = m_editor.GetPos();
+			m_state = state_search_all;
+			break;
+		case '|':
+			// find lines
+			m_search.clear();
+			m_searchPos = m_editor.GetPos();
+			m_state = state_search_lines;
+			break;
+		case '{':
+			// find scope
+			m_buffer.clear();
+			m_state = state_scopesearch;
+			break;
+		case WXK_ESCAPE:
+			Clear();
+			break;
 		default: break;
 		}
+		break;
+	case state_filter_sels:
+		FilterSelections(c, uc);
+		break;
+	case state_scopesearch:
+		DoScopeSearch(c, uc);
 		break;
 	case state_select_all_object:
 		SelectObject(c, count, true, true);
@@ -445,6 +521,15 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 		if (m_reverse) m_editor.ReverseSelections();
 		EndMovement();
 		break;
+	case state_replace:
+		if (c == WXK_ESCAPE) Clear();
+		else Replace(uc);
+		break;
+	case state_replacechar:
+		if (c == WXK_ESCAPE) Clear();
+		else ReplaceChar(uc);
+		break;
+		
 
 	default:
 		wxASSERT(false); // invalid state
@@ -461,6 +546,7 @@ void CommandHandler::EndMovement(bool redraw) {
 	switch (m_state) {
 	case state_visual:
 	case state_search:
+	case state_search_all:
 	case state_range:
 	case state_change:
 		m_count = m_count2 = 0;
@@ -572,6 +658,222 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 	}
 
 	m_editor.SetSearchHighlight(m_search, FIND_MATCHCASE|FIND_USE_REGEX);
+}
+
+void CommandHandler::DoSearchAll(int keyCode, wxChar c) {
+	switch (keyCode) {
+	case WXK_RETURN:
+	case '/':
+		Clear();
+		return;
+	case WXK_ESCAPE:
+		m_editor.RemoveAllSelections();
+		Clear();
+		return;
+	case WXK_BACK:
+		if (!m_search.empty()) {
+			m_search.erase(m_search.length()-1);
+			m_cmd.erase(m_cmd.length()-1);
+
+			if (m_search.empty()) {
+				m_editor.SetPos(m_searchPos);
+				m_editor.MakeCaretVisible();
+				m_editor.ReDraw();
+			}
+		}
+		break;
+	default:
+		m_search += c;
+	}
+
+	m_editor.RemoveAllSelections();
+	if (m_search.empty()) return;
+
+	const int options = FIND_MATCHCASE|FIND_USE_REGEX;
+	const unsigned int pos = m_editor.GetPos();
+
+	if (m_editor.HasSearchRange()) {
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+
+		// Select all matches in each range
+		for (size_t i = 0; i < ranges.size(); ++i) {
+			const interval& iv = ranges[i];
+			const unsigned int cpos = cursors[i];
+
+			// Do the search
+			size_t searchpos = iv.start;
+			for (;;) {
+				const search_result sr = m_editor.SearchDirect(m_search, options, searchpos, iv.end);
+				if (sr.error_code < 0) break; // no more matches
+
+				m_editor.AddSelection(sr.start, sr.end);
+				m_editor.SetSearchRangeCursor(i, sr.end);
+				if (pos == cpos) {
+					m_editor.SetPos(sr.end);
+					m_lastSearchPos = sr.end;
+				}
+
+				searchpos = sr.end;
+				if (sr.start == sr.end) ++searchpos; // avoid loop on zero-len matches
+			}
+		}
+	}
+	else {
+		size_t searchpos = 0;
+		for (;;) {
+			const search_result sr = m_editor.SearchDirect(m_search, options, searchpos);
+			if (sr.error_code < 0) break; // no more matches
+
+			m_editor.AddSelection(sr.start, sr.end);
+			m_editor.SetPos(sr.end);
+			m_lastSearchPos = sr.end;
+
+			searchpos = sr.end;
+			if (sr.start == sr.end) ++searchpos; // avoid loop on zero-len matches
+		}
+	}
+
+	if (m_reverse) m_editor.ReverseSelections();
+}
+
+void CommandHandler::DoSearchLines(int keyCode, wxChar c) {
+	switch (keyCode) {
+	case WXK_RETURN:
+	case '|':
+		Clear();
+		return;
+	case WXK_ESCAPE:
+		m_editor.RemoveAllSelections();
+		Clear();
+		return;
+	case WXK_BACK:
+		if (!m_search.empty()) {
+			m_search.erase(m_search.length()-1);
+			m_cmd.erase(m_cmd.length()-1);
+
+			if (m_search.empty()) {
+				m_editor.SetPos(m_searchPos);
+				m_editor.MakeCaretVisible();
+				m_editor.ReDraw();
+			}
+		}
+		break;
+	default:
+		m_search += c;
+	}
+
+	m_editor.RemoveAllSelections();
+	if (m_search.empty()) return;
+
+	const int options = FIND_MATCHCASE|FIND_USE_REGEX;
+	const unsigned int pos = m_editor.GetPos();
+
+	if (m_editor.HasSearchRange()) {
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+
+		// Select all matches in each range
+		for (size_t r = 0; r < ranges.size(); ++r) {
+			const interval& iv = ranges[r];
+			const unsigned int cpos = cursors[r];
+
+			// Do the search
+			const size_t firstline = m_editor.GetLineFromPos(iv.start);
+			const size_t lastline = m_editor.GetLineFromPos(iv.end)+1;
+			for (size_t i = firstline; i < lastline; ++i) {
+				interval l = m_editor.GetLineExtent(i);
+				if (l.start < iv.start) l.start = iv.start;
+				if (l.end > iv.end) l.end = iv.end;
+
+				const search_result sr = m_editor.SearchDirect(m_search, options, l.start, l.end);
+				if (sr.error_code < 0) continue; // no match in line
+
+				m_editor.AddSelection(l.start, l.end);
+				m_editor.SetSearchRangeCursor(r, l.end);
+				if (pos == cpos) m_editor.SetPos(l.end);
+			}
+		}
+	}
+	else {
+		const size_t linecount = m_editor.GetLineCount();
+		for (size_t i = 0; i < linecount; ++i) {
+			const interval iv = m_editor.GetLineExtent(i);
+
+			const search_result sr = m_editor.SearchDirect(m_search, options, iv.start, iv.end);
+			if (sr.error_code < 0) continue; // no match in line
+
+			m_editor.AddSelection(iv.start, iv.end);
+			m_editor.SetPos(iv.end);
+		}
+	}
+
+	if (m_reverse) m_editor.ReverseSelections();
+}
+
+void CommandHandler::DoScopeSearch(int keyCode, wxChar c) {
+	switch (keyCode) {
+	case WXK_RETURN:
+	case '}':
+		DoSelectObject(true, true, bindtraverser(&EditorCtrl::GetNextObjectScope, m_buffer));
+		if (m_reverse) m_editor.ReverseSelections();
+		m_editor.ReDraw();
+		Clear();
+		return;
+	case WXK_ESCAPE:
+		m_editor.RemoveAllSelections();
+		Clear();
+		return;
+	case WXK_BACK:
+		if (!m_buffer.empty()) {
+			m_buffer.erase(m_buffer.length()-1);
+			m_cmd.erase(m_cmd.length()-1);
+		}
+		break;
+	default:
+		m_buffer += c;
+	}
+}
+
+void CommandHandler::FilterSelections(int keyCode, wxChar c) {
+	if (!m_editor.IsSelected()) return;
+
+	// Get search pattern
+	switch (keyCode) {
+	case WXK_RETURN:
+		break;
+	case WXK_ESCAPE:
+		Clear();
+		return;
+	case WXK_BACK:
+		if (!m_search.empty()) {
+			m_search.erase(m_search.length()-1);
+			m_cmd.erase(m_cmd.length()-1);
+		}
+		return;
+	default:
+		m_search += c;
+		return;
+	}
+	if (m_search.empty()) return;
+
+	// Copy old selections
+	const vector<interval> selections = m_editor.GetSelections();
+	m_editor.RemoveAllSelections();
+
+	const int options = FIND_MATCHCASE|FIND_USE_REGEX;
+
+	for (vector<interval>::const_iterator p = selections.begin(); p != selections.end(); ++p) {
+		const search_result sr = m_editor.SearchDirect(m_search, options, p->start, p->end);
+		const bool hasmatch = (sr.error_code >= 0);
+		if (hasmatch == m_reverse) continue;
+
+		m_editor.AddSelection(p->start, p->end);
+		m_editor.SetPos(p->end);
+	}
+
+	m_editor.DrawLayout();
+	Clear();
 }
 
 void CommandHandler::NextMatch(size_t count, bool forward) {
@@ -755,8 +1057,10 @@ void CommandHandler::DoSelectObject(bool inclusive, bool all, const TextObjectTr
 			}
 
 			// Set cursors
-			if (pos != startpos) m_editor.SetSearchRangeCursor(i, v.end);
-			if (startpos == caretpos) m_editor.SetPos(v.end); // real caret follow
+			if (pos != startpos) {
+				m_editor.SetSearchRangeCursor(i, v.end);
+				if (startpos == caretpos) m_editor.SetPos(v.end); // real caret follow
+			}
 		}
 	}
 	else {
@@ -887,8 +1191,253 @@ void CommandHandler::SelectObject(wxChar c, size_t count, bool inclusive, bool a
 	case 'p':
 		DoSelectObject(inclusive, all, bindtraverser(&EditorCtrl::GetNextObjectParagraph));
 		break;
+	case WXK_ESCAPE:
+		Clear();
+		break;
 
 	default:
 		break;
 	}
+}
+
+void CommandHandler::SelectLikeMatch() {
+	if (!m_editor.IsSelected()) return;
+	const size_t pos = m_editor.GetPos();
+
+	// Get the pattern to search for
+	wxString pattern = m_search;
+	bool regex = true;
+	const bool issearch = (m_search.empty() || m_lastSearchPos != pos);
+	if (issearch) {
+		// search for selection content 
+		pattern = m_editor.GetFirstSelection();
+		regex = false;
+	}
+	if (pattern.empty()) return;
+
+	m_editor.RemoveAllSelections();
+
+	// Set options
+	int options = FIND_MATCHCASE;
+	if (regex) options |= FIND_USE_REGEX;
+
+	if (m_editor.HasSearchRange()) {
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+
+		// Select all matches in each range
+		for (size_t i = 0; i < ranges.size(); ++i) {
+			const interval& iv = ranges[i];
+			const unsigned int cpos = cursors[i];
+
+			// Do the search
+			size_t searchpos = iv.start;
+			for (;;) {
+				const search_result sr = m_editor.SearchDirect(pattern, options, searchpos, iv.end);
+				if (sr.error_code < 0) break; // no more matches
+
+				m_editor.AddSelection(sr.start, sr.end);
+				m_editor.SetSearchRangeCursor(i, sr.end);
+				if (pos == cpos) {
+					m_editor.SetPos(sr.end);
+					if (issearch) m_lastSearchPos = sr.end;
+				}
+
+				searchpos = sr.end;
+				if (sr.start == sr.end) ++searchpos; // avoid loop on zero-len matches
+			}
+		}
+	}
+	else {
+		size_t searchpos = 0;
+		for (;;) {
+			const search_result sr = m_editor.SearchDirect(pattern, options, searchpos);
+			if (sr.error_code < 0) break; // no more matches
+
+			m_editor.AddSelection(sr.start, sr.end);
+			m_editor.SetPos(sr.end);
+			if (issearch) m_lastSearchPos = sr.end;
+
+			searchpos = sr.end;
+			if (sr.start == sr.end) ++searchpos; // avoid loop on zero-len matches
+		}
+	}
+}
+
+void CommandHandler::CursorToOpposite() {
+	if (!m_editor.IsSelected()) return;
+
+	const size_t pos = m_editor.GetPos();
+	const vector<interval>& selections = m_editor.GetSelections();
+
+	for (vector<interval>::const_iterator p = selections.begin(); p != selections.end(); ++p) {
+		if (pos == p->start) {
+			m_editor.SetPos(p->end);
+			break;
+		}
+		if (pos == p->end) {
+			m_editor.SetPos(p->start);
+			break;
+		}
+	}
+}
+
+void CommandHandler::ReplaceChar(wxChar c) {
+	if (m_editor.IsSelected()) return;
+	
+	if (m_editor.HasSearchRange()) {
+		const unsigned int pos = m_editor.GetPos();
+		const vector<interval>& ranges = m_editor.GetSearchRange();
+		const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+
+		int offset = 0;
+		unsigned int caretpos = 0;
+		for (unsigned i = 0; i < ranges.size(); ++i) {
+			const interval& range = ranges[i];
+			const unsigned int cpos = cursors[i] + offset;
+			const bool iscaret = (cursors[i] == pos);
+
+			// Get character extent
+			m_editor.SetPos(cpos);
+			m_editor.CursorRight();
+			unsigned int endpos = m_editor.GetPos();
+			if (endpos > range.end) endpos = range.end;
+			
+			// Replace
+			if (cpos < endpos) offset -= m_editor.RawDelete(cpos, endpos);
+			const unsigned int bytelen = m_editor.RawInsert(cpos, c);
+			offset += bytelen;
+
+			// Adjust carets
+			const unsigned int newpos = cpos + bytelen;
+			m_editor.SetSearchRangeCursor(i, newpos);
+			if (iscaret) caretpos = newpos;
+
+			// Adjust ranges if their sizes has changes
+			const int diff = bytelen - (endpos - cpos);
+			if (diff) m_editor.AdjustSearchRangeInsert(i, diff);
+		}
+		m_editor.SetPos(caretpos);
+	}
+	else {
+		m_editor.Delete();
+		m_editor.InsertChar(c);
+	}
+
+	m_editor.ReDraw();
+	Clear();
+}
+
+bool CommandHandler::IsSelectionFromSearch() const {
+	return (!m_search.empty() && m_lastSearchPos == m_editor.GetPos());
+}
+
+void CommandHandler::Replace(const wxChar c) {
+	if (!m_editor.IsSelected()) return;
+
+	// Get replacement pattern
+	switch (c) {
+	case WXK_RETURN:
+		break;
+	case WXK_ESCAPE:
+		Clear();
+		return;
+	case WXK_BACK:
+		if (!m_buffer.empty()) {
+			m_buffer.erase(m_buffer.length()-1);
+			m_cmd.erase(m_cmd.length()-1);
+		}
+		return;
+	default:
+		m_buffer += c;
+		return;
+	}
+
+	// Did the selection come from a search
+	const bool fromsearch = IsSelectionFromSearch(); 
+	const vector<interval>& selections = m_editor.GetSelections();
+	map<unsigned int,interval> captures;
+	const bool hasranges = m_editor.HasSearchRange();
+	const unsigned int pos = m_editor.GetPos();
+
+	int offset = 0;
+	for (vector<interval>::const_iterator p = selections.begin(); p != selections.end(); ++p) {
+		const unsigned int start = p->start + offset;
+		const unsigned int end = p->end + offset;
+		const bool hascaret = (p->start == pos || p->end == pos);
+
+		wxString rep;
+		if (fromsearch) {
+			// Redo the search to get captures
+			captures.clear();
+			const search_result sr = m_editor.RegExFind(m_search, start, true, &captures, end);
+			if (sr.error_code < 0) continue;
+
+			rep = m_editor.ParseReplaceString(m_buffer, captures);
+		}
+		const wxString& sub = fromsearch ? rep : m_buffer;
+
+		m_editor.RawDelete(start, end);
+		const unsigned int bytelen = m_editor.RawInsert(start, sub);
+		const int diff = bytelen - (end - start);
+		offset += diff;
+
+		if (hasranges && diff) {
+			const vector<interval>& ranges = m_editor.GetSearchRange();
+			const vector<unsigned int>& cursors = m_editor.GetSearchRangeCursors();
+
+			// Find range containing selection
+			for (size_t i = 0; i < ranges.size(); ++i) {
+				const interval& range = ranges[i];
+				if (start >= range.start && end <= range.end) {
+					m_editor.AdjustSearchRangeInsert(i, diff);
+
+					const unsigned int cpos = cursors[i];
+					if (p->start == cpos || p->end == cpos) {
+						m_editor.SetSearchRangeCursor(i, start + bytelen);
+					}
+					break;
+				}
+			}
+		}
+
+		if (hascaret) m_editor.SetPos(start + bytelen);
+	}
+	
+	m_editor.RemoveAllSelections();
+	m_editor.ReDraw();
+	Clear();
+}
+
+void CommandHandler::EnterSelections(size_t count) {
+	// count indicates that we should enter capture
+	if (count && IsSelectionFromSearch()) {
+		const vector<interval> selections = m_editor.GetSelections(); // cache selections
+		m_editor.RemoveAllSelections();
+
+		map<unsigned int,interval> captures;
+		const unsigned int pos = m_editor.GetPos();
+
+		int offset = 0;
+		for (vector<interval>::const_iterator p = selections.begin(); p != selections.end(); ++p) {
+			const unsigned int start = p->start + offset;
+			const unsigned int end = p->end + offset;
+			const bool hascaret = (p->start == pos || p->end == pos);
+
+			// Redo the search to get captures
+			captures.clear();
+			const search_result sr = m_editor.RegExFind(m_search, start, true, &captures, end);
+			if (sr.error_code < 0) continue;
+
+			map<unsigned int,interval>::const_iterator cap = captures.find(count);
+			if (cap != captures.end()) {
+				const interval& iv = cap->second;
+				m_editor.AddSelection(iv.start, iv.end, true);
+				if (hascaret) m_editor.SetPos(iv.start);
+			}
+		}
+	}
+
+	m_editor.SetSearchRange();
+	Clear();
 }

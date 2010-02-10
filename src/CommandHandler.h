@@ -45,11 +45,25 @@ private:
 	void EndMovement(bool redraw=true);
 
 	void DoSearch(size_t count, int keyCode, wxChar c);
+	void DoSearchAll(int keyCode, wxChar c);
+	void DoSearchLines(int keyCode, wxChar c);
+	void DoScopeSearch(int keyCode, wxChar c);
 	void NextMatch(size_t count, bool forward=true);
 	
+	
+	bool IsSelectionFromSearch() const;
 	void SelectRangeStart();
 	void SelectRangeEnd();
 	void SelectObject(wxChar c, size_t count, bool inclusive=true, bool all=false);
+	void SelectLikeMatch();
+
+	void CursorToOpposite();
+	void FilterSelections(int keyCode, wxChar c);
+
+	void EnterSelections(size_t count);
+
+	void ReplaceChar(wxChar c);
+	void Replace(wxChar c);
 
 	template<class Op> void DoMovement(size_t count, const Op& f, bool redraw=true);
 
@@ -65,12 +79,18 @@ private:
 		state_findchar_reverse,
 		state_search,
 		state_search_reverse,
+		state_search_all,
+		state_search_lines,
 		state_range,
 		state_object,
 		state_object_inner,
 		state_select_all,
 		state_select_all_object,
-		state_select_all_object_inner
+		state_select_all_object_inner,
+		state_filter_sels,
+		state_scopesearch,
+		state_replace,
+		state_replacechar
 	};
 
 	// Member variables
@@ -87,6 +107,7 @@ private:
 	size_t m_searchPos;
 	size_t m_lastSearchPos;
 	wxString m_search;
+	wxString m_buffer;
 	std::vector<unsigned int> m_cursors;
 	bool m_reverse;
 };

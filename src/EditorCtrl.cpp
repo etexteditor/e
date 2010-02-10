@@ -4664,7 +4664,7 @@ void EditorCtrl::ReverseSelections() {
 	if (m_searchRanges.empty()) {
 		unsigned int pos = 0;
 		for (vector<interval>::const_iterator p = oldsel.begin(); p != oldsel.end(); ++p) {
-			m_lines.AddSelection(pos, p->start);
+			if (pos < p->start) m_lines.AddSelection(pos, p->start);
 			pos = p->end;
 		}
 		const unsigned int len = m_lines.GetLength();
@@ -4682,8 +4682,10 @@ void EditorCtrl::ReverseSelections() {
 			unsigned int pos = r.start;
 
 			while (s != oldsel.end() && s->end <= r.end) {
-				m_lines.AddSelection(pos, s->start);
-				m_cursors[i] = s->start;
+				if (pos < s->start)  {
+					m_lines.AddSelection(pos, s->start);
+					m_cursors[i] = s->start;
+				}
 				pos = s->end;
 				++s;
 			}
@@ -5090,19 +5092,28 @@ void EditorCtrl::SetSearchRange() {
 	m_searchRanges = m_lines.GetSelections();
 	m_lines.RemoveAllSelections();
 	
-	// Position cursors
+	// Position cursors at beginning of ranges
 	const unsigned int pos = m_lines.GetPos();
 	m_cursors.resize(m_searchRanges.size());
-	bool atStart = true; // Find out if caret is at start or end of ranges
-	for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p) {
-		if (pos == p->start) break;
-		if (pos == p->end) {atStart = false; break;}
-	}
 	for (size_t i = 0; i < m_searchRanges.size(); ++i) {
-		m_cursors[i] = atStart ? m_searchRanges[i].start : m_searchRanges[i].end;
+		const interval& r = m_searchRanges[i];
+		m_cursors[i] = r.start;
+		if (pos == r.end) SetPos(r.start); // make sure real cursor follows
 	}
 
 	DrawLayout();
+}
+
+void EditorCtrl::AdjustSearchRangeInsert(size_t range_id, int len) {
+	wxASSERT(range_id < m_searchRanges.size());
+
+	m_searchRanges[range_id].end += len;
+
+	for (size_t i = range_id+1; i < m_searchRanges.size(); ++i) {
+		interval& iv = m_searchRanges[i];
+		iv.start += len;
+		iv.end += len;
+	}
 }
 
 void EditorCtrl::ClearSearchRange(bool reset) {
@@ -7322,7 +7333,10 @@ bool EditorCtrl::GetContainingObjectString(wxChar brace, size_t pos, interval& i
 						return true;
 					}
 				}
-				else iv.start = p;
+				else {
+					iv.start = p;
+					startfound = true;
+				}
 			}
 			else if (*dbi == '\\') ++dbi; // jump escaped
 

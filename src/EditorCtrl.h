@@ -279,6 +279,7 @@ public:
 	// Search ranges
 	bool HasSearchRange() const;
 	void SetSearchRange();
+	void AdjustSearchRangeInsert(size_t range_id, int len);
 	void ClearSearchRange(bool reset=false);
 	const vector<interval>& GetSearchRange() const;
 	const vector<unsigned int>& GetSearchRangeCursors() const;

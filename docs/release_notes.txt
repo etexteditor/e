@@ -1,3 +1,28 @@
+11-feb-2010 - 1.0.43
+	o Fixed tab settings not being saved. [ajpalkovic]
+	
+	o Settings are now saved individually for each window. [ajpalkovic]
+	
+	o Fixed scrolling for High Resolution mice. [ajpalkovic]
+	
+	o Fixed the find and replace all bug. [ajpalkovic]
+	
+	o Fixed some bugs that could cause crashes when redoing. [ajpalkovic]
+	
+	o Fixed close on double-click in RedoDlg
+	
+	o Fixed possible infinite loop when doing replace-all with regex.
+	
+	o Fixed state being saved even though 'Keep state' was deselected.
+	
+	o Fixed syntax highlighting bug that could cause crashes with php syntax.
+	
+	o Fixed some cases where dead key (diacritics) didn't work.
+	
+	o Updated bundles from ebundles.
+	
+	o Many minor bugfixes.
+
 24-nov-2009 - 1.0.41
   o Fix: symbols in statusbar was out of sync
 

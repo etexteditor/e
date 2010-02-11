@@ -8109,6 +8109,10 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 		// We only want to ignore AltGr if it actually produce output
 		// (otherwise right-alt+ctrl would be unusable on us keyboards)
 		if (s_altGrDown) {
+			// Don't call ToAscii with dead keys as it clears the keyboard buffer
+			UINT k = ::MapVirtualKey(event.m_rawCode, MAPVK_VK_TO_CHAR);
+			if (k & 0x80000000) return false; // dead keys have top bit set
+
 			unsigned char keystate[256];
 			memset (keystate, 0, sizeof (keystate));
 			::GetKeyboardState(keystate);

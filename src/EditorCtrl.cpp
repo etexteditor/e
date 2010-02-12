@@ -5839,15 +5839,15 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 
 		// Get the replacement string
 		wxString textNew;
-		if (!replacetext.empty())
-			textNew = (options & FIND_USE_REGEX) ? ParseReplaceString(replacetext, captures) : textNew;
+		if (!replacetext.empty()) {
+			textNew = (options & FIND_USE_REGEX) ? ParseReplaceString(replacetext, captures) : replacetext;
+		}
 
 		// Delete original
 		if (result.start != result.end) {
 			cxLOCKDOC_WRITE(m_doc)
 				doc.Delete(result.start, result.end);
 			cxENDLOCK
-			//m_lines.Delete(result.start, result.end);
 		}
 
 		// Insert replacement
@@ -5855,8 +5855,8 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 			cxLOCKDOC_WRITE(m_doc)
 				byte_len = doc.Insert(result.start, textNew);
 			cxENDLOCK
-			//m_lines.Insert(result.start, byte_len);
 		}
+		else byte_len = 0;
 
 		// Adjust searchranges
 		if (!m_searchRanges.empty()) {
@@ -5879,6 +5879,11 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 				if (start_pos == doc.GetLength()) break;
 			}
 		cxENDLOCK
+
+		// We also want to avoid infinite loop when replacing a possible
+		// zero-len match with nothing
+		if (result.start == result.end && byte_len == 0) ++start_pos;
+
 	}
 	cxLOCKDOC_WRITE(m_doc)
 		doc.EndChange();
@@ -6403,7 +6408,7 @@ void EditorCtrl::Redo() {
 	}
 	else if (childlist.size() > 1) {
 		// Show dialog with undo history so user can choose branch
-		RedoDlg dlg(this, m_catalyst, GetId(), currentDoc);
+		RedoDlg dlg(this, &m_parentFrame, m_catalyst, GetId(), currentDoc);
 	}
 }
 
@@ -8322,7 +8327,7 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
 	const wxSize size = GetClientSize();
 	int pos = scrollPos;
-	const int rotation = event.GetWheelRotation();
+	const double rotation = event.GetWheelRotation();
 
 	if (event.GetLinesPerAction() == (int)UINT_MAX) { // signifies to scroll a page
 		wxScrollWinEvent newEvent;
@@ -8332,11 +8337,11 @@ void EditorCtrl::DoVerticalWheelScroll(wxMouseEvent& event) {
         ProcessEvent(newEvent);
 		return;
 	}
-
+	
 	if (rotation == 0) return;
 
-	const int linescount = (rotation / event.GetWheelDelta()) * event.GetLinesPerAction();
-	pos = pos - (pos % m_lines.GetLineHeight()) - (m_lines.GetLineHeight() * linescount);
+	const double linescount = (rotation / ((double)event.GetWheelDelta())) * ((double)event.GetLinesPerAction());
+	pos = pos - (m_lines.GetLineHeight() * linescount);
 
 	if (rotation > 0) pos = max(pos, 0); // up
 	else if (rotation < 0) pos = min(pos, m_lines.GetHeight() - size.y); // down
@@ -8987,6 +8992,10 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 		// We only want to ignore AltGr if it actually produce output
 		// (otherwise right-alt+ctrl would be unusable on us keyboards)
 		if (s_altGrDown) {
+			// Don't call ToAscii with dead keys as it clears the keyboard buffer
+			UINT k = ::MapVirtualKey(event.m_rawCode, MAPVK_VK_TO_CHAR);
+			if (k & 0x80000000) return false; // dead keys have top bit set
+
 			unsigned char keystate[256];
 			memset (keystate, 0, sizeof (keystate));
 			::GetKeyboardState(keystate);

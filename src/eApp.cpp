@@ -138,8 +138,8 @@ bool eApp::OnInit() {
 
 	// App info
 	const wxString appId = wxString::Format(wxT("eApp-%s"), wxGetUserId().c_str());
-	m_version_id = 210;  // <-------------- INTERNAL VERSION NUMBER
-	m_version_name =  wxT("1.0.42b"); // <-- VERSION NAME
+	m_version_id = 211;  // <-------------- INTERNAL VERSION NUMBER
+	m_version_name =  wxT("1.0.43"); // <-- VERSION NAME
 
 	// Option vars
 	m_lineNum = 0;
@@ -668,6 +668,14 @@ int eApp::OnExit() {
 	// the app has closed
 	wxTheClipboard->Flush();
 
+	// Check if we should keep state
+	bool keep_state = true; // default
+	m_settings.GetSettingBool(wxT("keepState"), keep_state);
+	if (wxGetKeyState(WXK_SHIFT)) keep_state = true; // override
+	if (!keep_state) {
+		m_settings.DeleteAllFrameSettings(0);
+	}
+
 	m_settings.Save();
 	cxLOCK_WRITE((*m_catalyst))
 		catalyst.Commit();
@@ -690,7 +698,7 @@ int eApp::OnExit() {
 	// curl cleanup
 	curl_global_cleanup();
 
-	return 0;
+	return wxApp::OnExit();
 }
 
 const wxString& eApp::GetAppTitle() {

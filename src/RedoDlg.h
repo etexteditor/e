@@ -22,10 +22,12 @@
 // Pre-definitions
 class CatalystWrapper;
 class doc_id;
+class EditorCtrl;
+class EditorFrame;
 
 class RedoDlg : public wxDialog {
 public:
-	RedoDlg(wxWindow *parent, CatalystWrapper& cw, int editorId, const doc_id& di);
+	RedoDlg(EditorCtrl *parent, EditorFrame* frame, CatalystWrapper& cw, int editorId, const doc_id& di);
 
 private:
 	// Event handlers

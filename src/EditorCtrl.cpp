@@ -5458,7 +5458,6 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 			cxLOCKDOC_WRITE(m_doc)
 				doc.Delete(result.start, result.end);
 			cxENDLOCK
-			//m_lines.Delete(result.start, result.end);
 		}
 
 		// Insert replacement
@@ -5466,8 +5465,8 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 			cxLOCKDOC_WRITE(m_doc)
 				byte_len = doc.Insert(result.start, textNew);
 			cxENDLOCK
-			//m_lines.Insert(result.start, byte_len);
 		}
+		else byte_len = 0;
 
 		// Adjust searchranges
 		if (!m_searchRanges.empty()) {
@@ -5490,6 +5489,11 @@ int EditorCtrl::ReplaceAll(const wxString& searchtext, const wxString& replacete
 				if (start_pos == doc.GetLength()) break;
 			}
 		cxENDLOCK
+
+		// We also want to avoid infinite loop when replacing a possible
+		// zero-len match with nothing
+		if (result.start == result.end && byte_len == 0) ++start_pos;
+
 	}
 	cxLOCKDOC_WRITE(m_doc)
 		doc.EndChange();
@@ -8142,6 +8146,10 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 		// We only want to ignore AltGr if it actually produce output
 		// (otherwise right-alt+ctrl would be unusable on us keyboards)
 		if (s_altGrDown) {
+			// Don't call ToAscii with dead keys as it clears the keyboard buffer
+			UINT k = ::MapVirtualKey(event.m_rawCode, MAPVK_VK_TO_CHAR);
+			if (k & 0x80000000) return false; // dead keys have top bit set
+
 			unsigned char keystate[256];
 			memset (keystate, 0, sizeof (keystate));
 			::GetKeyboardState(keystate);

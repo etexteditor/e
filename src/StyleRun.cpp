@@ -104,8 +104,7 @@ bool StyleRun::DoExtendBgAtPos(unsigned int pos) const {
 		const StyleSR& sr = m_styles[i];
 
 		if (pos >= sr.start && pos < sr.end) {
-			const wxColour& bgcolor = *sr.backgroundcolor;
-			if (bgcolor.Ok() && bgcolor == m_extendBgColor) return true;
+			if (sr.backgroundcolor && *sr.backgroundcolor == m_extendBgColor) return true;
 			break;
 		}
 	}

@@ -42,7 +42,7 @@ void RedoDlg::OnHistoryChar(wxKeyEvent& event) {
 	const int keycode = event.GetKeyCode();
 
 	if (keycode == WXK_RETURN || keycode == WXK_ESCAPE) {
-		Destroy(); // close dlg
+		EndModal(wxID_OK); // close dlg
 		return;
 	}
 
@@ -50,5 +50,5 @@ void RedoDlg::OnHistoryChar(wxKeyEvent& event) {
 }
 
 void RedoDlg::OnHistoryDClick(wxCommandEvent& WXUNUSED(event)) {
-	Destroy(); // close dlg
+	EndModal(wxID_OK); // close dlg
 }

@@ -551,35 +551,40 @@ void UndoHistory::OnChar(wxKeyEvent& event) {
 }
 
 void UndoHistory::OnVersionTreeSel(VersionTreeEvent& event) {
-	const size_t item_id = (int)event.GetItem();
-	if ((int)item_id == m_selectedNode) return;
-
 	if (!m_editorCtrl) return;
 
-	if (IsSelectionMode()) { // Selective undo
-		const cxDiffEntry& de = m_rangeHistory[item_id];
+	const size_t item_id = (int)event.GetItem();
+	if ((int)item_id != m_selectedNode) {
+		if (IsSelectionMode()) { // Selective undo
+			const cxDiffEntry& de = m_rangeHistory[item_id];
 
-		// Do the undo and make sure the history does not get update
-		m_ignoreUpdates = true;
-		m_range = m_editorCtrl->UndoSelection(de);
-		m_editorCtrl->ReDraw();
-		m_ignoreUpdates = false;
-	}
-	else if (m_sourceDoc.IsDraft()) {
-		const doc_id clicked_doc(DRAFT, m_sourceDoc.document_id, (int)item_id);
-
-		// We do not have to set the document now. We will recieve
-		// a WIN_CHANGEDOC notifer if the documents actually gets
-		// set on a page.
-
-		m_editorCtrl->SetDocument(clicked_doc);
-
-		// Check if we were double-clicked
-		if (event.GetInt() == 1) {
-			// Send event so that parent ctrl can close if it want
-			wxCommandEvent evt(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED);
-			GetEventHandler()->ProcessEvent(evt);
+			// Do the undo and make sure the history does not get update
+			m_ignoreUpdates = true;
+			m_range = m_editorCtrl->UndoSelection(de);
+			m_editorCtrl->ReDraw();
+			m_ignoreUpdates = false;
 		}
+		else if (m_sourceDoc.IsDraft()) {
+			const doc_id clicked_doc(DRAFT, m_sourceDoc.document_id, (int)item_id);
+
+			// We do not have to set the document now. We will recieve
+			// a WIN_CHANGEDOC notifer if the documents actually gets
+			// set on a page.
+
+			m_editorCtrl->SetDocument(clicked_doc);
+		}
+
+		// Select the clicked version
+		m_selectedNode = item_id;
+		m_pTree->Select(m_selectedNode);
+		m_needRedrawing = true;
+	}
+
+	// Check if we were double-clicked
+	if (event.GetInt() == 1) {
+		// Send event so that parent ctrl can close if it want
+		wxCommandEvent evt(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED);
+		GetEventHandler()->ProcessEvent(evt);
 	}
 
 	// Select the clicked version

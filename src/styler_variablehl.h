@@ -38,6 +38,8 @@ public:
 	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings);
 	virtual ~Styler_VariableHL() {};
 
+	void Clear();
+
 	void SetCurrentWord(const wxString& text, bool click, unsigned int cursosPosition, int key);
 	void Style(StyleRun& sr);
 

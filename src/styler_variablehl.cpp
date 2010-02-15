@@ -17,6 +17,7 @@
 #include "StyleRun.h"
 #include "Lines.h"
 #include "Document.h"
+#include "FindFlags.h"
 
 Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings):
 Styler_SearchHL(rev, lines, ranges, theme), m_settings(settings),
@@ -27,6 +28,12 @@ Styler_SearchHL(rev, lines, ranges, theme), m_settings(settings),
 	Clear(); // Make sure all variables are empty
 }
 
+void Styler_VariableHL::Clear() {
+	Styler_SearchHL::Clear();
+
+	//override default search options
+	m_options = FIND_MATCHCASE;
+}
 
 void Styler_VariableHL::SetCurrentWord(const wxString& text, bool click, unsigned int cursorPosition, int key) {
 	if (text != m_text) {

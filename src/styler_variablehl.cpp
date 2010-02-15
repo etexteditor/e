@@ -97,11 +97,14 @@ inline bool isAlphaNumeric(wxChar c) {
    var+2;
  */
 bool Styler_VariableHL::FilterMatch(search_result& result, const Document& doc) {
+	wxChar c;
 	if(result.start > 0) {
-		if(isAlphaNumeric(doc.GetChar(result.start-1))) return false;
+		c = doc.GetChar(result.start-1);
+		if(isAlphaNumeric(c) || c == '_') return false;
 	}
 	if(result.end < doc.GetLength()) {
-		if(isAlphaNumeric(doc.GetChar(result.end))) return false;
+		c = doc.GetChar(result.end);
+		if(isAlphaNumeric(c) || c == '_') return false;
 	}
 	
 	return true;

@@ -3285,12 +3285,6 @@ void EditorFrame::CloseSnippetList() {
 	m_frameManager.Update();
 }
 
-void EditorFrame::RefreshSnippetList() {
-	if (!m_snippetList) return;
-	m_snippetList->UpdateList();
-	m_snippetList->UpdateSearchText();
-}
-
 void EditorFrame::CloseWebPreview() {
 	if (!m_previewDlg) return; // already closed
 

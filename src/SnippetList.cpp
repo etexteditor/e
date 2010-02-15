@@ -30,6 +30,7 @@
 #include "SnippetList.h"
 #include "EditorFrame.h"
 #include "EditorCtrl.h"
+#include "EditorChangeState.h"
 #include "SnippetHandler.h"
 #include "plistHandler.h"
 #include "tm_syntaxhandler.h"
@@ -43,6 +44,10 @@
 
 using namespace std;
 
+BEGIN_EVENT_TABLE(SnippetList, wxPanel)
+	EVT_IDLE(SnippetList::OnIdle)
+END_EVENT_TABLE()
+
 SnippetList::SnippetList(EditorFrame& services):
 	wxPanel(dynamic_cast<wxWindow*>(&services), wxID_ANY),
 		m_editorFrame(services),
@@ -55,24 +60,33 @@ SnippetList::SnippetList(EditorFrame& services):
 	SetSizer(mainSizer);
 }
 
-void SnippetList::UpdateSearchText() {
-	wxString word = m_editorCtrl->GetCurrentWord();
-	UpdateList();
-	m_listBox->Find(word);
-}
+void SnippetList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
+	if(m_editorFrame.GetEditorCtrl() != NULL)
+		m_editorCtrl = m_editorFrame.GetEditorCtrl();
+	if(!m_editorCtrl) return;
 
-void SnippetList::UpdateList() {
-	GetCurrentActions();
+	//If the scope changed, then no matter what, we have to update the list
+	//If the active window has changed, or there have been changes to the document, then we might need to update the snippets
+	deque<const wxString*> scope = m_editorCtrl->GetScope();
+	EditorChangeState newState = m_editorCtrl->GetChangeState();
+	//If the bundle isn't loaded at startup, then the snippet list won't show any symbols.
+	//The bundle won't get reloaded later, cuz ScopeChanged will return false.  So, it has to wait till they switch tabs or make a change.
+	//if(!ScopeChanged(scope) && newState == m_editorState) return;
+	m_editorState = newState;
 	
+	//Update the list of snippets/commands to reflect a potentially new syntax
+	GetCurrentActions();
 	m_bundleStrings.Empty();
 	wxString name, trigger, label;
 	for(unsigned int c = 0; c < m_filteredActions.size(); ++c) {
-
 		label = m_filteredActions[c]->trigger;
-
 		m_bundleStrings.Add(label);
 	}
 	m_listBox->SetAllItems();
+	
+	//update the search text to match the current word
+	wxString word = m_editorCtrl->GetCurrentWord();
+	m_listBox->Find(word);
 }
 
 bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
@@ -80,26 +94,23 @@ bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
 }
 
 void SnippetList::GetCurrentActions() {
-	if(m_editorFrame.GetEditorCtrl() != NULL)
-		m_editorCtrl = m_editorFrame.GetEditorCtrl();
-
 	deque<const wxString*> scope = m_editorCtrl->GetScope();
-	if(ScopeChanged(scope)) {
-		//copy the new scope into the instance variable
-		m_previousScope.clear();
-		deque<const wxString*>::iterator scopeIterator;
-		for(scopeIterator = scope.begin(); scopeIterator != scope.end(); ++scopeIterator) {
-			m_previousScope.push_back(*scopeIterator);
-		}
 
-		//get an unfiltered list of the actions
-		m_previousActions.clear();
-		m_syntaxHandler.GetAllActions(scope, m_previousActions);
-
-		//remove duplicate triggers/empty triggers/non-snippets
-		m_filteredActions.clear();
-		FilterActions(m_previousActions, m_filteredActions);
+	//There should probably be a better way to do this, not quite sure how though.
+	//copy the new scope into the instance variable
+	m_previousScope.clear();
+	deque<const wxString*>::iterator scopeIterator;
+	for(scopeIterator = scope.begin(); scopeIterator != scope.end(); ++scopeIterator) {
+		m_previousScope.push_back(*scopeIterator);
 	}
+
+	//get an unfiltered list of the actions
+	m_previousActions.clear();
+	m_syntaxHandler.GetAllActions(scope, m_previousActions);
+
+	//remove duplicate triggers/empty triggers/non-snippets
+	m_filteredActions.clear();
+	FilterActions(m_previousActions, m_filteredActions);
 }
 
 bool SnippetList::FilterAction(const tmAction* action) {

@@ -22,6 +22,7 @@
 #include "SearchListBox.h"
 #include "EditorFrame.h"
 #include "tmAction.h"
+#include "EditorChangeState.h"
 
 #include <vector>
 #include <deque>
@@ -30,14 +31,14 @@ class SnippetList : public wxPanel {
 public:
 	SnippetList(EditorFrame& services);
 	bool Destroy();
-	void UpdateList();
-	void UpdateSearchText();
 	bool ScopeChanged(const deque<const wxString*> scope);
 	void GetCurrentActions();
 	bool FilterAction(const tmAction*);
 	void FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result);
 
 private:
+	void OnIdle(wxIdleEvent& event);
+	DECLARE_EVENT_TABLE();
 
 	class ActionList : public SearchListBox {
 	public:
@@ -81,6 +82,7 @@ private:
 	vector<const tmAction*> m_previousActions;
 	vector<const tmAction*> m_filteredActions;
 	deque<const wxString*> m_previousScope;
+	EditorChangeState m_editorState;
 
 	wxArrayString m_bundleStrings;
 };

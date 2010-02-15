@@ -1101,6 +1101,54 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Stylers"
+			>
+			<File
+				RelativePath="styler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_htmlhl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_htmlhl.h"
+				>
+			</File>
+			<File
+				RelativePath="styler_searchhl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="styler_searchhl.h"
+				>
+			</File>
+			<File
+				RelativePath="styler_syntax.cpp"
+				>
+			</File>
+			<File
+				RelativePath="styler_syntax.h"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_variablehl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_variablehl.h"
+				>
+			</File>
+			<File
+				RelativePath="StyleRun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="StyleRun.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="application.ico"
 			>
@@ -1531,50 +1579,6 @@
 		</File>
 		<File
 			RelativePath="Strings.h"
-			>
-		</File>
-		<File
-			RelativePath="styler.h"
-			>
-		</File>
-		<File
-			RelativePath=".\styler_htmlhl.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\styler_htmlhl.h"
-			>
-		</File>
-		<File
-			RelativePath="styler_searchhl.cpp"
-			>
-		</File>
-		<File
-			RelativePath="styler_searchhl.h"
-			>
-		</File>
-		<File
-			RelativePath="styler_syntax.cpp"
-			>
-		</File>
-		<File
-			RelativePath="styler_syntax.h"
-			>
-		</File>
-		<File
-			RelativePath=".\styler_variablehl.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\styler_variablehl.h"
-			>
-		</File>
-		<File
-			RelativePath="StyleRun.cpp"
-			>
-		</File>
-		<File
-			RelativePath="StyleRun.h"
 			>
 		</File>
 		<File

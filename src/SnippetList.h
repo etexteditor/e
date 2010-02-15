@@ -34,7 +34,6 @@ public:
 	bool ScopeChanged(const deque<const wxString*> scope);
 	void GetCurrentActions();
 	bool FilterAction(const tmAction*);
-	void FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result);
 
 private:
 	void OnIdle(wxIdleEvent& event);
@@ -79,8 +78,6 @@ private:
 	// Widgets
 	ActionList* m_listBox;
 
-	vector<const tmAction*> m_previousActions;
-	vector<const tmAction*> m_filteredActions;
 	deque<const wxString*> m_previousScope;
 	EditorChangeState m_editorState;
 

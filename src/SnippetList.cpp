@@ -76,12 +76,6 @@ void SnippetList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	
 	//Update the list of snippets/commands to reflect a potentially new syntax
 	GetCurrentActions();
-	m_bundleStrings.Empty();
-	wxString name, trigger, label;
-	for(unsigned int c = 0; c < m_filteredActions.size(); ++c) {
-		label = m_filteredActions[c]->trigger;
-		m_bundleStrings.Add(label);
-	}
 	m_listBox->SetAllItems();
 	
 	//update the search text to match the current word
@@ -91,6 +85,14 @@ void SnippetList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 
 bool SnippetList::ScopeChanged(const deque<const wxString*> scope) {
 	return m_previousScope.empty() || m_previousScope != scope;
+}
+
+bool sortComparator(const tmAction* a, const tmAction* b) {
+	return a->trigger.Lower() < b->trigger.Lower();
+}
+
+bool SnippetList::FilterAction(const tmAction* action) {
+	return !action->trigger.empty(); // && action->IsSnippet(); // && !action->name.empty();
 }
 
 void SnippetList::GetCurrentActions() {
@@ -105,47 +107,34 @@ void SnippetList::GetCurrentActions() {
 	}
 
 	//get an unfiltered list of the actions
-	m_previousActions.clear();
-	m_syntaxHandler.GetAllActions(scope, m_previousActions);
+	vector<const tmAction*> sortedActions, unsortedActions;
+	m_bundleStrings.Empty();
+	m_syntaxHandler.GetAllActions(scope, unsortedActions);
 
-	//remove duplicate triggers/empty triggers/non-snippets
-	m_filteredActions.clear();
-	FilterActions(m_previousActions, m_filteredActions);
-}
-
-bool SnippetList::FilterAction(const tmAction* action) {
-	return !action->trigger.empty(); // && action->IsSnippet(); // && !action->name.empty();
-}
-
-bool sortComparator(const tmAction* a, const tmAction* b) {
-	return a->trigger.Lower() < b->trigger.Lower();
-}
-
-void SnippetList::FilterActions(vector<const tmAction*>& actions, vector<const tmAction*>& result) {
 	//remove any actions that are not snippets or dont have a trigger text
-	vector<const tmAction*> tmp;
-	for(unsigned int c = 0; c < actions.size(); ++c) {
-		if(FilterAction(actions[c])) {
-			tmp.push_back(actions[c]);
+	for(unsigned int c = 0; c < unsortedActions.size(); ++c) {
+		if(FilterAction(unsortedActions[c])) {
+			sortedActions.push_back(unsortedActions[c]);
 		}
 	}
 	
 	//sort the actions for convenience and to make removing duplicates easier and faster
-	sort(tmp.begin(), tmp.end(), sortComparator);
+	sort(sortedActions.begin(), sortedActions.end(), sortComparator);
 
 	//remove duplicates
-	if(tmp.size() > 1) {
-		const tmAction* previous = tmp[0];
-		result.push_back(previous);
-		for(unsigned int c = 1; c < tmp.size(); c++) {
-			if(previous->trigger != tmp[c]->trigger) {
-				previous = tmp[c];
-				result.push_back(previous);
+	if(sortedActions.size() > 1) {
+		wxString previousTrigger = sortedActions[0]->trigger, trigger;
+		m_bundleStrings.Add(previousTrigger);
+		for(unsigned int c = 1; c < sortedActions.size(); c++) {
+			trigger = sortedActions[c]->trigger;
+			if(previousTrigger != trigger) {
+				previousTrigger = trigger;
+				m_bundleStrings.Add(previousTrigger);
 			}
 		}
 	} else {
-		if(tmp.size() == 1) {
-			result.push_back(tmp[0]);
+		if(sortedActions.size() == 1) {
+			m_bundleStrings.Add(sortedActions[0]->trigger);
 		}
 	}
 }

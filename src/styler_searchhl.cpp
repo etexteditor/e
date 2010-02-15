@@ -128,11 +128,15 @@ void Styler_SearchHL::Style(StyleRun& sr) {
 				}
 				if (!inRange) continue;
 			}
-
-			sr.SetBackgroundColor(start, end, m_hlcolor);
-			sr.SetShowHidden(start, end, true);
+			
+			ApplyStyle(sr, start, end);
 		}
 	}
+}
+
+void Styler_SearchHL::ApplyStyle(StyleRun& sr, unsigned int start, unsigned int end) {
+	sr.SetBackgroundColor(start, end, m_hlcolor);
+	sr.SetShowHidden(start, end, true);
 }
 
 void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_last) {
@@ -158,26 +162,31 @@ void Styler_SearchHL::DoSearch(unsigned int start, unsigned int end, bool from_l
 	// Search from start until we hit a previous match (or end)
 	search_result result = {-1, 0, start};
 	while(result.end < end) {
+		bool skip = false;
 		cxLOCKDOC_READ(m_doc)
 			if (m_options & FIND_USE_REGEX) result = doc.RegExFind(m_text, result.end, matchcase, NULL, end);
 			else result = doc.Find(m_text, result.end, matchcase, end);
+			
+			skip = !FilterMatch(result, doc);
 		cxENDLOCK
 
 		if (result.error_code < 0 || result.start >= end) break;
 
-		// Add new match to list
-		const interval iv(result.start, result.end);
-		if (from_last) m_matches.push_back(iv);
-		else {
-			// Check if we have hit a previous match
-			while (next_match != m_matches.end() && result.end > next_match->start) {
-				// if not equivalent, replace and continue
-				if (next_match->start == result.start && next_match->end == result.end)	break;
-				next_match = m_matches.erase(next_match);
+		if(!skip) {
+			// Add new match to list
+			const interval iv(result.start, result.end);
+			if (from_last) m_matches.push_back(iv);
+			else {
+				// Check if we have hit a previous match
+				while (next_match != m_matches.end() && result.end > next_match->start) {
+					// if not equivalent, replace and continue
+					if (next_match->start == result.start && next_match->end == result.end)	break;
+					next_match = m_matches.erase(next_match);
+				}
+	
+				next_match = m_matches.insert(next_match, iv);
+				++next_match;
 			}
-
-			next_match = m_matches.insert(next_match, iv);
-			++next_match;
 		}
 
 		// Avoid never ending loop if zero-length match

@@ -21,6 +21,13 @@ class Styler {
 public:
     virtual ~Styler() {};
 	virtual void Style(StyleRun& sr) = 0;
+	virtual void Clear() {}
+	virtual void Invalidate() {}
+	virtual void Insert(unsigned int WXUNUSED(pos), unsigned int WXUNUSED(length)) {}
+	virtual void Delete(unsigned int WXUNUSED(start_pos), unsigned int WXUNUSED(end_pos)) {}
+	virtual void ApplyDiff(const std::vector<cxChange>& WXUNUSED(changes)) {
+		Invalidate();
+	}
 };
 
 #endif // __STYLER_H__

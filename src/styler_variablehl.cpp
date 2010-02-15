@@ -52,6 +52,7 @@ bool Styler_VariableHL::ShouldStyle() {
 }
 
 void Styler_VariableHL::ApplyStyle(StyleRun& sr, unsigned int start, unsigned int end) {
+	//It's quite annoying if the styler highlights the current word in the document as you are typing.
 	if(!IsCurrentWord(start, end)) {
 		sr.SetBackgroundColor(start, end, m_searchHighlightColor);
 		sr.SetShowHidden(start, end, true);
@@ -77,6 +78,17 @@ inline bool isAlphaNumeric(wxChar c) {
 #endif
 }
 
+/**
+ * say we click on the variable var..
+ * We want to filter out matches like these:
+     variable
+	 avar
+	 a_var
+ * But allow matches like these:
+   var.method();
+   function(var);
+   var+2;
+ */
 bool Styler_VariableHL::FilterMatch(search_result& result, const Document& doc) {
 	if(result.start > 0) {
 		if(isAlphaNumeric(doc.GetChar(result.start-1))) return false;

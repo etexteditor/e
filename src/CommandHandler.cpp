@@ -716,6 +716,7 @@ void CommandHandler::DoSearchAll(int keyCode, wxChar c) {
 
 				searchpos = sr.end;
 				if (sr.start == sr.end) ++searchpos; // avoid loop on zero-len matches
+				if (searchpos > iv.end) break; // moved outside range
 			}
 		}
 	}

@@ -87,7 +87,11 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 #ifdef __WXMSW__
 		// Cygwin needs to be able to handle windows paths
 		wxString cygvar;
-		if (env.GetEnv(wxT("CYGWIN"), cygvar)) env.SetEnv(wxT("CYGWIN"), cygvar + wxT(" nodosfilewarning"));
+		if (env.GetEnv(wxT("CYGWIN"), cygvar)) {
+			if (cygvar.Find(wxT("dosfilewarning")) == wxNOT_FOUND) {
+				env.SetEnv(wxT("CYGWIN"), cygvar + wxT(" nodosfilewarning"));
+			}
+		}
 		else env.SetEnv(wxT("CYGWIN"), wxT("nodosfilewarning"));
 #endif
 	}

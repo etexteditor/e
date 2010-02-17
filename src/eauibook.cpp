@@ -218,22 +218,26 @@ bool eAuiNotebook::LoadPerspective(const wxString& layout) {
 void eAuiNotebook::SelectNextTab(bool wrap_around) {
 	if (GetPageCount() <= 1) return;
 
-	unsigned int newtab = this->GetSelection() + 1;
-	if (wrap_around || ( newtab < GetPageCount() ))
-		this->SetSelection(newtab % GetPageCount());
+	unsigned int newtab = TabToPage(this->GetSelection());
+	newtab++;
+
+	if (wrap_around || ( newtab < GetPageCount() )) {
+		unsigned int tabIndex = PageToTab(newtab % GetPageCount());
+		this->SetSelection(tabIndex);
+	}
 }
 
 void eAuiNotebook::SelectPrevTab(bool wrap_around) {
 	if (GetPageCount() <= 1) return;
 
-	unsigned int newtab = GetSelection();
+	unsigned int newtab = TabToPage(this->GetSelection());
 	if (newtab == 0) {
 		if(!wrap_around) return;
 		newtab = GetPageCount()-1;
 	}
 	else newtab -=  1;
 
-	this->SetSelection(newtab);
+	this->SetSelection(PageToTab(newtab));
 }
 
 void eAuiNotebook::OnMouseWheel(wxMouseEvent& event) {

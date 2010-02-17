@@ -362,18 +362,18 @@ void SearchPanel::OnSysColourChanged(wxSysColourChangedEvent& event) {
 	vbox->Layout();
 }
 
-void SearchPanel::OnMenuRegex(wxCommandEvent& WXUNUSED(evt)) {
-	m_use_regex = !m_use_regex;
+void SearchPanel::OnMenuRegex(wxCommandEvent& evt) {
+	m_use_regex = evt.IsChecked();
 	Find();
 }
 
-void SearchPanel::OnMenuMatchCase(wxCommandEvent& WXUNUSED(evt)) {
-	m_match_case = !m_match_case;
+void SearchPanel::OnMenuMatchCase(wxCommandEvent& evt) {
+	m_match_case = evt.IsChecked();
 	Find();
 }
 
-void SearchPanel::OnMenuHighlight(wxCommandEvent& WXUNUSED(evt)) {
-	m_highlight = !m_highlight;
+void SearchPanel::OnMenuHighlight(wxCommandEvent& evt) {
+	m_highlight = evt.IsChecked();
 	m_settings.SetSettingBool(wxT("search/highlight"), m_highlight);
 	Find();
 }

@@ -36,6 +36,7 @@ class TmSyntaxHandler;
 class PListHandler;
 class EditorFrame;
 class AppVersion;
+class eIpcThread;
 
 class eApp : public wxApp, 
 	public IAppPaths, 
@@ -110,6 +111,7 @@ private:
 	void OnUpdatesAvailable(wxCommandEvent& event);
 	void OnUpdatesChecked(wxCommandEvent& event);
 	void OnIdle(wxIdleEvent& event);
+	void OnIpcCall(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	// Member variables
@@ -122,6 +124,7 @@ private:
 	wxString m_appPath;
 	wxString m_appDataPath;
 	wxArrayString m_openStack;
+	eIpcThread* m_ipcThread;
 
 #ifndef __WXMSW__
 	eServer* m_server;

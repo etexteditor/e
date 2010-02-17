@@ -35,6 +35,9 @@
 #include "EditorCtrl.h"
 #include "eDocumentPath.h"
 #include "AppVersion.h"
+#include "IIpcServer.h"
+#include "IConnection.h"
+#include "eIpcThread.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -111,6 +114,7 @@ BEGIN_EVENT_TABLE(eApp, wxApp)
 	EVT_MENU(ID_UPDATES_AVAILABLE, eApp::OnUpdatesAvailable)
 	EVT_MENU(ID_UPDATES_CHECKED, eApp::OnUpdatesChecked)
 	EVT_IDLE(eApp::OnIdle)
+	EVT_COMMAND(wxID_ANY, wxEVT_IPC_CALL, eApp::OnIpcCall)
 END_EVENT_TABLE()
 
 bool eApp::OnInit() {
@@ -119,6 +123,7 @@ bool eApp::OnInit() {
 	m_catalyst = NULL;
 	m_pSyntaxHandler = NULL;
 	m_checker = NULL;
+	m_ipcThread = NULL;
 
 #ifdef __WXGTK__
 	m_server = NULL;
@@ -281,6 +286,9 @@ bool eApp::OnInit() {
 		if (checkForUpdate)
 			CheckForUpdates(m_settings, GetAppVersion());
 	}
+
+	// Start the scripting server
+	m_ipcThread = new eIpcThread(*this);
 
     return true;
 }
@@ -685,6 +693,7 @@ int eApp::OnExit() {
 #ifndef __WXMSW__
 	if (m_server) delete m_server;
 #endif
+	if (m_ipcThread) m_ipcThread->stop();
 	if (m_catalyst) delete m_catalyst;
 	if (m_pCatalyst) delete m_pCatalyst;
 	if (m_checker) delete m_checker;
@@ -812,3 +821,23 @@ int eApp::DaysLeftOfTrial() const {return m_pCatalyst->DaysLeftOfTrial();}
 int eApp::TotalDays() const {return m_pCatalyst->DaysLeftOfTrial();}
 const wxString& eApp::RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();}
 const wxString& eApp::RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();}
+
+void eApp::OnIpcCall(wxCommandEvent& event) {
+	IConnection* conn = (IConnection*)event.GetClientData();
+	if (!conn) return;
+
+	const hessian_ipc::Call* call = conn->get_call();
+	if (!call) return;
+
+	const string& m = call->GetMethod();
+	const wxString method(m.c_str(), wxConvUTF8, m.size());
+
+	wxLogDebug(wxT("IPC: %s"), method);
+
+	// Write the reply
+	hessian_ipc::Writer& writer = conn->get_reply_writer();
+	writer.write_reply(true);
+
+	// Notify connection that it can send the reply (threadsafe)
+	conn->reply_done();
+}

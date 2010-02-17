@@ -336,6 +336,8 @@ void SearchPanel::OnSearchTextEnter(wxCommandEvent& WXUNUSED(evt)) {
 void SearchPanel::OnSearchTextCombo(wxCommandEvent& evt) {
 	wxString pattern;
 	m_settings.GetSearch(evt.GetSelection(), pattern, m_use_regex, m_match_case);
+	checkRegex->SetValue(m_use_regex);
+	checkMatchcase->SetValue(m_match_case);
 }
 
 void SearchPanel::OnNext(wxCommandEvent& WXUNUSED(evt)) {

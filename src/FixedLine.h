@@ -82,6 +82,11 @@ public:
 	bool IsOverFoldIndicator(const wxPoint& point) const;
 
 	void AddStyler(Styler &styler);
+	void StylersClear();
+	void StylersInvalidate();
+	void StylersInsert(unsigned int pos, unsigned int len);
+	void StylersDelete(unsigned int start, unsigned int end);
+	void StylersApplyDiff(vector<cxChange>& changes);
 
 private:
 	unsigned int DrawText(int xoffset, int x, int y, unsigned int start, unsigned int end);

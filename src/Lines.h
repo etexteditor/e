@@ -114,6 +114,11 @@ public:
 	void RemoveSelection(unsigned int sel_id);
 
 	void AddStyler(Styler& styler);
+	inline void StylersClear() { line.StylersClear(); }
+	inline void StylersInvalidate() { line.StylersInvalidate(); }
+	inline void StylersApplyDiff(vector<cxChange>& changes) { line.StylersApplyDiff(changes); }
+	inline void StylersInsert(unsigned int pos, unsigned int length) { line.StylersInsert(pos, length); }
+	inline void StylersDelete(unsigned int start, unsigned int end) { line.StylersDelete(start, end); }
 
 	void Clear();
 	cxFileResult LoadText(const wxFileName& path, wxFontEncoding enc, const wxString& mirror=wxEmptyString);

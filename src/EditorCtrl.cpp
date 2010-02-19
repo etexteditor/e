@@ -2894,17 +2894,14 @@ void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	
 	// Lines has to be made valid first
 	m_lines.ApplyDiff(changes);
-
+	
 	// When applying changes to the syntax, we have to be very carefull
 	// not to do any reads of text from stale refs. To avoid this we only
 	// apply changes as full lines.
 	const vector<cxLineChange> linechanges = m_lines.ChangesToFullLines(changes);
 
-	m_syntaxstyler.ApplyDiff(linechanges);
+	StylersApplyDiff(changes);
 	FoldingApplyDiff(linechanges);
-	m_search_hl_styler.ApplyDiff(changes);
-	m_variable_hl_styler.ApplyDiff(changes);
-	m_html_hl_styler.ApplyDiff(changes);
 	if (!changes.empty()) bookmarks.ApplyChanges(changes);
 
 	// Move caret to position of first change
@@ -2962,37 +2959,29 @@ interval EditorCtrl::UndoSelection(const cxDiffEntry& de) {
 }
 
 void EditorCtrl::StylersClear() {
-	m_search_hl_styler.Clear();
-	m_variable_hl_styler.Clear();
-	m_html_hl_styler.Clear();
-	m_syntaxstyler.Clear();
+	m_lines.StylersClear();
 	FoldingClear();
 }
 
 void EditorCtrl::StylersInvalidate() {
-	m_search_hl_styler.Invalidate();
-	m_syntaxstyler.Invalidate();
-	m_html_hl_styler.Invalidate();
-	m_variable_hl_styler.Invalidate();
+	m_lines.StylersInvalidate();
 	FoldingClear();
 }
 
 void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
-	m_search_hl_styler.Insert(pos, length);
-	m_syntaxstyler.Insert(pos, length);
-	m_variable_hl_styler.Insert(pos, length);
-	m_html_hl_styler.Insert(pos, length);
+	m_lines.StylersInsert(pos, length);
 	FoldingInsert(pos, length);
 	bookmarks.InsertChars(pos, length);
 }
 
 void EditorCtrl::StylersDelete(unsigned int start, unsigned int end) {
-	m_search_hl_styler.Delete(start, end);
-	m_syntaxstyler.Delete(start, end);
-	m_variable_hl_styler.Delete(start, end);
-	m_html_hl_styler.Delete(start, end);
+	m_lines.StylersDelete(start, end);
 	FoldingDelete(start, end);
 	bookmarks.DeleteChars(start, end);
+}
+
+void EditorCtrl::StylersApplyDiff(vector<cxChange>& changes) {
+	m_lines.StylersApplyDiff(changes);
 }
 
 unsigned int EditorCtrl::GetChangePos(const doc_id& old_version_id) const {

@@ -275,7 +275,7 @@ int Styler_HtmlHL::FindCurrentTag() {
 bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const Document& doc) {
 	int openIndex = openTag.start+1;
 	int closeIndex = closeTag.start+1;
-	wxChar c;
+	wxChar start, end;
 	
 	//we only need to compare tag names, so <a> and </a> should both match
 	if(openTag.isClosingTag) openIndex++;
@@ -283,17 +283,24 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const D
 	
 	while(true) {
 		//we are guaranteed openIndex and closeIndex are less than the doc length because there must be a closing bracket in the tag to get in here
-		c = doc.GetChar(openIndex);
+		start = doc.GetChar(openIndex);
+		if(start >= 'A' && start <= 'Z') {
+		    start -= ('A' - 'a');
+		}
 		
 		//once we hit non-alphanumber characters, then the tags have not differred so far, so it is valid
-		if(!isAlphaNumeric(c)) {
+		if(!isAlphaNumeric(start)) {
 			//save the position of the end of the tag name so we dont have to recompute it when we highlight the tag later
 			openTag.tagNameEnd = openIndex;
 			closeTag.tagNameEnd = closeIndex;
 			return true;		
 		}
 		
-		if(c != doc.GetChar(closeIndex)) return false;
+		end = doc.GetChar(closeIndex);
+		if(end >= 'A' && end <= 'Z') {
+		    end -= ('A' - 'a');
+		}
+		if(start != end ) return false;
 		
 		openIndex++;
 		closeIndex++;

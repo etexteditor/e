@@ -28,6 +28,7 @@
 #include <vector>
 
 
+class EditorCtrl;
 class DocumentWrapper;
 class StyleRun;
 struct tmTheme;
@@ -35,12 +36,12 @@ class Lines;
 
 class Styler_VariableHL : public Styler_SearchHL {
 public:
-	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings);
+	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl);
 	virtual ~Styler_VariableHL() {};
 
 	void Clear();
 
-	void SetCurrentWord(const wxString& text, bool click, unsigned int cursosPosition, int key);
+	void SetCurrentWord();
 	void Style(StyleRun& sr);
 
 	bool ShouldStyle();
@@ -55,10 +56,9 @@ public:
 
 private:
 	eSettings& m_settings;
+	EditorCtrl& m_editorCtrl;
 
-	bool m_click;
 	unsigned int m_cursorPosition;
-	int m_key;
 
 	const wxColour& m_searchHighlightColor;
 	const wxColour& m_selectionHighlightColor;

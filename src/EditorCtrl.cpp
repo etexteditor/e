@@ -162,7 +162,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_lines(mdc, m_doc, *this, m_theme),
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
@@ -212,7 +212,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_lines(mdc, m_doc, *this, m_theme),
 	
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
@@ -276,7 +276,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_lines(mdc, m_doc, *this, m_theme), 
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
-	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings()),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
 
@@ -6143,7 +6143,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 	}
 
 	MakeCaretVisible();
-	RefreshVariableHighlighter(false, key);
 
 	// Draw the updated view
 	DrawLayout();
@@ -6991,7 +6990,6 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	}
 
 	m_tripleClicks.Reset();
-	RefreshVariableHighlighter(true, -1);
 	DrawLayout();
 
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
@@ -8206,16 +8204,6 @@ void EditorCtrl::Print() {
 }
 
 #endif  //__WXDEBUG__
-
-void EditorCtrl::RefreshVariableHighlighter(bool click, int key) {
-	wxString word = GetCurrentWord();
-	wxLogDebug(word);
-	if(word.Len() == 0) {
-		m_variable_hl_styler.Clear();
-	} else {
-		m_variable_hl_styler.SetCurrentWord(word, click, m_lines.GetPos(), key);
-	}
-}
 
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {
 	vector<unsigned int> folds;

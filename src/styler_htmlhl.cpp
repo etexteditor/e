@@ -357,6 +357,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 		}
 	}
 
+	UpdateCursorPosition();
 	//do a search for any new brackets inside of the inserted text
 	cxLOCKDOC_READ(m_doc)
 		FindBrackets(start, end, doc);
@@ -394,6 +395,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 		}
 	}
 
+	UpdateCursorPosition();
 	cxLOCKDOC_READ(m_doc)
 		//we always need to recreate the tags list from scratch
 		//it is much to difficult to take care of all the cases that could result

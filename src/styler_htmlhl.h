@@ -23,11 +23,11 @@
 #include "Catalyst.h"
 #include "styler.h"
 #include "eSettings.h"
-class EditorCtrl;
 
 #include <vector>
 
 
+class EditorCtrl;
 class DocumentWrapper;
 class Document;
 class StyleRun;

@@ -57,8 +57,10 @@ public:
 	void Reparse();
 	bool IsValidTag(unsigned int start, unsigned int end, const Document& doc);
 	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const Document& doc);
-	void FindBrackets(unsigned int start, unsigned int end, const Document& doc);
+	bool FindBrackets(unsigned int start, unsigned int end, const Document& doc);
 	void FindAllBrackets(const Document& doc);
+	bool IsOpenComment(const Document& doc, int bracket);
+	bool IsCloseComment(const Document& doc, int bracket);
 	void FindTags(const Document& doc);
 	int FindMatchingTag(const Document& doc, int tag);
 	int FindCurrentTag();
@@ -77,7 +79,7 @@ private:
 	EditorCtrl& m_editorCtrl;
 
 	unsigned int m_cursorPosition;
-	bool needReparse;
+	bool needReparse, needReparseTags;
 	int m_currentTag, m_matchingTag;
 	std::vector<unsigned int> m_brackets;
 	std::vector<TagInterval> m_tags;

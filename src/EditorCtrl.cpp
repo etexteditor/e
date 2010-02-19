@@ -4447,6 +4447,15 @@ wxString EditorCtrl::GetCurrentWord() const {
 	cxENDLOCK
 }
 
+wxString EditorCtrl::GetWord(unsigned int pos) const {
+	const interval iv = GetWordIv(pos);
+	if (iv.empty()) return wxEmptyString;
+
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(iv.start, iv.end);
+	cxENDLOCK
+}
+
 wxString EditorCtrl::GetCurrentLine() {
 	const unsigned int cl = m_lines.GetCurrentLine();
 	const unsigned int start = m_lines.GetLineStartpos(cl);

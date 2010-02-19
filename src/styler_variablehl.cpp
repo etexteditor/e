@@ -37,13 +37,11 @@ void Styler_VariableHL::Clear() {
 }
 
 void Styler_VariableHL::SetCurrentWord() {
-	const wxString text = m_editorCtrl.GetCurrentWord();
+	const wxString text = m_editorCtrl.GetWord(m_cursorPosition);
 	if (text != m_text || text.Len() == 0) {
 		Clear();
 		m_text = text;
 	}
-
-	m_cursorPosition = m_editorCtrl.GetPos();
 }
 
 bool Styler_VariableHL::IsCurrentWord(unsigned int start, unsigned int end) {
@@ -72,6 +70,7 @@ void Styler_VariableHL::Style(StyleRun& sr) {
 		return;
 	}
 	
+	m_cursorPosition = m_editorCtrl.GetPos();
 	SetCurrentWord();
 	Styler_SearchHL::Style(sr);
 }
@@ -117,7 +116,13 @@ void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
 		return;
 	}
 	
-	SetCurrentWord();
+	//We can't call GetPos because it hasn't been updated yet.
+    unsigned int end = pos+length;
+	if(m_cursorPosition >= pos) {
+		m_cursorPosition += length;
+		SetCurrentWord();
+	}
+
 	Styler_SearchHL::Insert(pos, length);
 }
 
@@ -127,6 +132,12 @@ void Styler_VariableHL::Delete(unsigned int start, unsigned int end) {
 		//If they later turn it on, we could have junk, so make sure we do a new search at that point.
 		Invalidate();
 		return;
+	}
+
+	if(end < m_cursorPosition) {
+		m_cursorPosition -= (end - start);
+	} else if(start <= m_cursorPosition && end >= m_cursorPosition) {
+		m_cursorPosition = start;
 	}
 
 	SetCurrentWord();

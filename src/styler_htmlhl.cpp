@@ -40,7 +40,7 @@ Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, con
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor)
 {
-	initialParse = false;
+	needReparse = false;
 	m_cursorPosition = m_lines.GetPos();
 }
 
@@ -49,9 +49,9 @@ void Styler_HtmlHL::Clear() {
 }
 
 void Styler_HtmlHL::Invalidate() {
-	initialParse = false;
-	//This causes a segfault when opening a new document.
-	//Setting initialParse to false will cause it to call Reparse when Style is called next.
+	needReparse = false;
+	//This somtimes causes a segfault when opening a new document.
+	//Setting needReparse to false will cause it to call Reparse when Style is called next.
 	//Reparse();
 }
 
@@ -60,30 +60,32 @@ bool Styler_HtmlHL::ShouldStyle() {
 	m_settings.GetSettingBool(wxT("highlightHtml"), shouldStyle);
 
 	//force the styler to reparse the whole document the next time it is enabled
-	if(!shouldStyle) initialParse = false;
+	if(!shouldStyle) needReparse = false;
 	return shouldStyle;
 }
 
 void Styler_HtmlHL::Reparse() {
-	initialParse = true;
+	needReparse = true;
+	
+	unsigned int pos = m_editorCtrl.GetPos();
+	m_cursorPosition = pos;
 
 	cxLOCKDOC_READ(m_doc)
-		wxString text = doc.GetText();
-		const wxChar* data = text.c_str();
-		FindAllBrackets(data);
-		FindTags(data);
+		FindAllBrackets(doc);
+		FindTags(doc);
 		m_currentTag = FindCurrentTag();
-		m_matchingTag = FindMatchingTag(data, m_currentTag);
+		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
 }
 
-void Styler_HtmlHL::UpdateCursorPosition(unsigned int pos) {
+void Styler_HtmlHL::UpdateCursorPosition() {
+	unsigned int pos = m_editorCtrl.GetPos();
+	if(pos == m_cursorPosition) return;
+
 	m_cursorPosition = pos;
 	m_currentTag = FindCurrentTag();
 	cxLOCKDOC_READ(m_doc)
-		wxString text = doc.GetText();
-		const wxChar* data = text.c_str();
-		m_matchingTag = FindMatchingTag(data, m_currentTag);
+		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
 }
 
@@ -91,10 +93,9 @@ void Styler_HtmlHL::SelectParentTag() {
 	//The Insert/Delete methods return if the highlight html option is not checked.
 	//This feature can still work without that, and it probably should.  However, we need to parse the doc to find the tags first.
 	if(!ShouldStyle()) Reparse();
+	UpdateCursorPosition();
 
 	cxLOCKDOC_READ(m_doc)
-		wxString text = doc.GetText();
-		const wxChar* data = text.c_str();
 		int closingTag, openingTag;
 
 		vector<interval> selections = m_editorCtrl.GetSelections();
@@ -103,7 +104,7 @@ void Styler_HtmlHL::SelectParentTag() {
 			closingTag = FindParentClosingTag(m_cursorPosition);
 			if(closingTag < 0) return;
 
-			openingTag = FindMatchingTag(data, closingTag);
+			openingTag = FindMatchingTag(doc, closingTag);
 			if(openingTag < 0) return;
 
 		} else {
@@ -111,14 +112,14 @@ void Styler_HtmlHL::SelectParentTag() {
 			closingTag = FindParentClosingTag(first.end);
 			if(closingTag < 0) return;
 
-			openingTag = FindMatchingTag(data, closingTag);
+			openingTag = FindMatchingTag(doc, closingTag);
 			if(openingTag < 0) return;
 
 			//check if the selection matches the content of the current tag pair.  if it does, then select the parent tag
 			if(first.start == m_tags[openingTag].end+1 && first.end == m_tags[closingTag].start) {
 				closingTag = FindParentClosingTag(m_tags[closingTag].end);
 				if(closingTag < 0) return;
-				openingTag = FindMatchingTag(data, closingTag);
+				openingTag = FindMatchingTag(doc, closingTag);
 				if(openingTag < 0) return;
 			}
 		}
@@ -126,12 +127,12 @@ void Styler_HtmlHL::SelectParentTag() {
 	cxENDLOCK
 }
 
-void Styler_HtmlHL::FindAllBrackets(const wxChar* data) {
+void Styler_HtmlHL::FindAllBrackets(const Document& doc) {
 	m_brackets.clear();
-	FindBrackets(0, m_doc.GetLength(), data);
+	FindBrackets(0, doc.GetLength(), doc);
 }
 
-void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxChar* data) {
+void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const Document& doc) {
 	vector<unsigned int> buffer;
 
 	//copy the existing brackets to a temporary array so we can add them in order, in linear time
@@ -142,7 +143,7 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxC
 	
 	unsigned int index = 0;
 	for(unsigned int c = start; c < end; ++c) {
-		switch(data[c]) {
+		switch(doc.GetChar(c)) {
 			case '<':
 			case '>':
 				//now we have the index of a bracket inside the search range
@@ -169,17 +170,17 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const wxC
 	}
 }
 
-bool Styler_HtmlHL::IsValidTag(unsigned int start, unsigned int end, const wxChar* data) {
+bool Styler_HtmlHL::IsValidTag(unsigned int start, unsigned int end, const Document& doc) {
 	start++;
 	
 	//if there is no tag name, it is not a tag
 	if(start == end) return false;
 	
 	//if it starts with a slash, it might be valid
-	if(data[start] == '/') start++;
+	if(doc.GetChar(start) == '/') start++;
 		
 	//if it starts with an alphabetic character, then it is prolly valid
-	if(isAlphaNumeric(data[start])) return true;
+	if(isAlphaNumeric(doc.GetChar(start))) return true;
 	
 	//TODO: comments
 	
@@ -187,7 +188,7 @@ bool Styler_HtmlHL::IsValidTag(unsigned int start, unsigned int end, const wxCha
 }
 
 //when inserting/removing a character, i should be able to ignore any brackets before the insertion, i should be able to just add those tags right back in to m_tags
-void Styler_HtmlHL::FindTags(const wxChar* data) {
+void Styler_HtmlHL::FindTags(const Document& doc) {
 	m_tags.clear();
 	bool haveOpenBracket = false;
 	int openBracketIndex = -1, closeBracketIndex = -1, size = (int)m_brackets.size(), index;
@@ -196,10 +197,10 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 	for(int c = 0; c < size; ++c) {
 		index = m_brackets[c];
 		if(haveOpenBracket) {
-			if(data[index] == '>') {
+			if(doc.GetChar(index) == '>') {
 				closeBracketIndex = index;
-				if(IsValidTag(openBracketIndex, closeBracketIndex, data)) {
-					TagInterval i = TagInterval(openBracketIndex, closeBracketIndex, data);	
+				if(IsValidTag(openBracketIndex, closeBracketIndex, doc)) {
+					TagInterval i = TagInterval(openBracketIndex, closeBracketIndex, doc);	
 					m_tags.push_back(i);
 				}
 				haveOpenBracket = false;
@@ -207,7 +208,7 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 				openBracketIndex = index;
 			}
 		} else {
-			if(data[index] == '>') {
+			if(doc.GetChar(index) == '>') {
 				
 			} else {
 				openBracketIndex = index;
@@ -217,7 +218,7 @@ void Styler_HtmlHL::FindTags(const wxChar* data) {
 	}
 }
 
-int Styler_HtmlHL::FindMatchingTag(const wxChar* data, int tag) {
+int Styler_HtmlHL::FindMatchingTag(const Document& doc, int tag) {
 	if(tag < 0) return -1;
 	TagInterval currentTag = m_tags[tag];
 	int stack = 1, size = (int)m_tags.size();
@@ -225,7 +226,7 @@ int Styler_HtmlHL::FindMatchingTag(const wxChar* data, int tag) {
 	if(currentTag.isClosingTag) {
 		//search in reverse to find the matching opening tag	
 		for(int c = tag-1; c >= 0; --c) {
-			if(SameTag(m_tags[c], currentTag, data)) {
+			if(SameTag(m_tags[c], currentTag, doc)) {
 				stack += m_tags[c].isClosingTag ? 1 : -1;
 				if(stack == 0) return c;
 			}
@@ -233,7 +234,7 @@ int Styler_HtmlHL::FindMatchingTag(const wxChar* data, int tag) {
 	} else {
 		//search forward to find the matching closing tag
 		for(int c = tag+1; c < size; ++c) {
-			if(SameTag(m_tags[c], currentTag, data)) {
+			if(SameTag(m_tags[c], currentTag, doc)) {
 				stack += m_tags[c].isClosingTag ? -1 : 1;
 				if(stack == 0) return c;
 			}
@@ -271,7 +272,7 @@ int Styler_HtmlHL::FindCurrentTag() {
 	return -1;
 }
 
-bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const wxChar* data) {
+bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const Document& doc) {
 	int openIndex = openTag.start+1;
 	int closeIndex = closeTag.start+1;
 	wxChar c;
@@ -282,7 +283,7 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const w
 	
 	while(true) {
 		//we are guaranteed openIndex and closeIndex are less than the doc length because there must be a closing bracket in the tag to get in here
-		c = data[openIndex];
+		c = doc.GetChar(openIndex);
 		
 		//once we hit non-alphanumber characters, then the tags have not differred so far, so it is valid
 		if(!isAlphaNumeric(c)) {
@@ -292,24 +293,25 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const w
 			return true;		
 		}
 		
-		if(c != data[closeIndex]) return false;
+		if(c != doc.GetChar(closeIndex)) return false;
 		
 		openIndex++;
 		closeIndex++;
 	}
 }
 
-Styler_HtmlHL::TagInterval::TagInterval(unsigned int start, unsigned int end, const wxChar* data) :
+Styler_HtmlHL::TagInterval::TagInterval(unsigned int start, unsigned int end, const Document& doc) :
  start(start), end(end), tagNameEnd(0)
  {
-	 isSelfClosingTag = data[end-1] == '/';
-	 isClosingTag = isSelfClosingTag || data[start+1]=='/';
+	 isSelfClosingTag = doc.GetChar(end-1) == '/';
+	 isClosingTag = isSelfClosingTag || doc.GetChar(start+1) == '/';
 }
 
 void Styler_HtmlHL::Style(StyleRun& sr) {
 	if(!ShouldStyle()) return;
 
-	if(!initialParse) Reparse();
+	if(!needReparse) Reparse();
+	UpdateCursorPosition();
 
 	if(m_matchingTag >= 0) {
 		const unsigned int rstart =  sr.GetRunStart();
@@ -340,7 +342,7 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	if(!ShouldStyle()) return;
 
-	if(!initialParse) {
+	if(!needReparse) {
 		Reparse();
 		return;
 	}
@@ -357,22 +359,20 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 
 	//do a search for any new brackets inside of the inserted text
 	cxLOCKDOC_READ(m_doc)
-		wxString text = doc.GetText();
-		const wxChar* data = text.c_str();
-		FindBrackets(start, end, data);
+		FindBrackets(start, end, doc);
 
 		//we always need to recreate the tags list from scratch
 		//it is much to difficult to take care of all the cases that could result
-		FindTags(data);
+		FindTags(doc);
 		m_currentTag = FindCurrentTag();
-		m_matchingTag = FindMatchingTag(data, m_currentTag);
+		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
 }
 
 void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 	if(!ShouldStyle()) return;
 
-	if(!initialParse) {
+	if(!needReparse) {
 		Reparse();
 		return;
 	}
@@ -395,14 +395,11 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 	}
 
 	cxLOCKDOC_READ(m_doc)
-		wxString text = doc.GetText();
-		const wxChar* data = text.c_str();
-
 		//we always need to recreate the tags list from scratch
 		//it is much to difficult to take care of all the cases that could result
-		FindTags(data);
+		FindTags(doc);
 		m_currentTag = FindCurrentTag();
-		m_matchingTag = FindMatchingTag(data, m_currentTag);
+		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
 }
 

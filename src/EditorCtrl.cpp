@@ -6144,7 +6144,6 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 	MakeCaretVisible();
 	RefreshVariableHighlighter(false, key);
-	RefreshHtmlHighlighter();
 
 	// Draw the updated view
 	DrawLayout();
@@ -6993,7 +6992,6 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 
 	m_tripleClicks.Reset();
 	RefreshVariableHighlighter(true, -1);
-	RefreshHtmlHighlighter();
 	DrawLayout();
 
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
@@ -8217,10 +8215,6 @@ void EditorCtrl::RefreshVariableHighlighter(bool click, int key) {
 	} else {
 		m_variable_hl_styler.SetCurrentWord(word, click, m_lines.GetPos(), key);
 	}
-}
-
-void EditorCtrl::RefreshHtmlHighlighter() {
-	m_html_hl_styler.UpdateCursorPosition(m_lines.GetPos());
 }
 
 vector<unsigned int> EditorCtrl::GetFoldedLines() const {

@@ -77,7 +77,7 @@ private:
 	EditorCtrl& m_editorCtrl;
 
 	unsigned int m_cursorPosition;
-	bool needReparse;
+	bool needReparse, needReparseTags;
 	int m_currentTag, m_matchingTag;
 	std::vector<unsigned int> m_brackets;
 	std::vector<TagInterval> m_tags;

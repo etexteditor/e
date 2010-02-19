@@ -40,7 +40,8 @@ Styler_HtmlHL::Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, con
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor)
 {
-	needReparse = false;
+	needReparse = true;
+	needReparseTags = true;
 	m_cursorPosition = m_lines.GetPos();
 }
 
@@ -49,7 +50,8 @@ void Styler_HtmlHL::Clear() {
 }
 
 void Styler_HtmlHL::Invalidate() {
-	needReparse = false;
+	needReparse = true;
+	needReparseTags = true;
 	//This somtimes causes a segfault when opening a new document.
 	//Setting needReparse to false will cause it to call Reparse when Style is called next.
 	//Reparse();
@@ -60,33 +62,41 @@ bool Styler_HtmlHL::ShouldStyle() {
 	m_settings.GetSettingBool(wxT("highlightHtml"), shouldStyle);
 
 	//force the styler to reparse the whole document the next time it is enabled
-	if(!shouldStyle) needReparse = false;
+	if(!shouldStyle) {
+		needReparse = true;
+		needReparseTags = true;
+	}
 	return shouldStyle;
 }
 
 void Styler_HtmlHL::Reparse() {
-	needReparse = true;
-	
-	unsigned int pos = m_editorCtrl.GetPos();
-	m_cursorPosition = pos;
+    //Reparse finds every bracket (< and >) in the document and then determines which of those are valid tags.
+    //It has to do a full scan of the document to do this though.
+    
+	needReparse = false;
+	needReparseTags = true;
 
 	cxLOCKDOC_READ(m_doc)
 		FindAllBrackets(doc);
-		FindTags(doc);
-		m_currentTag = FindCurrentTag();
-		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
 }
 
 void Styler_HtmlHL::UpdateCursorPosition() {
+    //m_editorCtrl.GetPos cannot be called from the insert/delete methods.  EditorCtrl has not update pos yet, so pos will always be incorrect at that stage.
+    //Instead, we just need to check it every time we style or select parent content.
+    //If the position has changed, then we need to find which tag contains the cursor.  If the document needs to be reparsed, then we need to find the tags as well.
+
 	unsigned int pos = m_editorCtrl.GetPos();
-	if(pos == m_cursorPosition) return;
+	if(pos == m_cursorPosition && !needReparseTags) return;
 
 	m_cursorPosition = pos;
-	m_currentTag = FindCurrentTag();
 	cxLOCKDOC_READ(m_doc)
+	    if(needReparseTags) FindTags(doc);
+		m_currentTag = FindCurrentTag();
 		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
+	
+    needReparseTags = false;
 }
 
 void Styler_HtmlHL::SelectParentTag() {
@@ -317,7 +327,7 @@ Styler_HtmlHL::TagInterval::TagInterval(unsigned int start, unsigned int end, co
 void Styler_HtmlHL::Style(StyleRun& sr) {
 	if(!ShouldStyle()) return;
 
-	if(!needReparse) Reparse();
+	if(needReparse) Reparse();
 	UpdateCursorPosition();
 
 	if(m_matchingTag >= 0) {
@@ -349,7 +359,7 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	if(!ShouldStyle()) return;
 
-	if(!needReparse) {
+	if(needReparse) {
 		Reparse();
 		return;
 	}
@@ -363,24 +373,19 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 			m_brackets[c] += length;
 		}
 	}
-
-	UpdateCursorPosition();
+	
 	//do a search for any new brackets inside of the inserted text
 	cxLOCKDOC_READ(m_doc)
 		FindBrackets(start, end, doc);
-
-		//we always need to recreate the tags list from scratch
-		//it is much to difficult to take care of all the cases that could result
-		FindTags(doc);
-		m_currentTag = FindCurrentTag();
-		m_matchingTag = FindMatchingTag(doc, m_currentTag);
 	cxENDLOCK
+	needReparseTags = true;
+	//TODO: if no brackets are found, we probably don't need to call FindTags again
 }
 
 void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 	if(!ShouldStyle()) return;
 
-	if(!needReparse) {
+	if(needReparse) {
 		Reparse();
 		return;
 	}
@@ -401,15 +406,8 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 			}
 		}
 	}
-
-	UpdateCursorPosition();
-	cxLOCKDOC_READ(m_doc)
-		//we always need to recreate the tags list from scratch
-		//it is much to difficult to take care of all the cases that could result
-		FindTags(doc);
-		m_currentTag = FindCurrentTag();
-		m_matchingTag = FindMatchingTag(doc, m_currentTag);
-	cxENDLOCK
+	
+	needReparseTags = true;
 }
 
 void Styler_HtmlHL::ApplyDiff(const std::vector<cxChange>& WXUNUSED(changes)) {

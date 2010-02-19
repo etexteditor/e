@@ -142,8 +142,20 @@ void Styler_HtmlHL::FindAllBrackets(const Document& doc) {
 	FindBrackets(0, doc.GetLength(), doc);
 }
 
-void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const Document& doc) {
+bool Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const Document& doc) {
 	vector<unsigned int> buffer;
+	bool foundBracket = false;
+	
+	//If there are no brackets in the inserted text, then we dont need to do anything
+	wxChar chr;
+	for(unsigned int c = start; c < end; ++c) {
+		chr = doc.GetChar(c);
+		if(chr == '<' || chr == '>') {
+			foundBracket = true;
+			break;
+		}
+	}
+	if(!foundBracket) return false;
 
 	//copy the existing brackets to a temporary array so we can add them in order, in linear time
 	for (vector<unsigned int>::iterator p = m_brackets.begin(); p != m_brackets.end(); ++p) {
@@ -169,6 +181,7 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const Doc
 			
 				//now add this bracket
 				m_brackets.push_back(c);
+				foundBracket = true;
 				
 			break;
 		}
@@ -178,6 +191,8 @@ void Styler_HtmlHL::FindBrackets(unsigned int start, unsigned int end, const Doc
 	for(; index < buffer.size(); ++index) {
 		m_brackets.push_back(buffer[index]);
 	}
+	
+	return true;
 }
 
 bool Styler_HtmlHL::IsValidTag(unsigned int start, unsigned int end, const Document& doc) {
@@ -298,17 +313,22 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const D
 		    start -= ('A' - 'a');
 		}
 		
+		end = doc.GetChar(closeIndex);
+		if(end >= 'A' && end <= 'Z') {
+		    end -= ('A' - 'a');
+		}
+		
 		//once we hit non-alphanumber characters, then the tags have not differred so far, so it is valid
 		if(!isAlphaNumeric(start)) {
 			//save the position of the end of the tag name so we dont have to recompute it when we highlight the tag later
 			openTag.tagNameEnd = openIndex;
-			closeTag.tagNameEnd = closeIndex;
-			return true;		
-		}
-		
-		end = doc.GetChar(closeIndex);
-		if(end >= 'A' && end <= 'Z') {
-		    end -= ('A' - 'a');
+
+			if(!isAlphaNumeric(end)) {
+				closeTag.tagNameEnd = closeIndex;
+				return true;
+			}
+
+			return false;
 		}
 		if(start != end ) return false;
 		
@@ -355,7 +375,6 @@ void Styler_HtmlHL::Style(StyleRun& sr) {
 	}
 }
 
-
 void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	if(!ShouldStyle()) return;
 
@@ -374,11 +393,31 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 		}
 	}
 	
+	bool foundBrackets = false;
 	//do a search for any new brackets inside of the inserted text
 	cxLOCKDOC_READ(m_doc)
-		FindBrackets(start, end, doc);
+		foundBrackets = FindBrackets(start, end, doc);
 	cxENDLOCK
-	needReparseTags = true;
+	
+	if(foundBrackets) {
+		needReparseTags = true;
+	} else {
+		if(!needReparseTags) {
+			int size = (int) m_tags.size();
+			for(int c = 0; c < size; ++c) {
+				//They could have inserted a non-alphabetic character, which would change the name of the tag, so that has to be reset
+				//The start and end brackets should be able to just be adjusted based on the length as long as no other brackets were inserted
+				if(m_tags[c].start >= start) {
+					m_tags[c].start += length;
+					m_tags[c].tagNameEnd = 0;
+				}
+				if(m_tags[c].end >= start) {
+					m_tags[c].end += length;
+					m_tags[c].tagNameEnd = 0;
+				}
+			}
+		}
+	}
 	//TODO: if no brackets are found, we probably don't need to call FindTags again
 }
 
@@ -395,10 +434,12 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 
 	//update all the brackets to point to their new locations
 	//remove any brackets that were inside the deleted text
+	bool erasedBracket = false;
 	for(int c = 0; c < count; ++c) {
 		if(m_brackets[c] >= start) {
 			if(m_brackets[c] < end) {
 				m_brackets.erase(m_brackets.begin()+c);
+				erasedBracket = true;
 				count--;
 				c--;
 			} else {
@@ -407,7 +448,21 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 		}
 	}
 	
-	needReparseTags = true;
+	if(!erasedBracket && !needReparseTags) {
+		int size = (int) m_tags.size();
+		for(int c = 0; c < size; ++c) {
+			if(m_tags[c].start >= end) {
+				m_tags[c].start -= length;
+				m_tags[c].tagNameEnd = 0;
+			}
+			if(m_tags[c].end >= end) {
+				m_tags[c].end -= length;
+				m_tags[c].tagNameEnd = 0;
+			}
+		}
+	} else {
+		needReparseTags = true;
+	}
 }
 
 void Styler_HtmlHL::ApplyDiff(const std::vector<cxChange>& WXUNUSED(changes)) {

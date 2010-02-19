@@ -57,7 +57,7 @@ public:
 	void Reparse();
 	bool IsValidTag(unsigned int start, unsigned int end, const Document& doc);
 	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const Document& doc);
-	void FindBrackets(unsigned int start, unsigned int end, const Document& doc);
+	bool FindBrackets(unsigned int start, unsigned int end, const Document& doc);
 	void FindAllBrackets(const Document& doc);
 	void FindTags(const Document& doc);
 	int FindMatchingTag(const Document& doc, int tag);

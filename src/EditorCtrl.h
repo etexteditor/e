@@ -100,6 +100,7 @@ public:
 	void GetText(vector<char>& text) const;
 	void GetTextPart(unsigned int start, unsigned int end, vector<char>& text) const;
 	wxString GetCurrentWord() const;
+	wxString GetWord(unsigned int pos) const;
 	void WriteText(wxOutputStream& stream) const;
 
 	// Position

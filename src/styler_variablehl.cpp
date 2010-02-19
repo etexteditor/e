@@ -18,12 +18,13 @@
 #include "Lines.h"
 #include "Document.h"
 #include "FindFlags.h"
+#include "EditorCtrl.h"
 
-Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings):
+Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl):
 Styler_SearchHL(rev, lines, ranges, theme), m_settings(settings),
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor) ,
-  m_click(false), m_cursorPosition(0), m_key(-1)
+  m_cursorPosition(0), m_editorCtrl(editorCtrl)
 {
 	Clear(); // Make sure all variables are empty
 }
@@ -35,17 +36,14 @@ void Styler_VariableHL::Clear() {
 	m_options = FIND_MATCHCASE;
 }
 
-void Styler_VariableHL::SetCurrentWord(const wxString& text, bool click, unsigned int cursorPosition, int key) {
-	if (text != m_text) {
+void Styler_VariableHL::SetCurrentWord() {
+	const wxString text = m_editorCtrl.GetCurrentWord();
+	if (text != m_text || text.Len() == 0) {
 		Clear();
 		m_text = text;
 	}
 
-	//These should always be updated.
-	//The user could hit the arrow up key to move to a new word, in which case the highlighting should change
-	m_click = click;
-	m_cursorPosition = cursorPosition;
-	m_key = key;
+	m_cursorPosition = m_editorCtrl.GetPos();
 }
 
 bool Styler_VariableHL::IsCurrentWord(unsigned int start, unsigned int end) {
@@ -74,6 +72,7 @@ void Styler_VariableHL::Style(StyleRun& sr) {
 		return;
 	}
 	
+	SetCurrentWord();
 	Styler_SearchHL::Style(sr);
 }
 
@@ -117,6 +116,8 @@ void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
 		Invalidate();
 		return;
 	}
+	
+	SetCurrentWord();
 	Styler_SearchHL::Insert(pos, length);
 }
 
@@ -127,5 +128,7 @@ void Styler_VariableHL::Delete(unsigned int start, unsigned int end) {
 		Invalidate();
 		return;
 	}
+
+	SetCurrentWord();
 	Styler_SearchHL::Delete(start, end);
 }

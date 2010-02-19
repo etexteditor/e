@@ -23,12 +23,13 @@
 #include "Catalyst.h"
 #include "styler.h"
 #include "eSettings.h"
-class EditorCtrl;
 
 #include <vector>
 
 
+class EditorCtrl;
 class DocumentWrapper;
+class Document;
 class StyleRun;
 struct tmTheme;
 class Lines;
@@ -40,7 +41,7 @@ public:
 		unsigned int start, end, tagNameEnd;
 		bool isClosingTag, isSelfClosingTag;
 		
-		TagInterval(unsigned int start, unsigned int end, const wxChar* data);
+		TagInterval(unsigned int start, unsigned int end, const Document& doc);
 	};
 
 	Styler_HtmlHL(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl);
@@ -48,18 +49,18 @@ public:
 
 	void Clear();
 	void Invalidate();
-	void UpdateCursorPosition(unsigned int pos);
+	void UpdateCursorPosition();
 	void SelectParentTag();
 	void Style(StyleRun& sr);
 	
 	bool ShouldStyle();
 	void Reparse();
-	bool IsValidTag(unsigned int start, unsigned int end, const wxChar* data);
-	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const wxChar* data);
-	void FindBrackets(unsigned int start, unsigned int end, const wxChar* data);
-	void FindAllBrackets(const wxChar* data);
-	void FindTags(const wxChar* data);
-	int FindMatchingTag(const wxChar* data, int tag);
+	bool IsValidTag(unsigned int start, unsigned int end, const Document& doc);
+	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const Document& doc);
+	void FindBrackets(unsigned int start, unsigned int end, const Document& doc);
+	void FindAllBrackets(const Document& doc);
+	void FindTags(const Document& doc);
+	int FindMatchingTag(const Document& doc, int tag);
 	int FindCurrentTag();
 	int FindParentClosingTag(unsigned int searchPosition);
 
@@ -76,7 +77,7 @@ private:
 	EditorCtrl& m_editorCtrl;
 
 	unsigned int m_cursorPosition;
-	bool initialParse;
+	bool needReparse;
 	int m_currentTag, m_matchingTag;
 	std::vector<unsigned int> m_brackets;
 	std::vector<TagInterval> m_tags;

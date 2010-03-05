@@ -24,8 +24,10 @@
 #include "styler.h"
 #include "styler_searchhl.h"
 #include "eSettings.h"
+#include "EditorChangeState.h"
 
 #include <vector>
+#include "time.h"
 
 
 class EditorCtrl;
@@ -41,7 +43,7 @@ public:
 
 	void Clear();
 
-	void SetCurrentWord();
+	bool OnIdle();
 	void Style(StyleRun& sr);
 
 	bool ShouldStyle();
@@ -59,6 +61,8 @@ private:
 	EditorCtrl& m_editorCtrl;
 
 	unsigned int m_cursorPosition;
+	time_t m_lastUpdateTime;
+	EditorChangeState m_lastEditorState;
 
 	const wxColour& m_searchHighlightColor;
 	const wxColour& m_selectionHighlightColor;

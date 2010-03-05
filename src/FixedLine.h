@@ -87,6 +87,7 @@ public:
 	void StylersInsert(unsigned int pos, unsigned int len);
 	void StylersDelete(unsigned int start, unsigned int end);
 	void StylersApplyDiff(vector<cxChange>& changes);
+	bool StylersOnIdle();
 
 private:
 	unsigned int DrawText(int xoffset, int x, int y, unsigned int start, unsigned int end);

@@ -28,6 +28,7 @@ public:
 	virtual void ApplyDiff(const std::vector<cxChange>& WXUNUSED(changes)) {
 		Invalidate();
 	}
+	virtual bool OnIdle() { return false; }
 };
 
 #endif // __STYLER_H__

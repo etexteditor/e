@@ -1099,3 +1099,11 @@ void FixedLine::StylersApplyDiff(vector<cxChange>& changes) {
 		m_stylers[c]->ApplyDiff(changes);
 	}
 }
+
+bool FixedLine::StylersOnIdle() {
+	bool ret = false;
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		ret = m_stylers[c]->OnIdle() || ret;
+	}
+	return ret;
+}

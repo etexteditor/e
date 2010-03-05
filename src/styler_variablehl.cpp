@@ -14,11 +14,13 @@
 #include "styler_variablehl.h"
 #include "styler_searchhl.h"
 
+#include <time.h>
 #include "StyleRun.h"
 #include "Lines.h"
 #include "Document.h"
 #include "FindFlags.h"
 #include "EditorCtrl.h"
+#include "EditorChangeState.h"
 
 Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl):
 Styler_SearchHL(rev, lines, ranges, theme), m_settings(settings),
@@ -36,12 +38,40 @@ void Styler_VariableHL::Clear() {
 	m_options = FIND_MATCHCASE;
 }
 
-void Styler_VariableHL::SetCurrentWord() {
-	const wxString text = m_editorCtrl.GetWord(m_cursorPosition);
-	if (text != m_text || text.Len() == 0) {
-		Clear();
-		m_text = text;
+bool Styler_VariableHL::OnIdle() {
+	if(!ShouldStyle()) {
+		//If the user has the option turned off, then do no processing at all.
+		//If they later turn it on, we could have junk, so make sure we do a new search at that point.
+		Invalidate();
+		return false;
 	}
+
+	const wxString text = m_editorCtrl.GetWord(m_cursorPosition);
+	//Instead of parsing the document in the styler, I moved it to an OnIdle function so the editor doesn't appear to lag as much.
+	//It will perform a full document search about 1 second after the most recent change to the document.
+	//TODO: use miliseconds for much more accurate timing
+	if(time(NULL) - m_lastUpdateTime <= 0) {
+		return false;
+	} else if (m_editorCtrl.GetChangeState() != m_lastEditorState) {
+		//reset the state and updateTime so that we have to wait another second
+		m_lastEditorState = m_editorCtrl.GetChangeState();
+		m_lastUpdateTime = time(NULL);
+		return false;
+	} else if (text != m_text) {
+		//wxLogDebug(wxT("Search: %s"), text);
+		Clear();
+		if(text.Len() > 0) {
+			m_text = text;
+			DoSearch(0, m_doc.GetLength());
+		}
+		//we have to force a redraw now because the selections have probably changed
+		m_editorCtrl.DrawLayout();
+
+		m_lastEditorState = m_editorCtrl.GetChangeState();
+		m_lastUpdateTime = time(NULL);
+	}
+
+	return false;
 }
 
 bool Styler_VariableHL::IsCurrentWord(unsigned int start, unsigned int end) {
@@ -64,14 +94,11 @@ void Styler_VariableHL::ApplyStyle(StyleRun& sr, unsigned int start, unsigned in
 
 void Styler_VariableHL::Style(StyleRun& sr) {
 	if(!ShouldStyle()) {
-		//If the user has the option turned off, then do no processing at all.
-		//If they later turn it on, we could have junk, so make sure we do a new search at that point.
 		Invalidate();
 		return;
 	}
 	
 	m_cursorPosition = m_editorCtrl.GetPos();
-	SetCurrentWord();
 	Styler_SearchHL::Style(sr);
 }
 
@@ -110,8 +137,6 @@ bool Styler_VariableHL::FilterMatch(search_result& result, const Document& doc) 
 
 void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
 	if(!ShouldStyle()) {
-		//If the user has the option turned off, then do no processing at all.
-		//If they later turn it on, we could have junk, so make sure we do a new search at that point.
 		Invalidate();
 		return;
 	}
@@ -120,7 +145,6 @@ void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
     unsigned int end = pos+length;
 	if(m_cursorPosition >= pos) {
 		m_cursorPosition += length;
-		SetCurrentWord();
 	}
 
 	Styler_SearchHL::Insert(pos, length);
@@ -128,8 +152,6 @@ void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
 
 void Styler_VariableHL::Delete(unsigned int start, unsigned int end) {
 	if(!ShouldStyle()) {
-		//If the user has the option turned off, then do no processing at all.
-		//If they later turn it on, we could have junk, so make sure we do a new search at that point.
 		Invalidate();
 		return;
 	}
@@ -140,6 +162,5 @@ void Styler_VariableHL::Delete(unsigned int start, unsigned int end) {
 		m_cursorPosition = start;
 	}
 
-	SetCurrentWord();
 	Styler_SearchHL::Delete(start, end);
 }

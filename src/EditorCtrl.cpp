@@ -7642,8 +7642,8 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	if (m_lines.NeedIdle())
 		m_lines.OnIdle();
 
-	// Update syntax
-	const bool syntaxNeedIdle = m_syntaxstyler.OnIdle();
+	// Update syntax and variable stylers
+	bool syntaxNeedIdle = m_lines.StylersOnIdle();
 
 	// Update foldings
 	ParseFoldMarkers();

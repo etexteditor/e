@@ -14,6 +14,7 @@
 #include "eSettings.h"
 
 #include <vector>
+#include <time.h>
 
 #include <wx/wfstream.h>
 #include <wx/regex.h>
@@ -715,10 +716,12 @@ void eSettings::SetApp(eApp* app) {
 //AutoSave just marks eSettings as requiring a save.  Then, in the OnIdle event we will perform the actual save because it is quite slow.
 void eSettings::AutoSave() {
 	needSave = needSave || ShouldSave();
+	lastChange = time(NULL);
 }
 
 void eSettings::DoAutoSave() {
 	if(!needSave) return;
+	if(time(NULL) - lastChange <= 0) return;
 
 	//Saving the settings doesn't really save them.  It writes them to the .cfg file, but e will just ignore that file the next time unless catalyst.commit is called.
 	Save();

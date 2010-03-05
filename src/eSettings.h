@@ -19,6 +19,7 @@
 #include <wx/string.h>
 #endif
 
+#include <time.h>
 #include "jsonval.h"
 #include "Catalyst.h"
 #include "auto_vector.h"
@@ -158,6 +159,7 @@ private:
 	bool haveApp;
 	bool needSave;
 	int m_blockCount;
+	time_t lastChange;
 };
 
 eSettings& eGetSettings(void);

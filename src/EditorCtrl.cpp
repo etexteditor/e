@@ -1321,6 +1321,70 @@ void EditorCtrl::GetTextPart(unsigned int start, unsigned int end, vector<char>&
 	cxENDLOCK
 }
 
+int GetTabWidthInSpaces(wxString& text, int tabWidth) {
+	int length = 0;
+	for(unsigned int c = 0; c < text.length(); c++) {
+		if(text[c] == ' ') {
+			length++;
+		} else if(text[c] == '\t') {
+			//If a line just has \t...., then the tab will expand to 4 spaces, for a total of 8.
+			//If a line has ..\t.... though, it might only 'take up' 2 spaces, for a total of 8.
+			length += (tabWidth - (length%tabWidth));
+		}
+	}
+	return length;
+}
+
+bool EditorCtrl::SmartTab() {
+	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
+	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	unsigned int p = linestart;
+	
+	cxLOCKDOC_READ(m_doc)
+		while(p < lineend) {
+			const wxChar c = doc.GetChar(p);
+			if(!(c == ' ' || c == '\t')) break;
+			p++;
+		}
+	cxENDLOCK
+	if(p >= lineend) {
+		//the line is all whitespace
+		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false);
+		int realWidth = GetTabWidthInSpaces(realIndent, tabWidth);
+		int currentWidth = 0;
+		cxLOCKDOC_READ(m_doc)
+			currentWidth = GetTabWidthInSpaces(doc.GetTextPart(linestart, lineend), tabWidth);
+		cxENDLOCK
+		
+		//If we are not at or past the previous line's indentation level, then let's jump to it
+		if(currentWidth < realWidth) {
+			int difference = realWidth - currentWidth;
+			if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab
+				//if there are 7 spaces on the line, but the real indent is 12, that is a difference of 5.  Say the tabWidth is 4.
+				//We need to insert two tabs then.  The second line takes care of that by increasing the difference from 5 to 8 in this example.
+				difference += difference % tabWidth;
+				for(int numTabs = difference / tabWidth; numTabs > 0; numTabs--) {
+					InsertChar(wxChar('\t'));
+				}
+			} else {
+				const wxString indent(wxT(' '), difference);
+				Insert(indent);
+			}
+			SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+			return true;
+		} else if (GetPos() < lineend && !m_lines.IsSelected()) {
+			//We are somewhere in the middle of a line of indentation, but we already have enough indents to match the previous line.
+			//First just jump to the end of the line.  Subsequent tabs will insert tabs, but this will not.
+			SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+			return true;
+		} else {
+			// Insert a new tab (done below)
+		}
+	}
+	
+	return false;
+}
 void EditorCtrl::Tab() {
 	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
 	const bool isMultiSel = m_lines.IsSelectionMultiline() && !m_lines.IsSelectionShadow();
@@ -1384,6 +1448,8 @@ void EditorCtrl::Tab() {
 		cxENDLOCK
 		if (qstart < pos && qstart != wordstart && DoTabTrigger(qstart, pos)) return;
 	}
+	
+	if(SmartTab()) return;
 
 	// If we get to here we have to insert a real tab
 	if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab

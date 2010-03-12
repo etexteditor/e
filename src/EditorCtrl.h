@@ -440,6 +440,7 @@ protected:
 	int ShowPopupList(wxMenu& menu);
 
 	void Tab();
+	bool SmartTab();
 	bool DoTabTrigger(unsigned int wordstart, unsigned int wordend);
 
 	void DeleteSelections();

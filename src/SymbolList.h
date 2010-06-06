@@ -31,6 +31,7 @@ class SymbolList : public wxPanel {
 public:
 	SymbolList(IFrameSymbolService& services, bool keepOpen=true);
 	bool Destroy();
+	void LoadFilters();
 
 private:
 	void OnIdle(wxIdleEvent& event);
@@ -88,6 +89,8 @@ private:
 
 	std::vector<SymbolRef> m_symbols;
 	wxArrayString m_symbolStrings;
+	std::vector<wxString> m_regexFilters;
+	wxString m_filters;
 };
 
 #endif // __SYMBOLLIST_H__

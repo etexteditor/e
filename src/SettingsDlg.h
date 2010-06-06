@@ -64,6 +64,7 @@ private:
 	void OnComboEol(wxCommandEvent& event);
 	void OnComboEncoding(wxCommandEvent& event);
 	void OnCheckBom(wxCommandEvent& event);
+	void OnSymbolListFilters(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	// Member variables

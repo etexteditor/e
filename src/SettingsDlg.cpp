@@ -56,6 +56,7 @@ enum {
 	CTRL_CYGWIN_ACTION, // Only added on Windows
 	CTRL_CHECK_FOR_UPDATES,
 	CTRL_AUTOUPDATE,
+	CTRL_SYMBOL_LIST_FILTERS
 };
 
 BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
@@ -78,6 +79,7 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_COMBOBOX(CTRL_LINEENDING, SettingsDlg::OnComboEol)
 	EVT_COMBOBOX(CTRL_ENCODING, SettingsDlg::OnComboEncoding)
 	EVT_CHECKBOX(CTRL_BOM, SettingsDlg::OnCheckBom)
+	EVT_TEXT(CTRL_SYMBOL_LIST_FILTERS, SettingsDlg::OnSymbolListFilters)
 END_EVENT_TABLE()
 
 
@@ -185,6 +187,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	wxCheckBox* lastTab = new wxCheckBox(settingsPage, CTRL_LASTTAB, _("Go to last active tab on Ctrl-Tab"));
 	wxCheckBox* highlightVariables = new wxCheckBox(settingsPage, CTRL_HIGHLIGHTVARIABLES, _("Highlight occurances of a variable when clicked."));
 	wxCheckBox* highlightHtml = new wxCheckBox(settingsPage, CTRL_HIGHLIGHTHTML, _("Highlight matching html tags."));
+	wxTextCtrl* symbolListFilters = new wxTextCtrl(settingsPage, CTRL_SYMBOL_LIST_FILTERS, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 
 	wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
 		settingsSizer->Add(autoPair, 0, wxALL, 5);
@@ -200,6 +203,8 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 		settingsSizer->Add(lastTab, 0, wxALL, 5);
 		settingsSizer->Add(highlightVariables, 0, wxALL, 5);
 		settingsSizer->Add(highlightHtml, 0, wxALL, 5);
+		settingsSizer->Add(new wxStaticText(settingsPage, wxID_ANY, _("Exclude Regex's For Symbol List:")), 0, wxALL, 5);
+		settingsSizer->Add(symbolListFilters, 0, wxALL, 5);
 	settingsPage->SetSizer(settingsSizer);
 
 	// Settings defaults.
@@ -214,6 +219,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	bool doHighlightVariables = false;
 	bool doHighlightHtml = false;
 	int marginChars = 80;  
+	wxString symbolListFiltersText = wxEmptyString;
 
 	m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
 	m_settings.GetSettingBool(wxT("autoWrap"), doAutoWrap);
@@ -226,6 +232,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	m_settings.GetSettingBool(wxT("gotoLastTab"), doLastTab);
 	m_settings.GetSettingBool(wxT("highlightVariables"), doHighlightVariables);
 	m_settings.GetSettingBool(wxT("highlightHtml"), doHighlightHtml);
+	m_settings.GetSettingString(wxT("symbolListFilters"), symbolListFiltersText);
 
 	// Update ctrls
 	autoPair->SetValue(doAutoPair);
@@ -243,6 +250,7 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	lastTab->SetValue(doLastTab);
 	highlightVariables->SetValue(doHighlightVariables);
 	highlightHtml->SetValue(doHighlightHtml);
+	symbolListFilters->SetValue(symbolListFiltersText);
 
 	return settingsPage;
 }
@@ -410,6 +418,11 @@ void SettingsDlg::UpdateEncoding() {
 
 	m_defBom->Enable(encoding_allows_bom(enc));
 	m_defBom->SetValue(bom);
+}
+
+void SettingsDlg::OnSymbolListFilters(wxCommandEvent& event) {
+	wxString value = event.GetString();
+	m_settings.SetSettingString(wxT("symbolListFilters"), value);
 }
 
 void SettingsDlg::OnComboEol(wxCommandEvent& event) {

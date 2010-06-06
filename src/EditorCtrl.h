@@ -191,6 +191,7 @@ public:
 	void OnCopy();
 	void OnCut();
 	void OnPaste();
+	void OnMarkCopy();
 
 	// Selection
 	bool IsSelected() const;
@@ -234,7 +235,7 @@ public:
 	search_result RegExFind(const wxString& searchtext, unsigned int start_pos, bool matchcase, map<unsigned int,interval> *captures=NULL, unsigned int end_pos=0) const;
 	search_result RegExFindBackwards(const wxString& searchtext, unsigned int start_pos, unsigned int end_pos, bool matchcase) const;
 	search_result RawRegexSearch(const char* regex, unsigned int subjectStart, unsigned int subjectEnd, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
-	search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
+	static search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL);
 	bool FindNextChar(wxChar c, unsigned int start_pos, unsigned int end_pos, interval& iv) const;
 	void SetSearchRange();
 	void ClearSearchRange(bool reset=false);
@@ -554,6 +555,7 @@ protected:
 	mutable int m_options_cache; // for compiled regex
 	mutable pcre *m_re; // for last compiled regex
 	mutable unsigned int m_symbolCacheToken;
+	unsigned int m_markCopyStart;
 
 	// Above: set in constructors' intializer list
 	// ----

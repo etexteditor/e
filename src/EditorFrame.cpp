@@ -143,6 +143,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(wxID_REDO, EditorFrame::OnMenuRedo)
 	EVT_MENU(wxID_CUT, EditorFrame::OnMenuCut)
 	EVT_MENU(wxID_COPY, EditorFrame::OnMenuCopy)
+	EVT_MENU(MENU_MARK_COPY, EditorFrame::OnMenuMarkCopy)
 	EVT_MENU(wxID_PASTE, EditorFrame::OnMenuPaste)
 
 	EVT_MENU(wxID_SELECTALL, EditorFrame::OnMenuSelectAll)
@@ -570,6 +571,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(wxID_CUT, _("&Cut\tCtrl+X"), _("Cut"));
 	editMenu->Append(wxID_COPY, _("&Copy\tCtrl+C"), _("Copy"));
+	editMenu->Append(MENU_MARK_COPY, _("&Mark Copy\tCtrl+Alt+M"), _("Mark Copy"));
 	editMenu->Append(wxID_PASTE, _("&Paste\tCtrl+V"), _("Paste"));
 	editMenu->AppendSeparator();
 
@@ -2589,6 +2591,11 @@ void EditorFrame::OnMenuCut(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuCopy(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->OnCopy();
+	editorCtrl->ReDraw();
+}
+
+void EditorFrame::OnMenuMarkCopy(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->OnMarkCopy();
 	editorCtrl->ReDraw();
 }
 

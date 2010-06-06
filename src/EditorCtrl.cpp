@@ -4241,6 +4241,25 @@ const deque<const wxString*> EditorCtrl::GetScope() {
 	return m_syntaxstyler.GetScope(caretPosition);
 };
 
+/**
+ * The goal of this method is to allow the user to type and copy text at the same time.
+ * They can press ctrl+shift+c, then start typing, then press ctrl+shift+c again, and that text
+ * will be copied to the clipboard.
+ */
+void EditorCtrl::OnMarkCopy() {
+	unsigned int pos = GetPos();
+	
+	if(m_markCopyStart >= 0 && m_markCopyStart <= m_lines.GetLength()) {
+		RemoveAllSelections();
+		Select(m_markCopyStart, pos);
+		OnCopy();
+		RemoveAllSelections();
+		m_markCopyStart = -1;
+	} else {
+		m_markCopyStart = pos;
+	}
+}
+
 void EditorCtrl::OnCopy() {
 	wxString copytext;
 	if (m_lines.IsSelected()) copytext = GetSelText();
@@ -5238,7 +5257,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 	return sr;
 }
 
-search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures) const {
+search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures) {
 	wxASSERT(regex);
 	wxASSERT(pos < subject.size() || pos == 0);
 

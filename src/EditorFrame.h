@@ -176,7 +176,8 @@ public:
 		MENU_BOOKMARK_NEXT,
 		MENU_BOOKMARK_PREVIOUS,
 		MENU_BOOKMARK_TOGGLE,
-		MENU_BOOKMARK_CLEAR
+		MENU_BOOKMARK_CLEAR,
+		MENU_MARK_COPY
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -364,6 +365,7 @@ private:
 	void OnMenuRedo(wxCommandEvent& event);
 	void OnMenuCut(wxCommandEvent& event);
 	void OnMenuCopy(wxCommandEvent& event);
+	void OnMenuMarkCopy(wxCommandEvent& event);
 	void OnMenuPaste(wxCommandEvent& event);
 	void OnMenuFind(wxCommandEvent& event);
 	void OnMenuFindInProject(wxCommandEvent& event);

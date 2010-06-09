@@ -71,7 +71,7 @@ void SnippetList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	EditorChangeState newState = m_editorCtrl->GetChangeState();
 	//If the bundle isn't loaded at startup, then the snippet list won't show any symbols.
 	//The bundle won't get reloaded later, cuz ScopeChanged will return false.  So, it has to wait till they switch tabs or make a change.
-	//if(!ScopeChanged(scope) && newState == m_editorState) return;
+	if(!ScopeChanged(scope) && newState == m_editorState) return;
 	m_editorState = newState;
 	
 	//Update the list of snippets/commands to reflect a potentially new syntax

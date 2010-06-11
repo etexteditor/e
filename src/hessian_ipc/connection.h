@@ -4,7 +4,9 @@
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <vector>
+#include <boost/thread/mutex.hpp>
+#include <boost/ptr_container/ptr_deque.hpp>
+#include <deque>
 #include "hessian_reader.h"
 
 namespace hessian_ipc {
@@ -28,10 +30,12 @@ public:
 	void stop();  // Stop all asynchronous operations associated with the connection.
 
 	void reply_done();
+	void notifier_done();
 
 protected:
 	// Method handling
 	virtual void invoke_method();
+	virtual void on_close();
 
 	// Functions used by method handlers
 	int get_parameter_int(size_t pos);
@@ -47,7 +51,7 @@ protected:
 private:
 	// Handle completion of read operations
 	void handle_read(const boost::system::error_code& e, size_t bytes_transferred);
-	void send_reply();
+	void send();
 
 	// Handle completion of write operations
 	void handle_write(const boost::system::error_code& e);
@@ -60,9 +64,14 @@ private:
 
 	// Member variables
 	boost::asio::io_service& io_service_;
-	boost::asio::ip::tcp::socket socket_;    // Socket for the connection.
-	connection_manager& connection_manager_; // The manager for this connection.
-	std::vector<unsigned char> buffer_;      // Buffer for incoming data.
+	boost::asio::ip::tcp::socket socket_;      // Socket for the connection.
+	connection_manager& connection_manager_;   // The manager for this connection.
+	std::vector<unsigned char> buffer_;        // Buffer for incoming data.
+	boost::shared_ptr<connection> keep_alive_; // Ensure that conn is not deleted during calls
+	boost::mutex queue_lock_;
+	std::vector<unsigned char>* reply_ptr_;     // Only one item in queue can be a reply
+	boost::ptr_deque<std::vector<unsigned char>> queue_;
+	bool write_in_progress_;
 };
 
 typedef boost::shared_ptr<connection> connection_ptr;

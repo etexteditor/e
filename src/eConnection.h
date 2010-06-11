@@ -27,11 +27,13 @@ public:
 
 	// Method handling
 	void invoke_method();
+	void on_close();
 
 	// Interface methods
 	virtual const hessian_ipc::Call* get_call(); // The request recieved (may be NULL)
 	virtual hessian_ipc::Writer& get_reply_writer();
 	virtual void reply_done(); // notify connection that it can send the reply (threadsafe)
+	virtual void notifier_done(); // notify connection that it can send the notifier (threadsafe)
 
 private:
 	// Member variables

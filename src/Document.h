@@ -43,6 +43,7 @@ public:
 	bool IsEmpty() const;
 	bool IsDraft() const {return m_docId.IsDraft();};
 	bool IsDocument() const {return m_docId.IsDocument();};
+	bool IsFrozen() const;
 	void Clear(bool initialRevision=false);
 	void Close();
 	void Commit(const wxString& label, const wxString& desc);

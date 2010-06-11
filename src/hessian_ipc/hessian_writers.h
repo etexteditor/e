@@ -37,10 +37,16 @@ template<class T> void Writer::write_reply(const T& value) {
 	write(value);
 }
 
-template<class T> void Writer::write(const vector<T>& value) {
-	const size_t len = value.size();
+template<class T> void Writer::write_notifier(unsigned int notifier_id, const T& value) {
+	Reset();
 
-	out += x57; // tag for variable-length untyped list
+	out.push_back('N');
+	write(notifier_id);
+	write(value);
+}
+
+template<class T> void Writer::write(const vector<T>& value) {
+	out.push_back(0x57); // tag for variable-length untyped list
 	for (vector<T>::const_iterator p = value.begin(); p != value.end(); ++p) {
 		write(*p);
 	}

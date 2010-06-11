@@ -52,6 +52,7 @@ namespace hessian_ipc {
 		Writer() {};
 
 		void Reset();
+		bool IsEmpty() const {return out.empty();};
 		const vector<unsigned char>& GetOutput() const {return out;};
 
 		// Calls
@@ -60,6 +61,10 @@ namespace hessian_ipc {
 		template<class T1, class T2> void call(const string& method, const T1& arg1, const T2& arg2);
 
 		template<class T> void write_reply(const T& value);
+		void write_reply(const unsigned char* value, size_t len);
+		void write_reply_handle(int handle);
+		template<class T> void write_notifier(unsigned int notifier_id, const T& value);
+		void write_notifier_ended(unsigned int notifier_id);
 		void write_fault(fault_type type, const string& msg);
 
 		// Variable writers
@@ -67,15 +72,19 @@ namespace hessian_ipc {
 		void write(int value);
 		void write(unsigned int value);
 		void write(long long value);
+		void write(const char* value);
 		void write(const string& value);
 		void write(const Value& value);
 		void write(const ObjectMixin& value);
+		void write(const vector<unsigned char>& binary);
+		void write(const vector<char>& binary);
 		template<class T> void write(const vector<T>& value);
 		template<class T1, class T2> void write(const map<T1,T2>& value);
 
 		void write_null();
 		void write_date(time_t value);
 		void write_binary(const unsigned char* value, size_t len);
+		void write_handle(int handle);
 		void write_direct(unsigned char c);
 
 	private:
@@ -100,6 +109,7 @@ namespace hessian_ipc {
 		virtual bool IsObject() const {return false;};
 		virtual bool IsCall() const {return false;};
 		virtual bool IsStringChunk() const {return false;};
+		virtual bool IsHandle() const {return false;};
 
 		// get the value
 		virtual int GetInt() const {throw value_exception("invalid value access");};
@@ -171,6 +181,14 @@ namespace hessian_ipc {
 
 	private:
 		int m_value;
+	};
+
+	class ProxyHandle : public Integer {
+	public:
+		ProxyHandle() {};
+		ProxyHandle(int value) : Integer(value) {};
+
+		bool IsHandle() const {return true;};
 	};
 
 	class Long : public Value {
@@ -273,6 +291,8 @@ namespace hessian_ipc {
 
 		// get the value
 		const string& GetMethod() const {return m_method;};
+		bool IsObjectCall() const {return !m_parameters.empty() && m_parameters[0].IsHandle();};
+		bool HasParameters() const {return !m_parameters.empty();};
 		size_t GetParameterCount() const {return m_parameters.size();};
 		const Value& GetParameter(size_t index) const {return m_parameters[index];};
 

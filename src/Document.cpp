@@ -1847,6 +1847,13 @@ void Document::Freeze() {
 	pState(rRevision) = STATE_FROZEN;
 }
 
+bool Document::IsFrozen() const {
+	if (m_docId.IsDocument()) return true; // Only Drafts can be editable
+	
+	c4_RowRef rRevision = vHistory[m_docId.version_id];
+	return pState(rRevision) == STATE_FROZEN;
+}
+
 wxDateTime Document::GetDate() const {
 	wxASSERT(IsOk());
 

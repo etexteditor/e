@@ -69,6 +69,7 @@
 #include "CurrentTabsPopup.h"
 #include "eauibook.h"
 #include "DiffDirPane.h"
+#include "InputPanel.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -357,6 +358,11 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		m_commandPanel = new CommandPanel(*this, panel);
 		box->Add(m_commandPanel, 0, wxEXPAND);
 		box->Show(m_commandPanel, false);
+
+		// Create and add the inputpanel
+		m_inputPanel = new InputPanel(*this, panel);
+		box->Add(m_inputPanel, 0, wxEXPAND);
+		box->Show(m_inputPanel, false);
 
 		// Layout main components
 		box->Layout();
@@ -1333,7 +1339,14 @@ void EditorFrame::UpdateTabs() {
 }
 
 // May be NULL, always check in reciever
-EditorCtrl* EditorFrame::GetEditorCtrl() { return editorCtrl; }
+EditorCtrl* EditorFrame::GetEditorCtrl() const { return editorCtrl; }
+
+// May be NULL, always check in reciever
+EditorCtrl* EditorFrame::GetEditorCtrl(int winId) const {
+	wxWindow* editor = FindWindowById(winId, this);
+	return (EditorCtrl*)editor;
+}
+
 // May be NULL, always check in reciever. Downcast.
 IEditorSearch* EditorFrame::GetSearch() { return editorCtrl; }
 
@@ -2039,6 +2052,9 @@ void EditorFrame::SaveAllFilesInProject() {
 
 void EditorFrame::ShowSearch(bool show, bool replace) {
 	if (show) {
+		if (box->IsShown(m_commandPanel)) ShowCommandMode(false);
+		else if (box->IsShown(m_inputPanel)) HideInputPanel(); 
+
 		m_searchPanel->InitSearch(editorCtrl->GetSelFirstLine(), replace);
 		box->Show(m_searchPanel);
 	}
@@ -2053,7 +2069,8 @@ bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
 
 void EditorFrame::ShowCommandMode(bool show) {
 	if (show) {
-		if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel); 
+		if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel);
+		else if (box->IsShown(m_inputPanel)) HideInputPanel(); 
 		box->Show(m_commandPanel);
 	}
 	else {
@@ -2070,6 +2087,28 @@ void EditorFrame::ShowCommand(const wxString& cmd) {
 
 bool EditorFrame::IsCommandMode() const {
 	return m_commandPanel->IsShown();
+}
+
+void EditorFrame::ShowInputPanel(unsigned int notifier_id, const wxString& caption) {
+	m_inputPanel->Set(notifier_id, caption);
+
+	if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel); 
+	else if (box->IsShown(m_commandPanel)) box->Hide(m_commandPanel); 
+	box->Show(m_inputPanel);
+	box->Layout();
+
+	m_inputPanel->SetFocus();
+}
+
+void EditorFrame::HideInputPanel() {
+	wxGetApp().OnInputLineClosed(m_inputPanel->GetNotifierId());
+
+	box->Hide(m_inputPanel);
+	box->Layout();
+}
+
+void EditorFrame::OnInputPanelChanged(unsigned int notifier_id, const wxString& text) {
+	wxGetApp().OnInputLineChanged(notifier_id, text);
 }
 
 bool EditorFrame::GetSetting(const wxString& name) const {

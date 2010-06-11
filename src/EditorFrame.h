@@ -60,6 +60,7 @@ class DiffDirPane;
 class DiffPanel;
 class IEditorSearch;
 class RemoteThread;
+class InputPanel;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -193,7 +194,8 @@ public:
 	void UpdateTabs();
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
-	EditorCtrl* GetEditorCtrl();
+	EditorCtrl* GetEditorCtrl() const; // Gets currently active
+	EditorCtrl* GetEditorCtrl(int winId) const;
 	virtual IEditorSearch* GetSearch();
 
 	// Editor Service methods.
@@ -238,6 +240,11 @@ public:
 	void ShowCommandMode(bool show=true);
 	void ShowCommand(const wxString& cmd=wxEmptyString);
 	bool IsCommandMode() const;
+
+	// Input Panel
+	void ShowInputPanel(unsigned int notifier_id, const wxString& caption);
+	void HideInputPanel();
+	void OnInputPanelChanged(unsigned int notifier_id, const wxString& text);
 
 	// Settings
 	bool GetSetting(const wxString& name) const;
@@ -507,6 +514,7 @@ private:
 	wxBoxSizer*	editorbox;
 	SearchPanel* m_searchPanel;
 	CommandPanel* m_commandPanel;
+	InputPanel* m_inputPanel;
 	eAuiNotebook* m_tabBar;
 
 	// Menus

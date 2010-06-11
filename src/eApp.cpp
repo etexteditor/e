@@ -38,6 +38,7 @@
 #include "IIpcServer.h"
 #include "IConnection.h"
 #include "eIpcThread.h"
+#include "hessian_ipc/hessian_values.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -115,6 +116,7 @@ BEGIN_EVENT_TABLE(eApp, wxApp)
 	EVT_MENU(ID_UPDATES_CHECKED, eApp::OnUpdatesChecked)
 	EVT_IDLE(eApp::OnIdle)
 	EVT_COMMAND(wxID_ANY, wxEVT_IPC_CALL, eApp::OnIpcCall)
+	EVT_COMMAND(wxID_ANY, wxEVT_IPC_CLOSE, eApp::OnIpcClosed)
 END_EVENT_TABLE()
 
 bool eApp::OnInit() {
@@ -288,7 +290,7 @@ bool eApp::OnInit() {
 	}
 
 	// Start the scripting server
-	m_ipcThread = new eIpcThread(*this);
+	InitIpc();
 
     return true;
 }
@@ -334,7 +336,7 @@ void eApp::CloseAllFrames() {
 	}
 }
 
-EditorFrame* eApp::GetTopFrame() {
+EditorFrame* eApp::GetTopFrame() const {
 	EditorFrame* win = NULL;
 	wxWindowList::const_iterator i;
     const wxWindowList::const_iterator end = wxTopLevelWindows.end();
@@ -377,6 +379,30 @@ bool eApp::IsLastFrame() const {
 	}
 
 	return (frameCount == 1);
+}
+
+EditorCtrl* eApp::GetActiveEditorCtrl() const {
+	const EditorFrame* frame = GetTopFrame();
+	if (!frame) return NULL;
+
+	return frame->GetEditorCtrl();
+}
+
+EditorCtrl* eApp::GetEditorCtrl(int winId) const {
+	wxWindowList::const_iterator i;
+    const wxWindowList::const_iterator end = wxTopLevelWindows.end();
+
+	// Search all frames for an editor with the given id
+	for ( i = wxTopLevelWindows.begin(); i != end; ++i )
+    {
+		if (!(*i)->IsKindOf(CLASSINFO(EditorFrame))) continue;
+
+		EditorFrame* win = wx_static_cast(EditorFrame*, *i);
+		EditorCtrl* editor = win->GetEditorCtrl(winId);
+		if (editor) return editor;
+	}
+
+	return NULL; // not found
 }
 
 void eApp::ClearState() {
@@ -539,6 +565,28 @@ void eApp::OnIdle(wxIdleEvent& event) {
 	if (m_pSyntaxHandler) {
 		if (m_pSyntaxHandler->DoIdle())
 			event.RequestMore();
+	}
+
+	// Do we have ipc connections watching for editor changes
+	vector<EditorWatch>::iterator p = m_editorWatchers.begin();
+	while (p != m_editorWatchers.end()) {
+		EditorCtrl* editor = GetEditorCtrl(p->editorId);
+		if (!editor){
+			// the editor has been closed
+			OnEditorChanged(p->notifierId, false); // Send notification
+			m_notifiers.erase(p->notifierId);
+			p = m_editorWatchers.erase(p); // remove entry	
+			continue; 
+		}
+
+		const unsigned int token = editor->GetChangeToken();
+		if (token != p->changeToken) {
+			wxLogDebug(wxT("token: %d"), token);
+			OnEditorChanged(p->notifierId, true); // Send notification
+			p->changeToken = token;
+		}
+
+		++p;
 	}
 
 	// Important: wxApp needs to do its idle processing as well
@@ -822,6 +870,27 @@ int eApp::TotalDays() const {return m_pCatalyst->DaysLeftOfTrial();}
 const wxString& eApp::RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();}
 const wxString& eApp::RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();}
 
+void eApp::InitIpc() {
+	m_ipcNextNotifierId = 0;
+
+	// Register method handlers
+	m_ipcFunctions["get_active_editor"] = (Pmemfun)&eApp::IpcGetActiveEditor;
+	m_ipcEditorFunctions["insert_at"] = (Pmemfun)&eApp::IpcEditorInsertAt;
+	m_ipcEditorFunctions["delete_range"] = (Pmemfun)&eApp::IpcEditorDeleteRange;
+	m_ipcEditorFunctions["gettext"] = (Pmemfun)&eApp::IpcEditorGetText;
+	m_ipcEditorFunctions["getline"] = (Pmemfun)&eApp::IpcEditorGetLine;
+	m_ipcEditorFunctions["getline_offset"] = (Pmemfun)&eApp::IpcEditorGetLineOffset;
+	m_ipcEditorFunctions["getpos"] = (Pmemfun)&eApp::IpcEditorGetPos;
+	m_ipcEditorFunctions["get_versionid"] = (Pmemfun)&eApp::IpcEditorGetVersionId;
+	m_ipcEditorFunctions["select"] = (Pmemfun)&eApp::IpcEditorSelect;
+	m_ipcEditorFunctions["get_changes_since"] = (Pmemfun)&eApp::IpcEditorGetChangesSince;
+	m_ipcEditorFunctions["show_input_line"] = (Pmemfun)&eApp::IpcEditorShowInputLine;
+	m_ipcEditorFunctions["watch_changes"] = (Pmemfun)&eApp::IpcEditorWatchChanges;
+
+	// Start the ipc server
+	m_ipcThread = new eIpcThread(*this);
+}
+
 void eApp::OnIpcCall(wxCommandEvent& event) {
 	IConnection* conn = (IConnection*)event.GetClientData();
 	if (!conn) return;
@@ -834,10 +903,317 @@ void eApp::OnIpcCall(wxCommandEvent& event) {
 
 	wxLogDebug(wxT("IPC: %s"), method);
 
-	// Write the reply
-	hessian_ipc::Writer& writer = conn->get_reply_writer();
-	writer.write_reply(true);
+	// Check if the call is for a specific object
+	map<string, Pmemfun>& funcs = call->IsObjectCall() ? m_ipcEditorFunctions : m_ipcFunctions;
+
+	// Call the function (if it exists)
+	map<string, Pmemfun>::const_iterator p = funcs.find(m.c_str());
+	if (p != funcs.end()) {
+		(this->*p->second)(*conn);
+	}
+	else {
+		hessian_ipc::Writer& writer = conn->get_reply_writer();
+		writer.write_fault(hessian_ipc::NoSuchMethodException, "Unknown method");
+	}
 
 	// Notify connection that it can send the reply (threadsafe)
 	conn->reply_done();
+}
+
+eApp::ConnectionState& eApp::GetConnState(IConnection& conn) {
+	boost::ptr_map<IConnection*,ConnectionState>::iterator p = m_connStates.find(&conn);
+	if (p == m_connStates.end()) {
+		IConnection* c = &conn;
+		m_connStates.insert(c, new ConnectionState);
+		p = m_connStates.find(&conn);
+	}
+	
+	return *p->second;
+}
+
+void eApp::OnIpcClosed(wxCommandEvent& event) {
+	IConnection* conn = (IConnection*)event.GetClientData();
+	if (!conn) return;
+
+	// Remove all notifiers from closed connection
+	map<unsigned int, IConnection*>::iterator p = m_notifiers.begin();
+	while (p != m_notifiers.end()) {
+		if (p->second == conn) p = m_notifiers.erase(p);
+		else ++p;
+	}
+
+	// Clear any associated state
+	m_connStates.erase(conn);
+}
+
+
+void eApp::IpcGetActiveEditor(IConnection& conn) {
+	EditorCtrl* editor = GetActiveEditorCtrl();
+	const int id = -editor->GetId();
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply_handle(id);
+}
+
+void eApp::IpcEditorGetVersionId(IConnection& conn) {
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	const doc_id id = editor->GetLastStableDocID();
+
+	// create handle for doc_id
+	ConnectionState& connState = GetConnState(conn);
+	const size_t handle = connState.docHandles.size();
+	connState.docHandles.push_back(id);
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(handle);
+}
+
+void eApp::IpcEditorGetText(IConnection& conn) {
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	vector<char> text;
+	editor->GetText(text);
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(text);
+}
+
+void eApp::IpcEditorGetLine(IConnection& conn) {
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	const unsigned int lineid = call.GetParameter(1).GetInt();
+	if (lineid > editor->GetLineCount()) return; // fault
+
+	vector<char> text;
+	editor->GetLine(lineid, text);
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(text);
+}
+
+void eApp::IpcEditorGetLineOffset(IConnection& conn) {
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	const unsigned int lineid = call.GetParameter(1).GetInt();
+	if (lineid > editor->GetLineCount()) return; // fault
+
+	const interval iv = editor->GetLineExtent(lineid);
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(iv.start);
+}
+
+void eApp::IpcEditorGetPos(IConnection& conn) {
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(editor->GetPos());
+}
+
+void eApp::IpcEditorSelect(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	const int v2 = call.GetParameter(1).GetInt();
+	const int v3 = call.GetParameter(2).GetInt();
+
+	editor->Select(v2, v3);
+	editor->SetPos(v3);
+	editor->MakeSelectionVisible();
+	editor->ReDraw();
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(true);
+}
+
+void eApp::IpcEditorInsertAt(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	// Get the insert position
+	const size_t pos = call.GetParameter(1).GetInt();
+	if (pos > editor->GetLength()) return; // fault: invalid position
+
+	// Get the text to insert
+	const hessian_ipc::Value& v3 = call.GetParameter(2);
+	const string& t = v3.GetString();
+	const wxString text(t.c_str(), wxConvUTF8, t.size());
+	
+	// Insert the text
+	// TODO: adjust selections
+	const unsigned int cpos = editor->GetPos();
+	const size_t byte_len = editor->RawInsert(pos, text);
+	if (cpos >= pos) editor->SetPos(cpos + byte_len);
+	editor->ReDraw();
+
+	// Write the reply
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(byte_len);
+}
+
+void eApp::IpcEditorDeleteRange(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	// Get the inset position
+	const size_t start = call.GetParameter(1).GetInt();
+	const size_t end = call.GetParameter(2).GetInt();
+	if (end > editor->GetLength() || start > end) return; // fault: invalid positions
+
+	// Delete the range
+	const size_t byte_len = editor->RawDelete(start, end);
+
+	// Write the reply
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(byte_len);
+}
+
+
+void eApp::IpcEditorShowInputLine(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	// Get caption
+	const hessian_ipc::Value& v2 = call.GetParameter(1);
+	const string& t = v2.GetString();
+	const wxString caption(t.c_str(), wxConvUTF8, t.size());
+
+	// Register notifier
+	const unsigned int notifier_id = GetNextNotifierId();
+	m_notifiers[notifier_id] = &conn;
+
+	// Show input line
+	EditorFrame* frame = GetTopFrame();
+	if (!frame) return;
+	frame->ShowInputPanel(notifier_id, caption);
+
+	// Return notifier id
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(notifier_id);
+}
+
+void eApp::IpcEditorWatchChanges(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	// Register notifier
+	const unsigned int notifier_id = GetNextNotifierId();
+	m_notifiers[notifier_id] = &conn;
+
+	// Add to watch list
+	EditorWatch ew = {editorId, editor->GetChangeToken(), notifier_id};
+	m_editorWatchers.push_back(ew);
+
+	// Return notifier id
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(notifier_id);
+}
+
+void eApp::IpcEditorGetChangesSince(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	// Get the version handle
+	const size_t versionHandle = call.GetParameter(1).GetInt();
+	ConnectionState& connState = GetConnState(conn);
+	if (versionHandle >= connState.docHandles.size()) return; // fault: invalid handle
+	const doc_id& di = connState.docHandles[versionHandle];
+
+	// Get diff
+	vector<size_t> changedlines;
+	editor->GetLinesChangedSince(di, changedlines);
+
+	// Return changed lines
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(changedlines);
+}
+
+void eApp::OnInputLineChanged(unsigned int nid, const wxString& text) {
+	// Look up notifier id
+	map<unsigned int, IConnection*>::const_iterator p = m_notifiers.find(nid);
+	if (p == m_notifiers.end()) return;
+	IConnection& conn = *p->second;
+
+	// Send notifier
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	const wxCharBuffer str = text.ToUTF8();
+	writer.write_notifier(nid, str.data());
+
+	conn.notifier_done();
+}
+
+void eApp::OnInputLineClosed(unsigned int nid) {
+	// Look up notifier id
+	map<unsigned int, IConnection*>::const_iterator p = m_notifiers.find(nid);
+	if (p == m_notifiers.end()) return;
+	IConnection& conn = *p->second;
+
+	// Remove notifier
+	m_notifiers.erase(nid);
+
+	// Notifier listener that the notifier has ended
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_notifier_ended(nid);
+	conn.notifier_done();
+}
+
+void eApp::OnEditorChanged(unsigned int nid, bool state) {
+	// Look up notifier id
+	map<unsigned int, IConnection*>::const_iterator p = m_notifiers.find(nid);
+	if (p == m_notifiers.end()) return;
+	IConnection& conn = *p->second;
+
+	// Send notifier
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	if (state) writer.write_notifier(nid, true);  // true for change, false for close
+	else writer.write_notifier_ended(nid);
+
+	conn.notifier_done();
 }

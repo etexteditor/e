@@ -458,6 +458,10 @@ unsigned int Lines::GetLineEndFromPos(unsigned int pos) const {
 unsigned int Lines::GetLineStartFromPos(unsigned int pos) const {
 	wxASSERT(pos <= GetLength());
 
+	if (!NewlineTerminated && pos == GetLength()) {
+		return IsEmpty() ? 0 : ll->offset(GetLineCount()-1);
+	}
+
 	return ll->StartFromPos(pos);
 }
 

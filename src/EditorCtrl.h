@@ -98,6 +98,7 @@ public:
 	wxString GetText(unsigned int start, unsigned int end) const;
 	void GetText(vector<char>& text) const;
 	void GetTextPart(unsigned int start, unsigned int end, vector<char>& text) const;
+	void GetLine(unsigned int lineId, vector<char>& text) const;
 	wxString GetCurrentWord() const;
 	void WriteText(wxOutputStream& stream) const;
 
@@ -165,6 +166,7 @@ public:
 	virtual const DocumentWrapper& GetDocument() const {return m_doc;};
 	bool SetDocument(const doc_id& di, const wxString& path=wxEmptyString, const RemoteProfile* rp=NULL);
 	doc_id GetDocID() const;
+	doc_id GetLastStableDocID() const;
 	virtual wxString GetName() const;
 	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
@@ -349,6 +351,7 @@ public:
 	void MarkAsModified() {++m_changeToken;};
 	unsigned int GetChangeToken() const {return m_changeToken;};
 	virtual EditorChangeState GetChangeState() const;
+	void GetLinesChangedSince(const doc_id& di, vector<size_t>& lines);
 
 	// Callbacks
 	void SetBeforeRedrawCallback(void(*callback)(void*), void* data) {m_beforeRedrawCallback = callback; if (data) m_callbackData = data;};

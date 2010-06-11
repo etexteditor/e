@@ -4,6 +4,7 @@
 #include "IIpcServer.h"
 
 DEFINE_EVENT_TYPE(wxEVT_IPC_CALL)
+DEFINE_EVENT_TYPE(wxEVT_IPC_CLOSE)
 
 eIpcThread::eIpcThread(eApp& app) : m_ipcServer(NULL), m_app(app) {
 	Create();
@@ -14,7 +15,7 @@ void* eIpcThread::Entry() {
 	m_ipcServer = NewIpcServer(*this);
 	m_ipcServer->run();
 
-	delete m_ipcServer;
+	m_ipcServer->destroy(); // will clean up after itself
 	return NULL;
 }
 
@@ -25,6 +26,14 @@ void eIpcThread::stop() {
 
 void eIpcThread::handle_call(IConnection& conn) {
 	wxCommandEvent event(wxEVT_IPC_CALL, wxID_ANY);
+	event.SetClientData(&conn);
+
+	// Notify app that there is a new call (threadsafe)
+	m_app.AddPendingEvent(event);
+}
+
+void eIpcThread::handle_close(IConnection& conn) {
+	wxCommandEvent event(wxEVT_IPC_CLOSE, wxID_ANY);
 	event.SetClientData(&conn);
 
 	// Notify app that there is a new call (threadsafe)

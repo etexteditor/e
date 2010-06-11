@@ -47,6 +47,28 @@ void Writer::Reset() {
 	objectMap.clear();
 }
 
+void Writer::write_reply(const unsigned char* value, size_t len) {
+	Reset();
+
+	out.push_back('R');
+	write_binary(value, len);
+}
+
+void Writer::write_reply_handle(int handle) {
+	Reset();
+
+	out.push_back('R');
+	write_handle(handle);
+}
+
+void Writer::write_notifier_ended(unsigned int notifier_id) {
+	Reset();
+
+	out.push_back('N');
+	write(notifier_id);
+	write_null();
+}
+
 void Writer::write_null() {
 	out.push_back('N');
 }
@@ -205,6 +227,11 @@ void Writer::write_date(time_t value) {
 	out.push_back(b8);
 }
 
+void Writer::write(const char* value) {
+	const string str(value);
+	write(str);
+}
+
 // write string
 void Writer::write(const string& value) {
 	size_t len = utf8_len(value);
@@ -241,7 +268,8 @@ void Writer::write(const string& value) {
 
 		if (len <= 0x1f) {
 			out.push_back((unsigned char)len); // single octet length
-			out.insert(out.end(), str + offset, str + offset + len);
+			const size_t bytelen = value.size() - offset;
+			out.insert(out.end(), str + offset, str + offset + bytelen);
 		}
 		else if (len <= 0x3ff) {
 			// pack in two octets
@@ -249,7 +277,8 @@ void Writer::write(const string& value) {
 			const unsigned char b8 = len & 0x000000FF;
 			out.push_back(b16);
 			out.push_back(b8);
-			out.insert(out.end(), str + offset, str + offset + len);
+			const size_t bytelen = value.size() - offset;
+			out.insert(out.end(), str + offset, str + offset + bytelen);
 		}
 		else {
 			// tag + double octets
@@ -258,9 +287,20 @@ void Writer::write(const string& value) {
 			out.push_back('S');
 			out.push_back(b16);
 			out.push_back(b8);
-			out.insert(out.end(), str + offset, str + offset + len);
+			const size_t bytelen = value.size() - offset;
+			out.insert(out.end(), str + offset, str + offset + bytelen);
 		}
 	}
+}
+
+void Writer::write(const vector<unsigned char>& binary) {
+	if (binary.empty()) write_binary(NULL, 0);
+	else write_binary(&*binary.begin(), binary.size());
+}
+
+void Writer::write(const vector<char>& binary) {
+	if (binary.empty()) write_binary(NULL, 0);
+	else write_binary((const unsigned char*)&*binary.begin(), binary.size());
 }
 
 // write binary
@@ -269,7 +309,7 @@ void Writer::write_binary(const unsigned char* value, size_t len) {
 
 	// split in chunks
 	while (len > 0x8000) {
-		out.push_back('A');
+		out.push_back('b');
 		out.push_back(0x80);
 		out.push_back(0x00);
 		out.insert(out.end(), value + offset, value + offset + 0x8000);
@@ -281,13 +321,6 @@ void Writer::write_binary(const unsigned char* value, size_t len) {
 	if (len <= 0x0f) {
 		out.push_back(0x20 + (unsigned char)len); // single octet length
 	}
-	else if (len <= 0x3ff) {
-		// pack in two octets
-		const unsigned char b16 = 0x34 + ((len >> 8) & 0xFF);
-		const unsigned char b8 = len & 0xFF;
-		out.push_back(b16);
-		out.push_back(b8);
-	}
 	else {
 		// tag + double octets
 		const unsigned char b16 = (len >> 8) & 0xFF;
@@ -297,6 +330,11 @@ void Writer::write_binary(const unsigned char* value, size_t len) {
 		out.push_back(b8);
 	}
 	out.insert(out.end(), value + offset, value + offset + len);
+}
+
+void Writer::write_handle(int handle) {
+	out.push_back('P'); // proxy object handle
+	write(handle);
 }
 
 void Writer::write_direct(unsigned char c) {
@@ -353,6 +391,7 @@ void Writer::write_fault(fault_type type, const string& msg) {
 	Reset();
 
 	out.push_back('F');
+	out.push_back('H');
 
 	write("code");
 	switch (type) {

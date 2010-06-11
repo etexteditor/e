@@ -14,6 +14,10 @@ void eServer::stop() {
 	server::stop();
 }
 
+void eServer::destroy() {
+	delete this;
+}
+
 hessian_ipc::connection* eServer::new_connection() {
 	return new eConnection(io_service_, connection_manager_, m_handler);
 }

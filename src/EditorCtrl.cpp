@@ -597,6 +597,15 @@ doc_id EditorCtrl::GetDocID() const {
 	cxENDLOCK
 }
 
+doc_id EditorCtrl::GetLastStableDocID() const {
+	cxLOCKDOC_READ(m_doc)
+		doc_id di = doc.GetDocument();
+		if (doc.IsFrozen()) return di;
+		else return doc.GetDraftParent(di.version_id);
+	cxENDLOCK
+}
+
+
 wxString EditorCtrl::GetName() const {
 	cxLOCKDOC_READ(m_doc)
 		return doc.GetPropertyName();
@@ -1325,6 +1334,14 @@ void EditorCtrl::GetTextPart(unsigned int start, unsigned int end, vector<char>&
 	cxLOCKDOC_READ(m_doc)
 		doc.GetTextPart(start, end, (unsigned char*)&*text.begin());
 	cxENDLOCK
+}
+
+void EditorCtrl::GetLine(unsigned int lineid, vector<char>& text) const {
+	unsigned int start;
+	unsigned int end;
+	m_lines.GetLineExtent(lineid, start, end);
+
+	GetTextPart(start, end, text);
 }
 
 void EditorCtrl::Tab() {
@@ -3122,6 +3139,32 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 
 // Only derived controls are embedded in a parent panel; see BundleItemEditorCtrl.
 void EditorCtrl::UpdateParentPanels() {}
+
+void EditorCtrl::GetLinesChangedSince(const doc_id& di, vector<size_t>& lines) {
+	vector<cxChange> changes;
+	cxLOCKDOC_READ(m_doc)
+		const doc_id current = doc.GetDocument();
+		doc_id prev = di;
+		if (prev == current) {
+			if (prev.IsDraft()) prev = doc.GetDraftParent(di.version_id);
+			else return;
+		}
+		changes = doc.GetChanges(prev, current);
+	cxENDLOCK
+
+	const vector<cxLineChange> linechanges = m_lines.ChangesToFullLines(changes);
+	const size_t end = m_lines.GetLength();
+
+	for (vector<cxLineChange>::const_iterator p = linechanges.begin(); p != linechanges.end(); ++p) {
+		const size_t firstline = m_lines.GetLineFromStartPos(p->start);
+		const size_t lastline = p->end == end ? m_lines.GetLineCount() : m_lines.GetLineFromStartPos(p->end);
+		lines.push_back(firstline);
+
+		for (size_t i = firstline+1; i < lastline; ++i) {
+			lines.push_back(i);
+		}
+	}
+}
 
 void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	vector<cxChange> changes;
@@ -7576,6 +7619,10 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.AddSystemVars(isUnix, GetAppPaths().AppPath());
 
 	// Add document/editor keys
+
+	// TM_EDITOR_ID (used for scripting via ipc)
+	const int id = -GetId(); // internally id is negative, but pass to user as positive
+	env.SetEnv(wxT("TM_EDITOR_ID"), wxString::Format(wxT("%u"), id));
 
 	// TM_FILENAME
 	// note: in case of remote files, this is of the buffer file

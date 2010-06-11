@@ -13,6 +13,10 @@ void eConnection::invoke_method() {
 	m_handler.handle_call(*this);
 }
 
+void eConnection::on_close() {
+	m_handler.handle_close(*this);
+}
+
 const hessian_ipc::Call* eConnection::get_call() {
 	return request_;
 }
@@ -23,4 +27,8 @@ hessian_ipc::Writer& eConnection::get_reply_writer() {
 
 void eConnection::reply_done() {
 	connection::reply_done();
+}
+
+void eConnection::notifier_done() {
+	connection::notifier_done();
 }

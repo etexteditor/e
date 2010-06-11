@@ -27,6 +27,7 @@ class IConnections;
 class IIpcServer;
 
 DECLARE_EVENT_TYPE(wxEVT_IPC_CALL, -1)
+DECLARE_EVENT_TYPE(wxEVT_IPC_CLOSE, -1)
 
 class eIpcThread : public wxThread, public IIpcHandler {
 public:
@@ -36,6 +37,7 @@ public:
 	void stop(); // Threadsafe stop of server
 
 	void handle_call(IConnection& conn);
+	void handle_close(IConnection& conn);
 
 private:
 	IIpcServer* m_ipcServer;

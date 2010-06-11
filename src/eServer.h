@@ -14,6 +14,7 @@ public:
 
 	virtual void run();
 	virtual void stop();
+	virtual void destroy();
 
 	hessian_ipc::connection* new_connection();
 

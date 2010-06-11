@@ -11,7 +11,7 @@ server::server(const std::string& address, const std::string& port)
 {
 	// Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
 	boost::asio::ip::tcp::resolver resolver(io_service_);
-	boost::asio::ip::tcp::resolver::query query(address, port);
+	boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, port);
 	boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 	acceptor_.open(endpoint.protocol());
 	acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));

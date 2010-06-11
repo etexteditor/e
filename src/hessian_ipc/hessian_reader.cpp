@@ -23,37 +23,56 @@ bool Reader::Parse(vector<unsigned char>::const_iterator begin, vector<unsigned 
 			const bool result = ParseValue();
 			if (!result) return false; // need more input
 
-			if (m_result->IsList()) {
-				m_stateStack.push_back(new savedstate(call_method, 0, m_result));
+			if (m_result->IsList() || m_result->IsHandle()) {
+				m_stateStack.push_back(new savedstate(m_state, 0, m_result));
 				m_state = value_start;
 				continue;
 			}
 
-			if (m_stateStack.empty()) return true;
-			savedstate& s = m_stateStack.back();
+			while (!m_stateStack.empty()) {
+				savedstate& s = m_stateStack.back();
+				bool needmore = true;
 
-			switch (s.state) {
-			case call_method:
-				s.value->AsCall().SetMethod(m_result);
-				s.state = call_len;
-				m_state = value_start;
-				continue; //ParseValue();
-			case call_len:
-				s.len_left = m_result->GetInt();
-				s.state = call_args;
-				m_state = value_start;
-				continue; //ParseValue();
-			case call_args:
-				s.value->AsCall().AddParameter(m_result);
-				m_state = value_start;
-				if (--s.len_left) break; //ParseValue();
-				else {
+				switch (s.state) {
+				case call_method:
+					s.value->AsCall().SetMethod(m_result);
+					s.state = call_len;
+					m_state = value_start;
+					break; //ParseValue();
+				case call_len:
+					s.len_left = m_result->GetInt();
+					if (s.len_left == 0) {
+						m_result = s.value;
+						return true; // no args
+					}
+					s.state = call_args;
+					m_state = value_start;
+					break; //ParseValue();
+				case call_args:
+					s.value->AsCall().AddParameter(m_result);
+					m_state = value_start;
+					if (--s.len_left) break; //ParseValue();
+					else {
+						m_result = s.value;
+						return true; // call parsed
+					}
+				case proxy_handle:
+					s.value->AsInteger() = m_result->GetInt();
 					m_result = s.value;
-					return true; // call parsed
+					
+					needmore = false;
+					break;
+				default:
+					throw value_exception("invalid state");
 				}
-			default:
-				throw value_exception("invalid state");
+
+				if (needmore) break; // Parse more values;
+				else {
+					m_state = value_start;
+					m_stateStack.pop_back();
+				}
 			}
+			continue;
 		}
 
 		switch (m_state) {
@@ -294,8 +313,11 @@ bool Reader::ParseValue() {
 			case 0x7c: case 0x7d: case 0x7e: case 0x7f:
 				break;
 
-
-
+			// Remote Proxy Handle
+			case 'P':
+				m_result.reset(new ProxyHandle());
+				m_state = proxy_handle;
+				return true;
 
 			default:
 				throw value_exception("invalid tag");

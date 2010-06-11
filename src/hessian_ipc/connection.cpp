@@ -6,7 +6,8 @@
 namespace hessian_ipc {
 
 connection::connection(boost::asio::io_service& io_service, connection_manager& manager)
-  : io_service_(io_service), socket_(io_service), connection_manager_(manager), request_(NULL)
+  : io_service_(io_service), socket_(io_service), connection_manager_(manager), request_(NULL),
+    write_in_progress_(false)
 {
 }
 
@@ -35,6 +36,9 @@ void connection::invoke_method() {
 	throw hessian_ipc::value_exception("Unknown method");
 }
 
+void connection::on_close() {
+}
+
 void connection::handle_read(const boost::system::error_code& e, size_t bytes_transferred) {
 	if (!e) {
 		try {
@@ -43,15 +47,23 @@ void connection::handle_read(const boost::system::error_code& e, size_t bytes_tr
 			
 			// Parse the request
 			if (reader_.Parse(begin, end)) {
+				// If the socket is closed while the request is
+				// being handled we could end up with writes to
+				// a dangling pointer. So we make sure it is kept
+				// alive until the request is complete 
+				keep_alive_ = shared_from_this();
+
 				// Invoke handler
 				request_ = reader_.GetResultCall();
 				invoke_method();
 			}
-
-			socket_.async_read_some(boost::asio::buffer(buffer_),
-			  boost::bind(&connection::handle_read, shared_from_this(),
-				boost::asio::placeholders::error,
-				boost::asio::placeholders::bytes_transferred));
+			else {
+				// More input needed
+				socket_.async_read_some(boost::asio::buffer(buffer_),
+				  boost::bind(&connection::handle_read, shared_from_this(),
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
+			}
 		}
 		catch (hessian_ipc::value_exception& e) {
 			protocol_error(e.what()); // Send fault
@@ -62,24 +74,105 @@ void connection::handle_read(const boost::system::error_code& e, size_t bytes_tr
 	}
 	else if (e != boost::asio::error::operation_aborted) {
 		connection_manager_.stop(shared_from_this());
+		on_close();
 	}
 }
 
 void connection::reply_done() {
-	// notify connection that it can send the reply (threadsafe)
-	io_service_.post(boost::bind(&connection::send_reply, this));
+	queue_lock_.lock();
+		queue_.push_back(new vector<unsigned char>(writer_.GetOutput()));
+		reply_ptr_ = &queue_.back(); // marks only reply in queue
+	queue_lock_.unlock();
+	writer_.Reset();
+
+	// notify connection that there are new items on queue (threadsafe)
+	io_service_.post(boost::bind(&connection::send, this));
+	keep_alive_.reset();
 }
 
-void connection::send_reply() {
-	// Prepare for reading next request
-	reader_.Reset();
-	request_ = NULL;
+void connection::notifier_done() {
+	queue_lock_.lock();
+		queue_.push_back(new vector<unsigned char>(writer_.GetOutput()));
+	queue_lock_.unlock();
+	writer_.Reset();
+
+	// notify connection that there are new items on queue (threadsafe)
+	io_service_.post(boost::bind(&connection::send, this));
+	keep_alive_.reset();
+}
+
+void connection::send() {
+	// If there already is a write in progress, it will
+	// pick up the new items on the queue
+	if (write_in_progress_) return;
+
+	queue_lock_.lock();
+		const vector<unsigned char>* reply = !queue_.empty() ? &queue_.front() : NULL;
+	queue_lock_.unlock();
+	if (!reply) return;
 
 	// Send the reply
-	const vector<unsigned char>& reply = writer_.GetOutput();
-	boost::asio::async_write(socket_, boost::asio::buffer(reply),
+	write_in_progress_ = true;
+	boost::asio::async_write(socket_, boost::asio::buffer(*reply),
 	  boost::bind(&connection::handle_write, shared_from_this(),
 		boost::asio::placeholders::error));
+}
+
+void connection::handle_write(const boost::system::error_code& e) {
+	if (!e) {
+		queue_lock_.lock();
+			// Check if the item we just wrote was a reply
+			const bool was_reply = (&queue_.front() == reply_ptr_);
+			if (was_reply) reply_ptr_ = NULL;
+
+			// Are there more to send
+			queue_.pop_front();
+			const vector<unsigned char>* msg = !queue_.empty() ? &queue_.front() : NULL;
+		queue_lock_.unlock();
+
+		if (was_reply) {
+			// Prepare for reading next request
+			reader_.Reset();
+			request_ = NULL;
+
+			// Read next request
+			socket_.async_read_some(boost::asio::buffer(buffer_),
+				  boost::bind(&connection::handle_read, shared_from_this(),
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
+		}
+
+		if (msg) {
+			// Send next item in queue
+			boost::asio::async_write(socket_, boost::asio::buffer(*msg),
+			  boost::bind(&connection::handle_write, shared_from_this(),
+				boost::asio::placeholders::error));
+		}
+		else write_in_progress_ = false;
+	}
+	else if (e != boost::asio::error::operation_aborted) {
+		connection_manager_.stop(shared_from_this());
+		on_close();
+	}
+}
+
+void connection::handle_write_and_close(const boost::system::error_code& e) {
+	if (!e)	{
+		// Initiate graceful connection closure.
+		boost::system::error_code ignored_ec;
+		socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+	}
+
+	if (e != boost::asio::error::operation_aborted)	{
+		connection_manager_.stop(shared_from_this());
+		on_close();
+	}
+}
+
+int connection::get_parameter_int(size_t pos) {
+	if (pos >= request_->GetParameterCount()) throw hessian_ipc::value_exception("Wrong number of arguments.");
+	const hessian_ipc::Value& arg = request_->GetParameter(pos);
+	return arg.GetInt();
 }
 
 void connection::protocol_error(const string& msg) {
@@ -110,37 +203,6 @@ void connection::service_error(const string& msg) {
 	boost::asio::async_write(socket_, boost::asio::buffer(reply),
       boost::bind(&connection::handle_write, shared_from_this(),
         boost::asio::placeholders::error));
-}
-
-void connection::handle_write(const boost::system::error_code& e) {
-	if (!e) {
-		// Read next request
-		socket_.async_read_some(boost::asio::buffer(buffer_),
-			  boost::bind(&connection::handle_read, shared_from_this(),
-				boost::asio::placeholders::error,
-				boost::asio::placeholders::bytes_transferred));
-	}
-	else if (e != boost::asio::error::operation_aborted) {
-		connection_manager_.stop(shared_from_this());
-	}
-}
-
-void connection::handle_write_and_close(const boost::system::error_code& e) {
-	if (!e)	{
-		// Initiate graceful connection closure.
-		boost::system::error_code ignored_ec;
-		socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-	}
-
-	if (e != boost::asio::error::operation_aborted)	{
-		connection_manager_.stop(shared_from_this());
-	}
-}
-
-int connection::get_parameter_int(size_t pos) {
-	if (pos >= request_->GetParameterCount()) throw hessian_ipc::value_exception("Wrong number of arguments.");
-	const hessian_ipc::Value& arg = request_->GetParameter(pos);
-	return arg.GetInt();
 }
 
 } // namespace hessian_ipc

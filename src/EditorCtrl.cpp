@@ -1343,17 +1343,17 @@ bool EditorCtrl::SmartTab() {
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
 	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
 	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-	unsigned int p = linestart;
+	unsigned int whitespaceEnd = linestart;
 	unsigned int pos = GetPos();
 	
 	cxLOCKDOC_READ(m_doc)
-		while(p < lineend) {
-			const wxChar c = doc.GetChar(p);
+		while(whitespaceEnd < lineend) {
+			const wxChar c = doc.GetChar(whitespaceEnd);
 			if(!(c == ' ' || c == '\t')) break;
-			p++;
+			whitespaceEnd++;
 		}
 	cxENDLOCK
-	if(p >= lineend) {
+	if(whitespaceEnd >= lineend) {
 		//the line is all whitespace
 		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false);
 		int realWidth = GetTabWidthInSpaces(realIndent, tabWidth);
@@ -1386,9 +1386,9 @@ bool EditorCtrl::SmartTab() {
 		} else {
 			// Insert a new tab (done below)
 		}
-	} else if(pos < p) {
+	} else if(pos < whitespaceEnd) {
 		//the cursor is in the leading whitespace of the line, so we will move the cursor to the end of the whitespace
-		SetPos(p);
+		SetPos(whitespaceEnd);
 		return true;
 	}
 	

@@ -1336,10 +1336,15 @@ int GetTabWidthInSpaces(wxString& text, int tabWidth) {
 }
 
 bool EditorCtrl::SmartTab() {
+	bool smartTabsEnabled = false;
+	eGetSettings().GetSettingBool(wxT("smartTabs"), smartTabsEnabled);
+	if(!smartTabsEnabled) return false;
+
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
 	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
 	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
 	unsigned int p = linestart;
+	unsigned int pos = GetPos();
 	
 	cxLOCKDOC_READ(m_doc)
 		while(p < lineend) {
@@ -1381,6 +1386,10 @@ bool EditorCtrl::SmartTab() {
 		} else {
 			// Insert a new tab (done below)
 		}
+	} else if(pos < p) {
+		//the cursor is in the leading whitespace of the line, so we will move the cursor to the end of the whitespace
+		SetPos(p);
+		return true;
 	}
 	
 	return false;

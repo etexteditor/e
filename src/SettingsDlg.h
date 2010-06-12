@@ -65,6 +65,7 @@ private:
 	void OnComboEncoding(wxCommandEvent& event);
 	void OnCheckBom(wxCommandEvent& event);
 	void OnSymbolListFilters(wxCommandEvent& event);
+	void OnCheckSmartTabs(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	// Member variables

@@ -483,7 +483,7 @@ protected:
 	void MatchBrackets();
 
 	// Indentation
-	wxString GetRealIndent(unsigned int lineid, bool newline=false);
+	wxString GetRealIndent(unsigned int lineid, bool newline=false, bool skipWhitespaceOnlyLines=false);
 
 	bool IsSpaces(unsigned int start, unsigned int end) const;
 	unsigned int CountMatchingChars(wxChar match, unsigned int start, unsigned int end) const;

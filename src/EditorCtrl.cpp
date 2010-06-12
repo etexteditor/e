@@ -1150,7 +1150,7 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 	return m_lines.GetLineIndent( (i == -1) ? 0 : i );
 }
 
-wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
+wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline, bool skipWhitespaceOnlyLines) {
 	if (lineid == 0) return m_lines.GetLineIndent(0);
 	wxASSERT(lineid < m_lines.GetLineCount());
 
@@ -1177,7 +1177,20 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 
 				// Ignore unindented lines
 				const search_result res = RegExFind(unIndentedLinePattern, linestart, false, NULL, lineend);
-				if (res.error_code <= 0) {validLine = i; break;}
+				if (res.error_code <= 0) {
+					if(skipWhitespaceOnlyLines) {
+						cxLOCKDOC_READ(m_doc)
+							while(linestart < lineend) {
+								const wxChar c = doc.GetChar(linestart);
+								if(!(c == ' ' || c == '\t')) break;
+								linestart++;
+							}
+						cxENDLOCK
+						if(linestart == lineend) continue;
+					}
+					validLine = i;
+					break;
+				}
 			}
 		}
 		if (validLine == lineid) break;
@@ -1336,21 +1349,27 @@ int GetTabWidthInSpaces(wxString& text, int tabWidth) {
 }
 
 bool EditorCtrl::SmartTab() {
+	bool smartTabsEnabled = false;
+	eGetSettings().GetSettingBool(wxT("smartTabs"), smartTabsEnabled);
+	if(!smartTabsEnabled) return false;
+
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
 	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
 	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-	unsigned int p = linestart;
+	unsigned int whitespaceEnd = linestart;
+	unsigned int pos = GetPos();
 	
 	cxLOCKDOC_READ(m_doc)
-		while(p < lineend) {
-			const wxChar c = doc.GetChar(p);
+		while(whitespaceEnd < lineend) {
+			const wxChar c = doc.GetChar(whitespaceEnd);
 			if(!(c == ' ' || c == '\t')) break;
-			p++;
+			whitespaceEnd++;
 		}
 	cxENDLOCK
-	if(p >= lineend) {
+
+	if(whitespaceEnd >= lineend) {
 		//the line is all whitespace
-		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false);
+		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false, true);
 		int realWidth = GetTabWidthInSpaces(realIndent, tabWidth);
 		int currentWidth = 0;
 		cxLOCKDOC_READ(m_doc)
@@ -1381,6 +1400,10 @@ bool EditorCtrl::SmartTab() {
 		} else {
 			// Insert a new tab (done below)
 		}
+	} else if(pos < whitespaceEnd) {
+		//the cursor is in the leading whitespace of the line, so we will move the cursor to the end of the whitespace
+		SetPos(whitespaceEnd);
+		return true;
 	}
 	
 	return false;

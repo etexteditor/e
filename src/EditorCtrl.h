@@ -34,6 +34,7 @@
 #include "AutoPairs.h"
 #include "Bookmarks.h"
 #include "CommandHandler.h"
+#include "Macro.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -230,10 +231,10 @@ public:
 	void SetPos(int line, int column);
 	void PageUp(bool select=false, int count=1);
 	void PageDown(bool select=false, int count=1);
-	void CursorUp();
-	void CursorDown();
-	void CursorLeft();
-	void CursorRight();
+	void CursorUp(bool select=false);
+	void CursorDown(bool select=false);
+	void CursorLeft(bool select=false);
+	void CursorRight(bool select=false);
 	void CursorWordLeft();
 	void CursorWordRight();
 	void CursorToHome();
@@ -406,6 +407,10 @@ public:
 
 	// Theme
 	const tmTheme& GetTheme() const { return m_theme; };
+
+	// Macro
+	void PlayMacro();
+	wxVariant PlayCommand(const eMacroCmd& cmd);
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -699,6 +704,10 @@ protected:
 	// Key state
 	static unsigned long s_ctrlDownTime;
 	static bool s_altGrDown;
+
+	// Macro
+	bool m_recordMacro;
+	eMacro m_macro;
 };
 
 #endif // __EDITORCTRL_H__

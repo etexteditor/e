@@ -130,19 +130,19 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 			// Movements
 			case 'h':
 			case WXK_LEFT:
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorLeft));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorLeft), false));
 				break;
 			case 'j':
 			case WXK_DOWN:
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorDown));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorDown), false));
 				break;
 			case 'k':
 			case WXK_UP:
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorUp));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorUp), false));
 				break;
 			case 'l':
 			case WXK_RIGHT:
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorRight));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), false));
 				break;
 			case '0':
 				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), false));
@@ -301,7 +301,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				}
 				else {
 					m_select = true;
-					DoMovement(count, mem_fun_ref(&EditorCtrl::CursorRight));
+					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), false));
 					if (m_editor.IsSelected()) {
 						m_editor.Delete();
 						m_editor.ReDraw();
@@ -317,7 +317,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				}
 				else {
 					m_select = true;
-					DoMovement(count, mem_fun_ref(&EditorCtrl::CursorLeft));
+					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorLeft), false));
 					if (m_editor.IsSelected()) {
 						m_editor.Delete();
 						m_editor.ReDraw();

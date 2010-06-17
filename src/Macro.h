@@ -1,0 +1,120 @@
+/*******************************************************************************
+ *
+ * Copyright (C) 2010, Alexander Stigsen, e-texteditor.com
+ *
+ * This software is licensed under the Open Company License as described
+ * in the file license.txt, which you should have received as part of this
+ * distribution. The terms are also available at http://opencompany.org/license.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ******************************************************************************/
+
+#ifndef __EMACRO_H__
+#define __EMACRO_H__
+
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
+
+#include <boost/ptr_container/ptr_vector.hpp>
+
+class eMacroArg {
+public:
+	eMacroArg(const wxString& name, bool value) : m_name(name), m_value(value) {};
+	eMacroArg(const wxString& name, int value) : m_name(name), m_value(value) {};
+	eMacroArg(const wxString& name, const wxString& value) : m_name(name), m_value(value) {};
+
+	const wxString& GetName() const {return m_name;};
+	const wxVariant& GetValue() const {return m_value;};
+
+private:
+	wxString m_name;
+	wxVariant m_value;
+};
+
+class eMacroCmd {
+public:
+	eMacroCmd(const wxString& cmd) : m_cmd(cmd) {};
+
+	const wxString& GetName() const {return m_cmd;};
+	size_t GetArgCount() const {return m_args.size();};
+	const wxVariant& GetArg(size_t ndx) const {return m_args[ndx];};
+	const vector<wxVariant>& GetArgs() const {return m_args;};
+
+	bool GetArgBool(size_t ndx, bool default=false) const {
+		if (ndx >= m_args.size()) return default;
+		const wxVariant& value = m_args[ndx];
+		if (!value.IsType(_("bool"))) return default;
+		return value.GetBool();
+	}
+
+	wxString GetArgString(size_t ndx, const wxString& default=wxEmptyString) const {
+		if (ndx >= m_args.size()) return default;
+		const wxVariant& value = m_args[ndx];
+		if (!value.IsType(_("string"))) return default;
+		return value.GetString();
+	}
+
+	void ExtendString(size_t ndx, const wxChar& c) {
+		if (ndx >= m_args.size()) {wxASSERT(false); return;}
+		wxVariant& value = m_args[ndx];
+		if (!value.IsType(_("string"))) {wxASSERT(false); return;}
+		wxString str = value.GetString();
+		str += c;
+		value = str;
+	}
+
+	void AddArg(bool value) {m_args.push_back(wxVariant(value));};
+	void AddArg(int value) {m_args.push_back(wxVariant(value));};
+	void AddArg(const wxString& value) {m_args.push_back(wxVariant(value));};
+	
+	void AddArg(const wxString& name, bool value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
+	void AddArg(const wxString& name, int value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
+	void AddArg(const wxString& name, const wxString& value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
+
+private:
+	wxString m_cmd;
+	vector<wxString> m_argNames;
+	vector<wxVariant> m_args;
+};
+
+class eMacro {
+public:
+
+	bool IsEmpty() const {return m_cmds.empty();};
+	size_t GetCount() const {return m_cmds.size();};
+	void Clear() {m_cmds.clear();};
+
+	const eMacroCmd& GetCommand(size_t ndx) const {return m_cmds[ndx];};
+	const eMacroCmd& Last() const {m_cmds.back();};
+	eMacroCmd& Last() {return m_cmds.back();};
+
+	eMacroCmd& Add(const wxString& cmd) {
+		wxLogDebug(wxT("Adding macro: %s"), cmd);
+		m_cmds.push_back(new eMacroCmd(cmd));
+		return m_cmds.back();
+	};
+
+	eMacroCmd& AddWithStrArg(const wxString& cmd, const wxString& arg, const wxString& value) {
+		wxLogDebug(wxT("Adding macro: %s"), cmd);
+		m_cmds.push_back(new eMacroCmd(cmd));
+		m_cmds.back().AddArg(arg, value);
+		return m_cmds.back();
+	};
+	
+	eMacroCmd& Add(const wxString& cmd, const wxString& arg, bool value) {
+		wxLogDebug(wxT("Adding macro: %s"), cmd);
+		m_cmds.push_back(new eMacroCmd(cmd));
+		m_cmds.back().AddArg(arg, value);
+		return m_cmds.back();
+	};
+
+
+private:
+	boost::ptr_vector<eMacroCmd> m_cmds;
+};
+
+#endif //__EMACRO_H__

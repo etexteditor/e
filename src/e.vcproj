@@ -1009,6 +1009,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Macro.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ReplaceStringParser.cpp"
 				>
 			</File>

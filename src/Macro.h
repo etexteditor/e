@@ -20,6 +20,7 @@
 #endif
 
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <vector>
 
 class eMacroArg {
 public:
@@ -41,8 +42,10 @@ public:
 
 	const wxString& GetName() const {return m_cmd;};
 	size_t GetArgCount() const {return m_args.size();};
+	const wxString& GetArgName(size_t ndx) const {return (ndx < m_argNames.size()) ? m_argNames[ndx] : wxEmptyString;};
 	const wxVariant& GetArg(size_t ndx) const {return m_args[ndx];};
-	const vector<wxVariant>& GetArgs() const {return m_args;};
+	wxVariant& GetArg(size_t ndx) {return m_args[ndx];};
+	const std::vector<wxVariant>& GetArgs() const {return m_args;};
 
 	bool GetArgBool(size_t ndx, bool default=false) const {
 		if (ndx >= m_args.size()) return default;
@@ -77,24 +80,40 @@ public:
 
 private:
 	wxString m_cmd;
-	vector<wxString> m_argNames;
-	vector<wxVariant> m_args;
+	std::vector<wxString> m_argNames;
+	std::vector<wxVariant> m_args;
 };
 
 class eMacro {
 public:
+	eMacro() : m_record(false), m_isModified(false) {};
+
+	bool IsRecording() const {return m_record;};
+	void StartRecording() {m_record = true;};
+	void EndRecording() {m_record = false;};
+	void ToogleRecording() {m_record = !m_record;};
+	void Clear() {m_isModified = true; m_cmds.clear();};
+
+	bool IsModified() const {return m_isModified;};
+	void ResetMod() {m_isModified = false;};
 
 	bool IsEmpty() const {return m_cmds.empty();};
 	size_t GetCount() const {return m_cmds.size();};
-	void Clear() {m_cmds.clear();};
+
+	void Delete(size_t ndx) {m_isModified = true; m_cmds.erase(m_cmds.begin()+ndx);};
+	void MoveUp(size_t ndx) {m_isModified = true; std::swap(*(m_cmds.begin()+ndx-1).base(),*(m_cmds.begin()+ndx).base());};
+	void MoveDown(size_t ndx) {m_isModified = true; std::swap(*(m_cmds.begin()+ndx).base(),*(m_cmds.begin()+ndx+1).base());};
+
 
 	const eMacroCmd& GetCommand(size_t ndx) const {return m_cmds[ndx];};
+	eMacroCmd& GetCommand(size_t ndx) {m_isModified = true; return m_cmds[ndx];};
 	const eMacroCmd& Last() const {m_cmds.back();};
-	eMacroCmd& Last() {return m_cmds.back();};
+	eMacroCmd& Last() {m_isModified = true; return m_cmds.back();};
 
 	eMacroCmd& Add(const wxString& cmd) {
 		wxLogDebug(wxT("Adding macro: %s"), cmd);
 		m_cmds.push_back(new eMacroCmd(cmd));
+		m_isModified = true;
 		return m_cmds.back();
 	};
 
@@ -102,6 +121,7 @@ public:
 		wxLogDebug(wxT("Adding macro: %s"), cmd);
 		m_cmds.push_back(new eMacroCmd(cmd));
 		m_cmds.back().AddArg(arg, value);
+		m_isModified = true;
 		return m_cmds.back();
 	};
 	
@@ -109,11 +129,14 @@ public:
 		wxLogDebug(wxT("Adding macro: %s"), cmd);
 		m_cmds.push_back(new eMacroCmd(cmd));
 		m_cmds.back().AddArg(arg, value);
+		m_isModified = true;
 		return m_cmds.back();
 	};
 
 
 private:
+	bool m_record;
+	bool m_isModified;
 	boost::ptr_vector<eMacroCmd> m_cmds;
 };
 

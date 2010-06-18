@@ -25,6 +25,8 @@
 #include "Catalyst.h"
 #include "key_hook.h"
 #include "eSettings.h"
+#include "Macro.h"
+#include "MacroPane.h"
 
 #include "WrapMode.h"
 
@@ -175,7 +177,12 @@ public:
 		MENU_BOOKMARK_NEXT,
 		MENU_BOOKMARK_PREVIOUS,
 		MENU_BOOKMARK_TOGGLE,
-		MENU_BOOKMARK_CLEAR
+		MENU_BOOKMARK_CLEAR,
+
+		MENU_MACRO_FUNCTIONS,
+		MENU_MACRO_REC,
+		MENU_MACRO_PLAY,
+		MENU_MACRO_EDIT
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -279,6 +286,9 @@ public:
 	// Symbol List (pane)
 	void ShowSymbolList(bool keepOpen=true);
 	virtual void CloseSymbolList();
+
+	// Macro
+	eMacro& GetMacro() {return m_macro;};
 
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
@@ -445,6 +455,9 @@ private:
 	void OnMenuEditBundles(wxCommandEvent& event);
 	void OnMenuManageBundles(wxCommandEvent& event);
 	void OnMenuBundleAction(wxCommandEvent& event);
+	void OnMenuMacroRec(wxCommandEvent& event);
+	void OnMenuMacroPlay(wxCommandEvent& event);
+	void OnMenuMacroEdit(wxCommandEvent& event);
 
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);
@@ -535,6 +548,7 @@ private:
 	DiffDirPane* m_diffPane;
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
+	MacroPane* m_macroPane;
 
 	// Statusbar
 	StatusBar* m_pStatBar;
@@ -560,6 +574,9 @@ private:
 	// tab state
 	bool m_softTabs;
 	int m_tabWidth;
+
+	// Macro
+	eMacro m_macro;
 
 	wxArrayString m_recentFiles;
 	wxArrayString m_recentProjects;

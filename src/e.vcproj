@@ -1638,6 +1638,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\MacroPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\MacroPane.h"
+			>
+		</File>
+		<File
 			RelativePath="matchers.cpp"
 			>
 		</File>

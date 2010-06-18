@@ -244,6 +244,10 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_MANAGE_BUNDLES, EditorFrame::OnMenuManageBundles)
 	EVT_MENU(MENU_KEYDIAG, EditorFrame::OnMenuKeyDiagnostics)
 
+	EVT_MENU(MENU_MACRO_REC, EditorFrame::OnMenuMacroRec)
+	EVT_MENU(MENU_MACRO_PLAY, EditorFrame::OnMenuMacroPlay)
+	EVT_MENU(MENU_MACRO_EDIT, EditorFrame::OnMenuMacroEdit)
+
 	// Dynamic sub-menus
 	EVT_MENU_RANGE(1000, 1999, EditorFrame::OnSubmenuSyntax)
 	EVT_MENU_RANGE(2000, 2999, EditorFrame::OnSubmenuEncoding)
@@ -386,6 +390,10 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		// Project dock
 		m_projectPane = new ProjectPane(*this, this);
 		m_frameManager.AddPane(m_projectPane, wxAuiPaneInfo().Name(wxT("Project")).Left().Caption(_("Project")).BestSize(wxSize(150,50)));
+
+		// Macro Pane
+		m_macroPane = new MacroPane(*this, this, m_macro);
+		m_frameManager.AddPane(m_macroPane, wxAuiPaneInfo().Name(wxT("Macro")).Hide().Right().Caption(_("Macro")).BestSize(wxSize(150,50)));
 
 		// See if we have saved the layout of the panes
 		wxString perspective;
@@ -835,6 +843,11 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	bool enableDebug = false; // default setting
 	m_settings.GetSettingBool(wxT("bundleDebug"), enableDebug);
 
+	wxMenu *macroMenu = new wxMenu;
+	macroMenu->Append(MENU_MACRO_REC, _("&Start Recording"), _("Start Recording"));
+	macroMenu->Append(MENU_MACRO_PLAY, _("&Play Macro"), _("Play Macro"));
+	macroMenu->Append(MENU_MACRO_EDIT, _("&Edit Macro"), _("Edit Macro"), wxITEM_CHECK);
+
 	wxMenu *funcMenu = new wxMenu;
 	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"), wxITEM_CHECK);
 	funcMenu->Append(MENU_MANAGE_BUNDLES, _("&Manage Bundles"), _("Show Bundle Manager"));
@@ -845,6 +858,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_BUNDLE_FUNCTIONS, _("&Edit Bundles"), funcMenu,  _("Edit Bundles"));
+	bundleMenu->Prepend(MENU_MACRO_FUNCTIONS, _("Macros"), macroMenu,  _("Edit Macros"));
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_FINDCMD, _("&Select Bundle Item...\tCtrl-Alt-T"), _("Select Bundle Item..."));
 
@@ -2240,6 +2254,16 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	wxMenuItem* saveasItem = GetMenuBar()->FindItem(wxID_SAVEAS);
 	saveasItem->Enable(!editorCtrl->IsBundleItem());
 
+	// Macros
+	wxMenuItem* macroEdit = GetMenuBar()->FindItem(MENU_MACRO_EDIT);
+	wxAuiPaneInfo& macroPane = m_frameManager.GetPane(wxT("Macro"));
+	if (macroEdit) macroEdit->Check(macroPane.IsShown());
+	wxMenuItem* macroRec = GetMenuBar()->FindItem(MENU_MACRO_REC);
+	if (macroRec) {
+		if (m_macro.IsRecording()) macroRec->SetItemLabel(_("&Stop Recording"));
+		else macroRec->SetItemLabel(_("&Start Recording"));
+	}
+
 	// We handle key events on our own, so disable accels (from menus)
 	//SetAcceleratorTable(wxNullAcceleratorTable);
 }
@@ -2293,6 +2317,21 @@ void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
 		if (!bundlePath.empty()) OpenRemoteFile(bundlePath);
 	}
 	else m_syntax_handler.DoBundleAction(event.GetId(), *editorCtrl);
+}
+
+void EditorFrame::OnMenuMacroRec(wxCommandEvent& WXUNUSED(event)) {
+	m_macro.ToogleRecording();
+}
+
+void EditorFrame::OnMenuMacroPlay(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->PlayMacro();
+	editorCtrl->ReDraw();
+}
+
+void EditorFrame::OnMenuMacroEdit(wxCommandEvent& WXUNUSED(event)) {
+	wxAuiPaneInfo& macroPane = m_frameManager.GetPane(wxT("Macro"));
+	macroPane.Show(!macroPane.IsShown()); // Toogle snown/hidden
+	m_frameManager.Update();
 }
 
 void EditorFrame::OnMenuKeyDiagnostics(wxCommandEvent& event) {

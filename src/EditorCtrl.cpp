@@ -189,7 +189,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
-	m_recordMacro(false)
+	m_macro(parentFrame.GetMacro())
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -239,7 +239,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
-	m_recordMacro(false)
+	m_macro(parentFrame.GetMacro())
 
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -303,7 +303,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
-	m_recordMacro(false)
+	m_macro(parentFrame.GetMacro())
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -1354,11 +1354,11 @@ void EditorCtrl::Tab() {
 	// If there are multiple lines selected then tab triggers indentation
 	if (m_snippetHandler.IsActive()) {
 		if (shiftDown) {
-			if (m_recordMacro) m_macro.Add(wxT("PrevSnippetField"));
+			if (m_macro.IsRecording()) m_macro.Add(wxT("PrevSnippetField"));
 			m_snippetHandler.PrevTab();
 		}
 		else {
-			if (m_recordMacro) m_macro.Add(wxT("NextSnippetField"));
+			if (m_macro.IsRecording()) m_macro.Add(wxT("NextSnippetField"));
 			m_snippetHandler.NextTab();
 		}
 		return;
@@ -1367,7 +1367,7 @@ void EditorCtrl::Tab() {
 	if (shiftDown || isMultiSel) {
 		if (lastaction != ACTION_NONE || lastpos != GetPos()) Freeze();
 		const bool addIndent = !shiftDown;
-		if (m_recordMacro) {
+		if (m_macro.IsRecording()) {
 			if (addIndent) m_macro.Add(wxT("IndentSelectedLines"));
 			else m_macro.Add(wxT("DedentSelectedLines"));
 		}
@@ -1380,7 +1380,7 @@ void EditorCtrl::Tab() {
 		return;
 	}
 
-	if (m_recordMacro) m_macro.Add(wxT("Tab"));
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Tab"));
 
 	// If the tab is preceded by a word it can trigger a snippet
 	const unsigned int pos = GetPos();
@@ -2274,7 +2274,7 @@ unsigned int EditorCtrl::InsertNewline() {
 }
 
 void EditorCtrl::InsertChar(const wxChar& text) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		eMacroCmd& cmd = lastaction != ACTION_INSERT || m_macro.IsEmpty() || m_macro.Last().GetName() != wxT("InsertChars")
 			             ? m_macro.AddWithStrArg(wxT("InsertChars"), wxT("text"), wxT("")) : m_macro.Last();
 		cmd.ExtendString(0, text);
@@ -2530,7 +2530,7 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 }
 
 void EditorCtrl::Delete(bool delWord) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		if (delWord) m_macro.Add(wxT("DeleteWord"));
 		else m_macro.Add(wxT("Delete"));
 	}
@@ -2637,7 +2637,7 @@ void EditorCtrl::Delete(bool delWord) {
 }
 
 void EditorCtrl::Backspace(bool delWord) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		if (delWord) m_macro.Add(wxT("DeleteWord"));
 		else m_macro.Add(wxT("Backspace"));
 	}
@@ -4386,7 +4386,7 @@ void EditorCtrl::Transpose() {
 }
 
 void EditorCtrl::DelCurrentLine(bool fromPos) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		m_macro.Add(wxT("DeleteCurrentLine"), wxT("fromPos"), fromPos);
 	}
 
@@ -4518,7 +4518,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 };
 
 void EditorCtrl::OnCopy() {
-	if (m_recordMacro) m_macro.Add(wxT("Copy"));
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Copy"));
 
 	wxString copytext;
 	if (m_lines.IsSelected()) copytext = GetSelText();
@@ -4587,7 +4587,7 @@ void EditorCtrl::OnCopy() {
 }
 
 void EditorCtrl::OnCut() {
-	if (m_recordMacro) m_macro.Add(wxT("Cut"));
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Cut"));
 
 	bool doCopy = true;
 	if (!m_lines.IsSelected()) {
@@ -4600,7 +4600,12 @@ void EditorCtrl::OnCut() {
 		if (m_lines.IsLineEmpty(cl)) doCopy = false; // don't copy empty line
 	}
 
-	if (doCopy) OnCopy();
+	if (doCopy) {
+		const bool mrec = m_macro.IsRecording();
+		if (mrec) m_macro.EndRecording();
+		OnCopy();
+		if (mrec) m_macro.StartRecording();
+	}
 	DeleteSelections();
 	cxLOCKDOC_WRITE(m_doc)
 		doc.Freeze();
@@ -4692,7 +4697,7 @@ void EditorCtrl::InsertColumn(const wxArrayString& text, bool select) {
 }
 
 void EditorCtrl::OnPaste() {
-	if (m_recordMacro) m_macro.Add(wxT("Paste"));
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Paste"));
 	if (!wxTheClipboard->Open()) return;
 	
 	if (wxTheClipboard->IsSupported( MultilineDataObject::FormatId )) {
@@ -5150,7 +5155,7 @@ void EditorCtrl::DoCompletion() {
 }
 
 void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		m_macro.AddWithStrArg(wxT("ReplaceCurrentWord"), wxT("text"), word);
 	}
 
@@ -6303,13 +6308,13 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;*/
 
 			case WXK_F10:
-				if (m_recordMacro) {
-					m_recordMacro = false;
+				if (m_macro.IsRecording()) {
+					m_macro.EndRecording();
 					wxLogDebug(wxT("Macro Recording Stopped"));
 				}
 				else {
 					m_macro.Clear();
-					m_recordMacro = true;
+					m_macro.StartRecording();
 					wxLogDebug(wxT("Macro Recording Started"));
 				}
 				break;
@@ -6605,7 +6610,7 @@ void EditorCtrl::PageDown(bool select, int WXUNUSED(count)) {
 }
 
 void EditorCtrl::CursorUp(bool select) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		m_macro.Add(wxT("CursorUp"), wxT("select"), select);
 	}
 
@@ -6626,7 +6631,7 @@ void EditorCtrl::CursorUp(bool select) {
 }
 
 void EditorCtrl::CursorDown(bool select) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		m_macro.Add(wxT("CursorDown"), wxT("select"), select);
 	}
 
@@ -6647,7 +6652,7 @@ void EditorCtrl::CursorDown(bool select) {
 }
 
 void EditorCtrl::CursorLeft(bool select) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		m_macro.Add(wxT("CursorLeft"), wxT("select"), select);
 	}
 
@@ -6683,7 +6688,7 @@ void EditorCtrl::CursorLeft(bool select) {
 }
 
 void EditorCtrl::CursorRight(bool select) {
-	if (m_recordMacro) {
+	if (m_macro.IsRecording()) {
 		m_macro.Add(wxT("CursorRight"), wxT("select"), select);
 	}
 
@@ -9703,7 +9708,7 @@ EditorChangeState EditorCtrl::GetChangeState() const {
 }
 
 void EditorCtrl::PlayMacro() {
-	if (m_recordMacro) m_recordMacro = false; // avoid endless loop
+	if (m_macro.IsRecording()) m_macro.EndRecording(); // avoid endless loop
 
 	for (size_t i = 0; i < m_macro.GetCount(); ++i) {
 		const eMacroCmd& cmd = m_macro.GetCommand(i);
@@ -9724,11 +9729,11 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 	}
 	else if (name == wxT("CursorLeft")) {
 		const bool select = cmd.GetArgBool(0);
-		CursorDown(select);
+		CursorLeft(select);
 	}
 	else if (name == wxT("CursorRight")) {
 		const bool select = cmd.GetArgBool(0);
-		CursorDown(select);
+		CursorRight(select);
 	}
 	else if (name == wxT("InsertChars")) {
 		const wxString text = cmd.GetArgString(0);

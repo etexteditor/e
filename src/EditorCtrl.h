@@ -34,7 +34,6 @@
 #include "AutoPairs.h"
 #include "Bookmarks.h"
 #include "CommandHandler.h"
-#include "Macro.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -59,6 +58,8 @@ struct thTheme;
 class tmAction;
 class tmDragCommand;
 class TmSyntaxHandler;
+class eMacro;
+class eMacroCmd;
 
 
 class EditorCtrl : public KeyHookable<wxControl>, 
@@ -706,8 +707,7 @@ protected:
 	static bool s_altGrDown;
 
 	// Macro
-	bool m_recordMacro;
-	eMacro m_macro;
+	eMacro& m_macro;
 };
 
 #endif // __EDITORCTRL_H__

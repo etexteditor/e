@@ -177,7 +177,9 @@ public:
 		MENU_BOOKMARK_PREVIOUS,
 		MENU_BOOKMARK_TOGGLE,
 		MENU_BOOKMARK_CLEAR,
-		MENU_MARK_COPY
+		MENU_MARK_COPY,
+		MENU_FIND_REPLACE,
+		MENU_FIND_REPLACE_ALL
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -372,6 +374,8 @@ private:
 	void OnMenuFindInSel(wxCommandEvent& event);
 	void OnMenuFindNext(wxCommandEvent& event);
 	void OnMenuFindPrevious(wxCommandEvent& event);
+	void OnMenuFindReplace(wxCommandEvent& event);
+	void OnMenuFindReplaceAll(wxCommandEvent& event);
 	void OnMenuFindCurrent(wxCommandEvent& event);
 	void OnMenuReplace(wxCommandEvent& event);
 	void OnMenuConvUpper(wxCommandEvent& event);

@@ -158,6 +158,8 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_FIND_IN_SEL, EditorFrame::OnMenuFindInSel)
 	EVT_MENU(MENU_FIND_NEXT, EditorFrame::OnMenuFindNext)
 	EVT_MENU(MENU_FIND_PREVIOUS, EditorFrame::OnMenuFindPrevious)
+	EVT_MENU(MENU_FIND_REPLACE, EditorFrame::OnMenuFindReplace)
+	EVT_MENU(MENU_FIND_REPLACE_ALL, EditorFrame::OnMenuFindReplaceAll)
 	EVT_MENU(MENU_FIND_CURRENT, EditorFrame::OnMenuFindCurrent)
 	EVT_MENU(wxID_REPLACE, EditorFrame::OnMenuReplace)
 
@@ -494,13 +496,17 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
-	const unsigned int accelcount = 5;
+	const unsigned int accelcount = 9;
 	wxAcceleratorEntry entries[accelcount];
 	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
 	entries[1].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
 	entries[2].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
 	entries[3].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
 	entries[4].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
+	entries[5].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'j', MENU_FIND_NEXT);
+	entries[6].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'k', MENU_FIND_PREVIOUS);
+	entries[7].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'l', MENU_FIND_REPLACE);
+	entries[8].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, ';', MENU_FIND_REPLACE_ALL);
 	wxAcceleratorTable accel(accelcount, entries);
 	SetAcceleratorTable(accel);
 }
@@ -2638,6 +2644,22 @@ void EditorFrame::OnMenuFindNext(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuFindPrevious(wxCommandEvent& WXUNUSED(event)) {
 	if (m_searchPanel->HasSearchString()) {
 		m_searchPanel->FindPrevious();
+		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
+	}
+	else ShowSearch(true);
+}
+
+void EditorFrame::OnMenuFindReplace(wxCommandEvent& WXUNUSED(event)) {
+	if (m_searchPanel->HasSearchString()) {
+		m_searchPanel->Replace();
+		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
+	}
+	else ShowSearch(true);
+}
+
+void EditorFrame::OnMenuFindReplaceAll(wxCommandEvent& WXUNUSED(event)) {
+	if (m_searchPanel->HasSearchString()) {
+		m_searchPanel->ReplaceAll();
 		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
 	}
 	else ShowSearch(true);

@@ -1952,6 +1952,8 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 		return false;
 	}
 
+	ec->SetTabWidthFromSyntax();
+
 	// Add to recent files list
 	m_generalSettings.AddRecentFile(filepath);
 	UpdateRecentFiles();
@@ -2087,9 +2089,10 @@ void EditorFrame::SetSoftTab(bool isSoft)  {
 	m_softTabs = isSoft;
 
 	// update all editor pages
+	EditorCtrl* activeEditor = GetEditorCtrl();
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
-		page->SetTabWidth(m_tabWidth, m_softTabs);
+		page->SetTabWidth(m_tabWidth, m_softTabs, true, page == activeEditor);
 	}
 }
 
@@ -2102,9 +2105,10 @@ void EditorFrame::SetTabWidth(unsigned int width) {
 	m_tabWidth = width;
 
 	// Invalidate all editor pages
+	EditorCtrl* activeEditor = GetEditorCtrl();
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
-		page->SetTabWidth(m_tabWidth, m_softTabs);
+		page->SetTabWidth(m_tabWidth, m_softTabs, true, page == activeEditor);
 	}
 
 	// Redraw current

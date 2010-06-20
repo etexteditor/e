@@ -708,6 +708,32 @@ bool eSettings::AddFilterCommand(const wxString& command) {
 	return true;
 }
 
+bool eSettings::GetTabWidth(const wxString& name, unsigned int& width) const {
+	if (!m_jsonRoot.HasMember(wxT("tabSettings"))) return false;
+	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("tabSettings"));
+	
+	if (!settings.HasMember(name)) return false;
+	const wxJSONValue syntaxSettings = settings.ItemAt(name);
+		
+	if(syntaxSettings.HasMember(wxT("width")))
+		width = syntaxSettings.ItemAt(wxT("width")).AsInt();
+		
+	return true;
+}
+
+bool eSettings::IsSoftTabs(const wxString& name, bool& softTabs) const {
+	if (!m_jsonRoot.HasMember(wxT("tabSettings"))) return false;
+	const wxJSONValue settings = m_jsonRoot.ItemAt(wxT("tabSettings"));
+	
+	if (!settings.HasMember(name)) return false;
+	const wxJSONValue syntaxSettings = settings.ItemAt(name);
+	
+	if(syntaxSettings.HasMember(wxT("softTabs")))
+		softTabs = syntaxSettings.ItemAt(wxT("softTabs")).AsBool();
+		
+	return true;
+}
+
 void eSettings::SetApp(eApp* app) {
 	m_app = app;
 	haveApp = true;

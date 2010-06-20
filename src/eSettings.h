@@ -133,6 +133,10 @@ public:
 
 	// Environmental variables
 	map<wxString, wxString> env;
+	
+	// Tab Settings
+	bool GetTabWidth(const wxString& name, unsigned int& width) const;
+	bool IsSoftTabs(const wxString& name, bool& softTabs) const;
 
 	bool ShouldSave();
 	void DontSave();

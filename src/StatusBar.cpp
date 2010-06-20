@@ -43,7 +43,7 @@ OtherTabDlg::OtherTabDlg(EditorFrame& parent):
 	wxDialog(&parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
 	m_parentFrame(parent)
 {
-	const unsigned int width = parent.GetTabWidth();
+	const unsigned int width = parent.GetEditorCtrl()->GetTabWidth();
 
 	SetTitle (_("Other Tab Size"));
 
@@ -124,7 +124,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	m_editorCtrlId = id;
 
 	Freeze();
-	UpdateTabs();
+	UpdateTabs(editorCtrl);
 
 	if (editorCtrl) {
 		// Caret position
@@ -186,12 +186,12 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	Thaw();
 }
 
-void StatusBar::UpdateTabs() {
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-	const bool isSoftTabs = m_parentFrame.IsSoftTabs();
+void StatusBar::UpdateTabs(EditorCtrl* editorCtrl) {
+	const unsigned int tabWidth = editorCtrl->GetTabWidth();
+	const bool isSoftTabs = editorCtrl->IsSoftTabs();
 	if (tabWidth == m_tabWidth && isSoftTabs == m_isSoftTabs) return;
 		
-	if (m_parentFrame.IsSoftTabs())
+	if (isSoftTabs)
 		SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
 	else
 		SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
@@ -252,7 +252,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 		tabsMenu.AppendSeparator();
 		tabsMenu.Append(MENU_TABS_SOFT, _("Soft Tabs (Spaces)"), wxEmptyString, wxITEM_CHECK);
 
-		const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+		const unsigned int tabWidth = m_editorCtrl->GetTabWidth();
 		if (tabWidth == 2) tabsMenu.Check(MENU_TABS_2, true);
 		else if (tabWidth == 3) tabsMenu.Check(MENU_TABS_3, true);
 		else if (tabWidth == 4) tabsMenu.Check(MENU_TABS_4, true);
@@ -262,7 +262,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 			tabsMenu.Check(MENU_TABS_OTHER, true);
 		}
 
-		if (m_parentFrame.IsSoftTabs()) tabsMenu.Check(MENU_TABS_SOFT, true);
+		if (m_editorCtrl->IsSoftTabs()) tabsMenu.Check(MENU_TABS_SOFT, true);
 
 		PopupMenu(&tabsMenu, tabsRect.x, tabsRect.y);
 	}
@@ -336,7 +336,7 @@ void StatusBar::OnMenuTabsOther(wxCommandEvent& WXUNUSED(event)) {
 
 void StatusBar::OnMenuTabsSoft(wxCommandEvent& WXUNUSED(event)) {
 	// WORKAROUND: event.IsChecked() gives wrong value
-	const bool isSoftTabs = !m_parentFrame.IsSoftTabs();
+	const bool isSoftTabs = !m_editorCtrl->IsSoftTabs();
 
 	m_parentFrame.SetSoftTab(isSoftTabs);
 }

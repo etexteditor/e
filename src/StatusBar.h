@@ -35,7 +35,7 @@ public:
 
 private:
 	void UpdateBarFromActiveEditor();
-	void UpdateTabs();
+	void UpdateTabs(EditorCtrl* editorCtrl);
 
 	void PopupSyntaxMenu(wxRect& menuPos);
 

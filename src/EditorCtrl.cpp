@@ -188,6 +188,11 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_re(NULL), 
 	m_symbolCacheToken(0),
 
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
+
 	bookmarks(m_lines)
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -238,6 +243,11 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_re(NULL),
 	m_symbolCacheToken(0),
 
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
+
 	bookmarks(m_lines)
 
 {
@@ -256,6 +266,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 
 	// Set the syntax to match the new document
 	m_syntaxstyler.UpdateSyntax();
+	SetTabWidthFromSyntax();
 
 	// Init Folding
 	FoldingClear();
@@ -301,6 +312,11 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_options_cache(0), 
 	m_re(NULL), 
 	m_symbolCacheToken(0),
+
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
 
 	bookmarks(m_lines)
 {
@@ -442,7 +458,9 @@ void EditorCtrl::Init() {
 	m_lines.AddStyler(m_html_hl_styler);
 
 	// Set initial tabsize
-	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
+	if(!m_tabSettingsFromSyntax) {
+		SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs(), false);
+	}
 
 	// Should we show margin line?
 	if (!doShowMargin) marginChars = 0;
@@ -559,7 +577,7 @@ unsigned int EditorCtrl::GetCurrentColumnNumber() {
 	const unsigned int pos = m_lines.GetPos();
 
 	// Calculate pos with tabs expanded.
-	const unsigned int tab_size = this->m_parentFrame.GetTabWidth();
+	const unsigned int tab_size = this->m_tabWidth;
 	unsigned int tabpos = 0;
 	cxLOCKDOC_READ(m_doc)
 		for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < pos; ++dbi) {
@@ -765,7 +783,17 @@ void EditorCtrl::SetWordWrap(cxWrapMode wrapMode) {
 	DrawLayout();
 }
 
-void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
+void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs, bool force, bool activeEditor) {
+	//If they set the tab size in the status bar, it changes it for all editors by default
+	//But, if they have applied a syntax specific tab size, and this is not the open editor, then ignore it.
+	if(!activeEditor && m_tabSettingsFromSyntax) return;
+
+	//If this is the open editor and the tab settings are set from the status bar, then ignore any settings from the syntax
+	if(force && activeEditor) {
+		m_tabSettingsOverriden = true;
+		m_tabSettingsFromSyntax = false;
+	}
+
 	// m_indent is the string used for indentation, either a real tab character
 	// or an appropriate number of spaces
 	if (soft_tabs) 
@@ -773,10 +801,40 @@ void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
 	else 
 		m_indent = wxString(wxT("\t"));
 
+	m_tabWidth = width;
+	m_softTabs = soft_tabs;
+
 	m_lines.SetTabWidth(width);
 	FoldingReIndent();
 
 	MarkAsModified();
+}
+
+void EditorCtrl::SetTabWidthFromSyntax() {
+	//If the user sets the tab settings from the status bar, then we are not going to override that with the syntax settings
+	if(m_tabSettingsOverriden) return;
+
+	unsigned int width;
+	bool softTabs;
+
+	eSettings& settings = eGetSettings();
+	wxString syntaxName = GetSyntaxName();
+
+	if(settings.GetTabWidth(syntaxName, width)) {
+		m_tabSettingsFromSyntax = true;
+	} else {
+		width = m_tabWidth;
+	}
+
+	if(settings.IsSoftTabs(syntaxName, softTabs)) {
+		m_tabSettingsFromSyntax = true;
+	} else {
+		softTabs = m_softTabs;
+	}
+
+	if(m_tabSettingsFromSyntax) {
+		SetTabWidth(width, softTabs, false);
+	}
 }
 
 const wxFont& EditorCtrl::GetEditorFont() const { return mdc.GetFont(); }
@@ -1254,7 +1312,7 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline, bool skipW
 			if (res.error_code > 0) {
 				// Decrease tab level with one
 				if (!indent.empty()) {
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					if (indent[0] == wxT('\t')) indent.Remove(0, 1);
 					else if (indent.size() >= tabWidth) indent.Remove(0, tabWidth);
 				}
@@ -1355,7 +1413,7 @@ bool EditorCtrl::SmartTab() {
 
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
 	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	unsigned int whitespaceEnd = linestart;
 	unsigned int pos = GetPos();
 	
@@ -1482,7 +1540,7 @@ void EditorCtrl::Tab() {
 
 	// Soft Tab (incremental number of spaces)
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 
 	// Calculate pos with tabs expanded
 	unsigned int tabpos = 0;
@@ -2256,8 +2314,8 @@ unsigned int EditorCtrl::InsertNewline() {
 		if (!atLineEnd) {
 			// Get the correct indentation for new line
 			const wxString newindent = GetRealIndent(lineid+1);
-			const unsigned int indentlevel = CountTextIndent(indent, m_parentFrame.GetTabWidth());
-			const unsigned int newindentlevel = CountTextIndent(newindent, m_parentFrame.GetTabWidth());
+			const unsigned int indentlevel = CountTextIndent(indent, m_tabWidth);
+			const unsigned int newindentlevel = CountTextIndent(newindent, m_tabWidth);
 
 			// Only double the newlines if the new line will be de-dented
 			if (newindentlevel < indentlevel) {
@@ -2351,7 +2409,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 				}
 
 				if (indentChange != 0) {
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 
 					// Get the indentation len based on the line above
 					const wxString currentIndent = lineid == 0 ? *wxEmptyString : GetNewIndentAfterNewline(lineid-1);
@@ -3577,7 +3635,7 @@ void EditorCtrl::TabsToSpaces() {
 
 	wxBusyCursor busy;
 
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	const wxString indentString(wxT(' '), tabWidth);
 	unsigned int pos = m_lines.GetPos();
 
@@ -3696,7 +3754,7 @@ void EditorCtrl::SpacesToTabs() {
 
 	wxBusyCursor busy;
 
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 
 	// Get list of lines to be converted
 	if (m_lines.IsSelected()) {
@@ -3856,7 +3914,7 @@ void EditorCtrl::IndentSelectedLines(bool add_indent) {
 	else sel_lines.push_back(m_lines.GetCurrentLine());
 
 	unsigned int pos = m_lines.GetPos();
-	unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	unsigned int tabWidth = m_tabWidth;
 
 	// Insert the indentations
 	for (vector<unsigned int>::const_iterator i = sel_lines.begin(); i != sel_lines.end(); ++i) {
@@ -4250,6 +4308,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	wxEndBusyCursor();
 
 	// We also have to reparse the foldings
+	SetTabWidthFromSyntax();
 	FoldingClear();
 
 	MarkAsModified(); // flush symbol cache
@@ -6087,7 +6146,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					}
 
 					// Check if we are at a soft tabpoint
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
 						&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 					{
@@ -6174,7 +6233,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 						prevpos = doc.GetPrevCharPos(pos);
 						prevchar = doc.GetChar(prevpos);
 					cxENDLOCK
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					unsigned int newpos;
 
 					// Check if we are at a soft tabpoint
@@ -6473,7 +6532,7 @@ void EditorCtrl::CursorLeft(bool select) {
 
 		// Check if we are at a soft tabpoint
 		if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()) {
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+			const unsigned int tabWidth = m_tabWidth;
 			if (pos >= tabWidth && IsSpaces(pos - tabWidth, pos))
 				prevpos = pos - tabWidth;
 		}
@@ -6504,7 +6563,7 @@ void EditorCtrl::CursorRight(bool select) {
 
 		// Check if we are at a soft tabpoint
 		if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()) {
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+			const unsigned int tabWidth = m_tabWidth;
 			if (pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 				nextpos = pos + tabWidth;
 		}
@@ -6882,7 +6941,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(wxT("TM_COLUMN_NUMBER"), wxString::Format(wxT("%u"), columnIndex));
 
 	// TM_TAB_SIZE
-	const wxString tabsize = wxString::Format(wxT("%u"), m_parentFrame.GetTabWidth());
+	const wxString tabsize = wxString::Format(wxT("%u"), m_tabWidth);
 	env.SetEnv(wxT("TM_TAB_SIZE"), tabsize);
 
 	// TM_SOFT_TABS

@@ -188,6 +188,11 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_re(NULL), 
 	m_symbolCacheToken(0),
 
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
+
 	bookmarks(m_lines)
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -238,6 +243,11 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_re(NULL),
 	m_symbolCacheToken(0),
 
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
+
 	bookmarks(m_lines)
 
 {
@@ -256,6 +266,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 
 	// Set the syntax to match the new document
 	m_syntaxstyler.UpdateSyntax();
+	SetTabWidthFromSyntax();
 
 	// Init Folding
 	FoldingClear();
@@ -301,6 +312,11 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_options_cache(0), 
 	m_re(NULL), 
 	m_symbolCacheToken(0),
+
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
 
 	bookmarks(m_lines)
 {
@@ -442,7 +458,9 @@ void EditorCtrl::Init() {
 	m_lines.AddStyler(m_html_hl_styler);
 
 	// Set initial tabsize
-	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
+	if(!m_tabSettingsFromSyntax) {
+		SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs(), false);
+	}
 
 	// Should we show margin line?
 	if (!doShowMargin) marginChars = 0;
@@ -765,7 +783,17 @@ void EditorCtrl::SetWordWrap(cxWrapMode wrapMode) {
 	DrawLayout();
 }
 
-void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
+void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs, bool force, bool activeEditor) {
+	//If they set the tab size in the status bar, it changes it for all editors by default
+	//But, if they have applied a syntax specific tab size, and this is not the open editor, then ignore it.
+	if(!activeEditor && m_tabSettingsFromSyntax) return;
+
+	//If this is the open editor and the tab settings are set from the status bar, then ignore any settings from the syntax
+	if(force && activeEditor) {
+		m_tabSettingsOverriden = true;
+		m_tabSettingsFromSyntax = false;
+	}
+
 	// m_indent is the string used for indentation, either a real tab character
 	// or an appropriate number of spaces
 	if (soft_tabs) 
@@ -773,10 +801,40 @@ void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
 	else 
 		m_indent = wxString(wxT("\t"));
 
+	m_tabWidth = width;
+	m_softTabs = soft_tabs;
+
 	m_lines.SetTabWidth(width);
 	FoldingReIndent();
 
 	MarkAsModified();
+}
+
+void EditorCtrl::SetTabWidthFromSyntax() {
+	//If the user sets the tab settings from the status bar, then we are not going to override that with the syntax settings
+	if(m_tabSettingsOverriden) return;
+
+	unsigned int width;
+	bool softTabs;
+
+	eSettings& settings = eGetSettings();
+	wxString syntaxName = GetSyntaxName();
+
+	if(settings.GetTabWidth(syntaxName, width)) {
+		m_tabSettingsFromSyntax = true;
+	} else {
+		width = m_tabWidth;
+	}
+
+	if(settings.IsSoftTabs(syntaxName, softTabs)) {
+		m_tabSettingsFromSyntax = true;
+	} else {
+		softTabs = m_softTabs;
+	}
+
+	if(m_tabSettingsFromSyntax) {
+		SetTabWidth(width, softTabs, false);
+	}
 }
 
 const wxFont& EditorCtrl::GetEditorFont() const { return mdc.GetFont(); }
@@ -4236,6 +4294,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	wxEndBusyCursor();
 
 	// We also have to reparse the foldings
+	SetTabWidthFromSyntax();
 	FoldingClear();
 
 	MarkAsModified(); // flush symbol cache

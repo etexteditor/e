@@ -142,7 +142,10 @@ public:
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);
 	void SetShowIndent(bool showIndent);
-	void SetTabWidth(unsigned int width, bool soft_tabs);
+	void SetTabWidth(unsigned int width, bool soft_tabs, bool force, bool activeEditor=true);
+	unsigned int GetTabWidth() { return m_tabWidth; }
+	bool IsSoftTabs() { return m_softTabs; }
+	void SetTabWidthFromSyntax();
 	void SetGutterRight(bool doMove=true);
 	const wxFont& GetEditorFont() const;
 	void SetScrollbarLeft(bool doMove=true);
@@ -560,6 +563,11 @@ protected:
 	// Above: set in constructors' intializer list
 	// ----
 	// Below: not set in initializer list
+
+	bool m_softTabs;
+	unsigned int m_tabWidth;
+	bool m_tabSettingsOverriden;
+	bool m_tabSettingsFromSyntax;
 
 	int lastxpos; // Used to keep Up/Down in line
 

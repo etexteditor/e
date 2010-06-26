@@ -42,6 +42,7 @@
 #include "IEditorSymbols.h"
 #include "IEditorSearch.h"
 #include "ITabPage.h"
+#include "styler_selections.h"
 
 
 class wxFileName;
@@ -210,6 +211,10 @@ public:
 	void SelectCurrentLine();
 	void SelectScope();
 	void SelectParentTag();
+
+	void NavigateSelections();
+	void NextSelection();
+	void PreviousSelection();
 
 	// Movement commands
 	void SetPos(unsigned int pos);
@@ -536,6 +541,7 @@ protected:
 	Styler_VariableHL m_variable_hl_styler;
 	Styler_HtmlHL m_html_hl_styler;
 	Styler_Syntax m_syntaxstyler;
+	Styler_Selections m_selectionsStyler;
 
 	wxTimer m_foldTooltipTimer;
 	TextTip* m_activeTooltip;

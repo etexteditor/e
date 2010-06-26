@@ -1125,6 +1125,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\styler_selections.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_selections.h"
+				>
+			</File>
+			<File
 				RelativePath="styler_syntax.cpp"
 				>
 			</File>

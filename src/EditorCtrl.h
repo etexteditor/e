@@ -565,7 +565,7 @@ protected:
 	mutable int m_options_cache; // for compiled regex
 	mutable pcre *m_re; // for last compiled regex
 	mutable unsigned int m_symbolCacheToken;
-	unsigned int m_markCopyStart;
+	int m_markCopyStart;
 
 	// Above: set in constructors' intializer list
 	// ----

@@ -16,7 +16,7 @@
 #include "EditorCtrl.h"
 #include "EditorFrame.h"
 
-RedoDlg::RedoDlg(EditorCtrl* parent, EditorFrame* frame, CatalystWrapper& cw, int editorId, const doc_id& di)
+RedoDlg::RedoDlg(EditorCtrl* parent, EditorFrame* frame, CatalystWrapper& cw, int WXUNUSED(editorId), const doc_id& di)
 : wxDialog (parent, -1, _("Undo History"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER) {
 	UndoHistory* undoHistory = new UndoHistory(cw, frame, frame->GetId(), this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	undoHistory->SetEditorCtrl(parent);

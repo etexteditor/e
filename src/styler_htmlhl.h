@@ -59,8 +59,8 @@ public:
 	bool SameTag(TagInterval& openTag, TagInterval& closeTag, const Document& doc);
 	bool FindBrackets(unsigned int start, unsigned int end, const Document& doc);
 	void FindAllBrackets(const Document& doc);
-	bool IsOpenComment(const Document& doc, int bracket);
-	bool IsCloseComment(const Document& doc, int bracket);
+	bool IsOpenComment(const Document& doc, unsigned int bracket);
+	bool IsCloseComment(const Document& doc, unsigned int bracket);
 	void FindTags(const Document& doc);
 	int FindMatchingTag(const Document& doc, int tag);
 	int FindCurrentTag();

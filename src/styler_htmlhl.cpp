@@ -214,13 +214,13 @@ bool Styler_HtmlHL::IsValidTag(unsigned int start, unsigned int end, const Docum
 	return false;
 }
 
-bool Styler_HtmlHL::IsOpenComment(const Document& doc, int bracket) {
+bool Styler_HtmlHL::IsOpenComment(const Document& doc, unsigned int bracket) {
 	//<!--
 	if(bracket+3 >= doc.GetLength()) return false;
 	return doc.GetChar(bracket+1) == '!' && doc.GetChar(bracket+2) == '-' && doc.GetChar(bracket+3) == '-';
 }
 
-bool Styler_HtmlHL::IsCloseComment(const Document& doc, int bracket) {
+bool Styler_HtmlHL::IsCloseComment(const Document& doc, unsigned int bracket) {
 	//-->
 	if(bracket-2 < 0) return false;
 	return doc.GetChar(bracket-1) == '-' && doc.GetChar(bracket-2) == '-';
@@ -332,12 +332,12 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const D
 		//we are guaranteed openIndex and closeIndex are less than the doc length because there must be a closing bracket in the tag to get in here
 		start = doc.GetChar(openIndex);
 		if(start >= 'A' && start <= 'Z') {
-		    start -= ('A' - 'a');
+		    start -= (unsigned int)('A' - 'a');
 		}
 		
 		end = doc.GetChar(closeIndex);
 		if(end >= 'A' && end <= 'Z') {
-		    end -= ('A' - 'a');
+		    end -= (unsigned int)('A' - 'a');
 		}
 		
 		//once we hit non-alphanumber characters, then the tags have not differred so far, so it is valid

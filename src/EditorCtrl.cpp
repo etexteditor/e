@@ -8854,10 +8854,12 @@ void EditorCtrl::ToogleBookmarkOnCurrentLine() {
 void EditorCtrl::AddBookmark(unsigned int line_id, bool toggle) {
 	wxASSERT(line_id < m_lines.GetLineCount());
 	bookmarks.AddBookmark(line_id, toggle);
+	DrawLayout();
 }
 
 void EditorCtrl::DeleteBookmark(unsigned int line_id) {
 	bookmarks.DeleteBookmark(line_id);
+	DrawLayout();
 }
 
 void EditorCtrl::GotoNextBookmark() {
@@ -8876,6 +8878,10 @@ void EditorCtrl::GotoPrevBookmark() {
 		MakeCaretVisible();
 		DrawLayout();
 	}
+}
+
+void EditorCtrl::BuildBookmarkMap(std::map<int, bool>& bookmarksMap) const {
+	bookmarks.BuildMap(bookmarksMap);
 }
 
 EditorChangeState EditorCtrl::GetChangeState() const {

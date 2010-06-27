@@ -179,7 +179,11 @@ public:
 		MENU_BOOKMARK_CLEAR,
 		MENU_MARK_COPY,
 		MENU_FIND_REPLACE,
-		MENU_FIND_REPLACE_ALL
+		MENU_FIND_REPLACE_ALL,
+		MENU_NAVIGATE_SELECTIONS,
+		MENU_NAVIGATE_SELECTIONS_MODE,
+		MENU_NAVIGATE_SELECTIONS_NEXT,
+		MENU_NAVIGATE_SELECTIONS_PREVIOUS
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -447,6 +451,9 @@ private:
 	void OnMenuEditBundles(wxCommandEvent& event);
 	void OnMenuManageBundles(wxCommandEvent& event);
 	void OnMenuBundleAction(wxCommandEvent& event);
+	void OnMenuNavigateSelections(wxCommandEvent& event);
+	void OnMenuNavigateSelectionsNext(wxCommandEvent& event);
+	void OnMenuNavigateSelectionsPrevious(wxCommandEvent& event);
 
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);

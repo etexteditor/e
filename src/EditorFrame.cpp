@@ -284,6 +284,10 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_FILESCHANGED(EditorFrame::OnFilesChanged)
 
 	EVT_MOUSEWHEEL(EditorFrame::OnMouseWheel)
+	
+	EVT_MENU(MENU_NAVIGATE_SELECTIONS_MODE, EditorFrame::OnMenuNavigateSelections)
+	EVT_MENU(MENU_NAVIGATE_SELECTIONS_NEXT, EditorFrame::OnMenuNavigateSelectionsNext)
+	EVT_MENU(MENU_NAVIGATE_SELECTIONS_PREVIOUS, EditorFrame::OnMenuNavigateSelectionsPrevious)
 
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
@@ -589,6 +593,12 @@ void EditorFrame::InitMenus() {
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
 		selectMenu->Append(MENU_SELECTTAG, _("Tag &Content\tCtrl+,"), _("Select Parent Tag Content"));
 		editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+
+	wxMenu* navigateSelectionsMenu = new wxMenu;
+		navigateSelectionsMenu->Append(MENU_NAVIGATE_SELECTIONS_MODE, _("&Navigate Selections\tCtrl+Alt+Shift+N"), _("Navigate Selections"));
+		navigateSelectionsMenu->Append(MENU_NAVIGATE_SELECTIONS_NEXT, _("&Next Selection\tCtrl+Alt+Shift+U"), _("Next Selection"));
+		navigateSelectionsMenu->Append(MENU_NAVIGATE_SELECTIONS_PREVIOUS, _("&Previous Selection\tCtrl+Alt+Shift+I"), _("Previous Selection"));
+		editMenu->Append(MENU_NAVIGATE_SELECTIONS, _("&Navigate Selections"), navigateSelectionsMenu, _("Navigate Selections"));
 
 	editMenu->AppendSeparator();
 	wxMenu* findMenu = new wxMenu;
@@ -3989,4 +3999,22 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 void EditorFrame::OnMouseWheel(wxMouseEvent& event) {
 	// If no one else handled the event, send it to the editor.
 	this->editorCtrl->ProcessMouseWheel(event);
+}
+
+void EditorFrame::OnMenuNavigateSelections(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ec = GetEditorCtrl();
+	if(!ec) return;
+	ec->NavigateSelections();
+}
+
+void EditorFrame::OnMenuNavigateSelectionsNext(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ec = GetEditorCtrl();
+	if(!ec) return;
+	ec->NextSelection();
+}
+
+void EditorFrame::OnMenuNavigateSelectionsPrevious(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ec = GetEditorCtrl();
+	if(!ec) return;
+	ec->PreviousSelection();
 }

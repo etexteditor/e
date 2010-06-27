@@ -165,6 +165,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
+	m_selectionsStyler(m_doc, m_lines, m_theme, *this),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -220,6 +221,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
+	m_selectionsStyler(m_doc, m_lines, m_theme, *this),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -290,6 +292,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
+	m_selectionsStyler(m_doc, m_lines, m_theme, *this),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
 	m_activeTooltip(NULL),
@@ -456,6 +459,7 @@ void EditorCtrl::Init() {
 	m_lines.AddStyler(m_search_hl_styler);
 	m_lines.AddStyler(m_variable_hl_styler);
 	m_lines.AddStyler(m_html_hl_styler);
+	m_lines.AddStyler(m_selectionsStyler);
 
 	// Set initial tabsize
 	if(!m_tabSettingsFromSyntax) {
@@ -8961,4 +8965,18 @@ wxDragResult DragDropTarget::OnData(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), wx
 	}
 
 	return def;
+}
+
+void EditorCtrl::NavigateSelections() {
+	m_selectionsStyler.EnableNavigation();
+}
+
+void EditorCtrl::NextSelection() {
+	m_selectionsStyler.NextSelection();
+	DrawLayout();
+}
+
+void EditorCtrl::PreviousSelection() {
+	m_selectionsStyler.PreviousSelection();
+	DrawLayout();
 }

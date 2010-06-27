@@ -38,10 +38,15 @@ public:
 	Styler_Selections(const DocumentWrapper& rev, const Lines& lines, const tmTheme& theme, EditorCtrl& editorCtrl);
 	virtual ~Styler_Selections() {};
 
+	void Invalidate();
+
 	void Style(StyleRun& sr);
+	void ApplyStyle(StyleRun& sr, unsigned int start, unsigned int end);
+
 	// Handle document changes
 	void Insert(unsigned int pos, unsigned int length);
 	void Delete(unsigned int start_pos, unsigned int end_pos);
+	void ApplyDiff(std::vector<cxChange>& changes);
 
 	void EnableNavigation();
 	void NextSelection();
@@ -53,7 +58,7 @@ private:
 	EditorCtrl& m_editorCtrl;
 
 	bool m_enabled;
-	int m_nextSelections;
+	int m_nextSelection;
 	std::vector<interval> m_selections;
 
 	// Theme variables

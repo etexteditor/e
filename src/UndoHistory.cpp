@@ -372,21 +372,23 @@ void UndoHistory::OnMouseWheel(wxMouseEvent& event) {
 	// Only handle scrollwheel if we have a scrollbar
 	if (!GetScrollThumb(wxVERTICAL)) return;
 
-	const int rotation = event.GetWheelRotation();
+	const double rotation = event.GetWheelRotation();
 	if (rotation == 0) return; // No net rotation.
 
 	const wxSize size = GetClientSize();
-	const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
+	const double linescount = (abs(rotation) / ((double)event.GetWheelDelta())) * ((double)event.GetLinesPerAction());
 
 	int pos = m_verticalScrollPos;
 
 	if (rotation > 0) { // up
-		pos = pos - (pos % m_lineHeight) - (m_lineHeight * linescount);
+		pos = pos - (pos % m_lineHeight) - (((double)m_lineHeight) * linescount);
 		if (pos < 0) pos = 0;
 	}
 	else if (rotation < 0) { // down
-		pos = pos - (pos % m_lineHeight) + (m_lineHeight * linescount);
-		if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
+		pos = pos + (pos % m_lineHeight) + (((double)m_lineHeight) * linescount);
+		if (pos > m_treeHeight - size.y) {
+			pos = m_treeHeight - size.y;
+		}
 	}
 
 	if (pos != m_verticalScrollPos) {

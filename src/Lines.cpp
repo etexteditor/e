@@ -19,6 +19,7 @@
 #include "tmTheme.h"
 #include <wx/filename.h>
 #include "styler.h"
+#include <map>
 
 Lines::Lines(wxDC& dc, DocumentWrapper& dw, IFoldingEditor& editorCtrl, const tmTheme& theme):
 	dc(dc),
@@ -1003,6 +1004,10 @@ void Lines::Draw(int xoffset, int yoffset, wxRect& rect) {
 		dc.DrawRectangle(0, FoldedYPos(ll->height()) + yoffset, rect.width, line.GetCharHeight());
 	}
 
+	//Build a map of the bookmarks for constant time access
+	std::map<int, bool> bookmarksMap;
+	m_editorCtrl.BuildBookmarkMap(bookmarksMap);
+
 	if (top_ypos < height) {
 		// Get the first visible line
 		unsigned int firstline = ll->find_ypos(top_ypos);
@@ -1019,7 +1024,7 @@ void Lines::Draw(int xoffset, int yoffset, wxRect& rect) {
 			SetLine(firstline);
 
 			// Check if we should highlight the line background
-			if (firstline == currentLine) {
+			if (firstline == currentLine || bookmarksMap.find(firstline) != bookmarksMap.end()) {
 				dc.SetBrush(wxBrush(m_theme.lineHighlightColor));
 				dc.SetPen(wxPen(m_theme.lineHighlightColor));
 

@@ -2,6 +2,7 @@
 #define __BOOKMARKS_H__
 
 #include <vector>
+#include <map>
 
 const unsigned int NO_BOOKMARK = (unsigned int)-1;
 
@@ -31,6 +32,8 @@ public:
 	void DeleteChars(unsigned int start, unsigned int end);
 
 	void ApplyChanges(const std::vector<cxChange>& changes);
+
+	void BuildMap(std::map<int, bool>& bookmarksMap) const;
 
 private:
 	std::vector<cxBookmark> bookmarks;

@@ -361,6 +361,7 @@ public:
 	void GotoNextBookmark();
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const;
+	void BuildBookmarkMap(std::map<int, bool>& bookmarksMap) const;
 
 	// Scroll Position
 	int GetYScrollPos() const { return scrollPos; };

@@ -333,8 +333,8 @@ void VersionTree::MakeNodeVisible(size_t node_id, bool doCenter) {
 		if (verticalScrollPos > ypos) verticalScrollPos = ypos;
 		else if (verticalScrollPos + size.y < ybottom) verticalScrollPos = ybottom - size.y;
 		
-		if(horizontalScrollPos > xpos) horizontalScrollPos = xpos;
-		else if(horizontalScrollPos+size.x < xpos) horizontalScrollPos = xpos - size.x;
+		//Always focus the version tree on the selected node
+		horizontalScrollPos = xpos;
 	}
 
 	// Redraw the tree with new position

@@ -163,6 +163,8 @@ void Styler_Selections::Delete(unsigned int start_pos, unsigned int end_pos) {
 			size--;
 		}
 	}
+
+	m_enabled = m_selections.size() > 0;
 }
 
 void Styler_Selections::ApplyDiff(std::vector<cxChange>& WXUNUSED(changes)) {

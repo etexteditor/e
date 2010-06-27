@@ -46,7 +46,7 @@ void Styler_Selections::NextSelection() {
 	if(!m_enabled) return;
 
 	m_nextSelection++;
-	if(m_nextSelection >= m_selections.size()) {
+	if((unsigned int)m_nextSelection >= m_selections.size()) {
 		m_nextSelection = 0;
 	}
 
@@ -155,7 +155,7 @@ void Styler_Selections::Delete(unsigned int start_pos, unsigned int end_pos) {
 			m_selections[c].end -= length;
 		} else {
 			//deleted text in some way encompasses teh whole selection, so ditch it
-			if(c <= m_nextSelection) {
+			if(c <= (unsigned int)m_nextSelection) {
 				m_nextSelection--;
 			}
 			m_selections.erase(m_selections.begin()+c);

@@ -142,7 +142,6 @@ void Styler_VariableHL::Insert(unsigned int pos, unsigned int length) {
 	}
 	
 	//We can't call GetPos because it hasn't been updated yet.
-    unsigned int end = pos+length;
 	if(m_cursorPosition >= pos) {
 		m_cursorPosition += length;
 	}

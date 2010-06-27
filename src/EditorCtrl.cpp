@@ -1396,7 +1396,7 @@ void EditorCtrl::GetTextPart(unsigned int start, unsigned int end, vector<char>&
 	cxENDLOCK
 }
 
-int GetTabWidthInSpaces(wxString& text, int tabWidth) {
+int GetTabWidthInSpaces(wxString text, int tabWidth) {
 	int length = 0;
 	for(unsigned int c = 0; c < text.length(); c++) {
 		if(text[c] == ' ') {
@@ -4335,7 +4335,7 @@ const deque<const wxString*> EditorCtrl::GetScope() {
 void EditorCtrl::OnMarkCopy() {
 	unsigned int pos = GetPos();
 	
-	if(m_markCopyStart >= 0 && m_markCopyStart <= m_lines.GetLength()) {
+	if(m_markCopyStart >= 0 && (unsigned int)m_markCopyStart <= m_lines.GetLength()) {
 		RemoveAllSelections();
 		Select(m_markCopyStart, pos);
 		OnCopy();

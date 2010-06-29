@@ -46,6 +46,7 @@ bool Styler_VariableHL::OnIdle() {
 		return false;
 	}
 
+	m_cursorPosition = m_editorCtrl.GetPos();
 	const wxString text = m_editorCtrl.GetWord(m_cursorPosition);
 	//Instead of parsing the document in the styler, I moved it to an OnIdle function so the editor doesn't appear to lag as much.
 	//It will perform a full document search about 1 second after the most recent change to the document.

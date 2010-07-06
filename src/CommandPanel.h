@@ -32,7 +32,6 @@ public:
 
 private:
 	// Event handlers
-	void OnCommandChar(wxKeyEvent& evt);
 	void OnCloseButton(wxCommandEvent& evt);
 	void OnIdle(wxIdleEvent& evt);
 	DECLARE_EVENT_TABLE();

@@ -23,8 +23,6 @@ CommandPanel::CommandPanel(EditorFrame& parentFrame, wxWindow* parent)
 	m_commandbox = new wxTextCtrl(this, COMMANDP_BOX, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
 	m_selStatic = new wxStaticText(this, wxID_ANY, wxEmptyString);
 
-	m_commandbox->Connect(wxEVT_CHAR, wxCharEventHandler(CommandPanel::OnCommandChar), NULL, this);
-
 	// Create the sizer layout
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 		sizer->AddSpacer(5);
@@ -46,26 +44,6 @@ CommandPanel::CommandPanel(EditorFrame& parentFrame, wxWindow* parent)
 
 void CommandPanel::ShowCommand(const wxString& cmd) {
 	m_commandbox->SetValue(cmd);
-}
-
-void CommandPanel::OnCommandChar(wxKeyEvent& evt) {
-	const wxChar c = evt.GetUnicodeKey();
-	EditorCtrl* editor = m_parentFrame.GetEditorCtrl();
-
-	switch (c) {
-	case 'h':
-		editor->CursorRight();
-		break;
-	case 'j':
-		editor->CursorDown();
-		break;
-	case 'k':
-		editor->CursorUp();
-		break;
-	case 'l':
-		editor->CursorLeft();
-		break;
-	}
 }
 
 void CommandPanel::OnCloseButton(wxCommandEvent& WXUNUSED(evt)) {

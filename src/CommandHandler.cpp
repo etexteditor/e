@@ -46,7 +46,7 @@ template<class F, class V> TextObjectTraverser1<F,V> bindtraverser(F op, const V
 }
 
 CommandHandler::CommandHandler(EditorFrame& parentFrame, EditorCtrl& editor)
-: m_parentFrame(parentFrame), m_editor(editor) {
+: m_parentFrame(parentFrame), m_editor(editor), m_isRecording(false), m_isReplaying(false) {
 	Clear();
 }
 
@@ -54,7 +54,21 @@ bool CommandHandler::IsSearching() const {
 	return (m_state == state_search || m_state == state_search_reverse);
 }
 
-void CommandHandler::Clear() {
+bool CommandHandler::InCommand() const {
+	return m_cmd.empty();
+}
+
+const wxString& CommandHandler::GetCommandString() const {
+	return m_cmd;
+}
+
+void CommandHandler::Clear(bool cancel) {
+	if (m_isRecording && !m_cmd.empty() && !cancel) {
+		eMacro& macro = m_editor.GetMacro();
+		eMacroCmd& cmd = macro.Add(wxT("RunCommandMode"));
+		cmd.SetArg(0, wxT("command"), m_cmd);
+	}
+
 	m_state = state_normal;
 	m_endState = state_normal;
 	m_count = 0;
@@ -64,7 +78,20 @@ void CommandHandler::Clear() {
 	m_reverse = false;
 }
 
-bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
+void CommandHandler::PlayCommand(const wxString& cmd) {
+	wxKeyEvent evt(wxEVT_CHAR);
+
+	m_isReplaying = true;
+	for (wxString::const_iterator p = cmd.begin(); p != cmd.end(); ++p) {
+		evt.m_keyCode = *p;
+		evt.m_uniChar = *p;
+		ProcessCommand(evt);
+	}
+	m_isReplaying = false;
+}
+
+bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
+	m_isRecording = record;
 	const int c = evt.GetKeyCode();
 	const wxChar uc = evt.GetUnicodeKey();
 	
@@ -130,19 +157,19 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 			// Movements
 			case 'h':
 			case WXK_LEFT:
-				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorLeft), false));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorLeft), EditorCtrl::SEL_IGNORE));
 				break;
 			case 'j':
 			case WXK_DOWN:
-				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorDown), false));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorDown), EditorCtrl::SEL_IGNORE));
 				break;
 			case 'k':
 			case WXK_UP:
-				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorUp), false));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorUp), EditorCtrl::SEL_IGNORE));
 				break;
 			case 'l':
 			case WXK_RIGHT:
-				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), false));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), EditorCtrl::SEL_IGNORE));
 				break;
 			case '0':
 				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), false));
@@ -155,7 +182,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				break;
 			case 'G':
 				if (count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLine), count));
-				else DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToEnd));
+				else DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToEnd), EditorCtrl::SEL_IGNORE));
 				break;
 			case '|':
 				if (count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToColumn), count));
@@ -301,7 +328,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				}
 				else {
 					m_select = true;
-					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), false));
+					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), EditorCtrl::SEL_IGNORE));
 					if (m_editor.IsSelected()) {
 						m_editor.Delete();
 						m_editor.ReDraw();
@@ -317,7 +344,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 				}
 				else {
 					m_select = true;
-					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorLeft), false));
+					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorLeft), EditorCtrl::SEL_IGNORE));
 					if (m_editor.IsSelected()) {
 						m_editor.Delete();
 						m_editor.ReDraw();
@@ -345,7 +372,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt) {
 					// Insert line above current
 					m_editor.CursorToLineStart();
 					m_editor.InsertNewline();
-					m_editor.CursorLeft();
+					m_editor.CursorLeft(EditorCtrl::SEL_IGNORE);
 					m_parentFrame.ShowCommandMode(false);
 					Clear();
 					return true;
@@ -586,8 +613,9 @@ void CommandHandler::EndMovement(bool redraw) {
 void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 	switch (keyCode) {
 	case WXK_RETURN:
-		if (m_endState == state_normal)
+		if (m_endState == state_normal) {
 			m_editor.RemoveAllSelections();
+		}
 		m_state = state_normal;
 		return;
 	case WXK_ESCAPE:
@@ -1300,7 +1328,7 @@ void CommandHandler::ReplaceChar(wxChar c) {
 
 			// Get character extent
 			m_editor.SetPos(cpos);
-			m_editor.CursorRight();
+			m_editor.CursorRight(EditorCtrl::SEL_IGNORE);
 			unsigned int endpos = m_editor.GetPos();
 			if (endpos > range.end) endpos = range.end;
 			

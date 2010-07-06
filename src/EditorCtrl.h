@@ -227,19 +227,25 @@ public:
 	bool GetContainingObjectString(wxChar c, size_t pos, interval& iv, interval& iv_inner);
 	bool GetContainingObjectBlock(wxChar c, size_t pos, interval& iv, interval& iv_inner);
 
+	enum SelAction {
+		SEL_IGNORE,
+		SEL_REMOVE,
+		SEL_SELECT
+	};
+	
 	// Movement commands
 	void SetPos(unsigned int pos);
 	void SetPos(int line, int column);
 	void PageUp(bool select=false, int count=1);
 	void PageDown(bool select=false, int count=1);
-	void CursorUp(bool select=false);
-	void CursorDown(bool select=false);
-	void CursorLeft(bool select=false);
-	void CursorRight(bool select=false);
-	void CursorWordLeft();
-	void CursorWordRight();
-	void CursorToHome();
-	void CursorToEnd();
+	void CursorUp(SelAction select);
+	void CursorDown(SelAction select);
+	void CursorLeft(SelAction select);
+	void CursorRight(SelAction select);
+	void CursorWordLeft(SelAction select);
+	void CursorWordRight(SelAction select);
+	void CursorToHome(SelAction select);
+	void CursorToEnd(SelAction select);
 	void CursorToLine(unsigned int line);
 	void CursorToColumn(unsigned int column);
 	void CursorToLineStart(bool soft=true);
@@ -412,6 +418,7 @@ public:
 	// Macro
 	void PlayMacro();
 	wxVariant PlayCommand(const eMacroCmd& cmd);
+	eMacro& GetMacro() {return m_macro;};;
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -469,6 +476,8 @@ private:
 	void SetMate(const wxString& mate) {m_mate = mate;}
 	void NotifyParentMate();
 	void ClearRemoteInfo();
+
+	bool ProcessCommandModeKey(wxKeyEvent& event);
 
 public:
 	// Used by GutterControl

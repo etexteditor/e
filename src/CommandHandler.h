@@ -31,10 +31,13 @@ public:
 	CommandHandler(EditorFrame& parentFrame, EditorCtrl& editor);
 	~CommandHandler() {};
 
-	void Clear();
+	void Clear(bool cancel=false);
 	bool IsSearching() const;
+	bool InCommand() const;
+	const wxString& GetCommandString() const;
 
-	bool ProcessCommand(const wxKeyEvent& evt);
+	void PlayCommand(const wxString& cmd);
+	bool ProcessCommand(const wxKeyEvent& evt, bool record=false);
 
 	class TextObjectTraverser {
 	public:
@@ -110,6 +113,8 @@ private:
 	wxString m_buffer;
 	std::vector<unsigned int> m_cursors;
 	bool m_reverse;
+	bool m_isRecording;
+	bool m_isReplaying;
 };
 
 #endif //__COMMANDHANDLER_H__

@@ -72,11 +72,32 @@ public:
 
 	void AddArg(bool value) {m_args.push_back(wxVariant(value));};
 	void AddArg(int value) {m_args.push_back(wxVariant(value));};
+	void AddArg(const wxChar* value) {m_args.push_back(wxVariant(value));};
 	void AddArg(const wxString& value) {m_args.push_back(wxVariant(value));};
 	
 	void AddArg(const wxString& name, bool value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
 	void AddArg(const wxString& name, int value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
+	void AddArg(const wxString& name, const wxChar* value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
 	void AddArg(const wxString& name, const wxString& value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
+
+	template<class T> void SetArg(size_t ndx, const wxString& name, T value) {
+		m_argNames.resize(ndx+1);
+		m_args.resize(ndx+1);
+		m_argNames[ndx] = name;
+		m_args[ndx] = value;
+	};
+	/*void SetArg(size_t ndx, const wxString& name, const wxChar* value) {
+		m_argNames.resize(ndx+1);
+		m_args.resize(ndx+1);
+		m_argNames[ndx] = name;
+		m_args[ndx] = value;
+	};
+	void SetArg(size_t ndx, const wxString& name, const wxString& value) {
+		m_argNames.resize(ndx+1);
+		m_args.resize(ndx+1);
+		m_argNames[ndx] = name;
+		m_args[ndx] = value;
+	};*/
 
 private:
 	wxString m_cmd;

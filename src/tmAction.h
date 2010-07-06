@@ -26,6 +26,12 @@ public:
 		cmdContent.swap(c);
 		contentLoaded = true;
 	};
+	void SetContent(const wxString& cmdStr) {
+		const wxCharBuffer buf = cmdStr.mb_str(wxConvUTF8);
+		const size_t len = strlen(buf.data());
+		cmdContent.assign(buf.data(), buf.data()+len);
+		contentLoaded = true;
+	};
 
 	// Member variables
 	bool isUnix;

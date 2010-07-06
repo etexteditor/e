@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\;..\..\external\wxwidgets\lib\vc_lib\mswud;..\..\external\wxwidgets\include;..\..\external\pcre;..\..\external\libtomcrypt\src\headers;..\..\external\tinyxml;..\..\external\curl\include;..\..\external\metakit\include"
+				AdditionalIncludeDirectories="..\;..\..\external\wxwidgets\lib\vc_lib\mswud;..\..\external\wxwidgets\include;..\..\external\pcre;..\..\external\libtomcrypt\src\headers;..\..\external\tinyxml;..\..\external\curl\include;..\..\external\metakit\include;..\..\external\boost"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"

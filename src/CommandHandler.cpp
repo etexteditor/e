@@ -253,6 +253,9 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				NextMatch(count, false);
 				EndMovement();
 				break;
+			case 'g':
+				m_state = state_extracmds;
+				break;
 
 			// Selection
 			case ',':
@@ -556,7 +559,14 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 		if (c == WXK_ESCAPE) Clear();
 		else ReplaceChar(uc);
 		break;
-		
+	case state_extracmds:
+		switch (c) {
+		case 'g':
+			DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToHome), EditorCtrl::SEL_IGNORE));
+			break;
+		default: break;
+		}
+		break;
 
 	default:
 		wxASSERT(false); // invalid state

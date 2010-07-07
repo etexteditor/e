@@ -93,7 +93,8 @@ private:
 		state_filter_sels,
 		state_scopesearch,
 		state_replace,
-		state_replacechar
+		state_replacechar,
+		state_extracmds,
 	};
 
 	// Member variables

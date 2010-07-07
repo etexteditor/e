@@ -1239,6 +1239,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ClipboardHistoryPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ClipboardHistoryPane.h"
+			>
+		</File>
+		<File
 			RelativePath="Colours.cpp"
 			>
 		</File>

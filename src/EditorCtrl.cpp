@@ -4359,6 +4359,11 @@ void EditorCtrl::OnCopy() {
 		}
 	}
 
+	m_parentFrame.AddCopyText(copytext);
+	DoCopy(copytext);
+}
+
+void EditorCtrl::DoCopy(wxString& copytext) {
 	if (!copytext.empty()) {
 #ifdef __WXMSW__
 		// WINDOWS ONLY!! newline conversion

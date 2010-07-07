@@ -196,6 +196,7 @@ public:
 	void OnCut();
 	void OnPaste();
 	void OnMarkCopy();
+	void DoCopy(wxString& copytext);
 
 	// Selection
 	bool IsSelected() const;

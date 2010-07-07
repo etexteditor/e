@@ -9919,6 +9919,7 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		const wxString command = cmd.GetArgString(0);
 		m_commandHandler.PlayCommand(command);
 	}
+	else return wxVariant(NULL, wxT("Unknown method"));
 
 	return wxVariant();
 }

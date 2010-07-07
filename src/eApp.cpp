@@ -903,15 +903,47 @@ void eApp::OnIpcCall(wxCommandEvent& event) {
 
 	wxLogDebug(wxT("IPC: %s"), method);
 
-	// Check if the call is for a specific object
-	map<string, Pmemfun>& funcs = call->IsObjectCall() ? m_ipcEditorFunctions : m_ipcFunctions;
-
 	// Call the function (if it exists)
-	map<string, Pmemfun>::const_iterator p = funcs.find(m.c_str());
-	if (p != funcs.end()) {
-		(this->*p->second)(*conn);
+	bool methodFound = true;
+	if (call->IsObjectCall()) {
+		map<string, Pmemfun>::const_iterator p = m_ipcEditorFunctions.find(m.c_str());
+		if (p != m_ipcEditorFunctions.end()) (this->*p->second)(*conn);
+		else {
+			const hessian_ipc::Call& call = *conn->get_call();
+			const hessian_ipc::Value& v1 = call.GetParameter(0);
+			const int editorId = -v1.GetInt();
+
+			EditorCtrl* editor = GetEditorCtrl(editorId);
+			if (!editor) {
+				hessian_ipc::Writer& writer = conn->get_reply_writer();
+				writer.write_fault(hessian_ipc::NoSuchObjectException, "Unknown object");
+			}
+
+			eMacroCmd cmd(method);
+			for (size_t i = 1; i < call.GetParameterCount(); ++i) {
+				const hessian_ipc::Value& v = call.GetParameter(i);
+
+				if (v.IsBoolean()) cmd.AddArg(v.GetBoolean());
+				else if (v.IsString()) {
+					const string& arg = v.GetString();
+					const wxString argstr(arg.c_str(), wxConvUTF8, arg.size());
+					cmd.AddArg(argstr);
+				}
+				else wxASSERT(false);
+			}
+
+			const wxVariant reply = editor->PlayCommand(cmd);
+			if (reply.GetName() == wxT("Unknown method")) methodFound = false;
+			//TODO: write variant
+		}
 	}
 	else {
+		map<string, Pmemfun>::const_iterator p = m_ipcFunctions.find(m.c_str());
+		if (p != m_ipcFunctions.end()) (this->*p->second)(*conn);
+		else methodFound = false;
+	}
+
+	if (!methodFound) {
 		hessian_ipc::Writer& writer = conn->get_reply_writer();
 		writer.write_fault(hessian_ipc::NoSuchMethodException, "Unknown method");
 	}

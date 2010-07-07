@@ -181,11 +181,11 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToLineEnd));
 				break;
 			case 'G':
-				if (count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLine), count));
+				if (m_count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLine), count));
 				else DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToEnd), EditorCtrl::SEL_IGNORE));
 				break;
 			case '|':
-				if (count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToColumn), count));
+				if (m_count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToColumn), count));
 				else DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), false));
 				break;
 			case 'f':

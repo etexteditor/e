@@ -401,10 +401,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	//wxLogDebug(wxT("INSERT: %d %d %d"), start, length, m_cursorPosition);
 	if(!ShouldStyle()) return;
 
-	if(needReparse) {
-		Reparse();
-		return;
-	}
+	if(needReparse) return;
 
 	unsigned int end = start+length;
 	int count = m_brackets.size();
@@ -423,7 +420,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	cxENDLOCK
 	
 	if(foundBrackets) {
-		needReparseTags = true;
+		needReparse = true;
 	} else {
 		if(!needReparseTags) {
 			int size = (int) m_tags.size();
@@ -446,10 +443,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 	//wxLogDebug(wxT("DELETE:  %d %d %d"), start, end, m_cursorPosition);
 	if(!ShouldStyle()) return;
 
-	if(needReparse) {
-		Reparse();
-		return;
-	}
+	if(needReparse) return;
 
 	int count = m_brackets.size();
 	int length = end - start;
@@ -483,7 +477,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 			}
 		}
 	} else {
-		needReparseTags = true;
+		needReparse = true;
 	}
 }
 

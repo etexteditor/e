@@ -4216,6 +4216,8 @@ void EditorCtrl::SwapLines(unsigned int line1, unsigned int line2) {
 }
 
 void EditorCtrl::Transpose() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Transpose"));
+
 	Freeze();
 
 	vector<interval> selections = m_lines.GetSelections();
@@ -4437,6 +4439,14 @@ void EditorCtrl::DelCurrentLine(bool fromPos) {
 }
 
 void EditorCtrl::ConvertCase(cxCase conversion) {
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = m_macro.Add(wxT("ConvertCase"));
+		if (conversion == cxUPPERCASE) cmd.AddArg(wxT("conversion"), wxT("upper"));
+		else if (conversion == cxLOWERCASE) cmd.AddArg(wxT("conversion"), wxT("lower"));
+		else if (conversion == cxTITLECASE) cmd.AddArg(wxT("conversion"), wxT("title"));
+		else if (conversion == cxREVERSECASE) cmd.AddArg(wxT("conversion"), wxT("reverse"));
+	}
+
 	Freeze();
 
 	vector<interval> selections = m_lines.GetSelections();
@@ -4838,6 +4848,8 @@ void EditorCtrl::AddSelection(unsigned int start, unsigned int end, bool allowEm
 }
 
 void EditorCtrl::SelectAll() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectAll"));
+
 	m_lastScopePos = -1; // invalidate scope selections
 	if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 
@@ -4893,7 +4905,13 @@ wxString EditorCtrl::GetCurrentLine() {
 	return wxEmptyString;
 }
 
-void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
+void EditorCtrl::SelectWord(bool multiselect) {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectWord"));
+
+	SelectWordAt(GetPos(), multiselect);
+}
+
+void EditorCtrl::SelectWordAt(unsigned int pos, bool multiselect) {
 	wxASSERT(pos <= m_doc.GetLength());
 	m_lastScopePos = -1; // invalidate scope selections
 
@@ -4943,6 +4961,8 @@ void EditorCtrl::SelectLine(unsigned int line_id, bool multiselect) {
 }
 
 void EditorCtrl::SelectCurrentLine() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectCurrentLine"));
+
 	SelectLine(m_lines.GetCurrentLine());
 }
 
@@ -4968,6 +4988,8 @@ void EditorCtrl::ExtendSelectionToLine(unsigned int sel_id) {
 }
 
 void EditorCtrl::SelectScope() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectScope"));
+
 	if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 	unsigned int pos = GetPos();
 
@@ -8536,7 +8558,7 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 		bool multiselect = event.ControlDown();
 
 		// Select the word clicked on
-		SelectWord(fp.pos, multiselect);
+		SelectWordAt(fp.pos, multiselect);
 		wxLogDebug(wxT("DClick done %d"), GetPos());
 	}
 
@@ -9651,6 +9673,8 @@ void EditorCtrl::ToggleFold() {
 }
 
 void EditorCtrl::SelectFold() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectFold"));
+
 	const unsigned int line_id = m_lines.GetCurrentLine();
 	SelectFold(line_id);
 }
@@ -9839,6 +9863,11 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
 		CursorToEnd(select);
 	}
+	else if (name == wxT("SelectAll")) SelectAll();
+	else if (name == wxT("SelectWord")) SelectWord();
+	else if (name == wxT("SelectCurrentLine")) SelectCurrentLine();
+	else if (name == wxT("SelectScope")) SelectScope();
+	else if (name == wxT("SelectFold")) SelectFold();
 	else if (name == wxT("InsertChars")) {
 		const wxString text = cmd.GetArgString(0);
 		for (wxString::const_iterator p = text.begin(); p != text.end(); ++p) {
@@ -9859,6 +9888,14 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 	else if (name == wxT("ReplaceCurrentWord")) {
 		const wxString text = cmd.GetArgString(0);
 		ReplaceCurrentWord(text);
+	}
+	else if (name == wxT("Transpose")) Transpose();
+	else if (name == wxT("ConvertCase")) {
+		const wxString conversion = cmd.GetArgString(0);
+		if (conversion == wxT("upper")) ConvertCase(cxUPPERCASE);
+		else if (conversion == wxT("lower")) ConvertCase(cxLOWERCASE);
+		else if (conversion == wxT("title")) ConvertCase(cxTITLECASE);
+		else if (conversion == wxT("reverse")) ConvertCase(cxREVERSECASE);
 	}
 	else if (name == wxT("NextSnippetField")) m_snippetHandler.NextTab();
 	else if (name == wxT("PrevSnippetField")) m_snippetHandler.PrevTab();

@@ -211,7 +211,8 @@ public:
 	wxString GetFirstSelection() const;
 	wxString GetSelFirstLine();
 	wxString GetSelText() const;
-	void SelectWord(unsigned int pos, bool multiselect=false);
+	void SelectWord(bool multiselect=false);
+	void SelectWordAt(unsigned int pos, bool multiselect=false);
 	void SelectLine(unsigned int lineId, bool multiselect=false);
 	void SelectCurrentLine();
 	void ExtendSelectionToLine(unsigned int sel_id=0);

@@ -2733,7 +2733,7 @@ void EditorFrame::OnMenuSelectAll(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuSelectWord(wxCommandEvent& WXUNUSED(event)) {
-	editorCtrl->SelectWord(editorCtrl->GetPos());
+	editorCtrl->SelectWord();
 	editorCtrl->ReDraw();
 }
 

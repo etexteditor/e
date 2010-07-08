@@ -367,6 +367,14 @@ void TmSyntaxHandler::LoadBundle(unsigned int bundleId) {
 		ParseDragCommand(*bundle, commandId);
 	}
 
+	// Parse Macros
+	const vector<unsigned int> macros = m_plistHandler.GetList(BUNDLE_MACRO, bundleId);
+	for (unsigned int d = 0; d < macros.size(); ++d) {
+		const unsigned int macroId = macros[d];
+
+		ParseMacro(*bundle, macroId);
+	}
+
 	// Parse Preferences
 	const vector<unsigned int> prefs = m_plistHandler.GetList(BUNDLE_PREF, bundleId);
 	for (unsigned int p = 0; p < prefs.size(); ++p) {
@@ -480,6 +488,14 @@ void TmSyntaxHandler::ReParseBundles(bool onlyMenu) {
 
 				ParseDragCommand(*bundle, commandId);
 			}
+			
+			// Parse Macros
+			const vector<unsigned int> macros = m_plistHandler.GetList(BUNDLE_MACRO, bundleId);
+			for (unsigned int d = 0; d < macros.size(); ++d) {
+				const unsigned int macroId = macros[d];
+
+				ParseMacro(*bundle, macroId);
+			}
 		}
 
 		// Parse Bundle info
@@ -534,7 +550,12 @@ void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 	if (s != m_actions.end()) {
 		tmAction* action = s->second;
 
-		editor.DoAction(*action, NULL, false);
+		if (action->IsMacro()) {
+			const eMacro macro = GetMacroContent(*action);
+			editor.PlayMacro(macro);
+			editor.ReDraw();
+		}
+		else editor.DoAction(*action, NULL, false);
 	}
 	else {
 		wxLogDebug(wxT("DoBundleAction: No matching uuid"));
@@ -761,6 +782,93 @@ const vector<char>& TmSyntaxHandler::GetActionContent(const tmAction& action) co
 	else wxASSERT(false);
 
 	return action.cmdContent;
+}
+
+eMacro TmSyntaxHandler::GetMacroContent(const tmAction& action) const {
+	wxASSERT(action.IsMacro());
+	eMacro macro;
+
+	const PListDict macroDict = m_plistHandler.Get(BUNDLE_MACRO, action.bundle->bundleRef, action.plistRef);
+	
+	PListArray commandArray;
+	if (macroDict.GetArray("commands", commandArray)) {
+		PListDict cmdDict;
+		for (size_t i = 0; i < commandArray.GetSize(); ++i) {
+			commandArray.GetDict(i, cmdDict);
+			TranslateMacroCmd(cmdDict, macro);
+		}
+	}
+
+	return macro;
+}
+
+bool TmSyntaxHandler::TranslateMacroCmd(const PListDict& macroDict, eMacro& macro) const {
+	const wxString cmdStr = macroDict.wxGetString("command");
+	PListDict argDict;
+	macroDict.GetDict("argument", argDict);
+
+	if (cmdStr == wxT("selectWord:")) {
+		macro.Add(wxT("SelectWord"));
+	}
+	else if (cmdStr == wxT("moveLeft:")) {
+		macro.Add(wxT("CursorLeft"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveRight:")) {
+		macro.Add(wxT("CursorRight"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveToBeginningOfLine:")) {
+		macro.Add(wxT("CursorToLineStart"), wxT("soft"), false);
+	}
+	else if (cmdStr == wxT("moveToEndOfLine:")) {
+		macro.Add(wxT("CursorToLineEnd"));
+	}
+	else if (cmdStr == wxT("moveToEndOfDocumentAndModifySelection:")) {
+		macro.Add(wxT("CursorEnd"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("deleteBackward:")) {
+		macro.Add(wxT("Backspace"));
+	}
+	else if (cmdStr == wxT("deleteWordLeft:")) {
+		macro.Add(wxT("CursorWordLeft"), wxT("select"), true);
+		macro.Add(wxT("Delete"));
+	}
+	else if (cmdStr == wxT("insertText:")) {
+		eMacroCmd& cmd = macro.Add(wxT("InsertChars"));
+		cmd.AddArg(wxT("text"), macroDict.wxGetString("argument"));
+	}
+	else if (cmdStr == wxT("executeCommandWithOptions:")) {
+		eMacroCmd& cmd = macro.Add(wxT("FilterThroughCommand"));
+		cmd.AddArg(wxT("command"), argDict.wxGetString("command"));
+		cmd.AddArg(wxT("input"), argDict.wxGetString("input"));
+		cmd.AddArg(wxT("output"), argDict.wxGetString("output"));
+	}
+	else if (cmdStr == wxT("findWithOptions:")) {
+		const wxString action = argDict.wxGetString("action");
+		if (action == wxT("findPrevious")) {
+			eMacroCmd& cmd = macro.Add(wxT("FindPrevious"));
+			cmd.AddArg(wxT("pattern"), argDict.wxGetString("findString"));
+			cmd.AddArg(wxT("ignoreCase"), argDict.GetBool("ignoreCase"));
+			cmd.AddArg(wxT("regularExpression"), argDict.GetBool("regularExpression"));
+			cmd.AddArg(wxT("wrapAround"), argDict.GetBool("wrapAround"));
+		}
+		else if (action == wxT("findNext")) {
+			eMacroCmd& cmd = macro.Add(wxT("FindNext"));
+			cmd.AddArg(wxT("pattern"), argDict.wxGetString("findString"));
+			cmd.AddArg(wxT("ignoreCase"), argDict.GetBool("ignoreCase"));
+			cmd.AddArg(wxT("regularExpression"), argDict.GetBool("regularExpression"));
+			cmd.AddArg(wxT("wrapAround"), argDict.GetBool("wrapAround"));
+		}
+		else {
+			wxASSERT(false);
+			return false;
+		}
+	}
+	else {
+		wxASSERT(false);
+		return false; // unknown command
+	}
+
+	return true;
 }
 
 cxSyntaxInfo* TmSyntaxHandler::GetSyntaxInfo(unsigned int bundleId, unsigned int syntaxId) {
@@ -1637,6 +1745,44 @@ bool TmSyntaxHandler::ParseDragCommand(const tmBundle& bundle, unsigned int comm
 	return true;
 }
 
+bool TmSyntaxHandler::ParseMacro(const tmBundle& bundle, unsigned int macroId) {
+	const PListDict macroDict = m_plistHandler.Get(BUNDLE_MACRO, bundle.bundleRef, macroId);
+
+	const char* name = macroDict.GetString("name");
+	const char* uuid = macroDict.GetString("uuid");
+	if (!name || !uuid) return false;
+
+	// Create the macro
+	tmMacro* cmd = new tmMacro;
+
+	cmd->bundle = &bundle;
+	cmd->plistRef = macroId;
+	cmd->name = wxString(name, wxConvUTF8);
+	cmd->uuid = wxString(uuid, wxConvUTF8);
+	cmd->scope = macroDict.wxGetString("scope");
+
+	// The actual macro content does not get added before GetMacroContent() get called
+#ifdef __WXDEBUG__
+	GetMacroContent(*cmd); // asserts on unknown cmds, to catch new cmds
+#endif
+
+	// Key binding
+	const char* binding = macroDict.GetString("keyEquivalent");
+	if (binding) {
+		cmd->key = tmKey(wxString(binding, wxConvUTF8));
+	}
+
+	// Add to action tree
+	SelectorParser<tmAction> parser(cmd->scope, cmd);
+	sNode<tmAction>* n = parser.ParseExpr();
+	if (n) m_actionNode.Merge(n);
+
+	// Add to action map
+	m_actions[cmd->uuid] = cmd;
+
+	return true;
+}
+
 bool TmSyntaxHandler::ParsePreferences(const PListDict& prefDict, tmBundle* bundle) {
 	const char* scopeStr = prefDict.GetString("scope");
 	const wxString scope = scopeStr ? wxString(scopeStr, wxConvUTF8) : *wxEmptyString;
@@ -1882,6 +2028,9 @@ wxMenu* TmSyntaxHandler::ParseMenu(const PListArray& itemsArray, const PListDict
                 item->AfterInsert();
 				m_menuActions[m_nextMenuID] = action->uuid;
 				++m_nextMenuID;
+			}
+			else {
+				wxLogDebug(wxT("Unknown action ref in menu"));
 			}
 		}
 

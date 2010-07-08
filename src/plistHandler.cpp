@@ -97,6 +97,12 @@ const char* PListHandler::DB_BUNDLES_FORMAT =
 			"loc:I,"
 			"mod:I,"
 			"prisref:I,"
+			"localref:I],"
+		"macros["
+			"uuid:S,"
+			"loc:I,"
+			"mod:I,"
+			"prisref:I,"
 			"localref:I]]";
 
 const char* PListHandler::DB_PLISTS_FORMAT =
@@ -143,6 +149,7 @@ static const c4_ViewProp   pFreeStrings("freestrings");
 static const c4_StringProp pKey("key");
 static const c4_IntProp    pLocality("loc");
 static const c4_IntProp    pLocalRef("localref");
+static const c4_ViewProp   pMacros("macros");
 static const c4_LongProp   pModDate("moddate");
 static const c4_IntProp    pModified("mod");
 static const c4_IntProp    pPristineRef("prisref");
@@ -634,6 +641,20 @@ void PListHandler::UpdateBundleSubDirs(const wxFileName& path, int loc, unsigned
 			UpdatePlists(prefsDir, files, loc, vPrefs);
 		}
 		else DeleteAllItems(loc, vPrefs);
+
+		// Update Macros
+		wxFileName macrosDir = path;
+		macrosDir.AppendDir(wxT("Macros"));
+		c4_View vMacros = pMacros(rBundle);
+		if (macrosDir.DirExists()) {
+			wxSortedArrayString files;
+			wxDir::GetAllFiles(macrosDir.GetPath(), &files, wxT("*.plist"), wxDIR_FILES);
+			wxDir::GetAllFiles(macrosDir.GetPath(), &files, wxT("*.tmMacro"), wxDIR_FILES);
+
+			UpdatePlists(macrosDir, files, loc, vMacros);
+		}
+		else DeleteAllItems(loc, vMacros);
+
 	}
 }
 
@@ -739,6 +760,10 @@ wxString PListHandler::GetBundleItemUri(BundleItemType type, unsigned int bundle
 		uri += wxT("Syntaxes");
 		vItems = pSyntaxes(rBundle);
 		break;
+	case BUNDLE_MACRO:
+		uri += wxT("Macros");
+		vItems = pMacros(rBundle);
+		break;
 	default:
 		wxASSERT(false);
 		return wxEmptyString;
@@ -777,6 +802,7 @@ BundleItemType PListHandler::GetBundleTypeFromUri(const wxString& uri) const {
 	if (itemtype == wxT("DragCommands")) return BUNDLE_DRAGCMD;
 	if (itemtype == wxT("Preferences")) return BUNDLE_PREF;
 	if (itemtype == wxT("Syntaxes")) return BUNDLE_LANGUAGE;
+	if (itemtype == wxT("Macros")) return BUNDLE_MACRO;
 	return BUNDLE_NONE;
 }
 
@@ -820,6 +846,10 @@ bool PListHandler::GetBundleItemFromUri(const wxString& uri, BundleItemType& typ
 	else if (itemtype == wxT("Syntaxes")) {
 		type = BUNDLE_LANGUAGE;
 		vItems = pSyntaxes(rBundle);
+	}
+	else if (itemtype == wxT("Macros")) {
+		type = BUNDLE_MACRO;
+		vItems = pMacros(rBundle);
 	}
 	else return false;
 
@@ -900,6 +930,15 @@ bool PListHandler::GetBundleItemFromUuid(const wxString& uuid, BundleItemType& t
 			itemId = ndx;
 			return true;
 		}
+
+		const c4_View vMacros = pMacros(rBundle);
+		ndx = vMacros.Find(rUuid);
+		if (ndx != -1) {
+			type = BUNDLE_MACRO;
+			bundleId = b;
+			itemId = ndx;
+			return true;
+		}
 	}
 
 	return false;
@@ -927,6 +966,9 @@ vector<unsigned int> PListHandler::GetList(BundleItemType type, unsigned int bun
 		break;
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -964,6 +1006,9 @@ PListDict PListHandler::Get(BundleItemType type, unsigned int bundleId, unsigned
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
 		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
+		break;
 	default:
 		wxASSERT(false);
 	}
@@ -994,6 +1039,9 @@ PListDict PListHandler::GetEditable(BundleItemType type, unsigned int bundleId, 
 		break;
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -1027,6 +1075,9 @@ unsigned int PListHandler::New(BundleItemType type, unsigned int bundleId, const
 		break;
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -1063,6 +1114,10 @@ void PListHandler::Delete(BundleItemType type, unsigned int bundleId, unsigned i
 	case BUNDLE_LANGUAGE:
 		path.AppendDir(wxT("Syntaxes"));
 		vPlists = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		path.AppendDir(wxT("Macros"));
+		vPlists = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -1603,6 +1658,11 @@ bool PListHandler::Save(BundleItemType type, unsigned int bundleId, unsigned int
 		vPlists = pSyntaxes(rBundle);
 		ext = wxT(".tmLanguage");
 		break;
+	case BUNDLE_MACRO:
+		path.AppendDir(wxT("Macros"));
+		vPlists = pMacros(rBundle);
+		ext = wxT(".tmMacro");
+		break;
 	default:
 		wxASSERT(false);
 	}
@@ -1668,6 +1728,10 @@ wxFileName PListHandler::GetBundleItemPath(BundleItemType type, unsigned int bun
 			path.AppendDir(wxT("Syntaxes"));
 			vItems = pSyntaxes(rBundle);
 			break;
+		case BUNDLE_MACRO:
+			path.AppendDir(wxT("Macros"));
+			vItems = pMacros(rBundle);
+			break;
 		default: wxASSERT(false);
 	}
 
@@ -1718,6 +1782,7 @@ bool PListHandler::ExportBundle(const wxFileName& dstPath, unsigned int bundleId
 	bundleTypes[BUNDLE_DRAGCMD]  = wxT("DragCommands");
 	bundleTypes[BUNDLE_PREF]     = wxT("Preferences");
 	bundleTypes[BUNDLE_LANGUAGE] = wxT("Syntaxes");
+	bundleTypes[BUNDLE_MACRO]    = wxT("Macros");
 
 	// Copy subdirs
 	for (map<BundleItemType, wxString>::const_iterator p = bundleTypes.begin(); p != bundleTypes.end(); ++p) {
@@ -2631,6 +2696,20 @@ bool PListDict::GetInteger(const char* key, int& value) const {
 
 	value = pRef(rItem);
 	return true;
+}
+
+bool PListDict::GetBool(const char* key) const {
+	wxASSERT(m_rPlist);
+	// defaults to false on error
+
+	const int ndx = m_vDict.Find(pKey[key]);
+	if (ndx == -1) return false;
+
+	const c4_RowRef rItem = m_vDict[ndx];
+	if (pType(rItem) != REF_BOOL && pType(rItem) != REF_INTEGER) return false;
+
+	const int value = pRef(rItem);
+	return (value != 0);
 }
 
 void PListDict::DeleteItem(const char* key) {

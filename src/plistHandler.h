@@ -239,6 +239,7 @@ public:
 	bool GetDict(const char* key, PListDict& dict) const;
 	bool GetArray(const char* key, PListArray& array) const;
 	bool GetInteger(const char* key, int& value) const;
+	bool GetBool(const char* key) const;
 
 	void DeleteItem(const char* key);
 	void SetString(const char* key, const char* text);

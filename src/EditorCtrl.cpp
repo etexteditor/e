@@ -9792,10 +9792,14 @@ EditorChangeState EditorCtrl::GetChangeState() const {
 }
 
 void EditorCtrl::PlayMacro() {
+	PlayMacro(m_macro);
+}
+
+void EditorCtrl::PlayMacro(const eMacro& macro) {
 	if (m_macro.IsRecording()) m_macro.EndRecording(); // avoid endless loop
 
-	for (size_t i = 0; i < m_macro.GetCount(); ++i) {
-		const eMacroCmd& cmd = m_macro.GetCommand(i);
+	for (size_t i = 0; i < macro.GetCount(); ++i) {
+		const eMacroCmd& cmd = macro.GetCommand(i);
 		PlayCommand(cmd);
 	}
 }

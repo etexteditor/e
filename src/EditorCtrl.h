@@ -143,7 +143,7 @@ public:
 
 	// Drawing & Layout
 	void EnableRedraw(bool enable) {m_enableDrawing = enable;};
-	inline void ReDraw(){DrawLayout();}
+	virtual void ReDraw(){DrawLayout();}
 	bool Show(bool show);
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);
@@ -417,6 +417,7 @@ public:
 
 	// Macro
 	void PlayMacro();
+	virtual void PlayMacro(const eMacro& macro);
 	wxVariant PlayCommand(const eMacroCmd& cmd);
 	eMacro& GetMacro() {return m_macro;};;
 

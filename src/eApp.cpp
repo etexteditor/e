@@ -874,18 +874,18 @@ void eApp::InitIpc() {
 	m_ipcNextNotifierId = 0;
 
 	// Register method handlers
-	m_ipcFunctions["get_active_editor"] = (Pmemfun)&eApp::IpcGetActiveEditor;
-	m_ipcEditorFunctions["insert_at"] = (Pmemfun)&eApp::IpcEditorInsertAt;
-	m_ipcEditorFunctions["delete_range"] = (Pmemfun)&eApp::IpcEditorDeleteRange;
-	m_ipcEditorFunctions["gettext"] = (Pmemfun)&eApp::IpcEditorGetText;
-	m_ipcEditorFunctions["getline"] = (Pmemfun)&eApp::IpcEditorGetLine;
-	m_ipcEditorFunctions["getline_offset"] = (Pmemfun)&eApp::IpcEditorGetLineOffset;
-	m_ipcEditorFunctions["getpos"] = (Pmemfun)&eApp::IpcEditorGetPos;
-	m_ipcEditorFunctions["get_versionid"] = (Pmemfun)&eApp::IpcEditorGetVersionId;
-	m_ipcEditorFunctions["select"] = (Pmemfun)&eApp::IpcEditorSelect;
-	m_ipcEditorFunctions["get_changes_since"] = (Pmemfun)&eApp::IpcEditorGetChangesSince;
-	m_ipcEditorFunctions["show_input_line"] = (Pmemfun)&eApp::IpcEditorShowInputLine;
-	m_ipcEditorFunctions["watch_changes"] = (Pmemfun)&eApp::IpcEditorWatchChanges;
+	m_ipcFunctions["GetActiveEditor"] = (Pmemfun)&eApp::IpcGetActiveEditor;
+	m_ipcEditorFunctions["InsertAt"] = (Pmemfun)&eApp::IpcEditorInsertAt;
+	m_ipcEditorFunctions["DeleteRange"] = (Pmemfun)&eApp::IpcEditorDeleteRange;
+	m_ipcEditorFunctions["GetText"] = (Pmemfun)&eApp::IpcEditorGetText;
+	m_ipcEditorFunctions["GetLine"] = (Pmemfun)&eApp::IpcEditorGetLine;
+	m_ipcEditorFunctions["GetLineOffset"] = (Pmemfun)&eApp::IpcEditorGetLineOffset;
+	m_ipcEditorFunctions["GetPos"] = (Pmemfun)&eApp::IpcEditorGetPos;
+	m_ipcEditorFunctions["GetVersionId"] = (Pmemfun)&eApp::IpcEditorGetVersionId;
+	m_ipcEditorFunctions["Select"] = (Pmemfun)&eApp::IpcEditorSelect;
+	m_ipcEditorFunctions["GetChangesSince"] = (Pmemfun)&eApp::IpcEditorGetChangesSince;
+	m_ipcEditorFunctions["ShowInputLine"] = (Pmemfun)&eApp::IpcEditorShowInputLine;
+	m_ipcEditorFunctions["WatchChanges"] = (Pmemfun)&eApp::IpcEditorWatchChanges;
 
 	// Start the ipc server
 	m_ipcThread = new eIpcThread(*this);

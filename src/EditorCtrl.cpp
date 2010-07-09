@@ -4633,10 +4633,8 @@ void EditorCtrl::OnCut() {
 	}
 
 	if (doCopy) {
-		const bool mrec = m_macro.IsRecording();
-		if (mrec) m_macro.EndRecording();
+		MacroDisabler m(m_macro);
 		OnCopy();
-		if (mrec) m_macro.StartRecording();
 	}
 	DeleteSelections();
 	cxLOCKDOC_WRITE(m_doc)
@@ -6145,13 +6143,8 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 }
 
 bool EditorCtrl::ProcessCommandModeKey(wxKeyEvent& event) {
-	const bool isRecording = m_macro.IsRecording();
-
-	if (isRecording) m_macro.EndRecording(); // Avoid dublicate recording
-	const bool processed = m_commandHandler.ProcessCommand(event, isRecording);
-	if (isRecording) m_macro.StartRecording();
-
-	return processed;
+	MacroDisabler m(m_macro); // Avoid dublicate recording
+	return m_commandHandler.ProcessCommand(event, isRecording);
 }
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {

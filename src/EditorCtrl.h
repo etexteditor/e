@@ -34,6 +34,7 @@
 #include "AutoPairs.h"
 #include "Bookmarks.h"
 #include "CommandHandler.h"
+#include "Macro.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -58,8 +59,6 @@ struct thTheme;
 class tmAction;
 class tmDragCommand;
 class TmSyntaxHandler;
-class eMacro;
-class eMacroCmd;
 
 
 class EditorCtrl : public KeyHookable<wxControl>, 
@@ -420,7 +419,21 @@ public:
 	void PlayMacro();
 	virtual void PlayMacro(const eMacro& macro);
 	wxVariant PlayCommand(const eMacroCmd& cmd);
-	eMacro& GetMacro() {return m_macro;};;
+	eMacro& GetMacro() {return m_macro;};
+
+	class MacroDisabler {
+	public:
+		MacroDisabler(eMacro& m) : m_macro(m), m_enable(false) {
+			if (m_macro.IsRecording()) {
+				m_macro.EndRecording();
+				m_enable = true;
+			}
+		}
+		~MacroDisabler() {if (m_enable) m_macro.StartRecording();};
+	private:
+		eMacro& m_macro;
+		bool m_enable;
+	};
 
 #ifdef __WXDEBUG__
 	void Print();

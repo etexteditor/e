@@ -1533,8 +1533,24 @@ void EditorCtrl::DoActionFromDlg() {
 
 void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw) {
 	wxLogDebug(wxT("Doing action '%s' from bundle '%s'"), action.name.c_str(), action.bundle ? action.bundle->name.c_str() : wxT("none"));
+
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = m_macro.Add(wxT("RunBundleCommand"));
+		cmd.AddArg(wxT("uuid"), action.uuid);
+		cmd.AddArg(wxT("path"), m_syntaxHandler.GetBundleItemUriFromUuid(action.uuid)); // for info only
+	}
+
+	MacroDisabler m(m_macro); // Avoid dublicate recording
+
 	if (action.IsSyntax()) {
 		SetSyntax(action.name);
+		return;
+	}
+
+	if (action.IsMacro()) {
+		const eMacro macro = m_syntaxHandler.GetMacroContent(action);
+		PlayMacro(macro);
+		ReDraw();
 		return;
 	}
 
@@ -9960,6 +9976,11 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 	else if (name == wxT("RunCommandMode")) {
 		const wxString command = cmd.GetArgString(0);
 		m_commandHandler.PlayCommand(command);
+	}
+	else if (name == wxT("RunBundleCommand")) {
+		const wxString uuid = cmd.GetArgString(0);
+		m_syntaxHandler.DoBundleAction(uuid, *this);
+
 	}
 	else return wxVariant(NULL, wxT("Unknown method"));
 

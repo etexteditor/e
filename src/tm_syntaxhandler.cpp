@@ -528,6 +528,10 @@ wxString TmSyntaxHandler::GetBundleItemUriFromMenu(unsigned int id) const {
 	}
 	const wxString& uuid = p->second;
 
+	return GetBundleItemUriFromUuid(uuid);
+}
+
+wxString TmSyntaxHandler::GetBundleItemUriFromUuid(const wxString& uuid) const {
 	BundleItemType type;
 	unsigned int bundleId;
 	unsigned int itemId;
@@ -535,6 +539,7 @@ wxString TmSyntaxHandler::GetBundleItemUriFromMenu(unsigned int id) const {
 	
 	return m_plistHandler.GetBundleItemUri(type, bundleId, itemId);
 }
+
 
 void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 	// Get uuid
@@ -545,17 +550,15 @@ void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 	}
 	const wxString& uuid = p->second;
 
+	DoBundleAction(uuid, editor);
+}
+
+void TmSyntaxHandler::DoBundleAction(const wxString& uuid, IEditorDoAction& editor) {
 	// Look for action
 	map<const wxString, tmAction*>::iterator s = m_actions.find(uuid);
 	if (s != m_actions.end()) {
 		tmAction* action = s->second;
-
-		if (action->IsMacro()) {
-			const eMacro macro = GetMacroContent(*action);
-			editor.PlayMacro(macro);
-			editor.ReDraw();
-		}
-		else editor.DoAction(*action, NULL, false);
+		editor.DoAction(*action, NULL, false);
 	}
 	else {
 		wxLogDebug(wxT("DoBundleAction: No matching uuid"));

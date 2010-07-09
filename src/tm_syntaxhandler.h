@@ -237,7 +237,9 @@ public:
 
 	wxMenu* GetBundleMenu();
 	wxString GetBundleItemUriFromMenu(unsigned int id) const;
+	wxString GetBundleItemUriFromUuid(const wxString& uuid) const;
 	void DoBundleAction(unsigned int id, IEditorDoAction& editor);
+	void DoBundleAction(const wxString& uuid, IEditorDoAction& editor);
 
 	// Paths for bundles
 	wxFileName GetBundleSupportPath(unsigned int bundleId) const;

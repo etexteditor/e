@@ -7931,6 +7931,10 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 }
 
 void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("RunCurrentSelectionAsCommand"), wxT("doReplace"), doReplace);
+	}
+
 	vector<char> command;
 	unsigned int start;
 	unsigned int end;
@@ -9921,6 +9925,10 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		else if (input == wxT("openAsNewDocument"))   tc.output = tmCommand::coNEWDOC;
 
 		DoAction(tc, NULL, false);
+	}
+	else if (name == wxT("RunCurrentSelectionAsCommand")) {
+		const bool doReplace = cmd.GetArgBool(0);
+		RunCurrentSelectionAsCommand(doReplace);
 	}
 	else if (name == wxT("Find")) {
 		const wxString pattern = cmd.GetArgString(0);

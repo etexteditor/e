@@ -430,6 +430,7 @@ public:
 			}
 		}
 		~MacroDisabler() {if (m_enable) m_macro.StartRecording();};
+		bool IsRecording() const {return m_enable;};
 	private:
 		eMacro& m_macro;
 		bool m_enable;

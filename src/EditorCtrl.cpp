@@ -6144,7 +6144,7 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 
 bool EditorCtrl::ProcessCommandModeKey(wxKeyEvent& event) {
 	MacroDisabler m(m_macro); // Avoid dublicate recording
-	return m_commandHandler.ProcessCommand(event, isRecording);
+	return m_commandHandler.ProcessCommand(event, m.IsRecording());
 }
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {

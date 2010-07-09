@@ -61,6 +61,7 @@ namespace hessian_ipc {
 		template<class T1, class T2> void call(const string& method, const T1& arg1, const T2& arg2);
 
 		template<class T> void write_reply(const T& value);
+		void write_reply_null();
 		void write_reply(const unsigned char* value, size_t len);
 		void write_reply_handle(int handle);
 		template<class T> void write_notifier(unsigned int notifier_id, const T& value);

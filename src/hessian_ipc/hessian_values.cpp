@@ -47,6 +47,13 @@ void Writer::Reset() {
 	objectMap.clear();
 }
 
+void Writer::write_reply_null() {
+	Reset();
+
+	out.push_back('R');
+	write_null();
+}
+
 void Writer::write_reply(const unsigned char* value, size_t len) {
 	Reset();
 

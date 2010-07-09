@@ -896,6 +896,7 @@ void eApp::OnIpcCall(wxCommandEvent& event) {
 	if (!conn) return;
 
 	const hessian_ipc::Call* call = conn->get_call();
+	hessian_ipc::Writer& writer = conn->get_reply_writer();
 	if (!call) return;
 
 	const string& m = call->GetMethod();
@@ -915,8 +916,9 @@ void eApp::OnIpcCall(wxCommandEvent& event) {
 
 			EditorCtrl* editor = GetEditorCtrl(editorId);
 			if (!editor) {
-				hessian_ipc::Writer& writer = conn->get_reply_writer();
 				writer.write_fault(hessian_ipc::NoSuchObjectException, "Unknown object");
+				conn->reply_done();
+				return;
 			}
 
 			eMacroCmd cmd(method);
@@ -934,7 +936,10 @@ void eApp::OnIpcCall(wxCommandEvent& event) {
 
 			const wxVariant reply = editor->PlayCommand(cmd);
 			if (reply.GetName() == wxT("Unknown method")) methodFound = false;
+			else editor->ReDraw();
+
 			//TODO: write variant
+			writer.write_reply_null();
 		}
 	}
 	else {
@@ -944,7 +949,6 @@ void eApp::OnIpcCall(wxCommandEvent& event) {
 	}
 
 	if (!methodFound) {
-		hessian_ipc::Writer& writer = conn->get_reply_writer();
 		writer.write_fault(hessian_ipc::NoSuchMethodException, "Unknown method");
 	}
 

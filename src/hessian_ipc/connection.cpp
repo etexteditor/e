@@ -79,6 +79,9 @@ void connection::handle_read(const boost::system::error_code& e, size_t bytes_tr
 }
 
 void connection::reply_done() {
+	// If there was no reply, just send null to ack
+	if (writer_.IsEmpty()) writer_.write_reply_null();
+
 	queue_lock_.lock();
 		queue_.push_back(new vector<unsigned char>(writer_.GetOutput()));
 		reply_ptr_ = &queue_.back(); // marks only reply in queue

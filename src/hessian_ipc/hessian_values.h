@@ -8,6 +8,9 @@
 #include <memory>
 #include <map>
 
+// e specific predefs
+class interval;
+
 using namespace std;
 
 namespace hessian_ipc {
@@ -88,7 +91,10 @@ namespace hessian_ipc {
 		void write_handle(int handle);
 		void write_direct(unsigned char c);
 
-	private:
+		// e specific writers
+		void write(const interval& value);
+
+	protected:
 		vector<unsigned char> out;
 		map<string,size_t> objectMap;
 	};
@@ -167,7 +173,7 @@ namespace hessian_ipc {
 		Integer(int value) : m_value(value) {};
 
 		// get the value type
-		bool IsInteger() const {return true;};
+		bool IsInt() const {return true;};
 
 		// get the value
 		int GetInt() const {return m_value;};

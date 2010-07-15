@@ -54,6 +54,13 @@ public:
 		return value.GetBool();
 	}
 
+	int GetArgInt(size_t ndx, int default=0) const {
+		if (ndx >= m_args.size()) return default;
+		const wxVariant& value = m_args[ndx];
+		if (!value.IsType(_("long"))) return default;
+		return value.GetLong();
+	}
+
 	wxString GetArgString(size_t ndx, const wxString& default=wxEmptyString) const {
 		if (ndx >= m_args.size()) return default;
 		const wxVariant& value = m_args[ndx];

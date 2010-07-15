@@ -1579,7 +1579,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 
 	if (action.IsSnippet()) {
 		DeleteSelections();
-		m_snippetHandler.StartSnippet(this, cmdContent, env, action.bundle);
+		m_snippetHandler.StartSnippet(this, cmdContent, &env, action.bundle);
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
@@ -1788,7 +1788,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 						SetPos(selStart);
 
 						if (!output.empty())
-							m_snippetHandler.StartSnippet(this, output, env, action.bundle);
+							m_snippetHandler.StartSnippet(this, output, &env, action.bundle);
 					}
 					break;
 
@@ -8409,6 +8409,10 @@ void EditorCtrl::ShowTipAtCaret(const wxString& text) {
 	m_activeTooltip = new TextTip(this, text, ClientToScreen(GetCaretPoint()), wxSize(0, m_caretHeight), &m_activeTooltip);
 }
 
+const deque<const wxString*> EditorCtrl::GetScope() {
+	return m_syntaxstyler.GetScope(GetPos());
+}
+
 void EditorCtrl::ShowScopeTip() {
 	if (m_syntaxstyler.IsOk()) {
 		// Get scopes as string
@@ -9876,6 +9880,10 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
 		CursorToEnd(select);
 	}
+	else if (name == wxT("SetPos")) {
+		const unsigned int pos = cmd.GetArgInt(0);
+		if (pos >= 0 && pos <= GetLength()) SetPos(pos);
+	}
 	else if (name == wxT("SelectAll")) SelectAll();
 	else if (name == wxT("SelectWord")) SelectWord();
 	else if (name == wxT("SelectCurrentLine")) SelectCurrentLine();
@@ -9887,6 +9895,13 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 			InsertChar(*p);
 		}
 	}
+	else if (name == wxT("InsertSnippet")) {
+		if (IsSelected()) Delete();
+
+		const wxString text = cmd.GetArgString(0);
+		m_snippetHandler.StartSnippet(this, text);
+	}
+	else if (name == wxT("Undo")) DoUndo();
 	else if (name == wxT("Tab")) Tab();
 	else if (name == wxT("Copy")) OnCopy();
 	else if (name == wxT("Cut")) OnCut();

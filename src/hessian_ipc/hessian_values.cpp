@@ -1,5 +1,8 @@
 #include "hessian_values.h"
 
+// e specific includes
+#include "../Interval.h"
+
 namespace hessian_ipc {
 
 // calculate numbers of characters in string
@@ -429,6 +432,13 @@ void Writer::write_fault(fault_type type, const string& msg) {
 	out.push_back('Z'); // complete
 }
 
+// e specific functions
+void Writer::write(const interval& iv) {
+	out.push_back(0x57); // tag for variable-length untyped list
+	write(iv.start);
+	write(iv.end);
+	out.push_back('Z');
+}
 
 void Call::Print(std::string& out) const {
 	out += m_method;

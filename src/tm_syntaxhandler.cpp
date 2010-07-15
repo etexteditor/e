@@ -866,6 +866,9 @@ bool TmSyntaxHandler::TranslateMacroCmd(const PListDict& macroDict, eMacro& macr
 			return false;
 		}
 	}
+	else if (cmdStr == wxT("findNext:")) {
+		// ignore for now
+	}
 	else {
 		wxASSERT(false);
 		return false; // unknown command

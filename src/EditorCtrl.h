@@ -340,10 +340,13 @@ public:
 
 	// Commands & Shell
 	void DoActionFromDlg();
-	void ShowScopeTip();
 	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
 	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 	void FilterThroughCommand();
+
+	// Scope
+	const deque<const wxString*> GetScope();
+	void ShowScopeTip();
 
 	// Drag-and-drop operations
 	void OnDragOver(wxCoord x, wxCoord y);

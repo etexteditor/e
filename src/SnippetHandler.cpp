@@ -18,9 +18,9 @@
 #include "Env.h"
 #include "matchers.h"
 
-void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippet, cxEnv& env, const tmBundle* bundle) {
+void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippet, cxEnv* env, const tmBundle* bundle) {
 	wxASSERT(editor);
-	m_env = &env;
+	m_env = env;
 	m_bundle = bundle;
 	Clear();
 	if (snippet.empty()) return;
@@ -58,6 +58,13 @@ void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippe
 	}
 
 	// TODO: Notify user if there are parse errors
+}
+
+void SnippetHandler::StartSnippet(EditorCtrl* editor, const wxString& snippet) {
+	const wxCharBuffer buf = snippet.ToUTF8();
+	const vector<char> str(buf.data(), buf.data() + strlen(buf.data()));
+
+	StartSnippet(editor, str);
 }
 
 void SnippetHandler::GotoEndAndClear() {

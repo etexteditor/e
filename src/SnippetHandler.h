@@ -36,7 +36,8 @@ public:
 	void Clear();
 	void GotoEndAndClear();
 
-	void StartSnippet(EditorCtrl* editor, const std::vector<char>& snippet, cxEnv& env, const tmBundle* bundle);
+	void StartSnippet(EditorCtrl* editor, const std::vector<char>& snippet, cxEnv* env=NULL, const tmBundle* bundle=NULL);
+	void StartSnippet(EditorCtrl* editor, const wxString& snippet);
 
 	void NextTab();
 	void PrevTab();

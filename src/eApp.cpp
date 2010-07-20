@@ -39,6 +39,7 @@
 #include "IConnection.h"
 #include "eIpcThread.h"
 #include "hessian_ipc/hessian_values.h"
+#include "WindowEnabler.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -1035,7 +1036,9 @@ void eApp::IpcEditorPrompt(IConnection& conn) {
 	const wxString title(t.c_str(), wxConvUTF8, t.size());
 
 	// Show Prompt
-	const wxString text = wxGetTextFromUser(title);
+	WindowEnabler we; // otherwise dlg wont be able to return focus
+	const wxString text = wxGetTextFromUser(title, _("Input text"), wxEmptyString, editor);
+	
 	const wxCharBuffer str = text.ToUTF8();
 
 	hessian_ipc::Writer& writer = conn.get_reply_writer();

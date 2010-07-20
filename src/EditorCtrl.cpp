@@ -1558,7 +1558,6 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 	}
 
 	if (m_activeTooltip) m_activeTooltip->Close();
-	wxWindowDisabler wd;
 
 	// Get Action contents
 	const vector<char>& cmdContent = m_syntaxHandler.GetActionContent(action);
@@ -1706,7 +1705,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 		vector<char> errout;
 		int pid;
 		{
-			wxBusyCursor wait; // Show busy cursor while running command.
+			wxWindowDisabler wd;
 			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, action.isUnix, cwd);
 		}
 

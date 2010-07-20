@@ -189,6 +189,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
+	m_snippetHandler(*this),
 	m_macro(parentFrame.GetMacro())
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);

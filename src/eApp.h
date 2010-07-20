@@ -129,6 +129,7 @@ private:
 	void IpcEditorGetLineRange(IConnection& conn);
 	void IpcEditorGetSelections(IConnection& conn);
 	void IpcEditorSelect(IConnection& conn);
+	void IpcEditorInsertTabStops(IConnection& conn);
 	void IpcEditorInsertAt(IConnection& conn);
 	void IpcEditorDeleteRange(IConnection& conn);
 	void IpcEditorShowInputLine(IConnection& conn);

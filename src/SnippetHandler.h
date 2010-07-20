@@ -26,18 +26,21 @@
 class EditorCtrl;
 class cxEnv;
 struct tmBundle;
+class interval;
 
 class SnippetHandler {
 public:
-	SnippetHandler() : m_editor(NULL), m_snippet(NULL), m_env(NULL) {};
+	SnippetHandler(EditorCtrl& editor) : m_editor(&editor), m_snippet(NULL), m_env(NULL) {};
 
 	bool IsActive() const {return m_snippet != NULL;};
 	bool Validate();
 	void Clear();
 	void GotoEndAndClear();
 
-	void StartSnippet(EditorCtrl* editor, const std::vector<char>& snippet, cxEnv* env=NULL, const tmBundle* bundle=NULL);
-	void StartSnippet(EditorCtrl* editor, const wxString& snippet);
+	void StartSnippet(const std::vector<char>& snippet, cxEnv* env=NULL, const tmBundle* bundle=NULL);
+	void StartSnippet(const wxString& snippet);
+
+	bool AddTabStop(const interval& iv, const wxString& ts);
 
 	void NextTab();
 	void PrevTab();

@@ -880,6 +880,7 @@ void eApp::InitIpc() {
 	m_ipcFunctions["Log"] = (Pmemfun)&eApp::IpcLog;
 	m_ipcEditorFunctions["Prompt"] = (Pmemfun)&eApp::IpcEditorPrompt;
 	m_ipcEditorFunctions["InsertAt"] = (Pmemfun)&eApp::IpcEditorInsertAt;
+	m_ipcEditorFunctions["InsertTabStops"] = (Pmemfun)&eApp::IpcEditorInsertTabStops;
 	m_ipcEditorFunctions["DeleteRange"] = (Pmemfun)&eApp::IpcEditorDeleteRange;
 	m_ipcEditorFunctions["GetLength"] = (Pmemfun)&eApp::IpcEditorGetLength;
 	m_ipcEditorFunctions["GetText"] = (Pmemfun)&eApp::IpcEditorGetText;
@@ -1196,6 +1197,36 @@ void eApp::IpcEditorSelect(IConnection& conn) {
 
 	hessian_ipc::Writer& writer = conn.get_reply_writer();
 	writer.write_reply(true);
+}
+
+void eApp::IpcEditorInsertTabStops(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	const hessian_ipc::Value& v2 = call.GetParameter(1);
+	const hessian_ipc::List& tabstops = v2.AsList();
+
+	if (!tabstops.empty()) {
+		SnippetHandler& sh = editor->GetSnippetHandler();
+		sh.Clear();
+		for (size_t i = 0; i < tabstops.size(); ++i) {
+			const hessian_ipc::List& t = tabstops.get(i).AsList();
+			const interval iv(t.get(0).GetInt(), t.get(1).GetInt());
+			const string& s = t.get(2).GetString();
+			const wxString text(s.c_str(), wxConvUTF8, s.size());
+
+			sh.AddTabStop(iv, text);
+		}
+		sh.NextTab();
+		editor->ReDraw();
+	}
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply_null();
 }
 
 void eApp::IpcEditorInsertAt(IConnection& conn) {

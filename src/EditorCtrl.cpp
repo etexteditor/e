@@ -239,6 +239,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
+	m_snippetHandler(*this),
 	m_macro(parentFrame.GetMacro())
 
 {
@@ -303,6 +304,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
+	m_snippetHandler(*this),
 	m_macro(parentFrame.GetMacro())
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -1579,7 +1581,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 
 	if (action.IsSnippet()) {
 		DeleteSelections();
-		m_snippetHandler.StartSnippet(this, cmdContent, &env, action.bundle);
+		m_snippetHandler.StartSnippet(cmdContent, &env, action.bundle);
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
@@ -1788,7 +1790,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 						SetPos(selStart);
 
 						if (!output.empty())
-							m_snippetHandler.StartSnippet(this, output, &env, action.bundle);
+							m_snippetHandler.StartSnippet(output, &env, action.bundle);
 					}
 					break;
 
@@ -9899,7 +9901,7 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		if (IsSelected()) Delete();
 
 		const wxString text = cmd.GetArgString(0);
-		m_snippetHandler.StartSnippet(this, text);
+		m_snippetHandler.StartSnippet(text);
 	}
 	else if (name == wxT("Undo")) DoUndo();
 	else if (name == wxT("Tab")) Tab();

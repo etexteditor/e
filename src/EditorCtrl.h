@@ -418,6 +418,9 @@ public:
 	// Theme
 	const tmTheme& GetTheme() const { return m_theme; };
 
+	// Snippets
+	SnippetHandler& GetSnippetHandler() {return m_snippetHandler;};
+
 	// Macro
 	void PlayMacro();
 	virtual void PlayMacro(const eMacro& macro);

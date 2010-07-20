@@ -22,6 +22,7 @@ namespace hessian_ipc {
 	class String;
 	class Call;
 	class Writer;
+	class List;
 
 	enum fault_type {
 		ProtocolException,
@@ -131,6 +132,8 @@ namespace hessian_ipc {
 		virtual Date& AsDate() {throw value_exception("invalid value type");};
 		virtual String& AsString() {throw value_exception("invalid value type");};
 		virtual Call& AsCall() {throw value_exception("invalid value type");};
+		virtual List& AsList() {throw value_exception("invalid value type");};
+		virtual const List& AsList() const {throw value_exception("invalid value type");};
 
 		// dump
 		virtual void Print(std::string& out) const = 0;
@@ -278,13 +281,21 @@ namespace hessian_ipc {
 
 		// get the value
 		List& AsList() {return *this;};
+		const List& AsList() const {return *this;};
+		
+		bool empty() const {return m_values.empty();};
+		size_t size() const {return m_values.size();};
+		const Value& get(size_t n) const {return m_values[n];};
 
 		// set value
 		void Add(auto_ptr<Value> v) {m_values.push_back(v);};
 
+		// dump
+		void Print(string&) const {};
+		void Write(Writer&) const {};
+
 	private:
 		boost::ptr_vector<Value> m_values;
-
 	};
 
 	class Call : public Value {

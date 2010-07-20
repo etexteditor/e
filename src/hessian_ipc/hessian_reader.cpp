@@ -23,7 +23,7 @@ bool Reader::Parse(vector<unsigned char>::const_iterator begin, vector<unsigned 
 			const bool result = ParseValue();
 			if (!result) return false; // need more input
 
-			if (m_result->IsList() || m_result->IsHandle()) {
+			if (m_state == list_1 || m_state == proxy_handle) {
 				m_stateStack.push_back(new savedstate(m_state, 0, m_result));
 				m_state = value_start;
 				continue;
@@ -58,17 +58,20 @@ bool Reader::Parse(vector<unsigned char>::const_iterator begin, vector<unsigned 
 					}
 				case proxy_handle:
 					s.value->AsInteger() = m_result->GetInt();
-					m_result = s.value;
-					
 					needmore = false;
+					break;
+				case list_1:
+					if (m_state == end_marker) needmore = false;
+					else s.value->AsList().Add(m_result);
 					break;
 				default:
 					throw value_exception("invalid state");
 				}
 
+				m_state = value_start;
 				if (needmore) break; // Parse more values;
 				else {
-					m_state = value_start;
+					m_result = s.value;
 					m_stateStack.pop_back();
 				}
 			}
@@ -293,7 +296,9 @@ bool Reader::ParseValue() {
 
 			// Variable-length untyped list
 			case 0x57:
-				break;
+				m_state = list_1;
+				m_result.reset(new List());
+				return true;
 
 			// Fixed-length list
 			case 'V':
@@ -312,6 +317,11 @@ bool Reader::ParseValue() {
 			case 0x78: case 0x79: case 0x7a: case 0x7b:
 			case 0x7c: case 0x7d: case 0x7e: case 0x7f:
 				break;
+
+			// End marker for list
+			case 'Z':
+				m_state = end_marker;
+				return true;
 
 			// Remote Proxy Handle
 			case 'P':

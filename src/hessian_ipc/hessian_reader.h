@@ -61,6 +61,8 @@ namespace hessian_ipc {
 			string_data,
 			string_next,
 			proxy_handle,
+			list_1,
+			end_marker,
 			value_last
 		};
 

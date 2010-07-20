@@ -410,7 +410,7 @@ void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int
 bool Lines::IsLineVirtual(unsigned int lineid) const {
 	wxASSERT(lineid >= 0 && lineid <= ll->size());
 	wxASSERT(NewlineTerminated || lineid != ll->size());
-	return lineid == ll->size() && NewlineTerminated;
+	return lineid == ll->size() && (NewlineTerminated || ll->size() == 0);
 }
 
 bool Lines::IsLineEmpty(unsigned int lineid) const {

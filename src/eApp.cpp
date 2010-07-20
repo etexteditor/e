@@ -571,22 +571,23 @@ void eApp::OnIdle(wxIdleEvent& event) {
 	// Do we have ipc connections watching for editor changes
 	vector<EditorWatch>::iterator p = m_editorWatchers.begin();
 	while (p != m_editorWatchers.end()) {
-		EditorCtrl* editor = GetEditorCtrl(p->editorId);
-		if (!editor){
-			// the editor has been closed
-			OnEditorChanged(p->notifierId, false); // Send notification
-			m_notifiers.erase(p->notifierId);
-			p = m_editorWatchers.erase(p); // remove entry	
-			continue; 
-		}
+		if (p->type == WATCH_EDITOR_CHANGE) {
+			EditorCtrl* editor = GetEditorCtrl(p->editorId);
+			if (!editor){
+				// the editor has been closed
+				OnEditorChanged(p->notifierId, false); // Send notification
+				m_notifiers.erase(p->notifierId);
+				p = m_editorWatchers.erase(p); // remove entry	
+				continue; 
+			}
 
-		const unsigned int token = editor->GetChangeToken();
-		if (token != p->changeToken) {
-			wxLogDebug(wxT("token: %d"), token);
-			OnEditorChanged(p->notifierId, true); // Send notification
-			p->changeToken = token;
+			const unsigned int token = editor->GetChangeToken();
+			if (token != p->changeToken) {
+				wxLogDebug(wxT("token: %d"), token);
+				OnEditorChanged(p->notifierId, true); // Send notification
+				p->changeToken = token;
+			}
 		}
-
 		++p;
 	}
 
@@ -1337,6 +1338,27 @@ void eApp::IpcEditorShowInputLine(IConnection& conn) {
 	writer.write_reply(notifier_id);
 }
 
+void eApp::IpcEditorWatchTab(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	// Register notifier
+	const unsigned int notifier_id = GetNextNotifierId();
+	m_notifiers[notifier_id] = &conn;
+
+	// Add to watch list
+	const EditorWatch ew = {WATCH_EDITOR_TAB, editorId, 0, notifier_id};
+	m_editorWatchers.push_back(ew);
+
+	// Return notifier id
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply(notifier_id);
+}
+
 void eApp::IpcEditorWatchChanges(IConnection& conn) {
 	// Get the editor id
 	const hessian_ipc::Call& call = *conn.get_call();
@@ -1350,7 +1372,7 @@ void eApp::IpcEditorWatchChanges(IConnection& conn) {
 	m_notifiers[notifier_id] = &conn;
 
 	// Add to watch list
-	EditorWatch ew = {editorId, editor->GetChangeToken(), notifier_id};
+	const EditorWatch ew = {WATCH_EDITOR_CHANGE, editorId, editor->GetChangeToken(), notifier_id};
 	m_editorWatchers.push_back(ew);
 
 	// Return notifier id
@@ -1408,6 +1430,23 @@ void eApp::OnInputLineClosed(unsigned int nid) {
 	hessian_ipc::Writer& writer = conn.get_reply_writer();
 	writer.write_notifier_ended(nid);
 	conn.notifier_done();
+}
+
+void eApp::OnEditorTab(int editorId) {
+	// find watchers
+	for (vector<EditorWatch>::iterator p = m_editorWatchers.begin(); p != m_editorWatchers.end(); ++p) {
+		if (p->type != WATCH_EDITOR_TAB) continue;
+
+		// Look up notifier id
+		map<unsigned int, IConnection*>::const_iterator n = m_notifiers.find(p->notifierId);
+		if (n == m_notifiers.end()) return;
+		IConnection& conn = *n->second;
+
+		// Send notifier
+		hessian_ipc::Writer& writer = conn.get_reply_writer();
+		writer.write_notifier(p->notifierId, true);  // true for change, false for close
+		conn.notifier_done();
+	}
 }
 
 void eApp::OnEditorChanged(unsigned int nid, bool state) {

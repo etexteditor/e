@@ -98,6 +98,7 @@ public:
 	// Ipc notifications
 	void OnInputLineChanged(unsigned int nid, const wxString& text);
 	void OnInputLineClosed(unsigned int nid);
+	void OnEditorTab(int editorId);
 
 private:
 	// Frames
@@ -134,6 +135,7 @@ private:
 	void IpcEditorDeleteRange(IConnection& conn);
 	void IpcEditorShowCompletions(IConnection& conn);
 	void IpcEditorShowInputLine(IConnection& conn);
+	void IpcEditorWatchTab(IConnection& conn);
 	void IpcEditorWatchChanges(IConnection& conn);
 	void IpcEditorGetChangesSince(IConnection& conn);
 	void OnEditorChanged(unsigned int nid, bool state);
@@ -174,7 +176,12 @@ private:
 	eIpcThread* m_ipcThread;
 
 	// Ipc variables
+	enum WatchType {
+		WATCH_EDITOR_CHANGE,
+		WATCH_EDITOR_TAB
+	};
 	struct EditorWatch {
+		WatchType type;
 		int editorId;
 		unsigned int changeToken;
 		unsigned int notifierId;

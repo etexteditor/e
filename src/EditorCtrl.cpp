@@ -5200,6 +5200,10 @@ void EditorCtrl::DoCompletion() {
 		return;
 	}
 
+	ShowCompletionPopup(completions);
+}
+
+void EditorCtrl::ShowCompletionPopup(const wxArrayString& completions) {
 	// Get current word
 	const interval iv = GetWordIv(GetPos());
 

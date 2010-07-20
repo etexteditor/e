@@ -892,6 +892,7 @@ void eApp::InitIpc() {
 	m_ipcEditorFunctions["GetVersionId"] = (Pmemfun)&eApp::IpcEditorGetVersionId;
 	m_ipcEditorFunctions["GetSelections"] = (Pmemfun)&eApp::IpcEditorGetSelections;
 	m_ipcEditorFunctions["Select"] = (Pmemfun)&eApp::IpcEditorSelect;
+	m_ipcEditorFunctions["ShowCompletions"] = (Pmemfun)&eApp::IpcEditorShowCompletions;
 	m_ipcEditorFunctions["GetChangesSince"] = (Pmemfun)&eApp::IpcEditorGetChangesSince;
 	m_ipcEditorFunctions["ShowInputLine"] = (Pmemfun)&eApp::IpcEditorShowInputLine;
 	m_ipcEditorFunctions["WatchChanges"] = (Pmemfun)&eApp::IpcEditorWatchChanges;
@@ -1223,6 +1224,32 @@ void eApp::IpcEditorInsertTabStops(IConnection& conn) {
 		}
 		sh.NextTab();
 		editor->ReDraw();
+	}
+
+	hessian_ipc::Writer& writer = conn.get_reply_writer();
+	writer.write_reply_null();
+}
+
+void eApp::IpcEditorShowCompletions(IConnection& conn) {
+	// Get the editor id
+	const hessian_ipc::Call& call = *conn.get_call();
+	const hessian_ipc::Value& v1 = call.GetParameter(0);
+	const int editorId = -v1.GetInt();
+	EditorCtrl* editor = GetEditorCtrl(editorId);
+	if (!editor) return; // fault: object does not exist
+
+	const hessian_ipc::Value& v2 = call.GetParameter(1);
+	const hessian_ipc::List& completions = v2.AsList();
+
+	if (!completions.empty()) {
+		wxArrayString comp;
+		for (size_t i = 0; i < completions.size(); ++i) {
+			const string& s = completions.get(i).GetString();
+			const wxString text(s.c_str(), wxConvUTF8, s.size());
+
+			comp.push_back(text);
+		}
+		editor->ShowCompletionPopup(comp);
 	}
 
 	hessian_ipc::Writer& writer = conn.get_reply_writer();

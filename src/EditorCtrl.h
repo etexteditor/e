@@ -376,6 +376,7 @@ public:
 	// Completion
 	void DoCompletion();
 	wxArrayString GetCompletionList();
+	void ShowCompletionPopup(const wxArrayString& completions);
 
 	// Symbols
 	virtual int GetSymbols(vector<SymbolRef>& symbols) const;

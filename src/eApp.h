@@ -132,6 +132,7 @@ private:
 	void IpcEditorInsertTabStops(IConnection& conn);
 	void IpcEditorInsertAt(IConnection& conn);
 	void IpcEditorDeleteRange(IConnection& conn);
+	void IpcEditorShowCompletions(IConnection& conn);
 	void IpcEditorShowInputLine(IConnection& conn);
 	void IpcEditorWatchChanges(IConnection& conn);
 	void IpcEditorGetChangesSince(IConnection& conn);

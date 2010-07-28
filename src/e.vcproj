@@ -1834,6 +1834,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\WindowEnabler.h"
+			>
+		</File>
+		<File
 			RelativePath="WrapMode.h"
 			>
 		</File>

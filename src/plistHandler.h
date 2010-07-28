@@ -289,9 +289,10 @@ public:
 	void AddString(const char* str);
 
 	// Plist <-> JSON conversion (support functions)
+	wxString GetJSON() const;
 	wxJSONValue GetJSONArray() const;
 	void InsertJSONValues(const wxJSONValue& value);
-
+	
 private:
 	c4_View m_vArray;
 };

@@ -3240,3 +3240,13 @@ void PListArray::InsertJSONValues(const wxJSONValue& value) {
 		}
 	}
 }
+
+wxString PListArray::GetJSON() const {
+	wxJSONValue root = GetJSONArray();
+
+	wxJSONWriter writer(wxJSONWRITER_STYLED|wxJSONWRITER_MULTILINE_STRING);
+	wxString str;
+	writer.Write( root, str );
+
+	return str;
+}

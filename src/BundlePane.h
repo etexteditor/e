@@ -38,6 +38,9 @@ public:
 	BundlePane(EditorFrame& parent, ITmLoadBundles* syntaxHandler);
 	void LoadBundles();
 
+	bool HasSelection() const;
+	void NewItem(BundleItemType type);
+
 private:
 	class SortTreeCtrl : public wxTreeCtrl {
 	public:
@@ -49,7 +52,6 @@ private:
 		DECLARE_DYNAMIC_CLASS_NO_COPY(SortTreeCtrl)
 	};
 
-	void NewItem(BundleItemType type);
 	void DeleteItem();
 
 	// Menu Handling

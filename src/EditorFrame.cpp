@@ -1646,6 +1646,16 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 	BringToFront();
 }
 
+void EditorFrame::SaveMacro() {
+	if (!IsBundlePaneShownAndSelected()) return;
+
+
+}
+
+bool EditorFrame::IsBundlePaneShownAndSelected() const {
+	return (m_bundlePane && m_bundlePane->IsShown() && m_bundlePane->HasSelection());
+}
+
 void EditorFrame::ShowBundlePane() {
 	wxAuiPaneInfo& projectPane = m_frameManager.GetPane(wxT("Project"));
 	projectPane.Caption(_("Bundles"));

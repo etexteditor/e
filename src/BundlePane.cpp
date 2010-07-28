@@ -50,6 +50,7 @@ public:
 			case BUNDLE_DRAGCMD:   return 3;
 			case BUNDLE_PREF:      return 4;
 			case BUNDLE_LANGUAGE:  return 5;
+			case BUNDLE_MACRO:     return 5; //TODO: real macro icon
 			case BUNDLE_SUBDIR:    return 6;
 			case BUNDLE_NONE:      return 7;
 			case BUNDLE_SEPARATOR: return 8;
@@ -257,6 +258,17 @@ void BundlePane::LoadBundles() {
 			const wxString name = langDict.wxGetString("name");
 
 			m_bundleTree->AppendItem(bundleItem, name, 5, -1, new BundleItemData(BUNDLE_LANGUAGE, bundleId, langId));
+		}
+
+		// Add Macros
+		const vector<unsigned int> macros =  m_plistHandler.GetList(BUNDLE_MACRO, bundleId);
+		for (unsigned int m = 0; m < macros.size(); ++m) {
+			const unsigned int macroId = macros[m];
+
+			const PListDict macroDict = m_plistHandler.Get(BUNDLE_MACRO, bundleId, macroId);
+			const wxString name = macroDict.wxGetString("name");
+
+			m_bundleTree->AppendItem(bundleItem, name, 5, -1, new BundleItemData(BUNDLE_MACRO, bundleId, macroId));
 		}
 
 		// Check if there is a menu
@@ -981,6 +993,7 @@ void BundlePane::DeleteItem() {
 		break;
 	case BUNDLE_COMMAND:
 	case BUNDLE_SNIPPET:
+	case BUNDLE_MACRO:
 		{
 			m_plistHandler.Delete(data->m_type, data->m_bundleId, data->m_itemId);
 
@@ -1014,6 +1027,11 @@ void BundlePane::DeleteItem() {
 		m_syntaxHandler->LoadBundles(cxRELOAD);
 	}
 	else m_syntaxHandler->ReParseBundles();
+}
+
+bool BundlePane::HasSelection() const {
+	const wxTreeItemId selItem = m_bundleTree->GetSelection();
+	return selItem.IsOk();
 }
 
 void BundlePane::NewItem(BundleItemType type) {
@@ -1067,8 +1085,8 @@ void BundlePane::NewItem(BundleItemType type) {
 		}
 		break;
 	case BUNDLE_PREF:
-		break;
 	case BUNDLE_LANGUAGE:
+	case BUNDLE_MACRO:
 		break;
 	default:
 		wxASSERT(false);

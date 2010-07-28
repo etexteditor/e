@@ -21,11 +21,11 @@
 #include <wx/grid.h>
 
 class eMacro;
-class IFrameEditorService;
+class EditorFrame;
 
 class MacroPane : public wxPanel {
 public:
-	MacroPane(IFrameEditorService& editorService, wxWindow* parent, eMacro& macro);
+	MacroPane(EditorFrame& frame, wxWindow* parent, eMacro& macro);
 
 	void OnMacroChanged();
 
@@ -38,6 +38,7 @@ private:
 	void OnButtonDel(wxCommandEvent& evt);
 	void OnButtonUp(wxCommandEvent& evt);
 	void OnButtonDown(wxCommandEvent& evt);
+	void OnButtonSave(wxCommandEvent& evt);
 	void OnCmdList(wxCommandEvent& evt);
 	void OnGridChanged(wxGridEvent& evt);
 	void OnIdle(wxIdleEvent& evt);
@@ -51,11 +52,12 @@ private:
 	wxBitmapButton* m_buttonDel;
 	wxBitmapButton* m_buttonUp;
 	wxBitmapButton* m_buttonDown;
+	wxBitmapButton* m_buttonSave;
 	wxListBox* m_cmdList;
 	wxGrid* m_argsGrid;
 
 	// Member variabels
-	IFrameEditorService& m_editorService;
+	EditorFrame& m_parentFrame;
 	bool m_recState;
 	eMacro& m_macro;
 };

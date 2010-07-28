@@ -287,8 +287,12 @@ public:
 	void ShowSymbolList(bool keepOpen=true);
 	virtual void CloseSymbolList();
 
+	// Bundle Pane
+	bool IsBundlePaneShownAndSelected() const;
+
 	// Macro
 	eMacro& GetMacro() {return m_macro;};
+	void SaveMacro();
 
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};

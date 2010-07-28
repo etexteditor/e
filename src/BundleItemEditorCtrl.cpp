@@ -50,6 +50,9 @@ const char** BundleItemEditorCtrl::RecommendedIcon() {
 		case BUNDLE_LANGUAGE: 
 			return tmlanguage_xpm;
 
+		case BUNDLE_MACRO: 
+			return tmlanguage_xpm; //TODO: real macro icon
+
 		default: wxASSERT(false);
 	}
 
@@ -246,6 +249,15 @@ bool BundleItemEditorCtrl::SaveBundleItem() {
 				}
 				break;
 
+			case BUNDLE_MACRO:
+				{
+					// The macro itself is read only, so only save keyEquivalent
+					wxString keyEquivalent;
+					doc.GetProperty(wxT("bundle:keyEquivalent"), keyEquivalent);
+					itemDict.wxUpdateString("keyEquivalent", keyEquivalent);
+				}
+				break;
+
 			default: wxASSERT(false);
 		}
 	cxENDLOCK
@@ -417,6 +429,23 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 
 						// Set properties
 						doc.SetProperty(wxT("bundle:scope"), itemDict.wxGetString("scope"));
+					cxENDLOCK
+					m_lines.ReLoadText();
+
+					m_syntaxstyler.SetSyntax(wxT("JSON"));
+				}
+				break;
+
+			case BUNDLE_MACRO:
+				{
+					PListArray cmdArray;
+					itemDict.GetArray("commands", cmdArray);
+					const wxString jsonSettings = cmdArray.GetJSON();
+					cxLOCKDOC_WRITE(m_doc)
+						doc.Insert(0, jsonSettings);
+
+						// Set properties
+						doc.SetProperty(wxT("bundle:keyEquivalent"), itemDict.wxGetString("keyEquivalent"));
 					cxENDLOCK
 					m_lines.ReLoadText();
 

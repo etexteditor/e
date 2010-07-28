@@ -313,6 +313,7 @@ void EditorBundlePanel::LayoutCtrls() {
 		break;
 
 	case BUNDLE_LANGUAGE:
+	case BUNDLE_MACRO:
 		{
 			m_activationStatic->Show();
 			m_shortcutCtrl->Show();
@@ -461,6 +462,7 @@ void EditorBundlePanel::UpdatePanel() {
 		break;
 
 	case BUNDLE_LANGUAGE:
+	case BUNDLE_MACRO:
 		UpdateSelector(type, dw);
 		break;
 

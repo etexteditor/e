@@ -13,9 +13,8 @@
 
 #include "MacroPane.h"
 #include "Macro.h"
+#include "EditorFrame.h"
 #include <wx/artprov.h>
-
-#include "IFrameEditorService.h"
 
 // Ctrl id's
 enum {
@@ -25,6 +24,7 @@ enum {
 	ID_BUTTON_DEL,
 	ID_BUTTON_UP,
 	ID_BUTTON_DOWN,
+	ID_BUTTON_SAVE,
 	ID_ARG_GRID
 };
 
@@ -33,13 +33,14 @@ BEGIN_EVENT_TABLE(MacroPane, wxPanel)
 	EVT_BUTTON(ID_BUTTON_DEL, MacroPane::OnButtonDel)
 	EVT_BUTTON(ID_BUTTON_UP, MacroPane::OnButtonUp)
 	EVT_BUTTON(ID_BUTTON_DOWN, MacroPane::OnButtonDown)
+	EVT_BUTTON(ID_BUTTON_SAVE, MacroPane::OnButtonSave)
 	EVT_LISTBOX(ID_CMDLIST, MacroPane::OnCmdList)
 	EVT_GRID_CMD_CELL_CHANGE(ID_ARG_GRID, MacroPane::OnGridChanged)
 	EVT_IDLE(MacroPane::OnIdle)
 END_EVENT_TABLE()
 
-MacroPane::MacroPane(IFrameEditorService& editorService, wxWindow* parent, eMacro& macro)
-: wxPanel(parent, wxID_ANY), m_editorService(editorService), m_recState(false), m_macro(macro)
+MacroPane::MacroPane(EditorFrame& frame, wxWindow* parent, eMacro& macro)
+: wxPanel(parent, wxID_ANY), m_parentFrame(frame), m_recState(false), m_macro(macro)
 {
 	// Create ctrls
 	m_bitmapStartRec = wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_BUTTON);
@@ -49,6 +50,7 @@ MacroPane::MacroPane(IFrameEditorService& editorService, wxWindow* parent, eMacr
 	m_buttonDel = new wxBitmapButton(this, ID_BUTTON_DEL, wxArtProvider::GetBitmap(wxART_DELETE, wxART_BUTTON));
 	m_buttonUp = new wxBitmapButton(this, ID_BUTTON_UP, wxArtProvider::GetBitmap(wxART_GO_UP, wxART_BUTTON));
 	m_buttonDown = new wxBitmapButton(this, ID_BUTTON_DOWN, wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_BUTTON));
+	m_buttonSave = new wxBitmapButton(this, ID_BUTTON_SAVE, wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_BUTTON));
 	m_cmdList = new wxListBox(this, ID_CMDLIST);
 	m_argsGrid = new wxGrid(this, ID_ARG_GRID);
 
@@ -69,6 +71,7 @@ MacroPane::MacroPane(IFrameEditorService& editorService, wxWindow* parent, eMacr
 			buttonSizer->Add(m_buttonDel, 0, wxALIGN_RIGHT);
 			buttonSizer->Add(m_buttonUp, 0, wxALIGN_RIGHT);
 			buttonSizer->Add(m_buttonDown, 0, wxALIGN_RIGHT);
+			buttonSizer->Add(m_buttonSave, 0, wxALIGN_RIGHT);
 			mainSizer->Add(buttonSizer, 0, wxEXPAND);
 		mainSizer->Add(m_cmdList, 3, wxEXPAND);
 		mainSizer->Add(m_argsGrid, 1, wxEXPAND);
@@ -131,7 +134,7 @@ void MacroPane::OnButtonRec(wxCommandEvent& WXUNUSED(evt)) {
 	if (m_recState) m_macro.EndRecording();
 	else {
 		m_macro.StartRecording();
-		m_editorService.FocusEditor();
+		m_parentFrame.FocusEditor();
 	}
 }
 
@@ -158,7 +161,11 @@ void MacroPane::OnButtonDown(wxCommandEvent& WXUNUSED(evt)) {
 	m_macro.MoveDown(ndx);
 }
 
-void MacroPane::OnCmdList(wxCommandEvent& evt) {
+void MacroPane::OnButtonSave(wxCommandEvent& WXUNUSED(evt)) {
+	m_parentFrame.SaveMacro();
+}
+
+void MacroPane::OnCmdList(wxCommandEvent& WXUNUSED(evt)) {
 	UpdateArgsGrid();
 	UpdateButtons();
 }
@@ -197,6 +204,9 @@ void MacroPane::OnIdle(wxIdleEvent& WXUNUSED(evt)) {
 			m_recState = false;
 		}
 	}
+
+	const bool canSave = m_parentFrame.IsBundlePaneShownAndSelected();
+	if (m_buttonSave->IsEnabled() != canSave) m_buttonSave->Enable(canSave);
 
 	if (m_macro.IsModified()) {
 		const int sel = m_cmdList->GetSelection();

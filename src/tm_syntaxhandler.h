@@ -335,6 +335,7 @@ private:
 	// Macro parsing
 	bool ParseMacro(const tmBundle& bundle, unsigned int macroId);
 	bool TranslateMacroCmd(const PListDict& macroDict, eMacro& macro) const;
+	bool TranslateTmMacroCmd(const PListDict& macroDict, eMacro& macro) const;
 
 	// Preference parsing
 	bool ParsePreferences(const PListDict& prefDict, tmBundle* bundle);

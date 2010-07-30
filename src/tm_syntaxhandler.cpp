@@ -794,18 +794,55 @@ eMacro TmSyntaxHandler::GetMacroContent(const tmAction& action) const {
 	const PListDict macroDict = m_plistHandler.Get(BUNDLE_MACRO, action.bundle->bundleRef, action.plistRef);
 	
 	PListArray commandArray;
-	if (macroDict.GetArray("commands", commandArray)) {
+	if (macroDict.GetArray("e_commands", commandArray)) {
 		PListDict cmdDict;
 		for (size_t i = 0; i < commandArray.GetSize(); ++i) {
 			commandArray.GetDict(i, cmdDict);
 			TranslateMacroCmd(cmdDict, macro);
 		}
 	}
+	else if (macroDict.GetArray("commands", commandArray)) {
+		PListDict cmdDict;
+		for (size_t i = 0; i < commandArray.GetSize(); ++i) {
+			commandArray.GetDict(i, cmdDict);
+			TranslateTmMacroCmd(cmdDict, macro);
+		}
+	}
 
 	return macro;
 }
-
 bool TmSyntaxHandler::TranslateMacroCmd(const PListDict& macroDict, eMacro& macro) const {
+	const wxString cmdStr = macroDict.wxGetString("command");
+	eMacroCmd& cmd = macro.Add(cmdStr);
+
+	PListArray args;
+	if (!macroDict.GetArray("arguments", args)) return true;
+
+	for (size_t i = 0; i < args.GetSize(); ++i) {
+		PListArray arg;
+		if (!args.GetArray(i, arg) || arg.GetSize() != 2) {
+			wxASSERT(false);
+			return false;
+		}
+
+		const wxString name = arg.wxGetString(0);
+		if (arg.IsBool(1)) cmd.AddArg(name, arg.GetBool(1));
+		else if (arg.IsInt(1)) cmd.AddArg(name, arg.GetInt(1));
+		else if (arg.IsString(1)) {
+			const wxString value = arg.wxGetString(1);
+			cmd.AddArg(name, value);
+		}
+		else {
+			wxASSERT(false);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& macro) const {
 	const wxString cmdStr = macroDict.wxGetString("command");
 	PListDict argDict;
 	macroDict.GetDict("argument", argDict);

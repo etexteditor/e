@@ -439,7 +439,7 @@ bool BundleItemEditorCtrl::LoadBundleItem(const wxString& bundleUri) {
 			case BUNDLE_MACRO:
 				{
 					PListArray cmdArray;
-					itemDict.GetArray("commands", cmdArray);
+					if (!itemDict.GetArray("e_commands", cmdArray))	itemDict.GetArray("commands", cmdArray);
 					const wxString jsonSettings = cmdArray.GetJSON();
 					cxLOCKDOC_WRITE(m_doc)
 						doc.Insert(0, jsonSettings);

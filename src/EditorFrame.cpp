@@ -1647,9 +1647,9 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 }
 
 void EditorFrame::SaveMacro() {
-	if (!IsBundlePaneShownAndSelected()) return;
+	if (!IsBundlePaneShownAndSelected() || m_macro.IsEmpty()) return;
 
-
+	m_bundlePane->NewItem(BUNDLE_MACRO, &m_macro);
 }
 
 bool EditorFrame::IsBundlePaneShownAndSelected() const {

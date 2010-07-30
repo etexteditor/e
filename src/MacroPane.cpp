@@ -54,6 +54,8 @@ MacroPane::MacroPane(EditorFrame& frame, wxWindow* parent, eMacro& macro)
 	m_cmdList = new wxListBox(this, ID_CMDLIST);
 	m_argsGrid = new wxGrid(this, ID_ARG_GRID);
 
+	m_buttonSave->SetToolTip(_("Save as Bundle Item\n(select in Bundle Editor)"));
+
 	UpdateButtons();
 
 	// Configure grid
@@ -205,7 +207,7 @@ void MacroPane::OnIdle(wxIdleEvent& WXUNUSED(evt)) {
 		}
 	}
 
-	const bool canSave = m_parentFrame.IsBundlePaneShownAndSelected();
+	const bool canSave = m_parentFrame.IsBundlePaneShownAndSelected() && !m_macro.IsEmpty();
 	if (m_buttonSave->IsEnabled() != canSave) m_buttonSave->Enable(canSave);
 
 	if (m_macro.IsModified()) {

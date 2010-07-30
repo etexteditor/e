@@ -17,6 +17,7 @@
 
 #include "Env.h"
 #include "Execute.h"
+#include "Macro.h"
 
 #include "images/tmBundle.xpm"
 #include "images/tmCommand.xpm"
@@ -1034,7 +1035,7 @@ bool BundlePane::HasSelection() const {
 	return selItem.IsOk();
 }
 
-void BundlePane::NewItem(BundleItemType type) {
+void BundlePane::NewItem(BundleItemType type, const eMacro* macro) {
 	const wxTreeItemId selItem = m_bundleTree->GetSelection();
 	if (!selItem.IsOk()) return; // Can't add item if no bundle
 	const BundleItemData* data = (BundleItemData*)m_bundleTree->GetItemData(selItem);
@@ -1055,6 +1056,7 @@ void BundlePane::NewItem(BundleItemType type) {
 	case BUNDLE_DRAGCMD:  name = _("New DragCommand"); break;
 	case BUNDLE_PREF:     name = _("New Preference"); break;
 	case BUNDLE_LANGUAGE: name = _("New Language"); break;
+	case BUNDLE_MACRO:    name = _("New Macro"); break;
 	default: wxASSERT(false);
 	}
 	name = wxGetTextFromUser(_("Name of new item:"), _("New Item"), name, this);
@@ -1086,7 +1088,9 @@ void BundlePane::NewItem(BundleItemType type) {
 		break;
 	case BUNDLE_PREF:
 	case BUNDLE_LANGUAGE:
+		break;
 	case BUNDLE_MACRO:
+		if (macro) macro->SaveTo(itemDict);
 		break;
 	default:
 		wxASSERT(false);

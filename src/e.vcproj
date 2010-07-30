@@ -1638,6 +1638,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Macro.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\MacroPane.cpp"
 			>
 		</File>

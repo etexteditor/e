@@ -2738,6 +2738,44 @@ void PListDict::DeleteItem(const char* key) {
 	m_vDict.RemoveAt(ndx);
 }
 
+void PListDict::SetBool(const char* key, bool value) {
+	wxASSERT(m_rPlist);
+	wxASSERT(key);
+
+	const int ndx = m_vDict.Find(pKey[key]);
+	if (ndx == -1) {
+		c4_Row rRef;
+		pKey(rRef) = key;
+		pRefType(rRef) = REF_BOOL;
+		pRef(rRef) =  value ? 1 : 0;
+		m_vDict.Add(rRef);
+	}
+	else {
+		const c4_RowRef rItem = m_vDict[ndx];
+		wxASSERT(pRefType(rItem) == REF_BOOL);
+		pRef(rItem) = value ? 1 : 0;
+	}
+}
+
+void PListDict::SetInt(const char* key, int value) {
+	wxASSERT(m_rPlist);
+	wxASSERT(key);
+
+	const int ndx = m_vDict.Find(pKey[key]);
+	if (ndx == -1) {
+		c4_Row rRef;
+		pKey(rRef) = key;
+		pRefType(rRef) = REF_INTEGER;
+		pRef(rRef) = value;
+		m_vDict.Add(rRef);
+	}
+	else {
+		const c4_RowRef rItem = m_vDict[ndx];
+		wxASSERT(pRefType(rItem) == REF_INTEGER);
+		pRef(rItem) = value;
+	}
+}
+
 void PListDict::SetString(const char* key, const char* text) {
 	wxASSERT(m_rPlist);
 	wxASSERT(key && text);
@@ -3000,6 +3038,31 @@ PListArray::PListArray(c4_View& array, c4_RowRef& plist)
 	m_vArrays = pArrays(*m_rPlist);
 }
 
+bool PListArray::IsBool(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	return pType(rItem) == REF_BOOL;
+}
+
+bool PListArray::IsInt(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	return pType(rItem) == REF_INTEGER;
+}
+
+bool PListArray::IsString(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	return pType(rItem) == REF_STRING;
+}
+
+
 void PListArray::SetArray(c4_View& array, c4_RowRef& plist) {
 	m_vArray = array;
 
@@ -3009,6 +3072,28 @@ void PListArray::SetArray(c4_View& array, c4_RowRef& plist) {
 	m_vStrings = pStrings(*m_rPlist);
 	m_vDicts = pDicts(*m_rPlist);
 	m_vArrays = pArrays(*m_rPlist);
+}
+
+bool PListArray::GetBool(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	if (pType(rItem) != REF_BOOL) return false;
+
+	const int ref = pRef(rItem);
+	return ref != 0;
+}
+
+int PListArray::GetInt(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	if (pType(rItem) != REF_INTEGER) return false;
+
+	const int ref = pRef(rItem);
+	return ref;
 }
 
 const char* PListArray::GetString(unsigned int ndx) const {
@@ -3150,6 +3235,20 @@ void PListArray::InsertString(unsigned int ndx, const char* text) {
 	m_vArray.InsertAt(ndx, rRef);
 }
 
+void PListArray::AddBool(bool value) {
+	c4_Row rRef;
+	pRefType(rRef) = REF_BOOL;
+	pRef(rRef) = value ? 1 : 0;
+	m_vArray.Add(rRef);
+}
+
+void PListArray::AddInt(int value) {
+	c4_Row rRef;
+	pRefType(rRef) = REF_INTEGER;
+	pRef(rRef) = value;
+	m_vArray.Add(rRef);
+}
+
 void PListArray::AddString(const char* text) {
 	wxASSERT(text);
 	const int ref = m_vStrings.Add(pString[text]);
@@ -3158,6 +3257,10 @@ void PListArray::AddString(const char* text) {
 	pRefType(rRef) = REF_STRING;
 	pRef(rRef) = ref;
 	m_vArray.Add(rRef);
+}
+
+void PListArray::AddString(const wxString& text) {
+	AddString(text.ToUTF8());
 }
 
 wxJSONValue PListArray::GetJSONArray() const {

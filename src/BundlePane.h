@@ -32,6 +32,7 @@ class EditorFrame;
 class ITmLoadBundles;
 class wxDragImage;
 class BundleItemData;
+class eMacro;
 
 class BundlePane : public wxPanel {
 public:
@@ -39,7 +40,7 @@ public:
 	void LoadBundles();
 
 	bool HasSelection() const;
-	void NewItem(BundleItemType type);
+	void NewItem(BundleItemType type, const eMacro* macro=NULL);
 
 private:
 	class SortTreeCtrl : public wxTreeCtrl {

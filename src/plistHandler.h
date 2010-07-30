@@ -242,6 +242,8 @@ public:
 	bool GetBool(const char* key) const;
 
 	void DeleteItem(const char* key);
+	void SetBool(const char* key, bool value);
+	void SetInt(const char* key, int value);
 	void SetString(const char* key, const char* text);
 	void wxSetString(const char* key, const wxString& text);
 
@@ -277,6 +279,13 @@ public:
 	void Clear();
 
 	unsigned int GetSize() const {return m_vArray.GetSize();};
+
+	bool IsBool(unsigned int ndx) const;
+	bool IsInt(unsigned int ndx) const;
+	bool IsString(unsigned int ndx) const;
+	
+	bool GetBool(unsigned int ndx) const;
+	int GetInt(unsigned int ndx) const;
 	const char* GetString(unsigned int ndx) const;
 	wxString wxGetString(unsigned int ndx) const;
 	bool GetDict(unsigned int ndx, PListDict& dict) const;
@@ -286,7 +295,10 @@ public:
 	PListDict InsertNewDict(unsigned int ndx);
 	PListArray InsertNewArray(unsigned int ndx);
 	void InsertString(unsigned int ndx, const char* str);
+	void AddBool(bool value);
+	void AddInt(int value);
 	void AddString(const char* str);
+	void AddString(const wxString& text);
 
 	// Plist <-> JSON conversion (support functions)
 	wxString GetJSON() const;

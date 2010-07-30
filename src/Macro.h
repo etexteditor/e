@@ -22,6 +22,10 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <vector>
 
+// Pre-declarations
+class PListDict;
+class PListArray;
+
 class eMacroArg {
 public:
 	eMacroArg(const wxString& name, bool value) : m_name(name), m_value(value) {};
@@ -77,15 +81,8 @@ public:
 		value = str;
 	}
 
-	void AddArg(bool value) {m_args.push_back(wxVariant(value));};
-	void AddArg(int value) {m_args.push_back(wxVariant(value));};
-	void AddArg(const wxChar* value) {m_args.push_back(wxVariant(value));};
-	void AddArg(const wxString& value) {m_args.push_back(wxVariant(value));};
-	
-	void AddArg(const wxString& name, bool value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
-	void AddArg(const wxString& name, int value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
-	void AddArg(const wxString& name, const wxChar* value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
-	void AddArg(const wxString& name, const wxString& value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
+	template<class T> void AddArg(T value) {m_args.push_back(wxVariant(value));};
+	template<class T> void AddArg(const wxString& name, T value) {m_argNames.push_back(name); m_args.push_back(wxVariant(value));};
 
 	template<class T> void SetArg(size_t ndx, const wxString& name, T value) {
 		m_argNames.resize(ndx+1);
@@ -93,18 +90,8 @@ public:
 		m_argNames[ndx] = name;
 		m_args[ndx] = value;
 	};
-	/*void SetArg(size_t ndx, const wxString& name, const wxChar* value) {
-		m_argNames.resize(ndx+1);
-		m_args.resize(ndx+1);
-		m_argNames[ndx] = name;
-		m_args[ndx] = value;
-	};
-	void SetArg(size_t ndx, const wxString& name, const wxString& value) {
-		m_argNames.resize(ndx+1);
-		m_args.resize(ndx+1);
-		m_argNames[ndx] = name;
-		m_args[ndx] = value;
-	};*/
+
+	void SaveTo(PListArray& arr) const;
 
 private:
 	wxString m_cmd;
@@ -145,21 +132,15 @@ public:
 		return m_cmds.back();
 	};
 
-	eMacroCmd& AddWithStrArg(const wxString& cmd, const wxString& arg, const wxString& value) {
+	template<class T> eMacroCmd& Add(const wxString& cmd, const wxString& arg, T value) {
 		wxLogDebug(wxT("Adding macro: %s"), cmd);
 		m_cmds.push_back(new eMacroCmd(cmd));
 		m_cmds.back().AddArg(arg, value);
 		m_isModified = true;
 		return m_cmds.back();
 	};
-	
-	eMacroCmd& Add(const wxString& cmd, const wxString& arg, bool value) {
-		wxLogDebug(wxT("Adding macro: %s"), cmd);
-		m_cmds.push_back(new eMacroCmd(cmd));
-		m_cmds.back().AddArg(arg, value);
-		m_isModified = true;
-		return m_cmds.back();
-	};
+
+	void SaveTo(PListDict& dict) const;
 
 
 private:

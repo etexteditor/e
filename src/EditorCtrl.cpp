@@ -2316,7 +2316,7 @@ unsigned int EditorCtrl::InsertNewline() {
 void EditorCtrl::InsertChar(const wxChar& text) {
 	if (m_macro.IsRecording()) {
 		eMacroCmd& cmd = lastaction != ACTION_INSERT || m_macro.IsEmpty() || m_macro.Last().GetName() != wxT("InsertChars")
-			             ? m_macro.AddWithStrArg(wxT("InsertChars"), wxT("text"), wxT("")) : m_macro.Last();
+			             ? m_macro.Add(wxT("InsertChars"), wxT("text"), wxT("")) : m_macro.Last();
 		cmd.ExtendString(0, text);
 	}
 
@@ -5220,7 +5220,7 @@ void EditorCtrl::ShowCompletionPopup(const wxArrayString& completions) {
 
 void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 	if (m_macro.IsRecording()) {
-		m_macro.AddWithStrArg(wxT("ReplaceCurrentWord"), wxT("text"), word);
+		m_macro.Add(wxT("ReplaceCurrentWord"), wxT("text"), word);
 	}
 
 	const interval iv = GetWordIv(GetPos());

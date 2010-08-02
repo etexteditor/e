@@ -172,9 +172,9 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 : m_dbChanged(false), m_allBundlesUpdated(false), m_appPath(appPath, wxEmptyString), m_appDataPath(appDataPath, wxEmptyString) {
 	wxFileName dbPath = m_appDataPath;
 	dbPath.SetFullName(wxT("config.db"));
-	const wxString path = dbPath.GetFullPath();
+	m_dbPath = dbPath.GetFullPath();
 
-	m_storage = c4_Storage(path.mb_str(), true);
+	m_storage = c4_Storage(m_dbPath.mb_str(), true);
 
 	// Check db version
 	const int DB_VERSION = 6;
@@ -187,10 +187,10 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 			// Close and delete old db
 			vDbinfo = c4_View(); // disconnect from storage
 			m_storage = c4_Storage();
-			wxRemoveFile(path);
+			wxRemoveFile(m_dbPath);
 
 			// Start again from a fresh db
-			m_storage = c4_Storage(path.mb_str(), true);
+			m_storage = c4_Storage(m_dbPath.mb_str(), true);
 			vDbinfo = m_storage.GetAs("db[int:I]");
 			vDbinfo.Add(pDbInteger[DB_VERSION]); // set db version id
 			m_dbChanged = true; // make sure new db layout is commited
@@ -225,8 +225,6 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 
 	Update(UPDATE_SYNTAXONLY);
 
-	// Init the commitTimer
-	m_commitTimer.SetOwner(this, ID_COMMITTIMER);
 }
 
 PListHandler::~PListHandler() {
@@ -1510,6 +1508,30 @@ void PListHandler::Commit() {
 	// Mark for commit in next idle time
 	m_dbChanged = true;
 }
+
+void PListHandler::Flush() {
+	wxLogDebug(wxT("Flushing PList Storage"));
+
+	// Write any changes to disk
+	if (m_dbChanged) {
+		m_storage.Commit();
+		m_dbChanged = false;
+	}
+	
+	// Release cached memory and rebind storage
+	m_storage = c4_View();
+	m_storage = c4_Storage(m_dbPath.mb_str(), true);
+
+	// Rebind views
+	m_vThemes = m_storage.GetAs(DB_THEMES_FORMAT);
+	m_vBundles = m_storage.GetAs(DB_BUNDLES_FORMAT);
+	m_vPlists = m_storage.GetAs(DB_PLISTS_FORMAT);
+	m_vFreePlists = m_storage.GetAs(DB_FREEPLISTS_FORMAT);
+	const c4_View assocs = m_storage.GetAs("assocs[ext:S,syntax:S]");
+	const c4_View assocsh = m_storage.GetAs("assocs_H[_H:I,_R:I]");
+	m_vSyntaxAssocs = assocs.Hash(assocsh);
+}
+
 
 PListDict PListHandler::GetBundleInfo(unsigned int ndx) const {
 	return GetPlistItem(ndx, m_vBundles);

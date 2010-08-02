@@ -47,6 +47,7 @@ public:
 	bool AllBundlesUpdated() const {return m_allBundlesUpdated;};
 	void Update(cxUpdateMode mode = UPDATE_FULL);
 	void Commit();
+	void Flush();
 
 	class cxItemRef {
 	public:
@@ -184,13 +185,13 @@ private:
 	bool m_allBundlesUpdated;
 	const wxFileName m_appPath;
 	const wxFileName m_appDataPath;
+	wxString m_dbPath;
 	c4_Storage m_storage;
 	c4_View m_vThemes;
 	c4_View m_vBundles;
 	c4_View m_vPlists;
 	c4_View m_vFreePlists;
 	c4_View m_vSyntaxAssocs;
-	wxTimer m_commitTimer;
 	wxFileName m_bundleDir;
 	wxFileName m_installedBundleDir;
 	wxFileName m_localBundleDir;

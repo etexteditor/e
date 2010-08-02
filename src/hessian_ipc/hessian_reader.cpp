@@ -270,7 +270,7 @@ bool Reader::ParseValue() {
 				else m_result.reset(new String());
 
 				m_state = string_len2;
-				m_len_left = ((int)c - 0x30);
+				m_len_left = ((int)c - 0x30) << 8;
 				break;
 
 			case 'S': // String (tag + len in 2 octets)

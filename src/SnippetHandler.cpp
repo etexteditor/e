@@ -533,7 +533,7 @@ void SnippetHandler::UpdateIntervals(unsigned int id, int diff) {
 	}
 
 	// Move endpos
-	if (m_endpos >= iv.start) m_endpos += diff;
+	if (m_endpos > iv.start) m_endpos += diff;
 }
 
 void SnippetHandler::UpdateIntervalsFromPos(unsigned int pos, int diff) {

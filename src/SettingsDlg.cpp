@@ -92,8 +92,8 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 	wxPanel* encodingPage = CreateEncodingPage(notebook);
 	notebook->AddPage(encodingPage, _("Encoding"));
 	
-	wxPanel* profilePage = CreateProfilePage(notebook);
-	notebook->AddPage(profilePage, _("Profile"));
+	//wxPanel* profilePage = CreateProfilePage(notebook);
+	//notebook->AddPage(profilePage, _("Profile"));
 
 	m_envPage = new EnvVarsPanel(notebook);
 	m_envPage->AddVars(this->m_settings.env);

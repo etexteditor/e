@@ -215,14 +215,9 @@ bool eApp::OnInit() {
 #endif //__WXDEBUG__
 
 	// Initialize wxWidgets internals
-	wxImage::AddHandler(new wxJPEGHandler);
 	wxImage::AddHandler(new wxPNGHandler);
-	wxImage::AddHandler(new wxGIFHandler);
-	wxImage::AddHandler(new wxICOHandler);
-	//wxFileSystem::AddHandler(new wxInternetFSHandler);
 
 	// Set up the database
-
 	m_pCatalyst = new Catalyst(m_appDataPath + wxT("e.db"));
 	m_catalyst = new CatalystWrapper(*m_pCatalyst);
 

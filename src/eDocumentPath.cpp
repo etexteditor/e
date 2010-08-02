@@ -307,6 +307,11 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 	if (updateTime == stampTime)
 		return false;
 
+	// If the difference is _exactly_ one hour, it is probably caused by daylight saving time
+	wxTimeSpan t = updateTime.Subtract(stampTime);
+	if (t.IsEqualTo(wxTimeSpan::Hours(1)) || t.IsEqualTo(wxTimeSpan::Hours(-1)))
+		return false;
+
 	// ...else the dates differ and we need to update.
 	wxLogDebug(wxT("InitCygwin: Diff dates"));
 	wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());

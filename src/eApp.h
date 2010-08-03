@@ -57,6 +57,14 @@ public:
 	EditorFrame* NewFrame();
 	void CloseAllFrames();
 	bool IsLastFrame() const;
+	EditorFrame* GetTopFrame() const;
+
+	// Editors
+	EditorCtrl* GetActiveEditorCtrl() const;
+	EditorCtrl* GetEditorCtrl(int winId) const;
+
+	// Handlers
+	TmSyntaxHandler& GetSyntaxHandler() {return *m_pSyntaxHandler;};
 
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);
@@ -89,11 +97,6 @@ public:
 #ifdef __WXDEBUG__
 	void OnAssertFailure(const wxChar *file, int line, const wxChar *cond, const wxChar *msg);
 #endif  //__WXDEBUG__
-
-	// Frames and Editors
-	EditorFrame* GetTopFrame() const;
-	EditorCtrl* GetActiveEditorCtrl() const;
-	EditorCtrl* GetEditorCtrl(int winId) const;
 
 	// Api notifications
 	void OnInputLineChanged(unsigned int nid, const wxString& text);

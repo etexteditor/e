@@ -93,7 +93,14 @@ void ApiHandler::OnIpcCall(wxCommandEvent& event) {
 
 		map<string, PIpcEdFun>::const_iterator p = m_ipcEditorFunctions.find(m.c_str());
 		if (p != m_ipcEditorFunctions.end()) {
-			(this->*p->second)(*editor, *conn);
+			try {
+				(this->*p->second)(*editor, *conn);
+			}
+			catch (exception& e) {
+				writer.write_fault(hessian_ipc::ServiceException, e.what());
+				conn->reply_done();
+				return;
+			}
 		}
 		else {
 			eMacroCmd cmd(method);
@@ -120,7 +127,16 @@ void ApiHandler::OnIpcCall(wxCommandEvent& event) {
 	}
 	else {
 		map<string, PIpcFun>::const_iterator p = m_ipcFunctions.find(m.c_str());
-		if (p != m_ipcFunctions.end()) (this->*p->second)(*conn);
+		if (p != m_ipcFunctions.end()) {
+			try {
+				(this->*p->second)(*conn);
+			}
+			catch (exception& e) {
+				writer.write_fault(hessian_ipc::ServiceException, e.what());
+				conn->reply_done();
+				return;
+			}
+		}
 		else methodFound = false;
 	}
 

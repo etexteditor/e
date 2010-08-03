@@ -1463,11 +1463,12 @@ const map<wxString,wxString>& EditorFrame::GetProjectEnv() const {
 	return m_projectPane->GetEnv();
 }
 
-bool EditorFrame::OpenTxmtUrl(const wxString& url) {
-	if (!url.StartsWith(wxT("txmt:"))) return false;
+bool EditorFrame::OpenTxmtUrl(const wxString& rawurl) {
+	if (!rawurl.StartsWith(wxT("txmt:"))) return false;
+	const wxString url = URLDecode(rawurl);
 
 	// get file, line & column
-	static wxRegEx fileRx(wxT("[&?]url=file://([^&]+)"));
+	static wxRegEx fileRx(wxT("[&?]url=file:///?([^&]+)"));
 	static wxRegEx bundleRx(wxT("[&?]url=(bundle://[^&]+)"));
 	static wxRegEx lineRx(wxT("[&?]line=([[:digit:]]+)"));
 	static wxRegEx columnRx(wxT("[&?]column=([[:digit:]]+)"));
@@ -1498,8 +1499,6 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 	}
 
 	if (!file.empty()) {
-		file = URLDecode(file);
-
 #ifdef __WXMSW__
 		// path may be in unix format, so we have to convert it
 		if (!isBundleItem) file = eDocumentPath::CygwinPathToWin(file);

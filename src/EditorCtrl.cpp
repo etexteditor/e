@@ -9895,6 +9895,7 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 	else if (name == wxT("SelectCurrentLine")) SelectCurrentLine();
 	else if (name == wxT("SelectScope")) SelectScope();
 	else if (name == wxT("SelectFold")) SelectFold();
+	else if (name == wxT("InsertNewline")) InsertChar(wxChar('\n'));
 	else if (name == wxT("InsertChars")) {
 		const wxString text = cmd.GetArgString(0);
 		for (wxString::const_iterator p = text.begin(); p != text.end(); ++p) {

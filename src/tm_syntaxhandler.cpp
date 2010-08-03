@@ -850,6 +850,12 @@ bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& ma
 	if (cmdStr == wxT("selectWord:")) {
 		macro.Add(wxT("SelectWord"));
 	}
+	else if (cmdStr == wxT("moveUp:")) {
+		macro.Add(wxT("CursorUp"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveDown:")) {
+		macro.Add(wxT("CursorDown"), wxT("select"), false);
+	}
 	else if (cmdStr == wxT("moveLeft:")) {
 		macro.Add(wxT("CursorLeft"), wxT("select"), false);
 	}
@@ -862,6 +868,9 @@ bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& ma
 	else if (cmdStr == wxT("moveToEndOfLine:")) {
 		macro.Add(wxT("CursorToLineEnd"));
 	}
+	else if (cmdStr == wxT("moveToEndOfParagraph:")) {
+		macro.Add(wxT("CursorToLineEnd"));
+	}
 	else if (cmdStr == wxT("moveToEndOfDocumentAndModifySelection:")) {
 		macro.Add(wxT("CursorEnd"), wxT("select"), true);
 	}
@@ -871,6 +880,9 @@ bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& ma
 	else if (cmdStr == wxT("deleteWordLeft:")) {
 		macro.Add(wxT("CursorWordLeft"), wxT("select"), true);
 		macro.Add(wxT("Delete"));
+	}
+	else if (cmdStr == wxT("insertNewline:")) {
+		macro.Add(wxT("InsertNewline"));
 	}
 	else if (cmdStr == wxT("insertText:")) {
 		eMacroCmd& cmd = macro.Add(wxT("InsertChars"));

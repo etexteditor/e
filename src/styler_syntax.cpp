@@ -151,7 +151,6 @@ bool Styler_Syntax::UpdateSyntax() {
 void Styler_Syntax::SetSyntax(const wxString& syntaxName, const wxString& ext) {
 	const cxSyntaxInfo* si = m_syntaxHandler->GetSyntax(syntaxName, ext);
 	if (!si) {
-		wxASSERT(false);
 		Clear(); // No syntax found
 		return;
 	}

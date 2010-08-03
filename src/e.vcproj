@@ -1198,6 +1198,14 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\ApiHandler.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ApiHandler.h"
+			>
+		</File>
+		<File
 			RelativePath="application.ico"
 			>
 		</File>

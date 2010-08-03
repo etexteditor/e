@@ -39,13 +39,8 @@ class TmSyntaxHandler;
 class PListHandler;
 class EditorFrame;
 class AppVersion;
-class eIpcThread;
-class IConnection;
 class EditorCtrl;
-namespace hessian_ipc {
-	class Call;
-	class Writer;
-};
+class ApiHandler;
 
 class eApp : public wxApp, 
 	public IAppPaths, 
@@ -95,50 +90,19 @@ public:
 	void OnAssertFailure(const wxChar *file, int line, const wxChar *cond, const wxChar *msg);
 #endif  //__WXDEBUG__
 
-	// Ipc notifications
+	// Frames and Editors
+	EditorFrame* GetTopFrame() const;
+	EditorCtrl* GetActiveEditorCtrl() const;
+	EditorCtrl* GetEditorCtrl(int winId) const;
+
+	// Api notifications
 	void OnInputLineChanged(unsigned int nid, const wxString& text);
 	void OnInputLineClosed(unsigned int nid);
-	void OnEditorTab(int editorId);
 
 private:
 	// Frames
 	EditorFrame* OpenFrame(size_t frameId);
-	EditorFrame* GetTopFrame() const;
 	void CheckForModifiedFiles();
-	EditorCtrl* GetActiveEditorCtrl() const;
-	EditorCtrl* GetEditorCtrl(int winId) const;
-
-	// Ipc handling
-	struct ConnectionState {
-		vector<doc_id> docHandles;
-	};
-	void InitIpc();
-	ConnectionState& GetConnState(IConnection& conn);
-	unsigned int GetNextNotifierId() {return m_ipcNextNotifierId++;};
-	void IpcGetActiveEditor(IConnection& conn);
-	void IpcIsSoftTabs(IConnection& conn);
-	void IpcGetTabWidth(IConnection& conn);
-	void IpcLog(IConnection& conn);
-	void IpcEditorPrompt(IConnection& conn);
-	void IpcEditorGetVersionId(IConnection& conn);
-	void IpcEditorGetLength(IConnection& conn);
-	void IpcEditorGetScope(IConnection& conn);
-	void IpcEditorGetPos(IConnection& conn);
-	void IpcEditorGetText(IConnection& conn);
-	void IpcEditorGetCurrentLine(IConnection& conn);
-	void IpcEditorGetLineText(IConnection& conn);
-	void IpcEditorGetLineRange(IConnection& conn);
-	void IpcEditorGetSelections(IConnection& conn);
-	void IpcEditorSelect(IConnection& conn);
-	void IpcEditorInsertTabStops(IConnection& conn);
-	void IpcEditorInsertAt(IConnection& conn);
-	void IpcEditorDeleteRange(IConnection& conn);
-	void IpcEditorShowCompletions(IConnection& conn);
-	void IpcEditorShowInputLine(IConnection& conn);
-	void IpcEditorWatchTab(IConnection& conn);
-	void IpcEditorWatchChanges(IConnection& conn);
-	void IpcEditorGetChangesSince(IConnection& conn);
-	void OnEditorChanged(unsigned int nid, bool state);
 
 	// Member variables
 	wxString m_version_name;
@@ -159,8 +123,6 @@ private:
 	void OnUpdatesAvailable(wxCommandEvent& event);
 	void OnUpdatesChecked(wxCommandEvent& event);
 	void OnIdle(wxIdleEvent& event);
-	void OnIpcCall(wxCommandEvent& event);
-	void OnIpcClosed(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	// Member variables
@@ -173,26 +135,7 @@ private:
 	wxString m_appPath;
 	wxString m_appDataPath;
 	wxArrayString m_openStack;
-	eIpcThread* m_ipcThread;
-
-	// Ipc variables
-	enum WatchType {
-		WATCH_EDITOR_CHANGE,
-		WATCH_EDITOR_TAB
-	};
-	struct EditorWatch {
-		WatchType type;
-		int editorId;
-		unsigned int changeToken;
-		unsigned int notifierId;
-	};
-	typedef void (eApp::* Pmemfun)(IConnection& conn);
-	map<string, Pmemfun> m_ipcFunctions;
-	map<string, Pmemfun> m_ipcEditorFunctions;
-	map<unsigned int, IConnection*> m_notifiers;
-	unsigned int m_ipcNextNotifierId;
-	boost::ptr_map<IConnection*, ConnectionState> m_connStates;
-	vector<EditorWatch> m_editorWatchers;
+	ApiHandler* m_apiHandler;
 
 #ifndef __WXMSW__
 	eServer* m_server;

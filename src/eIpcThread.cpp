@@ -6,7 +6,7 @@
 DEFINE_EVENT_TYPE(wxEVT_IPC_CALL)
 DEFINE_EVENT_TYPE(wxEVT_IPC_CLOSE)
 
-eIpcThread::eIpcThread(eApp& app) : m_ipcServer(NULL), m_app(app) {
+eIpcThread::eIpcThread(wxEvtHandler& app) : m_ipcServer(NULL), m_app(app) {
 	Create();
 	Run();
 }

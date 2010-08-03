@@ -22,7 +22,6 @@
 #include "IIpcHandler.h"
 
 // Pre-definitions
-class eApp;
 class IConnections;
 class IIpcServer;
 
@@ -31,7 +30,7 @@ DECLARE_EVENT_TYPE(wxEVT_IPC_CLOSE, -1)
 
 class eIpcThread : public wxThread, public IIpcHandler {
 public:
-	eIpcThread(eApp& app);
+	eIpcThread(wxEvtHandler& app);
 	virtual void* Entry();
 
 	void stop(); // Threadsafe stop of server
@@ -41,7 +40,7 @@ public:
 
 private:
 	IIpcServer* m_ipcServer;
-	eApp& m_app;
+	wxEvtHandler& m_app;
 };
 
 #endif //__EIPCTHREAD_H__

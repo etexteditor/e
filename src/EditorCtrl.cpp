@@ -6171,8 +6171,8 @@ bool EditorCtrl::ProcessCommandModeKey(wxKeyEvent& event) {
 
 void EditorCtrl::OnChar(wxKeyEvent& event) {
 	if (m_parentFrame.IsCommandMode()) {
-		if (ProcessCommandModeKey(event)) return;
-		ClearSearchRange(); // Most non-commandmode commands are not range aware
+		ProcessCommandModeKey(event);
+		return;	
 	}
 
 	wxString modifiers;

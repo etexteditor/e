@@ -591,6 +591,16 @@ void PreviewDlg::OnButtonReload(wxCommandEvent& WXUNUSED(event)) {
 	}
 	else m_pipeCmd.clear();
 
+	// If preview is pinned to an external url, just refresh
+	if (m_pinnedEditor) {
+		const wxString location = m_locationText->GetValue();
+		if (location != m_uncPath) {
+			if (m_webcontrol && m_webcontrol->IsShown()) m_webcontrol->Reload();
+			else m_browser->Refresh(wxHTML_REFRESH_NORMAL);
+			return;
+		}
+	}
+
 	UpdateBrowser(cxUPDATE_RELOAD);
 }
 

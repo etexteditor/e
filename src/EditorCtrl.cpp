@@ -4786,6 +4786,10 @@ bool EditorCtrl::IsSelected() const {
 	return m_lines.IsSelected();
 }
 
+bool EditorCtrl::IsMultiSelected() const {
+	return m_lines.IsMultiSelected();
+}
+
 void EditorCtrl::RemoveAllSelections() {
 	m_lines.RemoveAllSelections();
 	m_currentSel = -1;

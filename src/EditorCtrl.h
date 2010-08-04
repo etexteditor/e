@@ -201,6 +201,7 @@ public:
 
 	// Selection
 	bool IsSelected() const;
+	bool IsMultiSelected() const;
 	void SelectAll();
 	void Select(unsigned int start, unsigned int end);
 	void AddSelection(unsigned int start, unsigned int end, bool allowEmpty=false);
@@ -534,7 +535,6 @@ protected:
 	void InsertColumn(const wxArrayString& text, bool select=false);
 	void WrapSelections(const wxString& front, const wxString& back);
 	bool DeleteInShadow(unsigned int pos, bool nextchar=true);
-	wxString GetNewIndentAfterNewline(unsigned int lineid);
 	interval GetWordIv(unsigned int pos) const;
 
 	// Line selections
@@ -569,6 +569,7 @@ protected:
 
 	// Indentation
 	wxString GetRealIndent(unsigned int lineid, bool newline=false);
+	wxString GetNewIndentAfterNewline(unsigned int lineid);
 
 	bool IsSpaces(unsigned int start, unsigned int end) const;
 	unsigned int CountMatchingChars(wxChar match, unsigned int start, unsigned int end) const;

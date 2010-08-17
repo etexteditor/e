@@ -3562,7 +3562,7 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 		if (!m_inAskReload) {
 			// Should we check for changed files?
 			bool doCheckChange = true;  // default
-			m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+			m_generalSettings.GetSettingBool(wxT("checkChange"), doCheckChange);
 
 			// Check if any open files have been modified (in separate thread)
 			if (doCheckChange)

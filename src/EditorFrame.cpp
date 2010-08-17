@@ -841,7 +841,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	if (!bundleMenu) bundleMenu = new wxMenu;
 
 	bool enableDebug = false; // default setting
-	m_settings.GetSettingBool(wxT("bundleDebug"), enableDebug);
+	m_generalSettings.GetSettingBool(wxT("bundleDebug"), enableDebug);
 
 	wxMenu *macroMenu = new wxMenu;
 	macroMenu->Append(MENU_MACRO_REC, _("&Start Recording"), _("Start Recording"));
@@ -2310,7 +2310,7 @@ void EditorFrame::ShowBundleManager() {
 
 void EditorFrame::OnMenuDebugBundles(wxCommandEvent& event) {
 	const bool enableDebug = event.IsChecked();
-	m_settings.SetSettingBool(wxT("bundleDebug"), enableDebug);
+	m_generalSettings.SetSettingBool(wxT("bundleDebug"), enableDebug);
 }
 
 void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {

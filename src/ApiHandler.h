@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <boost/ptr_container/ptr_map.hpp>
 using namespace std;
 
@@ -44,6 +45,7 @@ public:
 private:
 	struct ConnectionState {
 		vector<doc_id> docHandles;
+		set<int> editorsInChange;
 	};
 
 	// Event handlers
@@ -80,6 +82,8 @@ private:
 	void IpcEditorWatchTab(EditorCtrl& editor, IConnection& conn);
 	void IpcEditorWatchChanges(EditorCtrl& editor, IConnection& conn);
 	void IpcEditorGetChangesSince(EditorCtrl& editor, IConnection& conn);
+	void IpcEditorStartChange(EditorCtrl& editor, IConnection& conn);
+	void IpcEditorEndChange(EditorCtrl& editor, IConnection& conn);
 
 	// Notification Handlers
 	void OnEditorChanged(unsigned int nid, bool state);

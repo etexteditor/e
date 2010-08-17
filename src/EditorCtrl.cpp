@@ -690,53 +690,28 @@ bool EditorCtrl::IsOk() const {
 	return (size.x == 0 && size.y == 0) || bitmap.Ok();
 }
 
-// WARNING: Be aware that during a change grouping, lines is not valid
-// Only call functions like lines.RemoveAllSelections() that does not use line info
-void EditorCtrl::StartChange() {
-	do_freeze = false;
-	change_pos = m_lines.GetPos();
-	cxLOCKDOC_WRITE(m_doc)
-		doc.Freeze();
-		change_doc_id = doc.GetDocument();
+bool EditorCtrl::InChange() const {
+	cxLOCKDOC_READ(m_doc)
+		return doc.InChange();
 	cxENDLOCK
-	change_toppos = m_lines.GetPosFromXY(0, scrollPos+1);
 }
 
-void EditorCtrl::EndChange() {
-	wxASSERT(do_freeze == false);
-
-	doc_id di;
-	cxLOCKDOC_WRITE(m_doc)
-		doc.Freeze();
-		di = doc.GetDocument();
+size_t EditorCtrl::GetChangeLevel() const {
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetChangeLevel();
 	cxENDLOCK
+}
 
-	// Invalidate all stylers
-	StylersInvalidate();
+void EditorCtrl::StartChange() {
+	cxLOCKDOC_WRITE(m_doc)
+		doc.StartChange(true/*doNotify*/);
+	cxENDLOCK
+}
 
-	if (change_doc_id.SameDoc(di)) {
-		// If we are still in the same document, we want to find
-		// matching positions and selections
-
-		if (change_doc_id.version_id == di.version_id) return;
-
-		vector<interval> oldsel = m_lines.GetSelections();
-		m_lines.ReLoadText();
-
-		// re-set the width
-		UpdateEditorWidth();
-
-		RemapPos(change_doc_id, change_pos, oldsel, change_toppos);
-	}
-	else {
-		scrollPos = 0;
-		m_lines.ReLoadText();
-
-		// re-set the width
-		UpdateEditorWidth();
-	}
-
-	do_freeze = true;
+void EditorCtrl::EndChange(int forceTo) {
+	cxLOCKDOC_WRITE(m_doc)
+		doc.EndChange(forceTo);
+	cxENDLOCK
 }
 
 bool EditorCtrl::Show(bool show) {
@@ -9849,10 +9824,12 @@ void EditorCtrl::PlayMacro() {
 void EditorCtrl::PlayMacro(const eMacro& macro) {
 	if (m_macro.IsRecording()) m_macro.EndRecording(); // avoid endless loop
 
+	StartChange(); // group changes as a single change
 	for (size_t i = 0; i < macro.GetCount(); ++i) {
 		const eMacroCmd& cmd = macro.GetCommand(i);
 		PlayCommand(cmd);
 	}
+	EndChange();
 }
 
 wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {

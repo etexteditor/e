@@ -86,7 +86,9 @@ public:
 
 	// Change state
 	void StartChange();
-	void EndChange();
+	void EndChange(int forceTo=-1);
+	bool InChange() const;
+	size_t GetChangeLevel() const;
 
 	// Document info
 	unsigned int GetLength() const;

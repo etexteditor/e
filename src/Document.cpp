@@ -26,8 +26,11 @@
 Document::Document(const doc_id& di, CatalystWrapper cw):
 	m_catalyst(cw.m_catalyst),
 	dispatcher(cw.GetDispatcher()),
-	do_notify(true),
 	m_textData(cw.m_catalyst),
+	in_change(false),
+	change_level(0),
+	do_notify(true),
+	do_notify_top(0),
 	m_re(NULL),
 	m_trackChanges(NULL)
 {
@@ -41,8 +44,11 @@ Document::Document(CatalystWrapper cw):
 	m_catalyst(cw.m_catalyst),
 	dispatcher(cw.GetDispatcher()),
 	m_docId(DRAFT,-1,-1),
-	do_notify(true),
 	m_textData(cw.m_catalyst),
+	in_change(false),
+	change_level(0),
+	do_notify(true),
+	do_notify_top(0),
 	m_re(NULL),
 	m_trackChanges(NULL)
 {
@@ -267,19 +273,50 @@ void Document::WriteText(wxOutputStream& stream) const {
 	m_textData.WriteText(stream);
 }
 
-void Document::StartChange() {
+void Document::StartChange(bool doNotify) {
 	wxASSERT(IsOk());
-	do_notify = false;
+
+	// Always freeze before starting grouped changes
+	if (change_level == 0) {
+		Freeze();
+		in_change = true;
+	}
+
+	// If notification is stopped at any nesting level
+	// no lower level can enable it
+	if (do_notify && !doNotify) {
+		do_notify = false;
+		do_notify_top = change_level;
+	}
+
+	++change_level;
 }
 
-void Document::EndChange() {
+void Document::EndChange(int forceTo) {
 	wxASSERT(IsOk());
-	do_notify = true;
+	wxASSERT(change_level > 0);
+	wxASSERT(forceTo < change_level);
 
-	// Notify subscribers that the revision has changed
-	m_catalyst.UnLock();
-		dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
-	m_catalyst.ReLock();
+	// Change nesting level
+	if (forceTo == -1) --change_level;
+	else change_level = forceTo;
+
+	// Restore notifications
+	if (change_level <= do_notify_top) {
+		do_notify = true;
+		do_notify_top = 0;
+	}
+
+	// Freeze when the entire change is complete
+	if (change_level == 0) {
+		in_change = false;
+		Freeze();
+
+		// Notify subscribers that the revision has changed
+		m_catalyst.UnLock();
+			dispatcher.Notify(wxT("DOC_UPDATEREVISION"), &m_docId, 0);
+		m_catalyst.ReLock();
+	}
 }
 
 wxString Document::GetTextPart(int start_pos, int end_pos) const {
@@ -1825,6 +1862,7 @@ unsigned int Document::Replace(unsigned int start_pos, unsigned int end_pos, con
 
 void Document::Freeze() {
 	wxASSERT(IsOk());
+	if (in_change) return; // Don't freeze during grouped changes
 	if (m_docId.IsDocument()) return; // Only a Draft can be frozen
 
 	if (vHistory.GetSize() == 0) NewRevision();
@@ -1866,6 +1904,12 @@ wxDateTime Document::GetDate() const {
 void Document::SetDocument(const doc_id& di) {
 	//wxASSERT(m_catalyst.IsOk(di));
 	if (m_docId == di) return;
+
+	// During grouped changes moving away from current
+	// change cleans it up
+	if (in_change && !IsFrozen()) {
+		m_catalyst.DeleteDraft(m_docId);
+	}
 
 	m_docId = di;
 

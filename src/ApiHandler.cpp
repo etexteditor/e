@@ -55,6 +55,8 @@ ApiHandler::ApiHandler(eApp& app)
 	m_ipcEditorFunctions["GetChangesSince"] = &ApiHandler::IpcEditorGetChangesSince;
 	m_ipcEditorFunctions["ShowInputLine"] = &ApiHandler::IpcEditorShowInputLine;
 	m_ipcEditorFunctions["WatchChanges"] = &ApiHandler::IpcEditorWatchChanges;
+	m_ipcEditorFunctions["StartChange"] = &ApiHandler::IpcEditorStartChange;
+	m_ipcEditorFunctions["EndChange"] = &ApiHandler::IpcEditorEndChange;
 
 	// Start the ipc server
 	m_ipcThread = new eIpcThread(*this);
@@ -194,6 +196,18 @@ void ApiHandler::OnIpcClosed(wxCommandEvent& event) {
 	while (p != m_notifiers.end()) {
 		if (p->second == conn) p = m_notifiers.erase(p);
 		else ++p;
+	}
+
+	boost::ptr_map<IConnection*, ConnectionState>::const_iterator c = m_connStates.find(conn);
+	if (c != m_connStates.end()) {
+		// If any editors are still in a change group, we have to release them
+		const set<int>& editorsInChange = c->second->editorsInChange;
+		if (!editorsInChange.empty()) {
+			for (set<int>::const_iterator e = editorsInChange.begin(); e != editorsInChange.end(); ++e) {
+				EditorCtrl* editor = m_app.GetEditorCtrl(*e);
+				if (editor) editor->EndChange();
+			}
+		}
 	}
 
 	// Clear any associated state
@@ -447,6 +461,7 @@ void ApiHandler::IpcEditorShowInputLine(EditorCtrl& , IConnection& conn) {
 	// Show input line
 	EditorFrame* frame = m_app.GetTopFrame();
 	if (!frame) return;
+
 	frame->ShowInputPanel(notifier_id, caption);
 
 	// Return notifier id
@@ -498,6 +513,37 @@ void ApiHandler::IpcEditorGetChangesSince(EditorCtrl& editor, IConnection& conn)
 	// Return changed lines
 	hessian_ipc::Writer& writer = conn.get_reply_writer();
 	writer.write_reply(changedlines);
+}
+
+void ApiHandler::IpcEditorStartChange(EditorCtrl& editor, IConnection& conn) {
+	const int editorId = editor.GetId();
+
+	// Only allow one level of change grouping
+	boost::ptr_map<IConnection*,ConnectionState>::iterator p = m_connStates.find(&conn);
+	if (p == m_connStates.end()) {
+		IConnection* c = &conn;
+		m_connStates.insert(c, new ConnectionState);
+		p = m_connStates.find(&conn);
+	}
+	else {
+		const set<int>& editorsInChange = p->second->editorsInChange;
+		if (editorsInChange.find(editorId) != editorsInChange.end()) return;
+	}
+
+	p->second->editorsInChange.insert(editorId);
+	editor.StartChange();
+}
+
+void ApiHandler::IpcEditorEndChange(EditorCtrl& editor, IConnection& conn) {
+	const int editorId = editor.GetId();
+
+	boost::ptr_map<IConnection*,ConnectionState>::iterator p = m_connStates.find(&conn);
+	if (p == m_connStates.end()) return;
+	set<int>& editorsInChange = p->second->editorsInChange;
+	if (editorsInChange.find(editorId) != editorsInChange.end()) return;
+	editorsInChange.erase(editorId);
+
+	editor.EndChange();
 }
 
 void ApiHandler::OnInputLineChanged(unsigned int nid, const wxString& text) {

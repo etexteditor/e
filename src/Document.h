@@ -145,8 +145,10 @@ public:
 	void MakeHead();
 
 	// Grouping of multiple changes
-	void StartChange();
-	void EndChange();
+	void StartChange(bool doNotify=false);
+	void EndChange(int forceTo=-1);
+	bool InChange() const {return in_change;};
+	int GetChangeLevel() const {return change_level;};
 
 	bool operator==(const doc_id& di) const;
 	bool operator!=(const doc_id& di) const;
@@ -167,8 +169,12 @@ private:
 	c4_View vNodes;
 	c4_View vHistory;
 	doc_id m_docId;
-	bool do_notify;
 	DataText m_textData;
+
+	bool in_change;
+	int change_level;
+	bool do_notify;
+	int do_notify_top;
 
 	// Cache of last compiled regex
 	mutable wxString m_regex_cache;

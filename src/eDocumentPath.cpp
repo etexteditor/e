@@ -314,8 +314,8 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 
 	// ...else the dates differ and we need to update.
 	wxLogDebug(wxT("InitCygwin: Diff dates"));
-	wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());
-	wxLogDebug(wxT("  last-e-update: %s"), stampTime.FormatTime());
+	wxLogDebug(wxT("  e-postinstall: %s"), updateTime.Format());
+	wxLogDebug(wxT("  last-e-update: %s"), stampTime.Format());
 	return true;
 }
 

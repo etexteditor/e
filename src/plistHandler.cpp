@@ -193,7 +193,7 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 			m_storage = c4_Storage(m_dbPath.mb_str(), true);
 			vDbinfo = m_storage.GetAs("db[int:I]");
 			vDbinfo.Add(pDbInteger[DB_VERSION]); // set db version id
-			m_dbChanged = true; // make sure new db layout is commited
+			MarkAsModified(); // make sure new db layout is commited
 		}
 	}
 	else vDbinfo.Add(pDbInteger[DB_VERSION]); // set db version id
@@ -240,6 +240,10 @@ PListHandler::~PListHandler() {
 	}
 }
 
+void PListHandler::MarkAsModified() {
+	m_dbChanged = true;
+}
+
 wxString PListHandler::GetSyntaxAssoc(const wxString& ext) const {
 	const int index = m_vSyntaxAssocs.Find(pExt[ext.mb_str(wxConvUTF8)]);
 	return index == -1 ? wxString(wxEmptyString) : wxString(pSynId(m_vSyntaxAssocs[index]), wxConvUTF8);
@@ -256,7 +260,7 @@ void PListHandler::SetSyntaxAssoc(const wxString& ext, const wxString& syntaxId)
 	}
 
 	// Mark for commit in next idle time
-	m_dbChanged = true;
+	MarkAsModified();
 }
 
 void PListHandler::OnCommitTimer(wxTimerEvent& WXUNUSED(event)) {
@@ -316,9 +320,9 @@ void PListHandler::Update(cxUpdateMode mode) {
 	}
 	else DeleteAllItems(PLIST_LOCAL, m_vBundles);
 
-	// Mark for commit in next idle time
-	m_dbChanged = true;
-	if (mode != UPDATE_SYNTAXONLY) m_allBundlesUpdated = true;
+	if (mode != UPDATE_SYNTAXONLY) {
+		m_allBundlesUpdated = true;
+	}
 }
 
 void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths, int loc, c4_View vList) {
@@ -377,6 +381,7 @@ void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths
 		const int ref = LoadPList(path);
 
 		if (ref != -1) {
+#ifdef __WXDEBUG__
 			// Get the uuid
 			const PListDict plist = GetPlist(ref);
 			const char* uuid = plist.GetString("uuid");
@@ -386,15 +391,16 @@ void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths
 			const int plistId = uuid ? vList.Find(pUuid[uuid]) : -1;
 
 			if (plistId != -1) {
-#ifdef __WXDEBUG__
+
 				const c4_RowRef rPlistItem = vList[plistId];
 				const int id = (pLocality(rPlistItem) == PLIST_PRISTINE) ? pPristineRef(rPlistItem) : pLocalRef(rPlistItem);
 				const wxString plistName(pFilename(m_vPlists[id]), wxConvUTF8);
 				wxLogDebug(wxT("WARNING: plist '%s' has same uuid as '%s'"), path.c_str(), plistName.c_str());
-#endif
-				UpdatePlistItem(ref, loc, vList, plistId);
+
+				//UpdatePlistItem(ref, loc, vList, plistId);
 			}
-			else NewPlistItem(ref, loc, vList);
+#endif
+			NewPlistItem(ref, loc, vList);
 		}
 	}
 }
@@ -1131,7 +1137,7 @@ void PListHandler::Delete(BundleItemType type, unsigned int bundleId, unsigned i
 	wxASSERT((int)itemId < vPlists.GetSize());
 
 	SafeDeletePlistItem(itemId, vPlists, path);
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 }
 
 
@@ -1291,6 +1297,7 @@ unsigned int PListHandler::CreateNewPlist(const wxString& name, const wxString& 
 unsigned int PListHandler::NewPlistItem(unsigned int ref, int loc, c4_View vList) {
 	wxASSERT((int)ref < m_vPlists.GetSize());
 	wxASSERT(loc == PLIST_PRISTINE || loc == PLIST_LOCAL || loc == PLIST_INSTALLED);
+	MarkAsModified();
 
 	// Get uuid
 	const PListDict plist = GetPlist(ref);
@@ -1332,6 +1339,7 @@ void PListHandler::UpdatePlistItem(unsigned int ref, int loc, c4_View vList, uns
 	wxASSERT((int)ref < m_vPlists.GetSize());
 	wxASSERT(loc == PLIST_PRISTINE || loc == PLIST_LOCAL || loc == PLIST_INSTALLED);
 	wxASSERT((int)ndx < vList.GetSize());
+	MarkAsModified();
 
 	// Get uuid
 	const PListDict plist = GetPlist(ref);
@@ -1368,6 +1376,7 @@ void PListHandler::UpdatePlistItem(unsigned int ref, int loc, c4_View vList, uns
 
 bool PListHandler::DeletePlistItem(unsigned int ndx, int loc, c4_View vList) {
 	wxASSERT((int)ndx < vList.GetSize());
+	MarkAsModified();
 
 	c4_RowRef rPlistItem = vList[ndx];
 	int locality = pLocality(rPlistItem);
@@ -1513,17 +1522,21 @@ void PListHandler::Commit() {
 	}
 
 	// Mark for commit in next idle time
-	m_dbChanged = true;
+	MarkAsModified();
 }
 
 void PListHandler::Flush() {
+	// writing data on every flush is too expensive
+	// so we only flush it is all cache
+	if (m_dbChanged) return;
+
 	wxLogDebug(wxT("Flushing PList Storage"));
 
 	// Write any changes to disk
-	if (m_dbChanged) {
+	/*if (m_dbChanged) {
 		m_storage.Commit();
 		m_dbChanged = false;
-	}
+	}*/
 	
 	// Release cached memory and rebind storage
 	m_storage = c4_View();
@@ -1571,13 +1584,13 @@ bool PListHandler::SaveBundle(unsigned int bundleId) {
 	path.AppendDir(dirName);
 
 	// Save the manifest file
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 	return SavePListItem(bundleId, m_vBundles, path, wxEmptyString);
 }
 
 bool PListHandler::RestoreBundle(unsigned int bundleId) {
 	wxASSERT((int)bundleId >= 0 && (int)bundleId < m_vBundles.GetSize());
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 
 	const c4_RowRef rBundle = m_vBundles[bundleId];
 	wxASSERT(pLocality(rBundle) & (PLIST_PRISTINE|PLIST_DISABLED));
@@ -1606,7 +1619,7 @@ bool PListHandler::RestoreBundle(unsigned int bundleId) {
 
 bool PListHandler::DeleteBundle(unsigned int bundleId) {
 	wxASSERT((int)bundleId >= 0 && (int)bundleId < m_vBundles.GetSize());
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 
 	const c4_RowRef rBundle = m_vBundles[bundleId];
 	int locality = pLocality(rBundle);
@@ -1698,7 +1711,7 @@ bool PListHandler::Save(BundleItemType type, unsigned int bundleId, unsigned int
 
 	wxASSERT((int)itemId < vPlists.GetSize());
 
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 	return SavePListItem(itemId, vPlists, path, ext);
 }
 
@@ -2066,7 +2079,7 @@ void PListHandler::SaveTheme(unsigned int ndx) {
 		SavePList(plistNdx, path);
 	}
 
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 }
 
 void PListHandler::MarkThemeAsModified(unsigned int ndx) {

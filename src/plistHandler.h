@@ -157,6 +157,8 @@ private:
 	void SaveArray(TiXmlElement* parent, unsigned int ndx, const c4_RowRef& rPlist) const;
 	void SaveString(TiXmlElement* parent, unsigned int ndx, const c4_RowRef& rPlist) const;
 
+	void MarkAsModified();
+
 	// Utility functions
 	static wxString MakeValidDir(const wxFileName& path, const wxString& name, const wxString& ext);
 	static wxString MakeValidFilename(const wxFileName& path, const wxString& name, const wxString& ext);

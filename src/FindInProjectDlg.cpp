@@ -266,7 +266,15 @@ void* SearchThread::Entry() {
 
 		// Write the html header for output
 		m_outputCrit.Enter();
-		m_output = wxT("<head><style type=\"text/css\">#match {background-color: yellow}</style></head>");
+		m_output = wxT(" \
+			<head><style type=\"text/css\"> \
+				.fileName {font-family: Consolas;font-size: 14px;font-weight: bold;} \
+				.lineNumber {background-color: #f6f6ef;padding: 2px;text-align: right;vertical-align: top;} \
+				.result, .lineNumber {font-family: Consolas;font-size: 13px;} \
+				.odd {background-color: #eee;} \
+				.odd .lineNumber {background-color: #d9d9d9;} \
+				.match {background-color: yellow;font-style: italic;} \
+			</style></head>");
 		m_outputCrit.Leave();
 
 		wxString path = m_path;
@@ -573,9 +581,9 @@ void SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath
 
 	// Header
 	const wxString path = filepath.GetFullPath();
-	const wxString format = (matches.size() == 1) ? _("<b>%s - %d match</b>") : _("<b>%s - %d matches</b>");
+	const wxString format = (matches.size() == 1) ? _("<span class=\"fileName\">%s - %d match</span>") : _("<span class=\"fileName\">%s - %d matches</span>");
 	wxString output = wxString::Format(format, path.c_str(), matches.size());
-	output += wxT("<br><table cellspacing=0>");
+	output += wxT("<br><table cellspacing=0 width=\"100%\">");
 
 	unsigned int linecount = 1;
 	const char* subject = buf.data();
@@ -583,6 +591,7 @@ void SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath
 	const char* linestart = subject;
 	vector<FileMatch>::iterator m = matches.begin();
 	const char* matchstart = subject + m->start;
+	bool even = true;
 
 	// Count lines
 	while (subject < end) {
@@ -591,7 +600,9 @@ void SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath
 			const size_t sel_len = m->end - m->start;
 
 			// Write linenumber with link
-			wxString line = wxString::Format(wxT("<tr><td bgcolor=#f6f6ef align=\"right\"><a href=\"txmt://open/?url=file://%s&line=%d&column=%d&sel=%d\">%d</a></td><td> "), path.c_str(), linecount, column, sel_len, linecount);
+			wxString line = wxString::Format(wxT("<tr class=\"%s\"><td class=\"lineNumber\"><a href=\"txmt://open/?url=file://%s&line=%d&column=%d&sel=%d\">%d</a></td><td class=\"result\" width=\"%s\"> "), 
+				(even ? wxT("even") : wxT("odd")), path.c_str(), linecount, column, sel_len, linecount, wxT("100%"));
+			even = !even;
 			
 			// Start of line
 			{
@@ -602,14 +613,14 @@ void SearchThread::WriteResult(const MMapBuffer& buf, const wxFileName& filepath
 
 
 			// Match
-			line += wxT("<i style=\"background-color: yellow\">");
+			line += wxT("<span class=\"match\">");
 			const size_t match_len = m->end - m->start;
 			{
 				wxString result = wxString(matchstart, wxConvUTF8, match_len);
 				SimpleHtmlEncode(result);
 				line += result;
 			}
-			line += wxT("</i>");
+			line += wxT("</span>");
 
 			// End of line
 			const char* const matchend = subject + match_len;

@@ -26,7 +26,7 @@ public:
 	virtual void* Entry();
 	void DeleteThread();
 
-	void StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex);
+	void StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex, const wxString& searchDirectory, const wxString& fileMatch);
 	void CancelSearch();
 	bool IsSearching() const {return m_isSearching;};
 	bool LastError() const {return m_lastError;};
@@ -52,13 +52,14 @@ private:
 		char lastChar;
 		bool matchCase;
 		pcre* regex;
+		pcre* fileMatchRegex;
 		wxString output;
 	};
 
 	void SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler);
 	void DoSearch(const MMapBuffer& buf, const SearchInfo& si, vector<FileMatch>& matches) const;
 	void WriteResult(const MMapBuffer& buf, const wxFileName& filepath, vector<FileMatch>& matches);
-	bool PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex);
+	bool PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex, const wxString& fileMatch);
 
 	// Member variables
 	bool m_isSearching;
@@ -71,6 +72,8 @@ private:
 	bool m_lastError;
 	wxString m_currentPath;
 	wxString m_output;
+	wxString m_searchDirectory;
+	wxString m_fileMatch;
 	wxCriticalSection m_outputCrit;
 
 	wxMutex m_condMutex;
@@ -82,11 +85,15 @@ private:
 enum {
 	CTRL_SEARCH,
 	CTRL_SEARCHBUTTON,
-	CTRL_BROWSER
+	CTRL_BROWSER,
+	CTRL_DIRECTORY,
+	CTRL_FILEMATCH
 };
 
 BEGIN_EVENT_TABLE(FindInProjectDlg, wxDialog)
 	EVT_TEXT_ENTER(CTRL_SEARCH, FindInProjectDlg::OnSearch)
+	EVT_TEXT_ENTER(CTRL_DIRECTORY, FindInProjectDlg::OnSearch)
+	EVT_TEXT_ENTER(CTRL_FILEMATCH, FindInProjectDlg::OnSearch)
 	EVT_BUTTON(CTRL_SEARCHBUTTON, FindInProjectDlg::OnSearch)
 	EVT_IDLE(FindInProjectDlg::OnIdle)
 	EVT_CLOSE(FindInProjectDlg::OnClose) 
@@ -104,6 +111,9 @@ FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHa
 	
 	// Create ctrls
 	m_searchCtrl = new wxTextCtrl(this, CTRL_SEARCH, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+	m_directoryCtrl = new wxTextCtrl(this, CTRL_DIRECTORY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+	m_fileMatchCtrl = new wxTextCtrl(this, CTRL_FILEMATCH , wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+	
 	m_searchButton = new wxButton(this, CTRL_SEARCHBUTTON, _("Search"));
 	m_caseCheck = new wxCheckBox(this, wxID_ANY, wxT("Match case"));
 	m_caseCheck->SetValue(true); // default is to match case
@@ -118,8 +128,14 @@ FindInProjectDlg::FindInProjectDlg(EditorFrame& parentFrame, const ProjectInfoHa
 		wxBoxSizer *searchSizer = new wxBoxSizer(wxHORIZONTAL);
 			searchSizer->Add(m_searchCtrl, 1, wxEXPAND|wxRIGHT, 5);
 			searchSizer->Add(m_searchButton, 0);
-			mainSizer->Add(searchSizer, 0, wxEXPAND|wxALL, 5);
-		wxBoxSizer *optionSizer = new wxBoxSizer(wxHORIZONTAL);
+			mainSizer->Add(searchSizer, 0, wxEXPAND|wxRIGHT|wxTOP|wxLEFT, 5);
+		wxGridSizer *optionsGridSizer = new wxGridSizer(2);
+			optionsGridSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Start Search in Directory:")), 1, wxEXPAND, 0);
+			optionsGridSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Match Files (Regex eg. \\.cpp$):")), 1, wxEXPAND, 0);
+			optionsGridSizer->Add(m_directoryCtrl, 1, wxEXPAND|wxRIGHT, 5);
+			optionsGridSizer->Add(m_fileMatchCtrl, 1, wxEXPAND, 0);
+			mainSizer->Add(optionsGridSizer, 0, wxEXPAND|wxALL, 5);
+		 wxBoxSizer *optionSizer = new wxBoxSizer(wxHORIZONTAL);
 			optionSizer->Add(m_caseCheck, 0, wxLEFT, 5);
 			optionSizer->Add(m_regexCheck, 0, wxLEFT, 5);
 			mainSizer->Add(optionSizer, 0);
@@ -165,7 +181,7 @@ void FindInProjectDlg::OnSearch(wxCommandEvent& WXUNUSED(event)) {
 
 	wxLogDebug(wxT("Searching:"));
 	const wxString path = projectDir.GetPath() + wxFILE_SEP_PATH;
-	m_searchThread->StartSearch(path, searchtext, m_caseCheck->GetValue(), m_regexCheck->GetValue());
+	m_searchThread->StartSearch(path, searchtext, m_caseCheck->GetValue(), m_regexCheck->GetValue(), m_directoryCtrl->GetValue(), m_fileMatchCtrl->GetValue());
 
 	m_inSearch = true;
 	m_searchButton->SetLabel(_("Cancel"));
@@ -241,7 +257,7 @@ void* SearchThread::Entry() {
 		}
 
 		SearchInfo si;
-		if (!PrepareSearchInfo(si, m_pattern, m_matchCase, m_regex)) continue;
+		if (!PrepareSearchInfo(si, m_pattern, m_matchCase, m_regex, m_fileMatch)) continue;
 
 		m_isSearching = true;
 		
@@ -253,11 +269,30 @@ void* SearchThread::Entry() {
 		m_output = wxT("<head><style type=\"text/css\">#match {background-color: yellow}</style></head>");
 		m_outputCrit.Leave();
 
-		SearchDir(m_path, si, infoHandler);
+		wxString path = m_path;
+		if(m_searchDirectory.length() > 0) {
+			wxString dir = m_searchDirectory;
+
+			wxChar first = dir[0];
+			if(first == wxFILE_SEP_PATH_DOS || first == wxFILE_SEP_PATH_UNIX) {
+				dir = dir.substr(1, dir.length()- 1);
+			}
+			
+			if(dir.length() > 0) {
+				wxChar last = dir[dir.length()-1];
+				if(last == wxFILE_SEP_PATH_DOS || last == wxFILE_SEP_PATH_UNIX) {
+					dir = dir.substr(0, dir.length()- 1);
+				}
+
+				path = path + dir + wxFILE_SEP_PATH;
+			}
+		}
+		SearchDir(path, si, infoHandler);
 		m_isSearching = false;
 
 		// Clean up
 		if (si.regex) free(si.regex);
+		if(si.fileMatchRegex) free(si.fileMatchRegex);
 	}
 
 	return NULL;
@@ -273,10 +308,12 @@ void SearchThread::DeleteThread() {
 	m_startSearchCond.Signal();
 }
 
-void SearchThread::StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex) {
+void SearchThread::StartSearch(const wxString& path, const wxString& pattern, bool matchCase, bool regex, const wxString& searchDirectory, const wxString& fileMatch) {
 	m_path = path;
 	m_pattern = pattern.c_str(); // wxString is not threadsafe, so we have to force copy
 	m_matchCase = matchCase;
+	m_searchDirectory = searchDirectory;
+	m_fileMatch = fileMatch;
 	m_regex = regex;
 	m_lastError = false;
 
@@ -310,10 +347,11 @@ bool SearchThread::UpdateOutput(wxString& output) {
 	return true;
 }
 
-bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex) {
+bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bool matchCase, bool regex, const wxString& fileMatch) {
 	si.pattern = pattern;
 	si.matchCase = matchCase;
 	si.regex = NULL;
+	si.fileMatchRegex = NULL;
 
 	// We need both upper- & lowercase versions for caseless search
 	if (!regex && !matchCase) {
@@ -327,17 +365,17 @@ bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bo
 	// In the future we might want to detect encoding of each file
 	// before searching it, but it will cost us some speed.
 	si.UTF8buffer = wxConvUTF8.cWC2MB(si.pattern);
+	
+	const char *error;
+	int erroffset;
 
 	if (regex) {
-		const char *error;
-		int erroffset;
-
 		// While the pattern is utf-8, we treat it as ascii here.
 		// Otherwise we would have to check all the files if they
 		// were valid utf-8 before searching.
 		int options = PCRE_MULTILINE;
 		if (!matchCase) options |= PCRE_CASELESS;
-
+		
 		// Compile the pattern
 		si.regex = pcre_compile(
 				si.UTF8buffer.data(), // the pattern
@@ -373,7 +411,45 @@ bool SearchThread::PrepareSearchInfo(SearchInfo& si, const wxString& pattern, bo
 			if (!matchCase) si.charmap[si.UTF8bufferUpper[i]] = last_char_pos-i;
 		}
 	}
+	
+	if(fileMatch.Length() > 0) {
+		// Compile the pattern
+		si.fileMatchRegex = pcre_compile(
+				fileMatch.mb_str(), // the pattern
+				PCRE_CASELESS,              // options
+				&error,               // for error message
+				&erroffset,           // for error offset
+				NULL);                // use default character tables
+				
+		// Handle errors
+		if (!si.fileMatchRegex) {
+			m_outputCrit.Enter();
+				m_currentPath = wxT("Invalid file match pattern: ") + wxString(error, wxConvUTF8);
+			m_outputCrit.Leave();
+			m_lastError = true;
+			return false;
+		}
+	}
 	return true;
+}
+
+bool ShouldSearchFile(const wxString& filename, const pcre* regex) {
+	if(!regex) return true;
+	
+	const int OVECCOUNT = 30;
+	int ovector[OVECCOUNT];
+
+	int rc = pcre_exec(
+		regex,             // the compiled pattern
+		NULL,                 // extra data - if we study the pattern
+		filename.mb_str(),           // the subject string
+		filename.length(),                  // the length of the subject
+		0,                  // start at offset in the subject
+		PCRE_NOTEMPTY,        // options
+		ovector,              // output vector for substring information
+		OVECCOUNT);           // number of elements in the output vector
+		
+	return rc > 0;
 }
 
 void SearchThread::SearchDir(const wxString& path, const SearchInfo& si, ProjectInfoHandler& infoHandler) {
@@ -387,11 +463,14 @@ void SearchThread::SearchDir(const wxString& path, const SearchInfo& si, Project
 
 	for (size_t f = 0; f < filenames.size(); ++f) {
 		if (!m_isSearching) return;
+		
 		m_outputCrit.Enter();
 			m_currentPath = path + filenames[f];
 		m_outputCrit.Leave();
 		filepath = m_currentPath;
 	
+		if(!ShouldSearchFile(filenames[f], si.fileMatchRegex)) continue;
+
 		// Map the file to memory
 		buf.Open(filepath);
 		if (!buf.IsMapped()) {

@@ -60,6 +60,7 @@ class DiffPanel;
 class IEditorSearch;
 class RemoteThread;
 class SnippetList;
+class ClipboardHistoryPane;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -183,7 +184,8 @@ public:
 		MENU_NAVIGATE_SELECTIONS,
 		MENU_NAVIGATE_SELECTIONS_MODE,
 		MENU_NAVIGATE_SELECTIONS_NEXT,
-		MENU_NAVIGATE_SELECTIONS_PREVIOUS
+		MENU_NAVIGATE_SELECTIONS_PREVIOUS,
+		MENU_CLIPBOARD_HISTORY_PANE
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -280,6 +282,11 @@ public:
 	// Snippet List (pane)
 	void ShowSnippetList();
 	virtual void CloseSnippetList();
+	
+	// ClipboardHistory (pane)
+	void ShowClipboardHistoryPane();
+	virtual void CloseClipboardHistoryPane();
+	void AddCopyText(wxString& copytext);
 	
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
@@ -425,6 +432,7 @@ private:
 	void OnMenuShowProject(wxCommandEvent& event);
 	void OnMenuShowSymbols(wxCommandEvent& event);
 	void OnMenuShowSnippets(wxCommandEvent& event);
+	void OnMenuShowClipboardHistoryPane(wxCommandEvent& event);
 	void OnMenuSymbols(wxCommandEvent& event);
 	void OnMenuRevisionHistory(wxCommandEvent& event);
 	void OnMenuUndoHistory(wxCommandEvent& event);
@@ -543,6 +551,7 @@ private:
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
 	SnippetList* m_snippetList;
+	ClipboardHistoryPane* m_clipboardHistoryPane;
 
 	// Statusbar
 	StatusBar* m_pStatBar;

@@ -43,7 +43,7 @@ OtherTabDlg::OtherTabDlg(EditorFrame& parent):
 	wxDialog(&parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
 	m_parentFrame(parent)
 {
-	const unsigned int width = parent.GetTabWidth();
+	const unsigned int width = parent.GetEditorCtrl()->GetTabWidth();
 
 	SetTitle (_("Other Tab Size"));
 

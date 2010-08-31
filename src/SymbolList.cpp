@@ -111,7 +111,7 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 		wxLogDebug(wxT("Doing Search"));
 		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
 			const SymbolRef& sr = *p;
-			wxString& symbol = m_editorSymbols->GetSymbolString(sr);
+			wxString symbol = m_editorSymbols->GetSymbolString(sr);
 			std::vector<char> symbolVector;
 			for(unsigned int c = 0; c < symbol.Len(); c++) {
 				symbolVector.push_back(symbol[c]);

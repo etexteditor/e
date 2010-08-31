@@ -69,6 +69,7 @@
 #include "eauibook.h"
 #include "DiffDirPane.h"
 #include "SnippetList.h"
+#include "ClipboardHistoryPane.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -171,6 +172,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_SHIFT_PROJECT_FOCUS, EditorFrame::OnShiftProjectFocus)
 	EVT_MENU(MENU_SHOWSYMBOLS, EditorFrame::OnMenuShowSymbols)
 	EVT_MENU(MENU_SHOWSNIPPETS, EditorFrame::OnMenuShowSnippets)
+	EVT_MENU(MENU_CLIPBOARD_HISTORY_PANE, EditorFrame::OnMenuShowClipboardHistoryPane)
 	EVT_MENU(MENU_REVHIS, EditorFrame::OnMenuRevisionHistory)
 	EVT_MENU(MENU_UNDOHIS, EditorFrame::OnMenuUndoHistory)
 	EVT_MENU(MENU_COMMANDOUTPUT, EditorFrame::OnMenuShowCommandOutput)
@@ -307,7 +309,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
 	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
-	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_snippetList(NULL),
+	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_snippetList(NULL), m_clipboardHistoryPane(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
 	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm)
@@ -426,6 +428,13 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 			bool showsymbols = false;
 			m_settings.GetSettingBool(wxT("showsymbols"), showsymbols);
 			if (showsymbols) ShowSymbolList();
+		}
+
+		// Check if we should show the clipboard history pane
+		{
+			bool showClipboardHistory = false;
+			m_settings.GetSettingBool(wxT("showClipboardHistory"), showClipboardHistory);
+			if (showClipboardHistory) ShowClipboardHistoryPane();
 		}
 
 		m_frameManager.Update();
@@ -622,6 +631,7 @@ void EditorFrame::InitMenus() {
 	//viewMenu->Check(MENU_INCOMMING, true);
 	viewMenu->Append(MENU_SHOWSYMBOLS, _("&Symbol List\tCtrl+Alt+L"), _("Show Symbol List"), wxITEM_CHECK);
 	viewMenu->Append(MENU_SHOWSNIPPETS, _("&Snippet List\tCtrl+Alt+S"), _("Show Snippet List"), wxITEM_CHECK);
+	viewMenu->Append(MENU_CLIPBOARD_HISTORY_PANE, _("&Clipboard History"), _("Show Clipboard History Pane"), wxITEM_CHECK);
 	viewMenu->Append(MENU_REVHIS, _("&Revision History\tF6"), _("Show Revision History"), wxITEM_CHECK);
 	viewMenu->Check(MENU_REVHIS, true);
 	viewMenu->Append(MENU_UNDOHIS, _("&Undo History\tF7"), _("Show Undo History"), wxITEM_CHECK);
@@ -2175,6 +2185,10 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	wxMenuItem* snItem = GetMenuBar()->FindItem(MENU_SHOWSNIPPETS);
 	if (snItem) snItem->Check(m_snippetList != NULL);
 
+	// "Show Clipboard History"
+	wxMenuItem* chItem = GetMenuBar()->FindItem(MENU_CLIPBOARD_HISTORY_PANE);
+	if (chItem) chItem->Check(m_clipboardHistoryPane != NULL);
+
 	// "Highlight Authors"
 	wxMenuItem* hlItem = GetMenuBar()->FindItem(MENU_HL_USERS);
 	if (hlItem) hlItem->Check(m_userHighlight);
@@ -3219,6 +3233,11 @@ void EditorFrame::OnMenuShowSnippets(wxCommandEvent& event) {
 	else CloseSnippetList();
 }
 
+void EditorFrame::OnMenuShowClipboardHistoryPane(wxCommandEvent& event) {
+	if (event.IsChecked()) ShowClipboardHistoryPane();
+	else CloseClipboardHistoryPane();
+}
+
 void EditorFrame::OnMenuSymbols(wxCommandEvent& WXUNUSED(event)) {
 	if (m_symbolList) {
 		// If symbol list is already open, we switch focus
@@ -3328,6 +3347,49 @@ void EditorFrame::CloseSnippetList() {
 	m_frameManager.Update();
 }
 
+void EditorFrame::ShowClipboardHistoryPane() {
+	if (m_clipboardHistoryPane) return; // already shown
+	
+	// Create the pane
+	m_clipboardHistoryPane = new ClipboardHistoryPane(*this);
+	wxAuiPaneInfo paneInfo;
+	paneInfo.Name(wxT("Clipboard History")).Right().Caption(_("Clipboard History")).BestSize(wxSize(150,50)); // defaults
+
+	// Load pane settings
+	wxString panePerspective;
+	m_settings.GetSettingString(wxT("clipboardHistory_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showClipboardHistory"), true);
+	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);
+
+	// Add to manager
+	m_frameManager.AddPane(m_clipboardHistoryPane, paneInfo);
+	m_frameManager.Update();
+}
+
+void EditorFrame::CloseClipboardHistoryPane() {
+	if (!m_clipboardHistoryPane) return; // already closed
+
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_clipboardHistoryPane);
+
+	// Save pane settings
+	const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+	m_settings.SetSettingString(wxT("clipboardHistory_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showClipboardHistory"), false);
+
+	// Delete the snippet pane
+	m_frameManager.DetachPane(m_clipboardHistoryPane);
+	m_clipboardHistoryPane->Hide();
+	m_clipboardHistoryPane->Destroy();
+	m_clipboardHistoryPane = NULL;
+	m_frameManager.Update();
+}
+
+void EditorFrame::AddCopyText(wxString& copytext) {
+	if(m_clipboardHistoryPane) {
+		m_clipboardHistoryPane->AddCopyText(copytext);
+	}
+}
+
 void EditorFrame::CloseWebPreview() {
 	if (!m_previewDlg) return; // already closed
 
@@ -3382,6 +3444,13 @@ void EditorFrame::OnPaneClose(wxAuiManagerEvent& event) {
 	}
 	else if (event.GetPane()->window == m_snippetList) {
 		CloseSnippetList();
+
+		// We have already deleted the window
+		// so we don't want aui to do any close handling
+		event.Veto();
+	}
+	else if (event.GetPane()->window == m_clipboardHistoryPane) {
+		CloseClipboardHistoryPane();
 
 		// We have already deleted the window
 		// so we don't want aui to do any close handling
@@ -3729,6 +3798,16 @@ void EditorFrame::SaveState() {
 		const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
 		m_settings.SetSettingString(wxT("snippet_pane"), panePerspective);
 		m_settings.SetSettingBool(wxT("showsnippets"), true);
+	}
+
+	// Save snippet list layout
+	if (m_clipboardHistoryPane) {
+		wxAuiPaneInfo& pane = m_frameManager.GetPane(m_clipboardHistoryPane);
+
+		// Save pane settings
+		const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+		m_settings.SetSettingString(wxT("clipboardHistory_pane"), panePerspective);
+		m_settings.SetSettingBool(wxT("showClipboardHistory"), true);
 	}
 
 	m_settings.SetSettingBool(wxT("showproject"), projectPane.IsShown());

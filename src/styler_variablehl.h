@@ -61,7 +61,7 @@ private:
 	EditorCtrl& m_editorCtrl;
 
 	unsigned int m_cursorPosition;
-	time_t m_lastUpdateTime;
+	wxLongLong m_lastUpdateTime;
 	EditorChangeState m_lastEditorState;
 
 	const wxColour& m_searchHighlightColor;

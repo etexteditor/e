@@ -332,12 +332,12 @@ bool Styler_HtmlHL::SameTag(TagInterval& openTag, TagInterval& closeTag, const D
 		//we are guaranteed openIndex and closeIndex are less than the doc length because there must be a closing bracket in the tag to get in here
 		start = doc.GetChar(openIndex);
 		if(start >= 'A' && start <= 'Z') {
-		    start -= (unsigned int)('A' - 'a');
+		    start -= (wxChar)('A' - 'a');
 		}
 		
 		end = doc.GetChar(closeIndex);
 		if(end >= 'A' && end <= 'Z') {
-		    end -= (unsigned int)('A' - 'a');
+		    end -= (wxChar)('A' - 'a');
 		}
 		
 		//once we hit non-alphanumber characters, then the tags have not differred so far, so it is valid
@@ -401,10 +401,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	//wxLogDebug(wxT("INSERT: %d %d %d"), start, length, m_cursorPosition);
 	if(!ShouldStyle()) return;
 
-	if(needReparse) {
-		Reparse();
-		return;
-	}
+	if(needReparse) return;
 
 	unsigned int end = start+length;
 	int count = m_brackets.size();
@@ -423,7 +420,7 @@ void Styler_HtmlHL::Insert(unsigned int start, unsigned int length) {
 	cxENDLOCK
 	
 	if(foundBrackets) {
-		needReparseTags = true;
+		needReparse = true;
 	} else {
 		if(!needReparseTags) {
 			int size = (int) m_tags.size();
@@ -446,10 +443,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 	//wxLogDebug(wxT("DELETE:  %d %d %d"), start, end, m_cursorPosition);
 	if(!ShouldStyle()) return;
 
-	if(needReparse) {
-		Reparse();
-		return;
-	}
+	if(needReparse) return;
 
 	int count = m_brackets.size();
 	int length = end - start;
@@ -483,7 +477,7 @@ void Styler_HtmlHL::Delete(unsigned int start, unsigned int end) {
 			}
 		}
 	} else {
-		needReparseTags = true;
+		needReparse = true;
 	}
 }
 

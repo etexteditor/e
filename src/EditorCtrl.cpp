@@ -581,7 +581,7 @@ unsigned int EditorCtrl::GetCurrentColumnNumber() {
 	const unsigned int pos = m_lines.GetPos();
 
 	// Calculate pos with tabs expanded.
-	const unsigned int tab_size = this->m_parentFrame.GetTabWidth();
+	const unsigned int tab_size = this->m_tabWidth;
 	unsigned int tabpos = 0;
 	cxLOCKDOC_READ(m_doc)
 		for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < pos; ++dbi) {
@@ -1212,7 +1212,7 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 	return m_lines.GetLineIndent( (i == -1) ? 0 : i );
 }
 
-wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
+wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline, bool skipWhitespaceOnlyLines) {
 	if (lineid == 0) return m_lines.GetLineIndent(0);
 	wxASSERT(lineid < m_lines.GetLineCount());
 
@@ -1239,7 +1239,20 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 
 				// Ignore unindented lines
 				const search_result res = RegExFind(unIndentedLinePattern, linestart, false, NULL, lineend);
-				if (res.error_code <= 0) {validLine = i; break;}
+				if (res.error_code <= 0) {
+					if(skipWhitespaceOnlyLines) {
+						cxLOCKDOC_READ(m_doc)
+							while(linestart < lineend) {
+								const wxChar c = doc.GetChar(linestart);
+								if(!(c == ' ' || c == '\t')) break;
+								linestart++;
+							}
+						cxENDLOCK
+						if(linestart == lineend) continue;
+					}
+					validLine = i;
+					break;
+				}
 			}
 		}
 		if (validLine == lineid) break;
@@ -1303,7 +1316,7 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 			if (res.error_code > 0) {
 				// Decrease tab level with one
 				if (!indent.empty()) {
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					if (indent[0] == wxT('\t')) indent.Remove(0, 1);
 					else if (indent.size() >= tabWidth) indent.Remove(0, tabWidth);
 				}
@@ -1404,7 +1417,7 @@ bool EditorCtrl::SmartTab() {
 
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
 	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	unsigned int whitespaceEnd = linestart;
 	unsigned int pos = GetPos();
 	
@@ -1415,9 +1428,10 @@ bool EditorCtrl::SmartTab() {
 			whitespaceEnd++;
 		}
 	cxENDLOCK
+	
 	if(whitespaceEnd >= lineend) {
 		//the line is all whitespace
-		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false);
+		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false, true);
 		int realWidth = GetTabWidthInSpaces(realIndent, tabWidth);
 		int currentWidth = 0;
 		cxLOCKDOC_READ(m_doc)
@@ -1530,7 +1544,7 @@ void EditorCtrl::Tab() {
 
 	// Soft Tab (incremental number of spaces)
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 
 	// Calculate pos with tabs expanded
 	unsigned int tabpos = 0;
@@ -2304,8 +2318,8 @@ unsigned int EditorCtrl::InsertNewline() {
 		if (!atLineEnd) {
 			// Get the correct indentation for new line
 			const wxString newindent = GetRealIndent(lineid+1);
-			const unsigned int indentlevel = CountTextIndent(indent, m_parentFrame.GetTabWidth());
-			const unsigned int newindentlevel = CountTextIndent(newindent, m_parentFrame.GetTabWidth());
+			const unsigned int indentlevel = CountTextIndent(indent, m_tabWidth);
+			const unsigned int newindentlevel = CountTextIndent(newindent, m_tabWidth);
 
 			// Only double the newlines if the new line will be de-dented
 			if (newindentlevel < indentlevel) {
@@ -2399,7 +2413,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 				}
 
 				if (indentChange != 0) {
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 
 					// Get the indentation len based on the line above
 					const wxString currentIndent = lineid == 0 ? *wxEmptyString : GetNewIndentAfterNewline(lineid-1);
@@ -3625,7 +3639,7 @@ void EditorCtrl::TabsToSpaces() {
 
 	wxBusyCursor busy;
 
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	const wxString indentString(wxT(' '), tabWidth);
 	unsigned int pos = m_lines.GetPos();
 
@@ -3744,7 +3758,7 @@ void EditorCtrl::SpacesToTabs() {
 
 	wxBusyCursor busy;
 
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 
 	// Get list of lines to be converted
 	if (m_lines.IsSelected()) {
@@ -3904,7 +3918,7 @@ void EditorCtrl::IndentSelectedLines(bool add_indent) {
 	else sel_lines.push_back(m_lines.GetCurrentLine());
 
 	unsigned int pos = m_lines.GetPos();
-	unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	unsigned int tabWidth = m_tabWidth;
 
 	// Insert the indentations
 	for (vector<unsigned int>::const_iterator i = sel_lines.begin(); i != sel_lines.end(); ++i) {
@@ -4345,6 +4359,11 @@ void EditorCtrl::OnCopy() {
 		}
 	}
 
+	m_parentFrame.AddCopyText(copytext);
+	DoCopy(copytext);
+}
+
+void EditorCtrl::DoCopy(wxString& copytext) {
 	if (!copytext.empty()) {
 #ifdef __WXMSW__
 		// WINDOWS ONLY!! newline conversion
@@ -6136,7 +6155,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 					}
 
 					// Check if we are at a soft tabpoint
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
 						&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 					{
@@ -6223,7 +6242,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 						prevpos = doc.GetPrevCharPos(pos);
 						prevchar = doc.GetChar(prevpos);
 					cxENDLOCK
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					unsigned int newpos;
 
 					// Check if we are at a soft tabpoint
@@ -6522,7 +6541,7 @@ void EditorCtrl::CursorLeft(bool select) {
 
 		// Check if we are at a soft tabpoint
 		if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()) {
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+			const unsigned int tabWidth = m_tabWidth;
 			if (pos >= tabWidth && IsSpaces(pos - tabWidth, pos))
 				prevpos = pos - tabWidth;
 		}
@@ -6553,7 +6572,7 @@ void EditorCtrl::CursorRight(bool select) {
 
 		// Check if we are at a soft tabpoint
 		if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()) {
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+			const unsigned int tabWidth = m_tabWidth;
 			if (pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 				nextpos = pos + tabWidth;
 		}
@@ -6931,7 +6950,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(wxT("TM_COLUMN_NUMBER"), wxString::Format(wxT("%u"), columnIndex));
 
 	// TM_TAB_SIZE
-	const wxString tabsize = wxString::Format(wxT("%u"), m_parentFrame.GetTabWidth());
+	const wxString tabsize = wxString::Format(wxT("%u"), m_tabWidth);
 	env.SetEnv(wxT("TM_TAB_SIZE"), tabsize);
 
 	// TM_SOFT_TABS

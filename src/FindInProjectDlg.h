@@ -45,6 +45,8 @@ private:
 
 	// member ctrl's
 	wxTextCtrl* m_searchCtrl;
+	wxTextCtrl* m_directoryCtrl;
+	wxTextCtrl* m_fileMatchCtrl;
 	wxButton* m_searchButton;
 	wxCheckBox* m_caseCheck;
 	wxCheckBox* m_regexCheck;

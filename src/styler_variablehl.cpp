@@ -46,16 +46,16 @@ bool Styler_VariableHL::OnIdle() {
 		return false;
 	}
 
+	m_cursorPosition = m_editorCtrl.GetPos();
 	const wxString text = m_editorCtrl.GetWord(m_cursorPosition);
 	//Instead of parsing the document in the styler, I moved it to an OnIdle function so the editor doesn't appear to lag as much.
 	//It will perform a full document search about 1 second after the most recent change to the document.
-	//TODO: use miliseconds for much more accurate timing
-	if(time(NULL) - m_lastUpdateTime <= 0) {
+	if(wxGetLocalTimeMillis() - m_lastUpdateTime <= 1000) {
 		return false;
 	} else if (m_editorCtrl.GetChangeState() != m_lastEditorState) {
 		//reset the state and updateTime so that we have to wait another second
 		m_lastEditorState = m_editorCtrl.GetChangeState();
-		m_lastUpdateTime = time(NULL);
+		m_lastUpdateTime = wxGetLocalTimeMillis();
 		return false;
 	} else if (text != m_text) {
 		//wxLogDebug(wxT("Search: %s"), text);
@@ -68,9 +68,8 @@ bool Styler_VariableHL::OnIdle() {
 		m_editorCtrl.DrawLayout();
 
 		m_lastEditorState = m_editorCtrl.GetChangeState();
-		m_lastUpdateTime = time(NULL);
+		m_lastUpdateTime = wxGetLocalTimeMillis();
 	}
-
 	return false;
 }
 

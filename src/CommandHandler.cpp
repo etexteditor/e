@@ -268,7 +268,10 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				m_reverse = true;
 				//fall-through
 			case 'V':
-				if (selected) m_state = state_filter_sels;
+				if (selected) {
+					m_search.clear();
+					m_state = state_filter_sels;
+				}
 				else m_state = state_select_all;
 				break;
 			case 'a':
@@ -392,7 +395,10 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 			case WXK_ESCAPE:
 				m_state = state_normal;
 				m_editor.ClearSearchRange();
-				if (m_cmd.empty()) m_editor.RemoveAllSelections();
+				if (m_cmd.empty()) {
+					if (m_editor.IsSelected()) m_editor.RemoveAllSelections();
+					else m_parentFrame.ShowCommandMode(false);
+				}
 				EndMovement();
 				break;
 			case WXK_RETURN:

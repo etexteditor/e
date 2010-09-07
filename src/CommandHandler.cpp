@@ -691,8 +691,8 @@ void CommandHandler::DoSearch(size_t count, int keyCode, wxChar c) {
 
 		// If movement is part of a command we want to highlight the
 		// movement rather than the match
-		if (m_endState == state_normal) m_editor.Select(sr.start, sr.end);
-		else m_editor.Select(m_searchPos, sr.start);
+		if (m_endState == state_normal) m_editor.Select(sr.start, sr.end, true);
+		else m_editor.Select(m_searchPos, sr.start, true);
 	}
 
 	m_editor.SetSearchHighlight(m_search, FIND_MATCHCASE|FIND_USE_REGEX);
@@ -745,7 +745,7 @@ void CommandHandler::DoSearchAll(int keyCode, wxChar c) {
 				const search_result sr = m_editor.SearchDirect(m_search, options, searchpos, iv.end);
 				if (sr.error_code < 0) break; // no more matches
 
-				m_editor.AddSelection(sr.start, sr.end);
+				m_editor.AddSelection(sr.start, sr.end, true);
 				m_editor.SetSearchRangeCursor(i, sr.end);
 				if (pos == cpos) {
 					m_editor.SetPos(sr.end);
@@ -764,7 +764,7 @@ void CommandHandler::DoSearchAll(int keyCode, wxChar c) {
 			const search_result sr = m_editor.SearchDirect(m_search, options, searchpos);
 			if (sr.error_code < 0) break; // no more matches
 
-			m_editor.AddSelection(sr.start, sr.end);
+			m_editor.AddSelection(sr.start, sr.end, true);
 			m_editor.SetPos(sr.end);
 			m_lastSearchPos = sr.end;
 

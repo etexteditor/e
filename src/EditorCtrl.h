@@ -205,7 +205,7 @@ public:
 	bool IsSelected() const;
 	bool IsMultiSelected() const;
 	void SelectAll();
-	void Select(unsigned int start, unsigned int end);
+	void Select(unsigned int start, unsigned int end, bool allowEmpty=false);
 	void AddSelection(unsigned int start, unsigned int end, bool allowEmpty=false);
 	const vector<interval>& GetSelections() const {return m_lines.GetSelections();};
 	void RemoveAllSelections();

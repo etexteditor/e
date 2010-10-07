@@ -23,6 +23,7 @@
 #include "EditorCtrl.h"
 #include "BundleMenu.h"
 #include "ITmGetSyntaxes.h"
+#include "Accelerators.h"
 
 class OtherTabDlg : public wxDialog {
 public:
@@ -95,7 +96,7 @@ StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, const ITmGetSyntaxes* s
 	m_syntax_handler(syntax_handler),
 	m_editorCtrl(NULL) 
 {
-	const int widths[] = {160, 120, 100, -1, 150 };
+	const int widths[] = {160, 120, 100, 120, -1, 150 };
 	SetFieldsCount(WXSIZEOF(widths), widths);
 }
 
@@ -104,6 +105,9 @@ void StatusBar::SetPanelTextIfDifferent(const wxString& newText, const int panel
 }
 
 void StatusBar::UpdateBarFromActiveEditor() {
+	// Chords
+	SetStatusText(m_parentFrame.GetAccelerators()->StatusBarText(), 3);
+
 	EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
 	if (!editorCtrl) return;
 
@@ -156,7 +160,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 			for (std::vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
 				if (pos >= p->start) {
 					const SymbolRef& sr = *p;
-					SetStatusText(editorCtrl->GetSymbolString(sr), 3);
+					SetStatusText(editorCtrl->GetSymbolString(sr), 4);
 					break;
 				}
 			}
@@ -178,7 +182,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 		else if (eol == wxTextFileType_Unix) encoding += wxT(" lf");
 		else if (eol == wxTextFileType_Mac) encoding += wxT(" cr");
 
-		SetStatusText(encoding, 4);
+		SetStatusText(encoding, 5);
 
 		m_pos = pos;
 	}

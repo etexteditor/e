@@ -61,6 +61,7 @@ class IEditorSearch;
 class RemoteThread;
 class SnippetList;
 class ClipboardHistoryPane;
+class Accelerators;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -307,6 +308,9 @@ public:
 
 	static wxString DefaultFileFilters;
 
+	bool HandleChord(wxKeyEvent& event);
+	Accelerators* GetAccelerators() { return m_accelerators; }
+
 protected:
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
 
@@ -538,6 +542,8 @@ private:
 	wxMenu* m_recentProjectsMenu;
 	wxMenu* m_syntaxMenu;
 	wxMenu* m_wrapMenu;
+	Accelerators* m_accelerators;
+
 
 	// wxAUI and Panes
 	wxAuiManager m_frameManager;

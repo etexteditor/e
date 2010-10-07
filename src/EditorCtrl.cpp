@@ -45,6 +45,7 @@
 #include "IAppPaths.h"
 #include "Strings.h"
 #include "ReplaceStringParser.h"
+#include "Accelerators.h"
 
 // Document Icons
 #include "document.xpm"
@@ -5751,6 +5752,13 @@ void EditorCtrl::OnKeyDown(wxKeyEvent& event) {
 		m_blockKeyState = BLOCKKEY_INIT;
 		m_blocksel_ids.clear();
 	}
+
+	if(event.GetKeyCode() == WXK_ALT) return;
+	if(event.GetKeyCode() == WXK_CONTROL) return;
+	if(event.GetKeyCode() == WXK_SHIFT) return;
+
+	if(m_parentFrame.HandleChord(event)) return;
+
 	event.Skip();
 }
 
@@ -7951,7 +7959,9 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 	// Get list of all actions available from current scope
 	vector<const tmAction*> actions;
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
-	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers));
+
+	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers, m_parentFrame.GetAccelerators()));
+	if(m_parentFrame.GetAccelerators()->WasChordActivated()) return true;
 
 	// Key Diagnostics
 	if (m_parentFrame.IsKeyDiagMode()) {

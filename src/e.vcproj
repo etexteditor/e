@@ -938,6 +938,14 @@
 			Name="Editor"
 			>
 			<File
+				RelativePath=".\Accelerators.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Accelerators.h"
+				>
+			</File>
+			<File
 				RelativePath="AutoPairs.cpp"
 				>
 			</File>

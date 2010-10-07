@@ -37,6 +37,8 @@
 #include "ITmGetSyntaxes.h"
 #include "ITmLoadBundles.h"
 
+#include "Accelerators.h"
+
 
 class PListHandler;
 class PListDict;
@@ -195,15 +197,15 @@ public:
 
 	class ShortcutMatch : public std::unary_function<const tmAction*, bool> {
 	public:
-		ShortcutMatch(int keyCode, int modifiers)
-			: m_keyCode(keyCode), m_modifiers(modifiers) {};
+		ShortcutMatch(int keyCode, int modifiers, Accelerators* accelerators)
+			: m_keyCode(keyCode), m_modifiers(modifiers), m_accelerators(accelerators) {};
 		bool operator()(const tmAction* x) const {
-			const tmKey& key = x->key;
-			return (key.keyCode == m_keyCode && key.modifiers == m_modifiers);
+			return m_accelerators->HandleBundle(m_keyCode, m_modifiers, x);
 		};
 	private:
 		const int m_keyCode;
 		const int m_modifiers;
+		Accelerators* m_accelerators;
 	};
 
 	class ExtMatch : public std::unary_function<const tmDragCommand*, bool> {

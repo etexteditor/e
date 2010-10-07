@@ -31,6 +31,9 @@ public:
 	bool OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxODStatus stat);
 #endif
 
+	void SetCustomAccel(wxString accel) { m_customAccel = accel; }
+	const tmAction& GetAction() { return m_action; }
+
 #ifdef __WXGTK__
 	void AfterInsert();
 #else
@@ -41,6 +44,7 @@ private:
 	const tmAction& m_action;
 #ifdef __WXMSW__
 	wxFont m_unifont;
+	wxString m_customAccel;
 #endif
 };
 

@@ -70,6 +70,7 @@
 #include "DiffDirPane.h"
 #include "SnippetList.h"
 #include "ClipboardHistoryPane.h"
+#include "Accelerators.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -298,6 +299,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(MENU_INCOMMING_TOOLBAR, EditorFrame::OnMenuIncommingTool)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
 	//EVT_MENU(wxID_PREVIEW, EditorFrame::OnMenuPrintPreview)
+
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
@@ -509,6 +511,7 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
+	m_accelerators = new Accelerators(this);
 	const unsigned int accelcount = 9;
 	wxAcceleratorEntry entries[accelcount];
 	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
@@ -741,6 +744,7 @@ void EditorFrame::InitMenus() {
 
 	// associate the menu bar with the frame
 	SetMenuBar(menuBar);
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::RestoreState() {
@@ -893,6 +897,8 @@ void EditorFrame::ResetBundleMenu() {
 	// Insert new bundles menu
 	wxMenu* bundleMenu = GetBundleMenu();
 	menuBar->Insert(menuNdx, bundleMenu, _("&Bundles"));
+
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::ResetSyntaxMenu() {
@@ -909,6 +915,8 @@ void EditorFrame::ResetSyntaxMenu() {
 		m_syntaxMenu->Append(item);
         item->AfterInsert();
 	}
+
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::CreateEncodingMenu(wxMenu& menu) const {
@@ -4096,4 +4104,8 @@ void EditorFrame::OnMenuNavigateSelectionsPrevious(wxCommandEvent& WXUNUSED(even
 	EditorCtrl* ec = GetEditorCtrl();
 	if(!ec) return;
 	ec->PreviousSelection();
+}
+
+bool EditorFrame::HandleChord(wxKeyEvent& event) {
+	return m_accelerators->HandleKeyEvent(event);
 }

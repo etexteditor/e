@@ -139,10 +139,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libcmt.lib libcpmt.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib wsock32.lib wxbase28u.lib wxbase28u_net.lib wxmsw28u_core.lib wxmsw28u_adv.lib wxmsw28u_aui.lib wxpng.lib wxjpeg.lib wxzlib.lib wxregexu.lib mk4vc60s.lib libtommath.lib libtomcrypt.lib pcre.lib tinyxml.lib dbghelp.lib libcurl.lib winmm.lib e.lib"
+				AdditionalDependencies="libcmt.lib libcpmt.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib wsock32.lib wxbase28u.lib wxbase28u_net.lib wxmsw28u_core.lib wxmsw28u_adv.lib wxmsw28u_aui.lib wxpng.lib wxjpeg.lib wxzlib.lib wxregexu.lib mk4vc60s.lib libtommath.lib libtomcrypt.lib pcre.lib tinyxml.lib dbghelp.lib libcurl.lib winmm.lib e.lib ecore.lib"
 				OutputFile="$(OutDir)\e.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\external\wxwidgets\lib\vc_lib;..\..\external\pcre;..\..\external\libtomcrypt;..\..\external\libtommath;..\..\external\tinyxml\Release;..\..\external\curl\lib\Release;..\..\external\metakit\builds;..\Release;..\..\external\boost\stage\lib"
+				AdditionalLibraryDirectories="..\..\external\wxwidgets\lib\vc_lib;..\..\external\pcre;..\..\external\libtomcrypt;..\..\external\libtommath;..\..\external\tinyxml\Release;..\..\external\curl\lib\Release;..\..\external\metakit\builds;..\Release;..\..\external\boost\stage\lib;..\..\ecore"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libc.lib,MSVCRTD.lib,msvcrt.lib"
 				GenerateDebugInformation="true"

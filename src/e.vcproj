@@ -1258,46 +1258,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Catalyst.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\Catalyst.h"
-			>
-		</File>
-		<File
-			RelativePath=".\cData.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\cData.h"
-			>
-		</File>
-		<File
-			RelativePath=".\cDataBool.h"
-			>
-		</File>
-		<File
-			RelativePath=".\cDataList.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\cDataList.h"
-			>
-		</File>
-		<File
-			RelativePath=".\cDataNum.h"
-			>
-		</File>
-		<File
-			RelativePath=".\cDataText.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\cDataText.h"
-			>
-		</File>
-		<File
 			RelativePath="Cell.cpp"
 			>
 		</File>
@@ -1342,38 +1302,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\cxInternal.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\cxInternal.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DataList.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\DataList.h"
-			>
-		</File>
-		<File
-			RelativePath=".\DataText.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\DataText.h"
-			>
-		</File>
-		<File
-			RelativePath=".\diff.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\diff.h"
-			>
-		</File>
-		<File
 			RelativePath="diff.xpm"
 			>
 		</File>
@@ -1391,14 +1319,6 @@
 		</File>
 		<File
 			RelativePath="Dispatcher.h"
-			>
-		</File>
-		<File
-			RelativePath=".\doc_byte_iter.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\doc_byte_iter.h"
 			>
 		</File>
 		<File
@@ -1550,10 +1470,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Fletcher.h"
-			>
-		</File>
-		<File
 			RelativePath="Fold.cpp"
 			>
 		</File>
@@ -1583,14 +1499,6 @@
 		</File>
 		<File
 			RelativePath="GutterCtrl.h"
-			>
-		</File>
-		<File
-			RelativePath=".\HashStream.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\HashStream.h"
 			>
 		</File>
 		<File
@@ -1695,14 +1603,6 @@
 		</File>
 		<File
 			RelativePath="RecursiveCriticalSection.h"
-			>
-		</File>
-		<File
-			RelativePath=".\RegisterDlg.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\RegisterDlg.h"
 			>
 		</File>
 		<File

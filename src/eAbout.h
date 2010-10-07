@@ -45,6 +45,9 @@ private:
 		// Member variables
 		wxBitmap bitmap;
 	};
+
+	// Member variables
+	bool m_needLicenseUpdate;
 };
 
 #endif // __EABOUT_H_

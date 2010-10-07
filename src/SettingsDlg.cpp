@@ -427,7 +427,7 @@ void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
 
 void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	// Check if name & profile pic changed.
-	wxString name = m_ctrlUserName->GetLabel();
+	/*wxString name = m_ctrlUserName->GetLabel();
 	cxLOCK_READ(m_catalyst)
 		if (name == catalyst.GetUserName(0)) name.clear(); // empty string means no change
 	cxENDLOCK
@@ -438,7 +438,7 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 		cxLOCK_WRITE(m_catalyst)
 			catalyst.SetProfile(name, m_userImage);
 		cxENDLOCK
-	}
+	}*/
 
 	if (m_envPage->VarsChanged()) {
 		m_settings.env.clear();

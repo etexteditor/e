@@ -26,7 +26,7 @@ END_EVENT_TABLE()
 eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
 	const bool isregistered = cat.IsRegistered();
-	const bool needLicenseUpdate = cat.NeedLicenseUpdate();
+	m_needLicenseUpdate = cat.NeedLicenseUpdate();
 	const wxString& versionName = wxGetApp().VersionName();
 
 	SetTitle (_("About e"));
@@ -49,7 +49,7 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 
 	wxString infotext = _("e is a fast and elegant text editor with many innovative features.\n\n");
 	if (isregistered) infotext += _("Thanks for your registration of this unique tool."); 
-	else if (needLicenseUpdate) infotext += _("Thanks for your use of this unique tool.");
+	else if (m_needLicenseUpdate) infotext += _("Thanks for your use of this unique tool.");
 	else infotext += _("This is your 30 days evaluation of this unique tool.");
 	infotext += _(" We hope you will have a lot of fun using it.\n\nWe are not a big corporation so we can assure you the fee you paid for the registration will go directly to the future software development.\n\nAgain thanks for your support.");
 
@@ -73,7 +73,7 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 		infopane->Add (okButton, 0, wxALIGN_RIGHT|wxALIGN_BOTTOM|wxLEFT|wxBOTTOM, 10);
 	}
 	else {
-		if (needLicenseUpdate) {
+		if (m_needLicenseUpdate) {
 			infopane->Add(new wxStaticText(this, -1, _("Your license is not valid for this release.")), 0, wxALIGN_CENTER);
 			infopane->Add(new wxStaticText(this, -1, _("But it does qualify for an update at a reduced price.")), 0, wxALIGN_CENTER);
 		}
@@ -129,7 +129,8 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 }
 
 void eAbout::OnBuy(wxCommandEvent& WXUNUSED(event)) {
-	wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com/order.html"));
+	if (m_needLicenseUpdate) wxLaunchDefaultBrowser(wxT("https://www.plimus.com/jsp/buynow.jsp?contractId=2862706"));
+	else wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com/order.html"));
 }
 
 void eAbout::OnRegister(wxCommandEvent& WXUNUSED(event)) {

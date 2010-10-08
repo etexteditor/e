@@ -26,6 +26,7 @@ END_EVENT_TABLE()
 eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 :  wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
 	const bool isregistered = cat.IsRegistered();
+	m_needLicenseUpdate = cat.NeedLicenseUpdate();
 	const wxString& versionName = wxGetApp().VersionName();
 
 	SetTitle (_("About e"));
@@ -46,9 +47,11 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 
 	infopane->Add(0,10,1);
 
-	wxString infotext;
-	if (isregistered) infotext = _("e is a fast and elegant text editor with many innovative features.\n\nThanks for your registration of this unique tool. We hope you will have a lot of fun using it.\n\nWe are not a big corporation so we can assure you the fee you paid for the registration will go directly to the future software development.\n\nAgain thanks for your support.");
-	else infotext = _("e is a fast and elegant text editor with many innovative features.\n\nThis is your 30 days evaluation of this unique tool. We hope you will have a lot of fun using it. You can decide to purchase a registration anytime, just press the 'Buy' button.\n\nWe are not a big corporation so we can assure you the fee you pay for the registration will go directly to the future software development.\n\nAgain thanks for your support.");
+	wxString infotext = _("e is a fast and elegant text editor with many innovative features.\n\n");
+	if (isregistered) infotext += _("Thanks for your registration of this unique tool."); 
+	else if (m_needLicenseUpdate) infotext += _("Thanks for your use of this unique tool.");
+	else infotext += _("This is your 30 days evaluation of this unique tool.");
+	infotext += _(" We hope you will have a lot of fun using it.\n\nWe are not a big corporation so we can assure you the fee you paid for the registration will go directly to the future software development.\n\nAgain thanks for your support.");
 
 	wxTextCtrl* textctrl = new wxTextCtrl(this, -1, infotext, wxDefaultPosition, wxSize(350,150) , wxTE_MULTILINE|wxTE_READONLY);
 	infopane->Add(textctrl);
@@ -58,9 +61,9 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 	infopane->Add(0,10);
 
 	// Registration info
-	infopane->Add(new wxStaticText(this, -1, _("This program is registered to:")));
-	infopane->Add(0,10);
 	if (isregistered) {
+		infopane->Add(new wxStaticText(this, -1, _("This program is registered to:")));
+		infopane->Add(0,10);
 		infopane->Add(new wxStaticText(this, -1, cat.RegisteredUserName()), 0, wxALIGN_CENTER);
 		infopane->Add(new wxStaticText(this, -1, cat.RegisteredUserEmail()), 0, wxALIGN_CENTER);
 		infopane->Add(0,10);
@@ -70,29 +73,37 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 		infopane->Add (okButton, 0, wxALIGN_RIGHT|wxALIGN_BOTTOM|wxLEFT|wxBOTTOM, 10);
 	}
 	else {
-		infopane->Add(new wxStaticText(this, -1, _("UNREGISTERED")), 0, wxALIGN_CENTER);
-
-		wxString trialstate;
-		int daysleft = cat.DaysLeftOfTrial();
-
-		if (daysleft == 1) trialstate = _("1 day left of trial");
-		else if (daysleft > 1) trialstate.Printf(_("%d days left of trial"), daysleft);
-		else trialstate = _("* TRIAL EXPIRED *");
-
-		wxStaticText* trialstatic = new wxStaticText(this, -1, trialstate);
-		if (daysleft <= 0) {
-			wxFont exp_font = trialstatic->GetFont();
-			exp_font.SetWeight(wxBOLD);
-			trialstatic->SetFont(exp_font);
-			trialstatic->SetForegroundColour(*wxRED);
+		if (m_needLicenseUpdate) {
+			infopane->Add(new wxStaticText(this, -1, _("Your license is not valid for this release.")), 0, wxALIGN_CENTER);
+			infopane->Add(new wxStaticText(this, -1, _("But it does qualify for an update at a reduced price.")), 0, wxALIGN_CENTER);
 		}
-		infopane->Add(trialstatic, 0, wxALIGN_CENTER);
+		else {
+			infopane->Add(new wxStaticText(this, -1, _("This program is registered to:")));
+			infopane->Add(0,10);
+			infopane->Add(new wxStaticText(this, -1, _("UNREGISTERED")), 0, wxALIGN_CENTER);
 
-		infopane->Add(0,10);
+			wxString trialstate;
+			int daysleft = cat.DaysLeftOfTrial();
 
-		wxGauge* daygauge = new wxGauge(this, -1, 30, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL|wxGA_PROGRESSBAR|wxGA_SMOOTH);
-		daygauge->SetValue(30-daysleft);
-		infopane->Add(daygauge, 0, wxEXPAND);
+			if (daysleft == 1) trialstate = _("1 day left of trial");
+			else if (daysleft > 1) trialstate.Printf(_("%d days left of trial"), daysleft);
+			else trialstate = _("* TRIAL EXPIRED *");
+
+			wxStaticText* trialstatic = new wxStaticText(this, -1, trialstate);
+			if (daysleft <= 0) {
+				wxFont exp_font = trialstatic->GetFont();
+				exp_font.SetWeight(wxBOLD);
+				trialstatic->SetFont(exp_font);
+				trialstatic->SetForegroundColour(*wxRED);
+			}
+			infopane->Add(trialstatic, 0, wxALIGN_CENTER);
+
+			infopane->Add(0,10);
+
+			wxGauge* daygauge = new wxGauge(this, -1, 30, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL|wxGA_PROGRESSBAR|wxGA_SMOOTH);
+			daygauge->SetValue(30-daysleft);
+			infopane->Add(daygauge, 0, wxEXPAND);
+		}
 		infopane->Add(0,10);
 
 		wxBoxSizer *buttons = new wxBoxSizer(wxHORIZONTAL);
@@ -118,7 +129,8 @@ eAbout::eAbout(wxWindow *parent, const Catalyst& cat)
 }
 
 void eAbout::OnBuy(wxCommandEvent& WXUNUSED(event)) {
-	wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com/order.html"));
+	if (m_needLicenseUpdate) wxLaunchDefaultBrowser(wxT("https://www.plimus.com/jsp/buynow.jsp?contractId=2862706"));
+	else wxLaunchDefaultBrowser(wxT("http://www.e-texteditor.com/order.html"));
 }
 
 void eAbout::OnRegister(wxCommandEvent& WXUNUSED(event)) {

@@ -110,10 +110,7 @@ tmCommand RunCmdDlg::GetCommand() const {
 	const wxString cmdStr = m_cmdCtrl->GetValue();
 	cmd.name = cmdStr;
 
-	const wxCharBuffer buf = cmdStr.mb_str(wxConvUTF8);
-	const size_t len = strlen(buf.data());
-	vector<char> content(buf.data(), buf.data()+len);
-	cmd.SwapContent(content);
+	cmd.SetContent(cmdStr);
 
 	switch(m_inputBox->GetSelection()) {
 	case 0:

@@ -19,6 +19,10 @@ unsigned int CountTextIndent(const wxString& text, const unsigned int tabWidth);
 
 bool DetectTextEncoding(const char* buffer, size_t len, wxFontEncoding& encoding, unsigned int& BOM_len);
 
+bool IsWordChar(const wxChar c);
+bool IsBigWordChar(const wxChar c);
+
+
 // Back-port of wxJoin and wxSplit from newer versions of wxWidgets
 
 // ----------------------------------------------------------------------------

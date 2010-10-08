@@ -177,6 +177,10 @@ void EditorBundlePanel::SaveSettings(unsigned int i, eFrameSettings& settings) {
 	m_editorCtrl->SaveSettings(i, settings);
 }
 
+void EditorBundlePanel::CommandModeEnded() {
+	m_editorCtrl->CommandModeEnded();
+}
+
 bool EditorBundlePanel::Show(bool show) {
 	// When hiding, we want to hide panel first to avoid flicker
 	bool result = false;
@@ -309,6 +313,7 @@ void EditorBundlePanel::LayoutCtrls() {
 		break;
 
 	case BUNDLE_LANGUAGE:
+	case BUNDLE_MACRO:
 		{
 			m_activationStatic->Show();
 			m_shortcutCtrl->Show();
@@ -457,6 +462,7 @@ void EditorBundlePanel::UpdatePanel() {
 		break;
 
 	case BUNDLE_LANGUAGE:
+	case BUNDLE_MACRO:
 		UpdateSelector(type, dw);
 		break;
 

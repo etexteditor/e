@@ -97,6 +97,12 @@ const char* PListHandler::DB_BUNDLES_FORMAT =
 			"loc:I,"
 			"mod:I,"
 			"prisref:I,"
+			"localref:I],"
+		"macros["
+			"uuid:S,"
+			"loc:I,"
+			"mod:I,"
+			"prisref:I,"
 			"localref:I]]";
 
 const char* PListHandler::DB_PLISTS_FORMAT =
@@ -143,6 +149,7 @@ static const c4_ViewProp   pFreeStrings("freestrings");
 static const c4_StringProp pKey("key");
 static const c4_IntProp    pLocality("loc");
 static const c4_IntProp    pLocalRef("localref");
+static const c4_ViewProp   pMacros("macros");
 static const c4_LongProp   pModDate("moddate");
 static const c4_IntProp    pModified("mod");
 static const c4_IntProp    pPristineRef("prisref");
@@ -165,9 +172,9 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 : m_dbChanged(false), m_allBundlesUpdated(false), m_appPath(appPath, wxEmptyString), m_appDataPath(appDataPath, wxEmptyString) {
 	wxFileName dbPath = m_appDataPath;
 	dbPath.SetFullName(wxT("config.db"));
-	const wxString path = dbPath.GetFullPath();
+	m_dbPath = dbPath.GetFullPath();
 
-	m_storage = c4_Storage(path.mb_str(), true);
+	m_storage = c4_Storage(m_dbPath.mb_str(), true);
 
 	// Check db version
 	const int DB_VERSION = 6;
@@ -180,13 +187,13 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 			// Close and delete old db
 			vDbinfo = c4_View(); // disconnect from storage
 			m_storage = c4_Storage();
-			wxRemoveFile(path);
+			wxRemoveFile(m_dbPath);
 
 			// Start again from a fresh db
-			m_storage = c4_Storage(path.mb_str(), true);
+			m_storage = c4_Storage(m_dbPath.mb_str(), true);
 			vDbinfo = m_storage.GetAs("db[int:I]");
 			vDbinfo.Add(pDbInteger[DB_VERSION]); // set db version id
-			m_dbChanged = true; // make sure new db layout is commited
+			MarkAsModified(); // make sure new db layout is commited
 		}
 	}
 	else vDbinfo.Add(pDbInteger[DB_VERSION]); // set db version id
@@ -216,16 +223,25 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 	m_localBundleDir = m_appDataPath;
 	m_localBundleDir.AppendDir(wxT("Bundles"));
 
+#ifdef __WXDEBUG__
+	wxStartTimer();
+#endif
+
 	Update(UPDATE_SYNTAXONLY);
 
-	// Init the commitTimer
-	m_commitTimer.SetOwner(this, ID_COMMITTIMER);
+#ifdef __WXDEBUG__
+	wxLogDebug(wxT("Bundle Update Time: %d"), wxGetElapsedTime());
+#endif
 }
 
 PListHandler::~PListHandler() {
 	if (m_dbChanged) {
 		m_storage.Commit();
 	}
+}
+
+void PListHandler::MarkAsModified() {
+	m_dbChanged = true;
 }
 
 wxString PListHandler::GetSyntaxAssoc(const wxString& ext) const {
@@ -244,7 +260,7 @@ void PListHandler::SetSyntaxAssoc(const wxString& ext, const wxString& syntaxId)
 	}
 
 	// Mark for commit in next idle time
-	m_dbChanged = true;
+	MarkAsModified();
 }
 
 void PListHandler::OnCommitTimer(wxTimerEvent& WXUNUSED(event)) {
@@ -304,9 +320,9 @@ void PListHandler::Update(cxUpdateMode mode) {
 	}
 	else DeleteAllItems(PLIST_LOCAL, m_vBundles);
 
-	// Mark for commit in next idle time
-	m_dbChanged = true;
-	if (mode != UPDATE_SYNTAXONLY) m_allBundlesUpdated = true;
+	if (mode != UPDATE_SYNTAXONLY) {
+		m_allBundlesUpdated = true;
+	}
 }
 
 void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths, int loc, c4_View vList) {
@@ -365,6 +381,7 @@ void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths
 		const int ref = LoadPList(path);
 
 		if (ref != -1) {
+#ifdef __WXDEBUG__
 			// Get the uuid
 			const PListDict plist = GetPlist(ref);
 			const char* uuid = plist.GetString("uuid");
@@ -374,15 +391,16 @@ void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths
 			const int plistId = uuid ? vList.Find(pUuid[uuid]) : -1;
 
 			if (plistId != -1) {
-#ifdef __WXDEBUG__
+
 				const c4_RowRef rPlistItem = vList[plistId];
 				const int id = (pLocality(rPlistItem) == PLIST_PRISTINE) ? pPristineRef(rPlistItem) : pLocalRef(rPlistItem);
 				const wxString plistName(pFilename(m_vPlists[id]), wxConvUTF8);
 				wxLogDebug(wxT("WARNING: plist '%s' has same uuid as '%s'"), path.c_str(), plistName.c_str());
-#endif
-				UpdatePlistItem(ref, loc, vList, plistId);
+
+				//UpdatePlistItem(ref, loc, vList, plistId);
 			}
-			else NewPlistItem(ref, loc, vList);
+#endif
+			NewPlistItem(ref, loc, vList);
 		}
 	}
 }
@@ -634,6 +652,20 @@ void PListHandler::UpdateBundleSubDirs(const wxFileName& path, int loc, unsigned
 			UpdatePlists(prefsDir, files, loc, vPrefs);
 		}
 		else DeleteAllItems(loc, vPrefs);
+
+		// Update Macros
+		wxFileName macrosDir = path;
+		macrosDir.AppendDir(wxT("Macros"));
+		c4_View vMacros = pMacros(rBundle);
+		if (macrosDir.DirExists()) {
+			wxSortedArrayString files;
+			wxDir::GetAllFiles(macrosDir.GetPath(), &files, wxT("*.plist"), wxDIR_FILES);
+			wxDir::GetAllFiles(macrosDir.GetPath(), &files, wxT("*.tmMacro"), wxDIR_FILES);
+
+			UpdatePlists(macrosDir, files, loc, vMacros);
+		}
+		else DeleteAllItems(loc, vMacros);
+
 	}
 }
 
@@ -739,6 +771,10 @@ wxString PListHandler::GetBundleItemUri(BundleItemType type, unsigned int bundle
 		uri += wxT("Syntaxes");
 		vItems = pSyntaxes(rBundle);
 		break;
+	case BUNDLE_MACRO:
+		uri += wxT("Macros");
+		vItems = pMacros(rBundle);
+		break;
 	default:
 		wxASSERT(false);
 		return wxEmptyString;
@@ -777,6 +813,7 @@ BundleItemType PListHandler::GetBundleTypeFromUri(const wxString& uri) const {
 	if (itemtype == wxT("DragCommands")) return BUNDLE_DRAGCMD;
 	if (itemtype == wxT("Preferences")) return BUNDLE_PREF;
 	if (itemtype == wxT("Syntaxes")) return BUNDLE_LANGUAGE;
+	if (itemtype == wxT("Macros")) return BUNDLE_MACRO;
 	return BUNDLE_NONE;
 }
 
@@ -820,6 +857,10 @@ bool PListHandler::GetBundleItemFromUri(const wxString& uri, BundleItemType& typ
 	else if (itemtype == wxT("Syntaxes")) {
 		type = BUNDLE_LANGUAGE;
 		vItems = pSyntaxes(rBundle);
+	}
+	else if (itemtype == wxT("Macros")) {
+		type = BUNDLE_MACRO;
+		vItems = pMacros(rBundle);
 	}
 	else return false;
 
@@ -900,6 +941,15 @@ bool PListHandler::GetBundleItemFromUuid(const wxString& uuid, BundleItemType& t
 			itemId = ndx;
 			return true;
 		}
+
+		const c4_View vMacros = pMacros(rBundle);
+		ndx = vMacros.Find(rUuid);
+		if (ndx != -1) {
+			type = BUNDLE_MACRO;
+			bundleId = b;
+			itemId = ndx;
+			return true;
+		}
 	}
 
 	return false;
@@ -927,6 +977,9 @@ vector<unsigned int> PListHandler::GetList(BundleItemType type, unsigned int bun
 		break;
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -964,6 +1017,9 @@ PListDict PListHandler::Get(BundleItemType type, unsigned int bundleId, unsigned
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
 		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
+		break;
 	default:
 		wxASSERT(false);
 	}
@@ -994,6 +1050,9 @@ PListDict PListHandler::GetEditable(BundleItemType type, unsigned int bundleId, 
 		break;
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -1027,6 +1086,9 @@ unsigned int PListHandler::New(BundleItemType type, unsigned int bundleId, const
 		break;
 	case BUNDLE_LANGUAGE:
 		vItems = pSyntaxes(rBundle);
+		break;
+	case BUNDLE_MACRO:
+		vItems = pMacros(rBundle);
 		break;
 	default:
 		wxASSERT(false);
@@ -1064,6 +1126,10 @@ void PListHandler::Delete(BundleItemType type, unsigned int bundleId, unsigned i
 		path.AppendDir(wxT("Syntaxes"));
 		vPlists = pSyntaxes(rBundle);
 		break;
+	case BUNDLE_MACRO:
+		path.AppendDir(wxT("Macros"));
+		vPlists = pMacros(rBundle);
+		break;
 	default:
 		wxASSERT(false);
 	}
@@ -1071,7 +1137,7 @@ void PListHandler::Delete(BundleItemType type, unsigned int bundleId, unsigned i
 	wxASSERT((int)itemId < vPlists.GetSize());
 
 	SafeDeletePlistItem(itemId, vPlists, path);
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 }
 
 
@@ -1231,6 +1297,7 @@ unsigned int PListHandler::CreateNewPlist(const wxString& name, const wxString& 
 unsigned int PListHandler::NewPlistItem(unsigned int ref, int loc, c4_View vList) {
 	wxASSERT((int)ref < m_vPlists.GetSize());
 	wxASSERT(loc == PLIST_PRISTINE || loc == PLIST_LOCAL || loc == PLIST_INSTALLED);
+	MarkAsModified();
 
 	// Get uuid
 	const PListDict plist = GetPlist(ref);
@@ -1272,6 +1339,7 @@ void PListHandler::UpdatePlistItem(unsigned int ref, int loc, c4_View vList, uns
 	wxASSERT((int)ref < m_vPlists.GetSize());
 	wxASSERT(loc == PLIST_PRISTINE || loc == PLIST_LOCAL || loc == PLIST_INSTALLED);
 	wxASSERT((int)ndx < vList.GetSize());
+	MarkAsModified();
 
 	// Get uuid
 	const PListDict plist = GetPlist(ref);
@@ -1308,6 +1376,7 @@ void PListHandler::UpdatePlistItem(unsigned int ref, int loc, c4_View vList, uns
 
 bool PListHandler::DeletePlistItem(unsigned int ndx, int loc, c4_View vList) {
 	wxASSERT((int)ndx < vList.GetSize());
+	MarkAsModified();
 
 	c4_RowRef rPlistItem = vList[ndx];
 	int locality = pLocality(rPlistItem);
@@ -1453,8 +1522,36 @@ void PListHandler::Commit() {
 	}
 
 	// Mark for commit in next idle time
-	m_dbChanged = true;
+	MarkAsModified();
 }
+
+void PListHandler::Flush() {
+	// writing data on every flush is too expensive
+	// so we only flush it is all cache
+	if (m_dbChanged) return;
+
+	wxLogDebug(wxT("Flushing PList Storage"));
+
+	// Write any changes to disk
+	/*if (m_dbChanged) {
+		m_storage.Commit();
+		m_dbChanged = false;
+	}*/
+	
+	// Release cached memory and rebind storage
+	m_storage = c4_View();
+	m_storage = c4_Storage(m_dbPath.mb_str(), true);
+
+	// Rebind views
+	m_vThemes = m_storage.GetAs(DB_THEMES_FORMAT);
+	m_vBundles = m_storage.GetAs(DB_BUNDLES_FORMAT);
+	m_vPlists = m_storage.GetAs(DB_PLISTS_FORMAT);
+	m_vFreePlists = m_storage.GetAs(DB_FREEPLISTS_FORMAT);
+	const c4_View assocs = m_storage.GetAs("assocs[ext:S,syntax:S]");
+	const c4_View assocsh = m_storage.GetAs("assocs_H[_H:I,_R:I]");
+	m_vSyntaxAssocs = assocs.Hash(assocsh);
+}
+
 
 PListDict PListHandler::GetBundleInfo(unsigned int ndx) const {
 	return GetPlistItem(ndx, m_vBundles);
@@ -1487,13 +1584,13 @@ bool PListHandler::SaveBundle(unsigned int bundleId) {
 	path.AppendDir(dirName);
 
 	// Save the manifest file
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 	return SavePListItem(bundleId, m_vBundles, path, wxEmptyString);
 }
 
 bool PListHandler::RestoreBundle(unsigned int bundleId) {
 	wxASSERT((int)bundleId >= 0 && (int)bundleId < m_vBundles.GetSize());
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 
 	const c4_RowRef rBundle = m_vBundles[bundleId];
 	wxASSERT(pLocality(rBundle) & (PLIST_PRISTINE|PLIST_DISABLED));
@@ -1522,7 +1619,7 @@ bool PListHandler::RestoreBundle(unsigned int bundleId) {
 
 bool PListHandler::DeleteBundle(unsigned int bundleId) {
 	wxASSERT((int)bundleId >= 0 && (int)bundleId < m_vBundles.GetSize());
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 
 	const c4_RowRef rBundle = m_vBundles[bundleId];
 	int locality = pLocality(rBundle);
@@ -1603,13 +1700,18 @@ bool PListHandler::Save(BundleItemType type, unsigned int bundleId, unsigned int
 		vPlists = pSyntaxes(rBundle);
 		ext = wxT(".tmLanguage");
 		break;
+	case BUNDLE_MACRO:
+		path.AppendDir(wxT("Macros"));
+		vPlists = pMacros(rBundle);
+		ext = wxT(".tmMacro");
+		break;
 	default:
 		wxASSERT(false);
 	}
 
 	wxASSERT((int)itemId < vPlists.GetSize());
 
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 	return SavePListItem(itemId, vPlists, path, ext);
 }
 
@@ -1668,6 +1770,10 @@ wxFileName PListHandler::GetBundleItemPath(BundleItemType type, unsigned int bun
 			path.AppendDir(wxT("Syntaxes"));
 			vItems = pSyntaxes(rBundle);
 			break;
+		case BUNDLE_MACRO:
+			path.AppendDir(wxT("Macros"));
+			vItems = pMacros(rBundle);
+			break;
 		default: wxASSERT(false);
 	}
 
@@ -1718,6 +1824,7 @@ bool PListHandler::ExportBundle(const wxFileName& dstPath, unsigned int bundleId
 	bundleTypes[BUNDLE_DRAGCMD]  = wxT("DragCommands");
 	bundleTypes[BUNDLE_PREF]     = wxT("Preferences");
 	bundleTypes[BUNDLE_LANGUAGE] = wxT("Syntaxes");
+	bundleTypes[BUNDLE_MACRO]    = wxT("Macros");
 
 	// Copy subdirs
 	for (map<BundleItemType, wxString>::const_iterator p = bundleTypes.begin(); p != bundleTypes.end(); ++p) {
@@ -1972,7 +2079,7 @@ void PListHandler::SaveTheme(unsigned int ndx) {
 		SavePList(plistNdx, path);
 	}
 
-	m_dbChanged = true; // Mark for commit in next idle time
+	MarkAsModified(); // Mark for commit in next idle time
 }
 
 void PListHandler::MarkThemeAsModified(unsigned int ndx) {
@@ -2633,6 +2740,20 @@ bool PListDict::GetInteger(const char* key, int& value) const {
 	return true;
 }
 
+bool PListDict::GetBool(const char* key) const {
+	wxASSERT(m_rPlist);
+	// defaults to false on error
+
+	const int ndx = m_vDict.Find(pKey[key]);
+	if (ndx == -1) return false;
+
+	const c4_RowRef rItem = m_vDict[ndx];
+	if (pType(rItem) != REF_BOOL && pType(rItem) != REF_INTEGER) return false;
+
+	const int value = pRef(rItem);
+	return (value != 0);
+}
+
 void PListDict::DeleteItem(const char* key) {
 	wxASSERT(m_rPlist);
 
@@ -2657,6 +2778,44 @@ void PListDict::DeleteItem(const char* key) {
 
 	// Delete the item
 	m_vDict.RemoveAt(ndx);
+}
+
+void PListDict::SetBool(const char* key, bool value) {
+	wxASSERT(m_rPlist);
+	wxASSERT(key);
+
+	const int ndx = m_vDict.Find(pKey[key]);
+	if (ndx == -1) {
+		c4_Row rRef;
+		pKey(rRef) = key;
+		pRefType(rRef) = REF_BOOL;
+		pRef(rRef) =  value ? 1 : 0;
+		m_vDict.Add(rRef);
+	}
+	else {
+		const c4_RowRef rItem = m_vDict[ndx];
+		wxASSERT(pRefType(rItem) == REF_BOOL);
+		pRef(rItem) = value ? 1 : 0;
+	}
+}
+
+void PListDict::SetInt(const char* key, int value) {
+	wxASSERT(m_rPlist);
+	wxASSERT(key);
+
+	const int ndx = m_vDict.Find(pKey[key]);
+	if (ndx == -1) {
+		c4_Row rRef;
+		pKey(rRef) = key;
+		pRefType(rRef) = REF_INTEGER;
+		pRef(rRef) = value;
+		m_vDict.Add(rRef);
+	}
+	else {
+		const c4_RowRef rItem = m_vDict[ndx];
+		wxASSERT(pRefType(rItem) == REF_INTEGER);
+		pRef(rItem) = value;
+	}
 }
 
 void PListDict::SetString(const char* key, const char* text) {
@@ -2921,6 +3080,31 @@ PListArray::PListArray(c4_View& array, c4_RowRef& plist)
 	m_vArrays = pArrays(*m_rPlist);
 }
 
+bool PListArray::IsBool(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	return pType(rItem) == REF_BOOL;
+}
+
+bool PListArray::IsInt(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	return pType(rItem) == REF_INTEGER;
+}
+
+bool PListArray::IsString(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	return pType(rItem) == REF_STRING;
+}
+
+
 void PListArray::SetArray(c4_View& array, c4_RowRef& plist) {
 	m_vArray = array;
 
@@ -2930,6 +3114,28 @@ void PListArray::SetArray(c4_View& array, c4_RowRef& plist) {
 	m_vStrings = pStrings(*m_rPlist);
 	m_vDicts = pDicts(*m_rPlist);
 	m_vArrays = pArrays(*m_rPlist);
+}
+
+bool PListArray::GetBool(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	if (pType(rItem) != REF_BOOL) return false;
+
+	const int ref = pRef(rItem);
+	return ref != 0;
+}
+
+int PListArray::GetInt(unsigned int ndx) const {
+	wxASSERT(m_rPlist);
+	wxASSERT((int)ndx < m_vArray.GetSize());
+
+	const c4_RowRef rItem = m_vArray[ndx];
+	if (pType(rItem) != REF_INTEGER) return false;
+
+	const int ref = pRef(rItem);
+	return ref;
 }
 
 const char* PListArray::GetString(unsigned int ndx) const {
@@ -3071,6 +3277,20 @@ void PListArray::InsertString(unsigned int ndx, const char* text) {
 	m_vArray.InsertAt(ndx, rRef);
 }
 
+void PListArray::AddBool(bool value) {
+	c4_Row rRef;
+	pRefType(rRef) = REF_BOOL;
+	pRef(rRef) = value ? 1 : 0;
+	m_vArray.Add(rRef);
+}
+
+void PListArray::AddInt(int value) {
+	c4_Row rRef;
+	pRefType(rRef) = REF_INTEGER;
+	pRef(rRef) = value;
+	m_vArray.Add(rRef);
+}
+
 void PListArray::AddString(const char* text) {
 	wxASSERT(text);
 	const int ref = m_vStrings.Add(pString[text]);
@@ -3079,6 +3299,10 @@ void PListArray::AddString(const char* text) {
 	pRefType(rRef) = REF_STRING;
 	pRef(rRef) = ref;
 	m_vArray.Add(rRef);
+}
+
+void PListArray::AddString(const wxString& text) {
+	AddString(text.ToUTF8());
 }
 
 wxJSONValue PListArray::GetJSONArray() const {
@@ -3160,4 +3384,14 @@ void PListArray::InsertJSONValues(const wxJSONValue& value) {
             wxASSERT(false); // not handled
 		}
 	}
+}
+
+wxString PListArray::GetJSON() const {
+	wxJSONValue root = GetJSONArray();
+
+	wxJSONWriter writer(wxJSONWRITER_STYLED|wxJSONWRITER_MULTILINE_STRING);
+	wxString str;
+	writer.Write( root, str );
+
+	return str;
 }

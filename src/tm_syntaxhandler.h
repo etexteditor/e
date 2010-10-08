@@ -31,6 +31,7 @@
 #include "tmTheme.h"
 #include "tmKey.h"
 #include "SyntaxInfo.h"
+#include "Macro.h"
 
 #include "IGetPListHandlerRef.h"
 #include "ITmThemeHandler.h"
@@ -64,6 +65,12 @@ public:
     virtual ~tmDragCommand() {};
 	bool IsDrag() const {return true;};
 	wxArrayString extArray;
+};
+
+class tmMacro : public tmAction {
+public:
+    virtual ~tmMacro() {};
+	bool IsMacro() const {return true;};
 };
 
 struct tmPrefs {
@@ -232,7 +239,9 @@ public:
 
 	wxMenu* GetBundleMenu();
 	wxString GetBundleItemUriFromMenu(unsigned int id) const;
+	wxString GetBundleItemUriFromUuid(const wxString& uuid) const;
 	void DoBundleAction(unsigned int id, IEditorDoAction& editor);
+	void DoBundleAction(const wxString& uuid, IEditorDoAction& editor);
 
 	// Paths for bundles
 	wxFileName GetBundleSupportPath(unsigned int bundleId) const;
@@ -260,6 +269,7 @@ public:
 	void GetDragActions(const std::deque<const wxString*>& scopes, std::vector<const tmDragCommand*>& result, const ExtMatch& matchfun) const;
 	const std::vector<const tmAction*> GetActions(const wxString& trigger, const std::deque<const wxString*>& scopes) const;
 	const std::vector<char>& GetActionContent(const tmAction& action) const;
+	eMacro GetMacroContent(const tmAction& action) const;
 
 	// Indentation
 	const wxString& GetIndentNonePattern(const std::deque<const wxString*>& scopes) const;
@@ -323,6 +333,11 @@ private:
 
 	// DragCommand parsing
 	bool ParseDragCommand(const tmBundle& bundle, unsigned int commandId);
+
+	// Macro parsing
+	bool ParseMacro(const tmBundle& bundle, unsigned int macroId);
+	bool TranslateMacroCmd(const PListDict& macroDict, eMacro& macro) const;
+	bool TranslateTmMacroCmd(const PListDict& macroDict, eMacro& macro) const;
 
 	// Preference parsing
 	bool ParsePreferences(const PListDict& prefDict, tmBundle* bundle);

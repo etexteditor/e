@@ -30,12 +30,17 @@
 #include "IAppPaths.h"
 #include "IExecuteAppCommand.h"
 
+#include <map>
+#include <boost/ptr_container/ptr_map.hpp>
 
+// Pre-definitions
 class wxSingleInstanceChecker;
 class TmSyntaxHandler;
 class PListHandler;
 class EditorFrame;
 class AppVersion;
+class EditorCtrl;
+class ApiHandler;
 
 class eApp : public wxApp, 
 	public IAppPaths, 
@@ -53,6 +58,14 @@ public:
 	EditorFrame* NewFrame();
 	void CloseAllFrames();
 	bool IsLastFrame() const;
+	EditorFrame* GetTopFrame() const;
+
+	// Editors
+	EditorCtrl* GetActiveEditorCtrl() const;
+	EditorCtrl* GetEditorCtrl(int winId) const;
+
+	// Handlers
+	TmSyntaxHandler& GetSyntaxHandler() {return *m_pSyntaxHandler;};
 
 	// Execute internal commands
 	virtual bool ExecuteCmd(const wxString& cmd);
@@ -86,10 +99,13 @@ public:
 	void OnAssertFailure(const wxChar *file, int line, const wxChar *cond, const wxChar *msg);
 #endif  //__WXDEBUG__
 
+	// Api notifications
+	void OnInputLineChanged(unsigned int nid, const wxString& text);
+	void OnInputLineClosed(unsigned int nid);
+
 private:
 	// Frames
 	EditorFrame* OpenFrame(size_t frameId);
-	EditorFrame* GetTopFrame();
 	void CheckForModifiedFiles();
 
 	// Member variables
@@ -123,6 +139,7 @@ private:
 	wxString m_appPath;
 	wxString m_appDataPath;
 	wxArrayString m_openStack;
+	ApiHandler* m_apiHandler;
 
 #ifndef __WXMSW__
 	eServer* m_server;

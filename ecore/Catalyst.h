@@ -387,6 +387,7 @@ public:
 
 	// Registration functions
 	bool IsRegistered() const;
+	bool NeedLicenseUpdate() const;
 	bool IsExpired() const;
 	int DaysLeftOfTrial() const;
 	int TotalDays() const;

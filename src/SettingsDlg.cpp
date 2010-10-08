@@ -100,8 +100,8 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 	wxPanel* encodingPage = CreateEncodingPage(notebook);
 	notebook->AddPage(encodingPage, _("Encoding"));
 	
-	wxPanel* profilePage = CreateProfilePage(notebook);
-	notebook->AddPage(profilePage, _("Profile"));
+	//wxPanel* profilePage = CreateProfilePage(notebook);
+	//notebook->AddPage(profilePage, _("Profile"));
 
 	m_envPage = new EnvVarsPanel(notebook);
 	m_envPage->AddVars(this->m_settings.env);
@@ -461,7 +461,7 @@ void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
 
 void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	// Check if name & profile pic changed.
-	wxString name = m_ctrlUserName->GetLabel();
+	/*wxString name = m_ctrlUserName->GetLabel();
 	cxLOCK_READ(m_catalyst)
 		if (name == catalyst.GetUserName(0)) name.clear(); // empty string means no change
 	cxENDLOCK
@@ -472,7 +472,7 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 		cxLOCK_WRITE(m_catalyst)
 			catalyst.SetProfile(name, m_userImage);
 		cxENDLOCK
-	}
+	}*/
 
 	if (m_envPage->VarsChanged()) {
 		m_settings.env.clear();

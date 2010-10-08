@@ -32,11 +32,15 @@ class EditorFrame;
 class ITmLoadBundles;
 class wxDragImage;
 class BundleItemData;
+class eMacro;
 
 class BundlePane : public wxPanel {
 public:
 	BundlePane(EditorFrame& parent, ITmLoadBundles* syntaxHandler);
 	void LoadBundles();
+
+	bool HasSelection() const;
+	void NewItem(BundleItemType type, const eMacro* macro=NULL);
 
 private:
 	class SortTreeCtrl : public wxTreeCtrl {
@@ -49,7 +53,6 @@ private:
 		DECLARE_DYNAMIC_CLASS_NO_COPY(SortTreeCtrl)
 	};
 
-	void NewItem(BundleItemType type);
 	void DeleteItem();
 
 	// Menu Handling

@@ -18,6 +18,7 @@
 #include <wx/tipwin.h>
 #include <wx/file.h>
 
+#include <set>
 #include <algorithm>
 
 #include "pcre.h"
@@ -162,7 +163,7 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme),
 
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
@@ -195,7 +196,10 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_tabWidth(0),
 	m_softTabs(false),
 
-	bookmarks(m_lines)
+	bookmarks(m_lines),
+	m_commandHandler(parentFrame, *this),
+	m_snippetHandler(*this),
+	m_macro(parentFrame.GetMacro())
 {
 	Create(parent, wxID_ANY, wxPoint(-100,-100), wxDefaultSize, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -218,7 +222,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme),
 	
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
@@ -251,7 +255,10 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_tabWidth(0),
 	m_softTabs(false),
 
-	bookmarks(m_lines)
+	bookmarks(m_lines),
+	m_commandHandler(parentFrame, *this),
+	m_snippetHandler(*this),
+	m_macro(parentFrame.GetMacro())
 
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
@@ -289,7 +296,7 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_theme(m_syntaxHandler.GetTheme()),
 	m_lines(mdc, m_doc, *this, m_theme), 
 
-	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_theme),
+	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
 	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_theme, eGetSettings(), *this),
 	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
@@ -322,7 +329,10 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_tabWidth(0),
 	m_softTabs(false),
 
-	bookmarks(m_lines)
+	bookmarks(m_lines),
+	m_commandHandler(parentFrame, *this),
+	m_snippetHandler(*this),
+	m_macro(parentFrame.GetMacro())
 {
 	Create(parent, wxID_ANY, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE);
 	Hide(); // start hidden to avoid flicker
@@ -550,6 +560,11 @@ EditorCtrl* EditorCtrl::GetActiveEditor() { return this; }
 
 const char** EditorCtrl::RecommendedIcon() const { return document_xpm; }
 
+void EditorCtrl::CommandModeEnded() {
+	ClearSearchRange();
+	m_commandHandler.Clear();
+}
+
 void EditorCtrl::ClearRemoteInfo() {
 	if (m_remotePath.empty()) return;
 
@@ -619,6 +634,15 @@ doc_id EditorCtrl::GetDocID() const {
 	cxENDLOCK
 }
 
+doc_id EditorCtrl::GetLastStableDocID() const {
+	cxLOCKDOC_READ(m_doc)
+		doc_id di = doc.GetDocument();
+		if (doc.IsFrozen()) return di;
+		else return doc.GetDraftParent(di.version_id);
+	cxENDLOCK
+}
+
+
 wxString EditorCtrl::GetName() const {
 	cxLOCKDOC_READ(m_doc)
 		return doc.GetPropertyName();
@@ -680,6 +704,11 @@ void EditorCtrl::DisableHighlight() {
 	//DrawLayout();
 }
 */
+
+void EditorCtrl::SetSearchHighlight(const wxString& pattern, int options) {
+	m_search_hl_styler.SetSearch(pattern, options);
+}
+
 void EditorCtrl::ClearSearchHighlight() {
 	m_search_hl_styler.Clear();
 	DrawLayout();
@@ -692,53 +721,28 @@ bool EditorCtrl::IsOk() const {
 	return (size.x == 0 && size.y == 0) || bitmap.Ok();
 }
 
-// WARNING: Be aware that during a change grouping, lines is not valid
-// Only call functions like lines.RemoveAllSelections() that does not use line info
-void EditorCtrl::StartChange() {
-	do_freeze = false;
-	change_pos = m_lines.GetPos();
-	cxLOCKDOC_WRITE(m_doc)
-		doc.Freeze();
-		change_doc_id = doc.GetDocument();
+bool EditorCtrl::InChange() const {
+	cxLOCKDOC_READ(m_doc)
+		return doc.InChange();
 	cxENDLOCK
-	change_toppos = m_lines.GetPosFromXY(0, scrollPos+1);
 }
 
-void EditorCtrl::EndChange() {
-	wxASSERT(do_freeze == false);
-
-	doc_id di;
-	cxLOCKDOC_WRITE(m_doc)
-		doc.Freeze();
-		di = doc.GetDocument();
+size_t EditorCtrl::GetChangeLevel() const {
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetChangeLevel();
 	cxENDLOCK
+}
 
-	// Invalidate all stylers
-	StylersInvalidate();
+void EditorCtrl::StartChange() {
+	cxLOCKDOC_WRITE(m_doc)
+		doc.StartChange(true/*doNotify*/);
+	cxENDLOCK
+}
 
-	if (change_doc_id.SameDoc(di)) {
-		// If we are still in the same document, we want to find
-		// matching positions and selections
-
-		if (change_doc_id.version_id == di.version_id) return;
-
-		vector<interval> oldsel = m_lines.GetSelections();
-		m_lines.ReLoadText();
-
-		// re-set the width
-		UpdateEditorWidth();
-
-		RemapPos(change_doc_id, change_pos, oldsel, change_toppos);
-	}
-	else {
-		scrollPos = 0;
-		m_lines.ReLoadText();
-
-		// re-set the width
-		UpdateEditorWidth();
-	}
-
-	do_freeze = true;
+void EditorCtrl::EndChange(int forceTo) {
+	cxLOCKDOC_WRITE(m_doc)
+		doc.EndChange(forceTo);
+	cxENDLOCK
 }
 
 bool EditorCtrl::Show(bool show) {
@@ -1050,7 +1054,7 @@ void EditorCtrl::DrawLayout(wxDC& dc, bool WXUNUSED(isScrolling)) {
 	if (UpdateScrollbars(editorSizeX, size.y)) return; // adding/removing scrollbars send size event
 
 	// Make sure we remove un-needed stylers
-	if (!m_parentFrame.IsSearching())
+	if (!(m_parentFrame.IsSearching() || m_commandHandler.IsSearching()))
 		m_search_hl_styler.Clear(); // Only highlight search terms during search
 
 	// When scrolling, we can just draw the new parts
@@ -1471,28 +1475,49 @@ bool EditorCtrl::SmartTab() {
 	
 	return false;
 }
+
+void EditorCtrl::GetLine(unsigned int lineid, vector<char>& text) const {
+	unsigned int start;
+	unsigned int end;
+	m_lines.GetLineExtent(lineid, start, end);
+
+	GetTextPart(start, end, text);
+}
+
 void EditorCtrl::Tab() {
 	const bool shiftDown = wxGetKeyState(WXK_SHIFT);
 	const bool isMultiSel = m_lines.IsSelectionMultiline() && !m_lines.IsSelectionShadow();
 
 	// If there are multiple lines selected then tab triggers indentation
 	if (m_snippetHandler.IsActive()) {
-		if (shiftDown) m_snippetHandler.PrevTab();
-		else m_snippetHandler.NextTab();
-
+		if (shiftDown) {
+			if (m_macro.IsRecording()) m_macro.Add(wxT("PrevSnippetField"));
+			m_snippetHandler.PrevTab();
+		}
+		else {
+			if (m_macro.IsRecording()) m_macro.Add(wxT("NextSnippetField"));
+			m_snippetHandler.NextTab();
+		}
 		return;
 	}
 
 	if (shiftDown || isMultiSel) {
 		if (lastaction != ACTION_NONE || lastpos != GetPos()) Freeze();
+		const bool addIndent = !shiftDown;
+		if (m_macro.IsRecording()) {
+			if (addIndent) m_macro.Add(wxT("IndentSelectedLines"));
+			else m_macro.Add(wxT("DedentSelectedLines"));
+		}
 
-		IndentSelectedLines(!shiftDown);
+		IndentSelectedLines(addIndent);
 
 		lastpos = GetPos();
 		lastaction = ACTION_NONE;
 
 		return;
 	}
+
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Tab"));
 
 	// If the tab is preceded by a word it can trigger a snippet
 	const unsigned int pos = GetPos();
@@ -1607,6 +1632,28 @@ void EditorCtrl::FilterThroughCommand() {
 	RunCmdDlg dlg(this, eGetSettings());
 	if (dlg.ShowModal() == wxID_OK) {
 		const tmCommand cmd = dlg.GetCommand();
+
+		if (m_macro.IsRecording()) {
+			eMacroCmd& mc = m_macro.Add(wxT("FilterThroughCommand"));
+			mc.AddArg(wxT("command"), cmd.name);
+			switch (cmd.input) {
+				case tmCommand::ciNONE: mc.AddArg(wxT("input"), wxT("none")); break;
+				case tmCommand::ciSEL:  mc.AddArg(wxT("input"), wxT("selection")); break;
+				case tmCommand::ciDOC:  mc.AddArg(wxT("input"), wxT("document")); break;
+			};
+
+			switch (cmd.output) {
+				case tmCommand::coNONE:    mc.AddArg(wxT("output"), wxT("discard")); break;
+				case tmCommand::coSEL:     mc.AddArg(wxT("output"), wxT("replaceSelectedText")); break;
+				case tmCommand::coDOC:     mc.AddArg(wxT("output"), wxT("replaceDocument")); break;
+				case tmCommand::coINSERT:  mc.AddArg(wxT("output"), wxT("afterSelectedText")); break;
+				case tmCommand::coSNIPPET: mc.AddArg(wxT("output"), wxT("insertAsSnippet")); break;
+				case tmCommand::coHTML:    mc.AddArg(wxT("output"), wxT("showAsHTML")); break;
+				case tmCommand::coTOOLTIP: mc.AddArg(wxT("output"), wxT("showAsTooltip")); break;
+				case tmCommand::coNEWDOC:  mc.AddArg(wxT("output"), wxT("openAsNewDocument")); break;
+			}
+		}
+
 		DoAction(cmd, NULL, false);
 	}
 }
@@ -1625,13 +1672,28 @@ void EditorCtrl::DoActionFromDlg() {
 
 void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw) {
 	wxLogDebug(wxT("Doing action '%s' from bundle '%s'"), action.name.c_str(), action.bundle ? action.bundle->name.c_str() : wxT("none"));
+
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = m_macro.Add(wxT("RunBundleCommand"));
+		cmd.AddArg(wxT("uuid"), action.uuid);
+		cmd.AddArg(wxT("path"), m_syntaxHandler.GetBundleItemUriFromUuid(action.uuid)); // for info only
+	}
+
+	MacroDisabler m(m_macro); // Avoid dublicate recording
+
 	if (action.IsSyntax()) {
 		SetSyntax(action.name);
 		return;
 	}
 
+	if (action.IsMacro()) {
+		const eMacro macro = m_syntaxHandler.GetMacroContent(action);
+		PlayMacro(macro);
+		ReDraw();
+		return;
+	}
+
 	if (m_activeTooltip) m_activeTooltip->Close();
-	wxWindowDisabler wd;
 
 	// Get Action contents
 	const vector<char>& cmdContent = m_syntaxHandler.GetActionContent(action);
@@ -1655,7 +1717,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 
 	if (action.IsSnippet()) {
 		DeleteSelections();
-		m_snippetHandler.StartSnippet(this, cmdContent, env, action.bundle);
+		m_snippetHandler.StartSnippet(cmdContent, &env, action.bundle);
 	}
 	else if (action.IsCommand()) {
 		#ifdef __WXMSW__
@@ -1779,7 +1841,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 		vector<char> errout;
 		int pid;
 		{
-			wxBusyCursor wait; // Show busy cursor while running command.
+			wxWindowDisabler wd;
 			pid = ShellRunner::RawShell(cmdContent, input, &output, &errout, env, action.isUnix, cwd);
 		}
 
@@ -1864,7 +1926,7 @@ void EditorCtrl::DoAction(const tmAction& action, const map<wxString, wxString>*
 						SetPos(selStart);
 
 						if (!output.empty())
-							m_snippetHandler.StartSnippet(this, output, env, action.bundle);
+							m_snippetHandler.StartSnippet(output, &env, action.bundle);
 					}
 					break;
 
@@ -2064,26 +2126,50 @@ wxString EditorCtrl::AutoPair(unsigned int pos, const wxString& text, bool addTo
 }
 
 void EditorCtrl::GotoMatchingBracket() {
-	if (!m_bracketHighlight.HasInterval()) return;
-
-	const unsigned int pos = m_lines.GetPos();
-	if (!m_bracketHighlight.IsEndPoint(pos)) return;
-
-	m_lines.SetPos(m_bracketHighlight.OtherEndPoint(pos));
-	MakeCaretVisible();
-}
-
-void EditorCtrl::MatchBrackets() {
-	const unsigned int pos = m_lines.GetPos();
-
-	// If no change to document or position, then stop.
-	if (!m_bracketHighlight.UpdateIfChanged(m_changeToken, pos)) return;
-
-	m_bracketHighlight.Clear();
-
+	unsigned int pos = m_lines.GetPos();
 	const unsigned int len = m_lines.GetLength();
 	if (pos == len) return;
 
+	// Get list of brackets
+	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
+	const map<wxString, wxString> smartPairs = m_syntaxHandler.GetSmartTypingPairs(scope);
+
+	// Build a set of end brackets
+	set<wxString> endBrackets;
+	for (map<wxString, wxString>::const_iterator p2 = smartPairs.begin(); p2 != smartPairs.end(); ++p2) {
+		endBrackets.insert(p2->second);
+	}
+
+	// Advance until we hit first start or end bracket
+	bool bracketFound = false;
+	cxLOCKDOC_READ(m_doc)
+		for (; pos < len; pos = doc.GetNextCharPos(pos)) {
+			const wxChar c = doc.GetChar(pos);
+
+			// Check if current char is a start bracket
+			const map<wxString, wxString>::const_iterator p = smartPairs.find(c);
+			if (p != smartPairs.end()) {
+				bracketFound = true;
+				break;
+			}
+
+			// Check if current char is an end bracket
+			const set<wxString>::const_iterator p2 = endBrackets.find(c);
+			if (p2 != endBrackets.end()) {
+				bracketFound = true;
+				break;
+			}
+		}
+	cxENDLOCK
+	if (!bracketFound) return;
+
+	// Move cursor to the matching bracket
+	unsigned int pos2;
+	if (!FindMatchingBracket(pos, pos2)) return;
+	m_lines.SetPos(pos2);
+}
+
+bool EditorCtrl::FindMatchingBracket(unsigned int pos, unsigned int& pos2) {
 	// Get list of brackets
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
 	const map<wxString, wxString> smartPairs = m_syntaxHandler.GetSmartTypingPairs(scope);
@@ -2095,7 +2181,7 @@ void EditorCtrl::MatchBrackets() {
 	cxENDLOCK
 
 	bool searchForward = true;
-	int limit = len;
+	int limit = m_lines.GetLength();
 	char start_bracket = '\0';
 	char end_bracket = '\0';
 
@@ -2125,11 +2211,13 @@ void EditorCtrl::MatchBrackets() {
 						}
 					}
 				}
-				if (escaped) return; // current char is escaped
+				if (escaped) return false; // current char is escaped
 			cxENDLOCK
 
-			if (count & 1)
-				m_bracketHighlight.Set(bracketpos, pos);
+			if (count & 1) {
+				pos2 = bracketpos;
+				return true;
+			}
 			else {
 				const unsigned int lineend = m_lines.GetLineEndpos(lineid);
 				cxLOCKDOC_READ(m_doc)
@@ -2139,15 +2227,15 @@ void EditorCtrl::MatchBrackets() {
 						else {
 							if (*dbi == '\\') escaped = true;
 							else if (*dbi == start_bracket) {
-								m_bracketHighlight.Set(pos, dbi.GetIndex());
-								break;
+								pos2 = dbi.GetIndex();
+								return true;
 							}
 						}
 					}
 				cxENDLOCK
 			}
 
-			return;
+			return false;
 		}
 	}
 	else {
@@ -2163,7 +2251,7 @@ void EditorCtrl::MatchBrackets() {
 				break;
 			}
 		}
-		if (!bracketFound) return; // no bracket at pos
+		if (!bracketFound) return false; // no bracket at pos
 	}
 
 	if (searchForward) {
@@ -2179,8 +2267,8 @@ void EditorCtrl::MatchBrackets() {
 					else if (*dbi == end_bracket) {
 						--count;
 						if (count == 0) {
-							m_bracketHighlight.Set(pos, dbi.GetIndex());
-							return;
+							pos2 = dbi.GetIndex();
+							return true;
 						}
 					}
 				}
@@ -2204,8 +2292,8 @@ void EditorCtrl::MatchBrackets() {
 					if (!(esc_count & 1)) {
 						--count;
 						if (count == 0) {
-							m_bracketHighlight.Set(dbi.GetIndex(), pos);
-							return;
+							pos2 = dbi.GetIndex();
+							return true;
 						}
 					}
 				}
@@ -2214,6 +2302,24 @@ void EditorCtrl::MatchBrackets() {
 			}
 		cxENDLOCK
 	}
+	return false;
+}
+
+void EditorCtrl::MatchBrackets() {
+	const unsigned int pos = m_lines.GetPos();
+
+	// If no change to document or position, then stop.
+	if (!m_bracketHighlight.UpdateIfChanged(m_changeToken, pos)) return;
+
+	m_bracketHighlight.Clear();
+
+	if (pos == m_lines.GetLength()) return;
+
+	unsigned int pos2;
+	if (!FindMatchingBracket(pos, pos2)) return;
+
+	if (pos < pos2) m_bracketHighlight.Set(pos, pos2);
+	else  m_bracketHighlight.Set(pos2, pos);
 }
 
 unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
@@ -2345,6 +2451,12 @@ unsigned int EditorCtrl::InsertNewline() {
 }
 
 void EditorCtrl::InsertChar(const wxChar& text) {
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = lastaction != ACTION_INSERT || m_macro.IsEmpty() || m_macro.Last().GetName() != wxT("InsertChars")
+			             ? m_macro.Add(wxT("InsertChars"), wxT("text"), wxT("")) : m_macro.Last();
+		cmd.ExtendString(0, text);
+	}
+
 	if (m_snippetHandler.IsActive()) {
 		m_snippetHandler.Insert(wxString(text));
 		return;
@@ -2591,6 +2703,205 @@ void EditorCtrl::Delete(unsigned int start, unsigned int end) {
 		else m_lines.SetPos(pos - del_len);
 	}
 
+	MarkAsModified();
+}
+
+void EditorCtrl::Delete(bool delWord) {
+	if (m_macro.IsRecording()) {
+		if (delWord) m_macro.Add(wxT("DeleteWord"));
+		else m_macro.Add(wxT("Delete"));
+	}
+
+	const unsigned int pos = m_lines.GetPos();
+
+	// Reset autoPair state if deleting outside inner pair
+	if (m_autopair.HasPairs())
+	{
+		const interval& inner_pair = m_autopair.InnerPair();
+		if (pos < inner_pair.start || inner_pair.end <= pos)
+			m_autopair.Clear();
+	}
+
+	// Check if we should delete entire word
+	if (delWord && !m_lines.IsSelected()) {
+		const interval iv = GetWordIv(pos);
+
+		if (pos >= iv.start && pos < iv.end) {
+			Delete(pos, iv.end);
+			return;
+		}
+	}
+
+	// Check if we delete outside zero-width selection
+	if (m_lines.IsSelected()) {
+		const vector<interval>& sels = m_lines.GetSelections();
+		if (sels.size() == 1 && sels[0].start == sels[0].end) {
+			m_lines.RemoveAllSelections();
+		}
+	}
+
+	// Handle deletions in snippet
+	if (m_snippetHandler.IsActive()) {
+		if (m_lines.IsSelected()) DeleteSelections();
+		else if (pos < m_lines.GetLength()) {
+			unsigned int nextcharpos;
+			cxLOCKDOC_READ(m_doc)
+				nextcharpos = doc.GetNextCharPos(pos);
+			cxENDLOCK
+			m_snippetHandler.Delete(pos, nextcharpos);
+		}
+		return;
+	}
+
+	if (pos != lastpos || lastaction != ACTION_DELETE) {
+		cxLOCKDOC_WRITE(m_doc)
+			doc.Freeze();
+		cxENDLOCK
+	}
+
+	if (m_lines.IsSelected()) {
+		if (m_lines.IsSelectionShadow()) {
+			if (DeleteInShadow(pos, true)) return; // if false we have to del outside shadow
+		}
+		else {
+			DeleteSelections();
+			cxLOCKDOC_WRITE(m_doc)
+				doc.Freeze();
+			cxENDLOCK
+			return;
+		}
+
+		m_lines.RemoveAllSelections();
+	}
+
+	if (pos >= m_lines.GetLength()) return; // Can't delete at end of text
+
+	unsigned int nextpos;
+	wxChar nextchar;
+	cxLOCKDOC_READ(m_doc)
+		nextpos = doc.GetNextCharPos(pos);
+		nextchar = doc.GetChar(pos);
+	cxENDLOCK
+
+	// Check if we are deleting over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(nextpos, NULL, &fold_end)) {
+		Delete(pos, fold_end); // delete fold
+		return;
+	}
+
+	// Check if we are at a soft tabpoint
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
+		&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
+	{
+		Delete(pos, pos + tabWidth);
+	}
+	else {
+		// Just delete the char
+		unsigned int byte_len;
+		cxLOCKDOC_WRITE(m_doc)
+			byte_len = doc.DeleteChar(pos);
+		cxENDLOCK
+		unsigned int del_end = pos + byte_len;
+		m_lines.Delete(pos, del_end);
+		StylersDelete(pos, del_end);
+		MarkAsModified();
+	}
+
+	lastpos = pos;
+	lastaction = ACTION_DELETE;
+}
+
+void EditorCtrl::Backspace(bool delWord) {
+	if (m_macro.IsRecording()) {
+		if (delWord) m_macro.Add(wxT("DeleteWord"));
+		else m_macro.Add(wxT("Backspace"));
+	}
+
+	const unsigned int pos = m_lines.GetPos();
+
+	// Check if we should delete entire word
+	if (delWord && !m_lines.IsSelected()) {
+		const interval iv = GetWordIv(pos);
+
+		if (pos <= iv.end && pos > iv.start) {
+			Delete(iv.start, pos);
+			return;
+		}
+	}
+
+	// Check if we delete outside zero-width selection
+	if (m_lines.IsSelected()) {
+		const vector<interval>& sels = m_lines.GetSelections();
+		if (sels.size() == 1 && sels[0].start == sels[0].end) {
+			m_lines.RemoveAllSelections();
+		}
+	}
+
+	// Handle deletions in snippet
+	if (m_snippetHandler.IsActive()) {
+		if (m_lines.IsSelected()) DeleteSelections();
+		else if (pos > 0) {
+			unsigned int prevcharpos;
+			cxLOCKDOC_READ(m_doc)
+				prevcharpos = doc.GetPrevCharPos(pos);
+			cxENDLOCK
+
+			m_snippetHandler.Delete(prevcharpos, pos);
+		}
+		return;
+	}
+
+	if (pos != lastpos || lastaction != ACTION_DELETE) {
+		cxLOCKDOC_WRITE(m_doc)
+			doc.Freeze();
+		cxENDLOCK
+	}
+
+	if (m_lines.IsSelected()) {
+		if (m_lines.IsSelectionShadow()) {
+			if (DeleteInShadow(pos, false)) return; // if false we have to del outside shadow
+		}
+		else {
+			DeleteSelections();
+			cxLOCKDOC_WRITE(m_doc)
+				doc.Freeze();
+			cxENDLOCK
+			return;
+		}
+
+		m_lines.RemoveAllSelections();
+	}
+
+	if (pos == 0) return; // Can't delete at start of text
+
+	unsigned int prevpos;
+	wxChar prevchar;
+	cxLOCKDOC_READ(m_doc)
+		prevpos = doc.GetPrevCharPos(pos);
+		prevchar = doc.GetChar(prevpos);
+	cxENDLOCK
+	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	unsigned int newpos;
+
+	// Check if we are at a soft tabpoint
+	if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()
+		&& pos >= tabWidth && IsSpaces(pos - tabWidth, pos)) {
+
+		newpos = pos - tabWidth;
+		RawDelete(newpos, pos);
+	}
+	else {
+		// Else just delete the char
+		RawDelete(prevpos, pos);
+		newpos = prevpos;
+	}
+
+	m_lines.SetPos(newpos);
+
+	lastpos = newpos;
+	lastaction = ACTION_DELETE;
 	MarkAsModified();
 }
 
@@ -3037,6 +3348,32 @@ bool EditorCtrl::SetDocument(const doc_id& di, const wxString& path, const Remot
 // Only derived controls are embedded in a parent panel; see BundleItemEditorCtrl.
 void EditorCtrl::UpdateParentPanels() {}
 
+void EditorCtrl::GetLinesChangedSince(const doc_id& di, vector<size_t>& lines) {
+	vector<cxChange> changes;
+	cxLOCKDOC_READ(m_doc)
+		const doc_id current = doc.GetDocument();
+		doc_id prev = di;
+		if (prev == current) {
+			if (prev.IsDraft()) prev = doc.GetDraftParent(di.version_id);
+			else return;
+		}
+		changes = doc.GetChanges(prev, current);
+	cxENDLOCK
+
+	const vector<cxLineChange> linechanges = m_lines.ChangesToFullLines(changes);
+	const size_t end = m_lines.GetLength();
+
+	for (vector<cxLineChange>::const_iterator p = linechanges.begin(); p != linechanges.end(); ++p) {
+		const size_t firstline = m_lines.GetLineFromStartPos(p->start);
+		const size_t lastline = p->end == end ? m_lines.GetLineCount() : m_lines.GetLineFromStartPos(p->end);
+		lines.push_back(firstline);
+
+		for (size_t i = firstline+1; i < lastline; ++i) {
+			lines.push_back(i);
+		}
+	}
+}
+
 void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	vector<cxChange> changes;
 	cxLOCKDOC_READ(m_doc)
@@ -3270,22 +3607,53 @@ void EditorCtrl::DeleteSelections() {
 	unsigned int pos = m_lines.GetPos();
 
 	const vector<interval>& selections = m_lines.GetSelections();
+	const bool hasRanges = HasSearchRange();
 
-	int dl = 0;
+	size_t dl = 0;
 	for (vector<interval>::const_iterator iv = selections.begin(); iv != selections.end(); ++iv) {
-		if (iv->start < iv->end) {
-			cxLOCKDOC_WRITE(m_doc)
-				doc.Delete((*iv).start-dl, (*iv).end-dl);
-			cxENDLOCK
-			m_lines.Delete((*iv).start-dl, (*iv).end-dl);
-			StylersDelete((*iv).start-dl, (*iv).end-dl);
-		}
+		if (iv->start == iv->end) continue;
+
+		const size_t start = iv->start - dl;
+		const size_t end = iv->end - dl;
+		const size_t len = iv->end - iv->start;
+
+		cxLOCKDOC_WRITE(m_doc)
+			doc.Delete(start, end);
+		cxENDLOCK
+		m_lines.Delete(start, end);
+		StylersDelete(start, end);
 
 		// Update caret position
-		if (pos >= (*iv).start-dl && pos <= (*iv).end-dl) pos = (*iv).start-dl;
-		else if (pos > (*iv).end-dl) pos -= (*iv).end - (*iv).start;
+		if (pos >= start && pos <= end) pos = start;
+		else if (pos > end) pos -= len;
 
-		dl += (*iv).end - (*iv).start;
+		if (hasRanges) {
+			// Find range containing deletion
+			for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+				interval& r = m_searchRanges[i];
+				if (end <= r.end) {
+					// Adjust cursor
+					size_t& c = m_cursors[i];
+					if (c == end) c = start;
+					else if (c > end) c -= len;
+
+					// Adjust range len
+					r.end -= len;
+
+					// Adjust all following ranges
+					++i;
+					for (; i < m_searchRanges.size(); ++i) {
+						m_searchRanges[i].start -= len;
+						m_searchRanges[i].end -= len;
+						m_cursors[i] -= len;
+					}
+					break;
+				}
+			}
+
+		}
+
+		dl += len;
 	}
 
 	m_lines.RemoveAllSelections();
@@ -4002,6 +4370,8 @@ void EditorCtrl::SwapLines(unsigned int line1, unsigned int line2) {
 }
 
 void EditorCtrl::Transpose() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Transpose"));
+
 	Freeze();
 
 	vector<interval> selections = m_lines.GetSelections();
@@ -4194,6 +4564,10 @@ void EditorCtrl::Transpose() {
 }
 
 void EditorCtrl::DelCurrentLine(bool fromPos) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("DeleteCurrentLine"), wxT("fromPos"), fromPos);
+	}
+
 	Freeze();
 
 	const unsigned int pos = m_lines.GetPos();
@@ -4219,6 +4593,14 @@ void EditorCtrl::DelCurrentLine(bool fromPos) {
 }
 
 void EditorCtrl::ConvertCase(cxCase conversion) {
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = m_macro.Add(wxT("ConvertCase"));
+		if (conversion == cxUPPERCASE) cmd.AddArg(wxT("conversion"), wxT("upper"));
+		else if (conversion == cxLOWERCASE) cmd.AddArg(wxT("conversion"), wxT("lower"));
+		else if (conversion == cxTITLECASE) cmd.AddArg(wxT("conversion"), wxT("title"));
+		else if (conversion == cxREVERSECASE) cmd.AddArg(wxT("conversion"), wxT("reverse"));
+	}
+
 	Freeze();
 
 	vector<interval> selections = m_lines.GetSelections();
@@ -4322,12 +4704,6 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	MarkAsModified();
 };
 
-
-const deque<const wxString*> EditorCtrl::GetScope() {
-	int caretPosition = GetPos();
-	return m_syntaxstyler.GetScope(caretPosition);
-};
-
 /**
  * The goal of this method is to allow the user to type and copy text at the same time.
  * They can press ctrl+shift+c, then start typing, then press ctrl+shift+c again, and that text
@@ -4348,6 +4724,8 @@ void EditorCtrl::OnMarkCopy() {
 }
 
 void EditorCtrl::OnCopy() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Copy"));
+
 	wxString copytext;
 	if (m_lines.IsSelected()) copytext = GetSelText();
 	else if (!m_lines.IsEmpty()) {
@@ -4420,6 +4798,8 @@ void EditorCtrl::DoCopy(wxString& copytext) {
 }
 
 void EditorCtrl::OnCut() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Cut"));
+
 	bool doCopy = true;
 	if (!m_lines.IsSelected()) {
 		// Select current line 
@@ -4431,7 +4811,10 @@ void EditorCtrl::OnCut() {
 		if (m_lines.IsLineEmpty(cl)) doCopy = false; // don't copy empty line
 	}
 
-	if (doCopy) OnCopy();
+	if (doCopy) {
+		MacroDisabler m(m_macro);
+		OnCopy();
+	}
 	DeleteSelections();
 	cxLOCKDOC_WRITE(m_doc)
 		doc.Freeze();
@@ -4523,6 +4906,7 @@ void EditorCtrl::InsertColumn(const wxArrayString& text, bool select) {
 }
 
 void EditorCtrl::OnPaste() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("Paste"));
 	if (!wxTheClipboard->Open()) return;
 	
 	if (wxTheClipboard->IsSupported( MultilineDataObject::FormatId )) {
@@ -4563,12 +4947,60 @@ bool EditorCtrl::IsSelected() const {
 	return m_lines.IsSelected();
 }
 
+bool EditorCtrl::IsMultiSelected() const {
+	return m_lines.IsMultiSelected();
+}
+
 void EditorCtrl::RemoveAllSelections() {
 	m_lines.RemoveAllSelections();
 	m_currentSel = -1;
 }
 
-void EditorCtrl::Select(unsigned int start, unsigned int end) {
+void EditorCtrl::ReverseSelections() {
+	if (!m_lines.IsSelected()) return;
+	
+	const vector<interval> oldsel = m_lines.GetSelections();
+	m_lines.RemoveAllSelections();
+
+	if (m_searchRanges.empty()) {
+		unsigned int pos = 0;
+		for (vector<interval>::const_iterator p = oldsel.begin(); p != oldsel.end(); ++p) {
+			if (pos < p->start) m_lines.AddSelection(pos, p->start);
+			pos = p->end;
+		}
+		const unsigned int len = m_lines.GetLength();
+		if (pos < len) {
+			m_lines.AddSelection(pos, len);
+			pos = len;
+		}
+
+		m_lines.SetPos(pos);
+	}
+	else {
+		vector<interval>::const_iterator s = oldsel.begin();
+		for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+			const interval& r = m_searchRanges[i];
+			unsigned int pos = r.start;
+
+			while (s != oldsel.end() && s->end <= r.end) {
+				if (pos < s->start)  {
+					m_lines.AddSelection(pos, s->start);
+					m_cursors[i] = s->start;
+				}
+				pos = s->end;
+				++s;
+			}
+			if (pos < r.end) {
+				m_lines.AddSelection(pos, r.end);
+				m_cursors[i] = r.end;
+			}
+		}
+
+		m_lines.SetPos(m_cursors.back());
+	}
+}
+
+void EditorCtrl::Select(unsigned int start, unsigned int end, bool allowEmpty) {
 	// The positions may come from unverified input
 	// So we have to make sure they are valid
 	cxLOCKDOC_READ(m_doc)
@@ -4576,13 +5008,30 @@ void EditorCtrl::Select(unsigned int start, unsigned int end) {
 		if (end > doc.GetLength()) end = doc.GetLength();
 		else if (end != doc.GetLength()) end = doc.GetValidCharPos(end);
 	cxENDLOCK
-	if (start >= end) return;
+	if (start > end) return;
+	if (start == end && !allowEmpty) return;
 
 	m_lines.RemoveAllSelections();
 	m_lines.AddSelection(start, end);
 }
 
+void EditorCtrl::AddSelection(unsigned int start, unsigned int end, bool allowEmpty) {
+	// The positions may come from unverified input
+	// So we have to make sure they are valid
+	cxLOCKDOC_READ(m_doc)
+		start = doc.GetValidCharPos(start);
+		if (end > doc.GetLength()) end = doc.GetLength();
+		else if (end != doc.GetLength()) end = doc.GetValidCharPos(end);
+	cxENDLOCK
+	if (start > end) return;
+	if (start == end && !allowEmpty) return;
+
+	m_lines.AddSelection(start, end);
+}
+
 void EditorCtrl::SelectAll() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectAll"));
+
 	m_lastScopePos = -1; // invalidate scope selections
 	if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 
@@ -4647,7 +5096,13 @@ wxString EditorCtrl::GetCurrentLine() {
 	return wxEmptyString;
 }
 
-void EditorCtrl::SelectWord(unsigned int pos, bool multiselect) {
+void EditorCtrl::SelectWord(bool multiselect) {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectWord"));
+
+	SelectWordAt(GetPos(), multiselect);
+}
+
+void EditorCtrl::SelectWordAt(unsigned int pos, bool multiselect) {
 	wxASSERT(pos <= m_doc.GetLength());
 	m_lastScopePos = -1; // invalidate scope selections
 
@@ -4697,10 +5152,35 @@ void EditorCtrl::SelectLine(unsigned int line_id, bool multiselect) {
 }
 
 void EditorCtrl::SelectCurrentLine() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectCurrentLine"));
+
 	SelectLine(m_lines.GetCurrentLine());
 }
 
+void EditorCtrl::ExtendSelectionToLine(unsigned int sel_id) {
+	wxASSERT(sel_id < m_lines.GetSelections().size());
+
+	const unsigned int pos = m_lines.GetPos();
+	unsigned int line_id = m_lines.GetLineFromCharPos(pos);
+	const bool isStart = m_lines.IsLineStart(line_id, pos);
+	const interval& iv = m_lines.GetSelections()[sel_id];
+
+	if (pos > iv.start) {
+		if (isStart) --line_id;
+		const unsigned int end = m_lines.GetLineEndpos(line_id, false);
+		m_lines.UpdateSelection(sel_id, iv.start, end);
+		m_lines.SetPos(end);
+	}
+	else {
+		const unsigned int start = m_lines.GetLineStartpos(line_id);
+		m_lines.UpdateSelection(sel_id, start, iv.end);
+		m_lines.SetPos(start);
+	}
+}
+
 void EditorCtrl::SelectScope() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectScope"));
+
 	if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 	unsigned int pos = GetPos();
 
@@ -4899,6 +5379,10 @@ void EditorCtrl::DoCompletion() {
 		return;
 	}
 
+	ShowCompletionPopup(completions);
+}
+
+void EditorCtrl::ShowCompletionPopup(const wxArrayString& completions) {
 	// Get current word
 	const interval iv = GetWordIv(GetPos());
 
@@ -4914,6 +5398,10 @@ void EditorCtrl::DoCompletion() {
 }
 
 void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("ReplaceCurrentWord"), wxT("text"), word);
+	}
+
 	const interval iv = GetWordIv(GetPos());
 
 	Freeze();
@@ -4931,23 +5419,88 @@ void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 	Freeze();
 }
 
+bool EditorCtrl::HasSearchRange() const {
+	return !m_searchRanges.empty();
+}
+
 void EditorCtrl::SetSearchRange() {
 	m_searchRanges = m_lines.GetSelections();
 	m_lines.RemoveAllSelections();
-	//if (!m_searchRanges.empty()) SetPos(m_searchRanges[0].start);
+	
+	// Position cursors at beginning of ranges
+	const unsigned int pos = m_lines.GetPos();
+	m_cursors.resize(m_searchRanges.size());
+	for (size_t i = 0; i < m_searchRanges.size(); ++i) {
+		const interval& r = m_searchRanges[i];
+		m_cursors[i] = r.start;
+		if (pos == r.end) SetPos(r.start); // make sure real cursor follows
+	}
+
 	DrawLayout();
+}
+
+void EditorCtrl::AdjustSearchRangeInsert(size_t range_id, int len) {
+	wxASSERT(range_id < m_searchRanges.size());
+
+	m_searchRanges[range_id].end += len;
+
+	for (size_t i = range_id+1; i < m_searchRanges.size(); ++i) {
+		interval& iv = m_searchRanges[i];
+		iv.start += len;
+		iv.end += len;
+	}
 }
 
 void EditorCtrl::ClearSearchRange(bool reset) {
 	if (m_searchRanges.empty()) return;
 
 	if (reset && !m_lines.IsSelected()) {
-		// Reset selection
-		for (vector<interval>::const_iterator p = m_searchRanges.begin(); p != m_searchRanges.end(); ++p)
-			m_lines.AddSelection(p->start, p->end);
+		// Reset selection to cursors
+		for (vector<unsigned int>::const_iterator p = m_cursors.begin(); p != m_cursors.end(); ++p)
+			m_lines.AddSelection(*p, *p);
 	}
 	m_searchRanges.clear();
+	m_cursors.clear();
 	DrawLayout();
+}
+
+const vector<interval>& EditorCtrl::GetSearchRange() const {
+	return m_searchRanges;
+}
+
+const vector<unsigned int>& EditorCtrl::GetSearchRangeCursors() const {
+	return m_cursors;
+}
+	
+void EditorCtrl::SetSearchRangeCursor(size_t cursor, unsigned int pos) {
+	wxASSERT(cursor < m_cursors.size());
+	m_cursors[cursor] = pos;
+}
+
+search_result EditorCtrl::SearchDirect(const wxString& pattern, int options, size_t startpos, size_t endpos) const {
+	const bool regex = (options & FIND_USE_REGEX) != 0;
+	const bool matchcase = (options & FIND_MATCHCASE) != 0;;
+	const bool forward = (options & FIND_REVERSE) == 0;
+
+	// Direct interface to document search
+	cxLOCKDOC_READ(m_doc)
+		if (regex) {
+			if (forward) return doc.RegExFind(pattern, startpos, matchcase, NULL, endpos);
+			else {
+				search_result sr = doc.RegExFindBackwards(pattern, startpos, matchcase);
+				if (sr.start < endpos) sr.error_code = -1;
+				return sr;
+			}
+		}
+		else {
+			if (forward) return doc.Find(pattern, startpos, matchcase, endpos);
+			else {
+				search_result sr = doc.FindBackwards(pattern, startpos, matchcase);
+				if (sr.start < endpos) sr.error_code = -1;
+				return sr;
+			}
+		}
+	cxENDLOCK
 }
 
 bool EditorCtrl::DoFind(const wxString& text, unsigned int start_pos, int options, bool dir_forward) {
@@ -5068,9 +5621,20 @@ bool EditorCtrl::FindNextChar(wxChar c, unsigned int start_pos, unsigned int end
 cxFindResult EditorCtrl::Find(const wxString& text, int options) {
 	// We have to be aware of incremental searches, so to find out if we are continuing
 	// a previous search we check if lastpos/pos are in sync with start_pos/found_pos
+	bool isIncremental = true;
 	if (m_search_found_pos != m_lines.GetPos() || m_search_start_pos != m_lines.GetLastpos()) {
 		m_search_start_pos = m_lines.GetPos();
 		m_lines.SetLastpos(m_search_start_pos);
+		isIncremental = false;
+	}
+
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = isIncremental && !m_macro.IsEmpty() && m_macro.Last().GetName() == wxT("Find")
+			             ? m_macro.Last() : m_macro.Add(wxT("Find"));
+		cmd.SetArg(0, wxT("findString"), text);
+		cmd.SetArg(1, wxT("ignoreCase"), !(options & FIND_MATCHCASE));
+		cmd.SetArg(2, wxT("regularExpression"), (options & FIND_USE_REGEX) != 0);
+		cmd.SetArg(3, wxT("wrapAround"), (options & FIND_RESTART) != 0);
 	}
 
 	cxFindResult result = cxNOT_FOUND;
@@ -5092,6 +5656,14 @@ cxFindResult EditorCtrl::Find(const wxString& text, int options) {
 }
 
 cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = m_macro.Add(wxT("FindNext"));
+		cmd.SetArg(0, wxT("findString"), text);
+		cmd.SetArg(1, wxT("ignoreCase"), !(options & FIND_MATCHCASE));
+		cmd.SetArg(2, wxT("regularExpression"), (options & FIND_USE_REGEX) != 0);
+		cmd.SetArg(3, wxT("wrapAround"), (options & FIND_RESTART) != 0);
+	}
+
 	unsigned int start_pos;
 	if (options & FIND_RESTART) start_pos = m_searchRanges.empty() ? 0 : m_searchRanges[0].start;
 	else if (m_lines.IsSelected()) {
@@ -5126,6 +5698,14 @@ cxFindResult EditorCtrl::FindNext(const wxString& text, int options) {
 }
 
 cxFindResult EditorCtrl::FindPrevious(const wxString& text, int options) {
+	if (m_macro.IsRecording()) {
+		eMacroCmd& cmd = m_macro.Add(wxT("FindPrevious"));
+		cmd.SetArg(0, wxT("findString"), text);
+		cmd.SetArg(1, wxT("ignoreCase"), !(options & FIND_MATCHCASE));
+		cmd.SetArg(2, wxT("regularExpression"), (options & FIND_USE_REGEX) != 0);
+		cmd.SetArg(3, wxT("wrapAround"), (options & FIND_RESTART) != 0);
+	}
+
 	unsigned int start_pos;
 	if (options & FIND_RESTART) start_pos = m_searchRanges.empty() ? m_lines.GetLength() : m_searchRanges.back().end;
 	else if (m_lines.IsSelected()) {
@@ -5770,7 +6350,17 @@ void EditorCtrl::OnKeyUp(wxKeyEvent& event) {
 	event.Skip();
 }
 
+bool EditorCtrl::ProcessCommandModeKey(wxKeyEvent& event) {
+	MacroDisabler m(m_macro); // Avoid dublicate recording
+	return m_commandHandler.ProcessCommand(event, m.IsRecording());
+}
+
 void EditorCtrl::OnChar(wxKeyEvent& event) {
+	if (m_parentFrame.IsCommandMode()) {
+		ProcessCommandModeKey(event);
+		return;	
+	}
+
 	wxString modifiers;
 	if (event.ControlDown()) modifiers += wxT("CTRL-");
 	if (event.AltDown()) modifiers += wxT("ALT-");
@@ -5787,7 +6377,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 
 	const int key = event.GetKeyCode();
 	const unsigned int oldpos = m_lines.GetPos();
-	unsigned int pos; // Used within several cases, and a case doesn't define a scope, so declare here.
+	const SelAction doSelect = (event.ShiftDown() || event.AltDown()) ? SEL_SELECT : SEL_REMOVE;
 
 	// If the cursor is positioned outside of the innermost bracket pair, then
 	// we toss our nested bracket pair information.
@@ -5837,15 +6427,17 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_LEFT: // Ctrl <-
-				CursorWordLeft(event.ShiftDown() || event.AltDown());
+				CursorWordLeft(doSelect);
 				break;
 
 			case WXK_RIGHT: // Ctrl ->
-				CursorWordRight(event.ShiftDown() || event.AltDown());
+				CursorWordRight(doSelect);
 				break;
 
 			case WXK_UP: // Ctrl arrow up
-				if (event.ShiftDown() || event.AltDown()) CursorUp(true);
+				if (event.ShiftDown() || event.AltDown()) {
+					CursorUp(SEL_SELECT);
+				}
 				else {
 					scrollPos = scrollPos - (scrollPos % m_lines.GetLineHeight()) - m_lines.GetLineHeight();
 					if (scrollPos < 0) scrollPos = 0;
@@ -5870,7 +6462,9 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_DOWN: // Ctrl arrow down
-				if (event.ShiftDown() || event.AltDown()) CursorDown(true);
+				if (event.ShiftDown() || event.AltDown()) {
+					CursorDown(SEL_SELECT);
+				}
 				else {
 					const wxSize size = GetClientSize();
 					scrollPos = scrollPos - (scrollPos % m_lines.GetLineHeight()) + m_lines.GetLineHeight();
@@ -5895,29 +6489,12 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				break;
 
 			case WXK_HOME:
-				SetPos(0);
-
-				// Handle selection
-				if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-				else if (oldpos != 0) SelectFromMovement(0, oldpos);
-
+				CursorToHome(doSelect);
 				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
-				pos = GetLength();
-
-				// Check if end is in a fold
-				unsigned int fold_start;
-				if (IsPosInFold(pos, &fold_start))
-					pos = fold_start;
-
-				SetPos(pos);
-
-				// Handle selection
-				if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-				else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
-
+				CursorToEnd(doSelect);
 				lastaction = ACTION_NONE;
 				break;
 
@@ -5993,73 +6570,66 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				}
 				break;
 
-			case WXK_F10:
+			/*case WXK_F10:
 				{
 					vector<SymbolRef> symbols;
 					m_syntaxstyler.GetSymbols(symbols);
 					for (vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p)
 						wxLogDebug(wxT("%d-%d -> \"%s\" -> \"%s\""), p->start, p->end, GetText(p->start, p->end).c_str(), p->transform->c_str());
 				}
+				break;*/
+
+			case WXK_F10:
+				if (m_macro.IsRecording()) {
+					m_macro.EndRecording();
+					wxLogDebug(wxT("Macro Recording Stopped"));
+				}
+				else {
+					m_macro.Clear();
+					m_macro.StartRecording();
+					wxLogDebug(wxT("Macro Recording Started"));
+				}
 				break;
 
 			case WXK_F11:
-				TestMilestones();
+				PlayMacro();
 				break;
 	#endif //__WXDEBUG__
 
 			case WXK_LEFT:
 			case WXK_NUMPAD_LEFT:
-				CursorLeft(event.ShiftDown() || event.AltDown());
+				CursorLeft(doSelect);
 				break;
 
 			case WXK_RIGHT:
 			case WXK_NUMPAD_RIGHT:
-				CursorRight(event.ShiftDown() || event.AltDown());
+				CursorRight(doSelect);
 				break;
 
 			case WXK_UP:
 			case WXK_NUMPAD_UP:
-				CursorUp(event.ShiftDown() || event.AltDown());
+				CursorUp(doSelect);
 				break;
 
 			case WXK_DOWN:
 			case WXK_NUMPAD_DOWN:
-				CursorDown(event.ShiftDown() || event.AltDown());
+				CursorDown(doSelect);
 				break;
 
 			case WXK_HOME:
 			case WXK_NUMPAD_HOME:
 			case WXK_NUMPAD_BEGIN:
-				{
-					const unsigned int currentLine = m_lines.GetCurrentLine();
-					const unsigned int indentPos = m_lines.GetLineIndentPos(currentLine);
-
-					if (indentPos < oldpos) // Move to first text after indentation
-						m_lines.SetPos(indentPos);
-					else {
-						const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
-						if (oldpos == startOfLine) // Move back to text after indentation
-							m_lines.SetPos(indentPos);
-						else // Move to start-of-line
-							m_lines.SetPos(startOfLine);
-					}
-
-					// Handle selection
-					if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-					else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
-
-					lastaction = ACTION_NONE;
-				}
+				CursorToLineStart(true);
+				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
+				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
 			case WXK_NUMPAD_END:
-				m_lines.SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
-
-				// Handle selection
-				if (!event.ShiftDown()) m_lines.RemoveAllSelections();
-				else if (oldpos != m_lines.GetPos()) SelectFromMovement(oldpos, m_lines.GetPos());
-
+				CursorToLineEnd();
+				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
+				else RemoveAllSelections();
 				lastaction = ACTION_NONE;
 				break;
 
@@ -6084,193 +6654,15 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_NUMPAD_DELETE:
 				if (event.ShiftDown()) OnCut();
 				else {
-					pos = m_lines.GetPos();
-
-					// Reset autoPair state if deleting outside inner pair
-					if (m_autopair.HasPairs())
-					{
-						const interval& inner_pair = m_autopair.InnerPair();
-						if (pos < inner_pair.start || inner_pair.end <= pos)
-							m_autopair.Clear();
-					}
-
-					// Check if we should delete entire word
-					if (event.ControlDown() && !m_lines.IsSelected()) {
-						const interval iv = GetWordIv(pos);
-
-						if (pos >= iv.start && pos < iv.end) {
-							Delete(pos, iv.end);
-							break;
-						}
-					}
-
-					// Check if we delete outside zero-width selection
-					if (m_lines.IsSelected()) {
-						const vector<interval>& sels = m_lines.GetSelections();
-						if (sels.size() == 1 && sels[0].IsPoint())
-							m_lines.RemoveAllSelections();
-					}
-
-					// Handle deletions in snippet
-					if (m_snippetHandler.IsActive()) {
-						if (m_lines.IsSelected()) DeleteSelections();
-						else if (pos < m_lines.GetLength()) {
-							unsigned int nextcharpos;
-							cxLOCKDOC_READ(m_doc)
-								nextcharpos = doc.GetNextCharPos(pos);
-							cxENDLOCK
-							m_snippetHandler.Delete(pos, nextcharpos);
-						}
-						break;
-					}
-
-					if (pos != lastpos || lastaction != ACTION_DELETE) {
-						cxLOCKDOC_WRITE(m_doc)
-							doc.Freeze();
-						cxENDLOCK
-					}
-
-					if (m_lines.IsSelected()) {
-						if (m_lines.IsSelectionShadow()) {
-							if (DeleteInShadow(pos, true)) break; // if false we have to del outside shadow
-						}
-						else {
-							DeleteSelections();
-							cxLOCKDOC_WRITE(m_doc)
-								doc.Freeze();
-							cxENDLOCK
-							break;
-						}
-
-						m_lines.RemoveAllSelections();
-					}
-
-					if (pos >= m_lines.GetLength()) 
-						return; // Can't delete at end of text
-
-					unsigned int nextpos;
-					wxChar nextchar;
-					cxLOCKDOC_READ(m_doc)
-						nextpos = doc.GetNextCharPos(pos);
-						nextchar = doc.GetChar(pos);
-					cxENDLOCK
-
-					// Check if we are deleting over a fold
-					unsigned int fold_end;
-					if (IsPosInFold(nextpos, NULL, &fold_end)) {
-						Delete(pos, fold_end); // delete fold
-						break;
-					}
-
-					// Check if we are at a soft tabpoint
-					const unsigned int tabWidth = m_tabWidth;
-					if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
-						&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
-					{
-						Delete(pos, pos + tabWidth);
-					}
-					else {
-						// Just delete the char
-						unsigned int byte_len;
-						cxLOCKDOC_WRITE(m_doc)
-							byte_len = doc.DeleteChar(pos);
-						cxENDLOCK
-						unsigned int del_end = pos + byte_len;
-						m_lines.Delete(pos, del_end);
-						StylersDelete(pos, del_end);
-						MarkAsModified();
-					}
-
-					lastpos = pos;
-					lastaction = ACTION_DELETE;
+					const bool delWord = event.ControlDown();
+					Delete(delWord);
 				}
 				break;
 
 			case WXK_BACK:
 				{
-					pos = m_lines.GetPos();
-
-					// Check if we should delete entire word
-					if (event.ControlDown() && !m_lines.IsSelected()) {
-						const interval iv = GetWordIv(pos);
-
-						if (pos <= iv.end && pos > iv.start) {
-							Delete(iv.start, pos);
-							break;
-						}
-					}
-
-					// Check if we delete outside zero-width selection
-					if (m_lines.IsSelected()) {
-						const vector<interval>& sels = m_lines.GetSelections();
-						if (sels.size() == 1 && sels[0].IsPoint())
-							m_lines.RemoveAllSelections();
-					}
-
-					// Handle deletions in snippet
-					if (m_snippetHandler.IsActive()) {
-						if (m_lines.IsSelected()) DeleteSelections();
-						else if (pos > 0) {
-							unsigned int prevcharpos;
-							cxLOCKDOC_READ(m_doc)
-								prevcharpos = doc.GetPrevCharPos(pos);
-							cxENDLOCK
-
-							m_snippetHandler.Delete(prevcharpos, pos);
-						}
-						break;
-					}
-
-					if (pos != lastpos || lastaction != ACTION_DELETE) {
-						cxLOCKDOC_WRITE(m_doc)
-							doc.Freeze();
-						cxENDLOCK
-					}
-
-					if (m_lines.IsSelected()) {
-						if (m_lines.IsSelectionShadow()) {
-							if (DeleteInShadow(pos, false)) break; // if false we have to del outside shadow
-						}
-						else {
-							DeleteSelections();
-							cxLOCKDOC_WRITE(m_doc)
-								doc.Freeze();
-							cxENDLOCK
-							break;
-						}
-
-						m_lines.RemoveAllSelections();
-					}
-
-					if (pos == 0) return; // Can't delete at start of text
-
-					unsigned int prevpos;
-					wxChar prevchar;
-					cxLOCKDOC_READ(m_doc)
-						prevpos = doc.GetPrevCharPos(pos);
-						prevchar = doc.GetChar(prevpos);
-					cxENDLOCK
-					const unsigned int tabWidth = m_tabWidth;
-					unsigned int newpos;
-
-					// Check if we are at a soft tabpoint
-					if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()
-						&& pos >= tabWidth && IsSpaces(pos - tabWidth, pos)) {
-
-						newpos = pos - tabWidth;
-						RawDelete(newpos, pos);
-					}
-					else {
-						// Else just delete the char
-						RawDelete(prevpos, pos);
-						newpos = prevpos;
-					}
-
-					m_lines.SetPos(newpos);
-
-					lastpos = newpos;
-					lastaction = ACTION_DELETE;
-					MarkAsModified();
+					const bool delWord = event.ControlDown();
+					Backspace(delWord);
 				}
 				break;
 
@@ -6296,7 +6688,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_ESCAPE:
 				if (m_snippetHandler.IsActive()) m_snippetHandler.Clear();
 				else if (m_lines.IsSelectionShadow()) m_lines.RemoveAllSelections();
-				else DoCompletion();
+				else m_parentFrame.ShowCommandMode();
 				break;
 
 			default:
@@ -6449,22 +6841,8 @@ void EditorCtrl::SetPos(unsigned int pos) {
 
 void EditorCtrl::SetPos(int line, int column) {
 	// line & colums indexes starts from 1
-	if (line > 0) {
-		--line;
-		if (line < (int)m_lines.GetLineCount())
-			m_lines.SetPos(m_lines.GetLineStartpos(line));
-	}
-	if (column > 0) {
-		--column;
-		const unsigned int pos = m_lines.GetPos();
-		const unsigned int curLine = m_lines.GetLineFromCharPos(pos);
-		const unsigned int lineEnd = m_lines.GetLineEndpos(curLine);
-		unsigned int newpos;
-		cxLOCKDOC_READ(m_doc)
-			newpos = doc.GetValidCharPos(pos + column);
-		cxENDLOCK
-		m_lines.SetPos(wxMin(newpos, lineEnd));
-	}
+	if (line > 0) CursorToLine(line);
+	if (column > 0) CursorToColumn(column);
 }
 
 void EditorCtrl::PageUp(bool select, int WXUNUSED(count)) {
@@ -6503,7 +6881,11 @@ void EditorCtrl::PageDown(bool select, int WXUNUSED(count)) {
 	else SelectFromMovement(oldpos, m_lines.GetPos());
 }
 
-void EditorCtrl::CursorUp(bool select) {
+void EditorCtrl::CursorUp(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorUp"), wxT("select"), (select == SEL_SELECT));
+	}
+
 	const int oldpos = m_lines.GetPos();
 
 	if (lastaction == ACTION_UP) m_lines.MovePosUp(lastxpos);
@@ -6514,13 +6896,17 @@ void EditorCtrl::CursorUp(bool select) {
 	}
 
 	// Handle selection
-	if (!select) m_lines.RemoveAllSelections(true, m_lines.GetPos());
-	else SelectFromMovement(oldpos, m_lines.GetPos());
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, m_lines.GetPos());
 
 	lastaction = ACTION_UP;
 }
 
-void EditorCtrl::CursorDown(bool select) {
+void EditorCtrl::CursorDown(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorDown"), wxT("select"), (select == SEL_SELECT));
+	}
+
 	const int oldpos = m_lines.GetPos();
 
 	if (lastaction == ACTION_DOWN) m_lines.MovePosDown(lastxpos);
@@ -6531,13 +6917,17 @@ void EditorCtrl::CursorDown(bool select) {
 	}
 
 	// Handle selection
-	if (!select) m_lines.RemoveAllSelections(true, m_lines.GetPos());
-	else SelectFromMovement(oldpos, m_lines.GetPos());
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, m_lines.GetPos());
 
 	lastaction = ACTION_DOWN;
 }
 
-void EditorCtrl::CursorLeft(bool select) {
+void EditorCtrl::CursorLeft(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorLeft"), wxT("select"), (select == SEL_SELECT));
+	}
+
 	const unsigned int pos = m_lines.GetPos();
 	if (pos > 0) {
 		unsigned int prevpos;
@@ -6560,15 +6950,20 @@ void EditorCtrl::CursorLeft(bool select) {
 			prevpos = fold_start;
 
 		m_lines.SetPos(prevpos); // Caret will be moved in DrawLayout()
-
-		// Handle selection
-		if (select) SelectFromMovement(pos, prevpos);
-		else m_lines.RemoveAllSelections(true, prevpos);
 	}
+	
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(pos, m_lines.GetPos());
+
 	lastaction = ACTION_NONE;
 }
 
-void EditorCtrl::CursorRight(bool select) {
+void EditorCtrl::CursorRight(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorRight"), wxT("select"), (select == SEL_SELECT));
+	}
+
 	const unsigned int pos = m_lines.GetPos();
 	if (pos < m_lines.GetLength()) {
 		unsigned int nextpos;
@@ -6593,17 +6988,22 @@ void EditorCtrl::CursorRight(bool select) {
 		}
 
 		m_lines.SetPos(nextpos); // Caret will be moved in DrawLayout()
-
-		// Handle selection
-		if (!select) m_lines.RemoveAllSelections(true, nextpos);
-		else SelectFromMovement(pos, nextpos);
 	}
+	
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(pos, m_lines.GetPos());
+
 	lastaction = ACTION_NONE;
 }
 
-void EditorCtrl::CursorWordLeft(bool select) {
-	unsigned int pos = m_lines.GetPos();
-	const unsigned int oldpos = pos;
+void EditorCtrl::CursorWordLeft(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorWordLeft"), wxT("select"), (select == SEL_SELECT));
+	}
+
+	const unsigned int oldpos = m_lines.GetPos();
+	unsigned int pos = oldpos;
 
 	/* State machine:
 		   | a s p  (* marks SetPos)
@@ -6642,14 +7042,18 @@ void EditorCtrl::CursorWordLeft(bool select) {
 			pos = fold_start;
 
 		m_lines.SetPos(pos);
-
-		// Handle selection
-		if (!select) m_lines.RemoveAllSelections(true, pos);
-		else if (oldpos != pos) SelectFromMovement(oldpos, pos);
 	}
+
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, pos);
 }
 
-void EditorCtrl::CursorWordRight(bool select) {
+void EditorCtrl::CursorWordRight(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorWordRight"), wxT("select"), (select == SEL_SELECT));
+	}
+
 	unsigned int pos = m_lines.GetPos();
 	const unsigned int oldpos = pos;
 
@@ -6681,11 +7085,400 @@ void EditorCtrl::CursorWordRight(bool select) {
 	m_lines.SetPos(pos);
 
 	// Handle selection
-	if (!select) m_lines.RemoveAllSelections(true, pos);
-	else if (oldpos != pos) SelectFromMovement(oldpos, pos);
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, pos);
 }
 
-void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible) {
+void EditorCtrl::CursorToHome(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorToHome"), wxT("select"), (select == SEL_SELECT));
+	}
+	const unsigned int oldpos = m_lines.GetPos();
+
+	SetPos(0);
+
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, 0);
+}
+
+void EditorCtrl::CursorToEnd(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorToEnd"), wxT("select"), (select == SEL_SELECT));
+	}
+
+	const unsigned int oldpos = m_lines.GetPos();
+	unsigned int pos = GetLength();
+
+	// Check if end is in a fold
+	unsigned int fold_start;
+	if (IsPosInFold(pos, &fold_start))
+		pos = fold_start;
+
+	SetPos(pos);
+
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, pos);
+}
+
+void EditorCtrl::CursorToLine(unsigned int line) {
+	if (line == 0) return; // line id's start from 1
+	if (--line >= m_lines.GetLineCount()) return CursorToEnd(SEL_IGNORE);
+
+	m_lines.SetPos(m_lines.GetLineStartpos(line));
+}
+
+void EditorCtrl::CursorToColumn(unsigned int column) {
+	if (column == 0) return; // column id's start from 1
+	--column;
+
+	const unsigned int curLine = m_lines.GetCurrentLine();
+	const unsigned int lineStart = m_lines.GetLineStartpos(curLine);
+	const unsigned int lineEnd = m_lines.GetLineEndpos(curLine);
+
+	unsigned int newpos;
+	cxLOCKDOC_READ(m_doc)
+		newpos = doc.GetValidCharPos(lineStart + column);
+	cxENDLOCK
+	m_lines.SetPos(wxMin(newpos, lineEnd));
+}
+
+void EditorCtrl::CursorToLineStart(bool soft) {
+	const unsigned int oldpos = GetPos();
+	const unsigned int currentLine = m_lines.GetCurrentLine();
+	const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
+
+	if (!soft) m_lines.SetPos(startOfLine);
+	else {
+		const unsigned int indentPos = m_lines.GetLineIndentPos(currentLine);
+
+		if (indentPos < oldpos) {
+			// Move to first text after indentation
+			m_lines.SetPos(indentPos);
+		}
+		else {
+			if (oldpos == startOfLine) {
+				// Move back to text after indentation
+				m_lines.SetPos(indentPos);
+			}
+			else {
+				// Move to start-of-line
+				m_lines.SetPos(startOfLine);
+			}
+		}
+	}
+}
+
+void EditorCtrl::CursorToLineEnd() {
+	m_lines.SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+}
+
+void EditorCtrl::CursorToNextChar(wxChar c) {
+	const unsigned int oldpos = GetPos();
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		const unsigned int startpos = doc.GetNextCharPos(oldpos); // don't find current
+		sr = doc.Find(c, startpos, true, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+}
+
+void EditorCtrl::CursorToPrevChar(wxChar c) {
+	const unsigned int oldpos = GetPos();
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.FindBackwards(c, oldpos, true);
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+}
+
+void EditorCtrl::CursorToWordStart(bool bigword) {
+	unsigned int pos = m_lines.GetPos();
+
+	cxLOCKDOC_READ(m_doc)
+		if (pos < doc.GetLength()) {
+			wxChar prev_char = doc.GetChar(pos);
+			if (bigword) {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if (wxIsspace(prev_char) && (Isalnum(c) || c == wxT('_') || wxIspunct(c))) break;
+					prev_char = c;
+				}
+			}
+			else {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if ((wxIsspace(prev_char) || wxIspunct(prev_char)) && (Isalnum(c) || c == wxT('_'))) break;
+					if (!wxIspunct(prev_char) && wxIspunct(c)) break;
+					prev_char = c;
+				}
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(pos, NULL, &fold_end))
+		pos = fold_end;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToWordEnd(bool bigword) {
+	unsigned int pos = m_lines.GetPos();
+
+	cxLOCKDOC_READ(m_doc)
+		if (pos < doc.GetLength()) {
+			wxChar prev_char = doc.GetChar(pos);
+			if (bigword) {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if ((Isalnum(prev_char) || prev_char == wxT('_') || wxIspunct(prev_char)) && wxIsspace(c)) break;
+					prev_char = c;
+				}
+			}
+			else {
+				for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+					const wxChar c = doc.GetChar(pos);
+					if ((Isalnum(prev_char) || prev_char == wxT('_')) && (wxIsspace(c) || wxIspunct(c))) break;
+					if (wxIspunct(prev_char) && !wxIspunct(c)) break;
+					prev_char = c;
+				}
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(pos, NULL, &fold_end))
+		pos = fold_end;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToPrevWordStart(bool bigword) {
+	unsigned int pos = m_lines.GetPos();
+	if (pos == 0) return;
+
+	cxLOCKDOC_READ(m_doc)
+		pos = doc.GetPrevCharPos(pos);
+		if (pos) {
+			wxChar c = doc.GetChar(pos);
+			unsigned int prev_pos = doc.GetPrevCharPos(pos);
+			if (bigword) {
+				for (;;) {
+					wxChar prev_char = doc.GetChar(prev_pos);
+					if (wxIsspace(prev_char) && (Isalnum(c) || c == wxT('_') || wxIspunct(c))) break;
+
+					c = prev_char;
+					pos = prev_pos;
+					if (pos == 0) break;
+					prev_pos = doc.GetPrevCharPos(pos);
+				}
+			}
+			else {
+				for (;;) {
+					wxChar prev_char = doc.GetChar(prev_pos);
+					if ((Isalnum(c) || c == wxT('_')) && (wxIsspace(prev_char) || wxIspunct(prev_char))) break;
+					if (wxIspunct(c) && !wxIspunct(prev_char)) break;
+
+					c = prev_char;
+					pos = prev_pos;
+					if (pos == 0) break;
+					prev_pos = doc.GetPrevCharPos(pos);
+				}
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_start;
+	if (IsPosInFold(pos, &fold_start))
+		pos = fold_start;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToNextLine() {
+	const unsigned int nextLine = m_lines.GetCurrentLine()+1;
+	if (nextLine >= m_lines.GetLineCount()) return;
+	
+	const unsigned int indentPos = m_lines.GetLineIndentPos(nextLine);
+	m_lines.SetPos(indentPos);
+}
+
+void EditorCtrl::CursorToPrevLine() {
+	const unsigned int currentLine = m_lines.GetCurrentLine();
+	if (currentLine == 0) return;
+	const unsigned int prevLine = currentLine-1;
+	
+	const unsigned int indentPos = m_lines.GetLineIndentPos(prevLine);
+	m_lines.SetPos(indentPos);
+}
+
+void EditorCtrl::CursorToNextSentence() {
+	unsigned int pos = m_lines.GetPos();
+
+	cxLOCKDOC_READ(m_doc)
+		if (pos < doc.GetLength()) {
+			wxChar prev_char = doc.GetChar(pos);
+			bool after = false;
+			for (pos = doc.GetNextCharPos(pos); pos < doc.GetLength(); pos = doc.GetNextCharPos(pos)) {
+				const wxChar c = doc.GetChar(pos);
+				if (prev_char == '.' && wxIsspace(c)) after = true;
+				if (after && !wxIsspace(c)) break;
+				prev_char = c;
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_end;
+	if (IsPosInFold(pos, NULL, &fold_end))
+		pos = fold_end;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToPrevSentence() {
+	unsigned int pos = m_lines.GetPos();
+	if (pos == 0) return;
+
+	cxLOCKDOC_READ(m_doc)
+		pos = doc.GetPrevCharPos(pos);
+		if (pos) {
+			wxChar c = doc.GetChar(pos);
+			unsigned int prev_pos = doc.GetPrevCharPos(pos);
+			unsigned int lastpos = 0;
+			bool after = false;
+			
+			for (;;) {
+				if (!wxIsspace(c)) lastpos = pos;
+
+				wxChar prev_char = doc.GetChar(prev_pos);
+				if (prev_char == '.' && wxIsspace(c)) {
+					if (after && lastpos != 0) {
+						pos = lastpos;
+						break;
+					}
+					else after = true;
+				}
+
+				c = prev_char;
+				pos = prev_pos;
+				if (pos == 0) break;
+				prev_pos = doc.GetPrevCharPos(pos);
+			}
+		}
+	cxENDLOCK
+
+	// Check if we are moving over a fold
+	unsigned int fold_start;
+	if (IsPosInFold(pos, &fold_start))
+		pos = fold_start;
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToNextParagraph() {
+	unsigned int pos = m_lines.GetPos();
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.RegExFind(wxT("\\n\\s*\\n\\s*(?=\\S)"), pos, true, NULL, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.end);
+}
+
+void EditorCtrl::CursorToParagraphStart() {
+	unsigned int pos = m_lines.GetPos();
+	const unsigned int oldpos = pos;
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		const unsigned int startpos = doc.GetPrevCharPos(oldpos); // don't find current
+		sr = doc.RegExFindBackwards(wxT("(\\A|\\n\\s*\\n\\s*)(?=\\S)"), startpos, true);
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.end);
+}
+
+void EditorCtrl::CursorToNextSymbol() {
+	vector<SymbolRef> symbols;
+	GetSymbols(symbols);
+	if (symbols.empty()) return;
+
+	unsigned int pos = m_lines.GetPos();
+	for (std::vector<SymbolRef>::const_iterator p = symbols.begin(); p != symbols.end(); ++p) {
+		if (p->start > pos) {
+			pos = p->start;
+			break;
+		}
+	}
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToPrevSymbol() {
+	vector<SymbolRef> symbols;
+	GetSymbols(symbols);
+	if (symbols.empty()) return;
+
+	unsigned int pos = m_lines.GetPos();
+	for (std::vector<SymbolRef>::reverse_iterator p = symbols.rbegin(); p != symbols.rend(); ++p) {
+		if (pos > p->start) {
+			pos = p->start;
+			break;
+		}
+	}
+
+	m_lines.SetPos(pos);
+}
+
+void EditorCtrl::CursorToNextCurrent() {
+	const unsigned int oldpos = GetPos();
+	const interval iv = IsSelected() ? GetSelections()[0] : GetWordIv(oldpos);
+	if (iv.empty()) return;
+
+	const wxString current = GetText(iv.start, iv.end);
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		sr = doc.Find(current, iv.end, true, GetLength());
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+}
+
+void EditorCtrl::CursorToPrevCurrent() {
+	const unsigned int oldpos = GetPos();
+	const interval iv = IsSelected() ? GetSelections()[0] : GetWordIv(oldpos);
+	if (iv.empty()) return;
+
+	const wxString current = GetText(iv.start, iv.end);
+
+	search_result sr;
+	cxLOCKDOC_READ(m_doc)
+		const unsigned int startpos = doc.GetPrevCharPos(iv.start); // don't find current
+		sr = doc.FindBackwards(current, startpos, true);
+	cxENDLOCK
+	if (sr.error_code < 0) return; // no match
+
+	m_lines.SetPos(sr.start);
+}
+
+void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible, bool multiSelect) {
 	wxASSERT(0 <= oldpos && oldpos <= m_lines.GetLength());
 	wxASSERT(0 <= newpos && newpos <= m_lines.GetLength());
 	if (oldpos == newpos) return; // Empty selection
@@ -6733,13 +7526,333 @@ void EditorCtrl::SelectFromMovement(unsigned int oldpos, unsigned int newpos, bo
 		}
 
 		// Otherwise, we were not in connection with any current selections so start a new one.
-		m_lines.RemoveAllSelections();
+		if (!multiSelect) m_lines.RemoveAllSelections();
 		sel = m_lines.AddSelection(oldpos, newpos);
 	}
 
 	if (makeVisible && sel != -1)
 		MakeSelectionVisible();
 }
+
+bool EditorCtrl::GetNextObjectScope(const wxString& scope, size_t pos, interval& iv, interval& iv_inner) const {
+	return m_syntaxstyler.GetNextMatch(scope, pos, iv, iv_inner);
+}
+
+bool EditorCtrl::GetNextObjectWords(size_t count, size_t pos, interval& iv, interval& iv_inner) const {
+	const unsigned int len = m_lines.GetLength();
+	if (pos == len) return false;
+
+	cxLOCKDOC_READ(m_doc)
+		// Move to start of first word
+		wxChar c = doc.GetChar(pos);
+		if (IsWordChar(c)) {
+			while (pos) {
+				const unsigned int prevpos = doc.GetPrevCharPos(pos);
+				c = doc.GetChar(prevpos);
+				if (!IsWordChar(c)) break;
+				pos = prevpos;
+			}
+		}
+		else {
+			while (pos < len && !IsWordChar(c)) {
+				pos = doc.GetNextCharPos(pos);
+				c = doc.GetChar(pos);
+			}
+			if (pos == len) return false; // no words left
+		}
+
+		iv.start = iv_inner.start = pos;
+		while (pos < len && count > 0) {
+			// Advance to word end
+			c = doc.GetChar(pos);
+			while (pos < len && IsWordChar(c)) {
+				pos = doc.GetNextCharPos(pos);
+				c = doc.GetChar(pos);
+			}
+
+			iv_inner.end = pos;
+
+			// Advance to next word
+			c = doc.GetChar(pos);
+			while (pos < len && !IsWordChar(c)) {
+				pos = doc.GetNextCharPos(pos);
+				c = doc.GetChar(pos);
+			}
+
+			--count;
+		}
+
+		iv.end = pos;
+	cxENDLOCK
+
+	return true;
+}
+
+bool EditorCtrl::GetNextObjectBlock(wxChar brace, size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	char startBrace;
+	char endBrace;
+	switch (brace) {
+	case '{': startBrace = '{'; endBrace = '}'; break;
+	case '(': startBrace = '('; endBrace = ')'; break;
+	case '[': startBrace = '['; endBrace = ']'; break;
+	case '<': startBrace = '<'; endBrace = '>'; break;
+	case '"': startBrace = '"'; endBrace = '"'; break;
+	case '\'': startBrace = '\''; endBrace = '\''; break;
+	default: return false;
+	}
+
+	cxLOCKDOC_READ(m_doc)
+		// Advance to first startbrace
+		doc_byte_iter dbi(doc, pos);
+		while (dbi.GetIndex() < (int)len) {
+			if (*dbi == startBrace) {
+				iv.start = dbi.GetIndex();
+				break;
+			}
+			else if (*dbi == '\\') ++dbi; // jump escaped chars
+			
+			++dbi;
+		}
+
+		// Find endbrace
+		++dbi; // ignore startbrace
+		while (dbi.GetIndex() < (int)len) {
+			// TODO: nesting
+			if (*dbi == endBrace) {
+				iv.end = dbi.GetIndex()+1;
+				iv_inner.Set(iv.start+1, iv.end-1);
+				return true;
+			}
+			else if (*dbi == '\\') ++dbi; // jump escaped chars
+			
+			++dbi;
+		}
+	cxENDLOCK
+
+	return false;
+}
+
+bool EditorCtrl::GetNextObjectSentence(size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	cxLOCKDOC_READ(m_doc)
+		// Find sentence start
+		doc_byte_iter dbi(doc, pos);
+		iv.start = iv_inner.start = 0;
+		if (pos > 0) {
+			--dbi;
+			for (;;) {
+				if (*dbi == '.') {
+					++dbi;
+					// Advance past whitespace
+					while (dbi.GetIndex() < (int)len && isspace(*dbi)) ++dbi;
+					
+					iv.start = iv_inner.start = dbi.GetIndex();
+					break;
+				}
+
+				if (dbi.GetIndex() == 0) break;
+				--dbi;
+			}
+		}
+
+		// Find sentence end
+		dbi.SetIndex(pos);
+		iv.end = iv_inner.end = len;
+		while (dbi.GetIndex() < (int)len) {
+			if (*dbi == '.') {
+				++dbi;
+				iv.end = iv_inner.end = dbi.GetIndex();
+				
+				// Trailing whitespace
+				while (dbi.GetIndex() < (int)len && isspace(*dbi)) {
+					++dbi;
+					iv.end = dbi.GetIndex();
+				}
+
+				// Period may also be used for abbr.
+				if (dbi.GetIndex() < (int)len && islower(*dbi)) continue;
+				else return true;
+			}
+			++dbi;
+		}
+	cxENDLOCK
+
+	return true;
+}
+
+bool EditorCtrl::GetNextObjectParagraph(size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	cxLOCKDOC_READ(m_doc)
+		// Find paragraph start
+		doc_byte_iter dbi(doc, pos);
+		iv.start = iv_inner.start = 0;
+		if (pos > 0) {
+			--dbi;
+			for (;;) {
+				if (*dbi == '\n') {
+					const unsigned int start = dbi.GetIndex()+1;
+					
+					// Advance past any whitespace
+					bool isPara = true;
+					while (dbi.GetIndex() > 0) {
+						if (*dbi == '\n') { // double newline marks paragraph start
+							iv.start = iv_inner.start = start;
+							break;
+						}
+						else if (isspace(*dbi)) --dbi;
+						else {
+							isPara = false;
+							break;
+						}
+					}
+					
+					if (isPara) break;
+				}
+
+				if (dbi.GetIndex() == 0) break;
+				--dbi;
+			}
+		}
+
+		// Find paragraph end
+		dbi.SetIndex(pos);
+		iv.end = iv_inner.end = len;
+		while (dbi.GetIndex() < (int)len) {
+			if (*dbi == '\n') {
+				const unsigned int end = dbi.GetIndex();
+				
+				// Trailing whitespace
+				++dbi;
+				bool isPara = false;
+				while (dbi.GetIndex() < (int)len) {
+					if (*dbi == '\n') isPara = true;
+					else if (!isspace(*dbi)) break;
+					++dbi;
+				}
+
+				if (isPara) {
+					iv_inner.end = end;
+					iv.end = dbi.GetIndex();
+					return true;
+				}
+			}
+			++dbi;
+		}
+	cxENDLOCK
+
+	return true;
+}
+
+bool EditorCtrl::GetContainingObjectString(wxChar brace, size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	char t;
+	switch (brace) {
+	case '"': t = '"'; break;
+	case '\'': t = '\''; break;
+	default: return false;
+	}
+
+	const unsigned int lineid = m_lines.GetCurrentLine();
+	const unsigned int linestart = m_lines.GetLineStartpos(lineid);
+	const unsigned int lineend = m_lines.GetLineEndpos(lineid);
+
+	// count brackets from start of line
+	bool startfound = false;
+	cxLOCKDOC_READ(m_doc)
+		doc_byte_iter dbi(doc, linestart);
+		while (dbi.GetIndex() < (int)lineend) {
+			if (*dbi == t) {
+				const unsigned int p = dbi.GetIndex();
+				if (p > pos) {
+					if (!startfound) return false;
+					else {
+						iv.end = p+1;
+						iv_inner.Set(iv.start+1, p);
+						return true;
+					}
+				}
+				else {
+					iv.start = p;
+					startfound = true;
+				}
+			}
+			else if (*dbi == '\\') ++dbi; // jump escaped
+
+			++dbi;
+		}
+	cxENDLOCK
+
+	return false;
+}
+
+
+bool EditorCtrl::GetContainingObjectBlock(wxChar brace, size_t pos, interval& iv, interval& iv_inner) {
+	const unsigned int len = m_lines.GetLength();
+	if (pos >= len) return false;
+
+	wxChar endBrace;
+	switch (brace) {
+	case '{': endBrace = '}'; break;
+	case '(': endBrace = ')'; break;
+	case '[': endBrace = ']'; break;
+	case '<': endBrace = '>'; break;
+	default: return false;
+	}
+
+	// Is first char start brace?
+	bool onBrace = false;
+	cxLOCKDOC_READ(m_doc)
+		const wxChar c = doc.GetChar(pos);
+		if (c == brace) onBrace = true;
+	cxENDLOCK
+	if (onBrace) {
+		unsigned int endpos;
+		if (!FindMatchingBracket(pos, endpos)) return false;
+		iv.Set(pos, endpos+1);
+		iv_inner.Set(pos+1, endpos);
+		return true;
+	}
+
+	cxLOCKDOC_READ(m_doc)
+		unsigned int p = pos;
+		unsigned int endpos = 0;
+		unsigned int count = 0;
+
+		// Advance to first unmatched brace
+		while (p < len) {
+			const wxChar c = doc.GetChar(p);
+			if (c == brace) ++count;
+			else if (c == endBrace) {
+				if (count == 0) { // unmatched endbrace found
+					endpos = p;
+					break;
+				}
+				else --count;
+			}
+			else if (c == '\\') p = doc.GetNextCharPos(p); // jump escaped
+			
+			p = doc.GetNextCharPos(p);
+		}
+		if (endpos == 0) return false;
+		
+		// Backtrace to starter
+		unsigned int startpos;
+		if (!FindMatchingBracket(endpos, startpos)) return false;
+		iv.Set(startpos, endpos+1);
+		iv_inner.Set(startpos+1, endpos);
+		return true;
+	cxENDLOCK
+}
+
 
 bool EditorCtrl::IsCaretVisible() {
 	const wxSize caretsize = caret->GetSize();
@@ -6906,6 +8019,10 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 
 	// Add document/editor keys
 
+	// TM_EDITOR_ID (used for scripting via ipc)
+	const int id = -GetId(); // internally id is negative, but pass to user as positive
+	env.SetEnv(wxT("TM_EDITOR_ID"), wxString::Format(wxT("%u"), id));
+
 	// TM_FILENAME
 	// note: in case of remote files, this is of the buffer file
 	const wxString name = m_path.GetFullName();
@@ -7022,6 +8139,10 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 }
 
 void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("RunCurrentSelectionAsCommand"), wxT("doReplace"), doReplace);
+	}
+
 	vector<char> command;
 	unsigned int start;
 	unsigned int end;
@@ -7088,10 +8209,11 @@ void EditorCtrl::RunCurrentSelectionAsCommand(bool doReplace) {
 void EditorCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event)) {}
 
 void EditorCtrl::OnFocus(wxFocusEvent& WXUNUSED(event)) {
-	ClearSearchRange(true);
+	if (!m_parentFrame.IsCommandMode()) ClearSearchRange(true);
 }
 
 void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
+	ClearSearchRange();
 	// Remove tooltips
 	/*if (m_revTooltip.IsShown()) {
 		m_revTooltip.Hide();
@@ -7478,6 +8600,10 @@ void EditorCtrl::ShowTipAtCaret(const wxString& text) {
 	m_activeTooltip = new TextTip(this, text, ClientToScreen(GetCaretPoint()), wxSize(0, m_caretHeight), &m_activeTooltip);
 }
 
+const deque<const wxString*> EditorCtrl::GetScope() {
+	return m_syntaxstyler.GetScope(GetPos());
+}
+
 void EditorCtrl::ShowScopeTip() {
 	if (m_syntaxstyler.IsOk()) {
 		// Get scopes as string
@@ -7640,7 +8766,7 @@ void EditorCtrl::OnMouseDClick(wxMouseEvent& event) {
 		bool multiselect = event.ControlDown();
 
 		// Select the word clicked on
-		SelectWord(fp.pos, multiselect);
+		SelectWordAt(fp.pos, multiselect);
 		wxLogDebug(wxT("DClick done %d"), GetPos());
 	}
 
@@ -8757,6 +9883,8 @@ void EditorCtrl::ToggleFold() {
 }
 
 void EditorCtrl::SelectFold() {
+	if (m_macro.IsRecording()) m_macro.Add(wxT("SelectFold"));
+
 	const unsigned int line_id = m_lines.GetCurrentLine();
 	SelectFold(line_id);
 }
@@ -8901,6 +10029,179 @@ void EditorCtrl::BuildBookmarkMap(std::map<int, bool>& bookmarksMap) const {
 
 EditorChangeState EditorCtrl::GetChangeState() const {
 	return EditorChangeState(this->GetId(), this->GetChangeToken());
+}
+
+void EditorCtrl::PlayMacro() {
+	PlayMacro(m_macro);
+}
+
+void EditorCtrl::PlayMacro(const eMacro& macro) {
+	if (m_macro.IsRecording()) m_macro.EndRecording(); // avoid endless loop
+
+	StartChange(); // group changes as a single change
+	for (size_t i = 0; i < macro.GetCount(); ++i) {
+		const eMacroCmd& cmd = macro.GetCommand(i);
+		PlayCommand(cmd);
+	}
+	EndChange();
+}
+
+wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
+	const wxString& name = cmd.GetName();
+
+	if (name == wxT("CursorUp")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorUp(select);
+	}
+	else if (name == wxT("CursorDown")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorDown(select);
+	}
+	else if (name == wxT("CursorLeft")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorLeft(select);
+	}
+	else if (name == wxT("CursorRight")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorRight(select);
+	}
+	else if (name == wxT("CursorWordLeft")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorWordLeft(select);
+	}
+	else if (name == wxT("CursorWordRight")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorWordRight(select);
+	}
+	else if (name == wxT("CursorToHome")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorToHome(select);
+	}
+	else if (name == wxT("CursorToEnd")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorToEnd(select);
+	}
+	else if (name == wxT("SetPos")) {
+		const unsigned int pos = cmd.GetArgInt(0);
+		if (pos >= 0 && pos <= GetLength()) SetPos(pos);
+	}
+	else if (name == wxT("SelectAll")) SelectAll();
+	else if (name == wxT("SelectWord")) SelectWord();
+	else if (name == wxT("SelectCurrentLine")) SelectCurrentLine();
+	else if (name == wxT("SelectScope")) SelectScope();
+	else if (name == wxT("SelectFold")) SelectFold();
+	else if (name == wxT("InsertNewline")) InsertChar(wxChar('\n'));
+	else if (name == wxT("InsertChars")) {
+		const wxString text = cmd.GetArgString(0);
+		for (wxString::const_iterator p = text.begin(); p != text.end(); ++p) {
+			InsertChar(*p);
+		}
+	}
+	else if (name == wxT("InsertSnippet")) {
+		if (IsSelected()) Delete();
+
+		const wxString text = cmd.GetArgString(0);
+		m_snippetHandler.StartSnippet(text);
+	}
+	else if (name == wxT("Undo")) DoUndo();
+	else if (name == wxT("Tab")) Tab();
+	else if (name == wxT("Copy")) OnCopy();
+	else if (name == wxT("Cut")) OnCut();
+	else if (name == wxT("Paste")) OnPaste();
+	else if (name == wxT("Backspace")) Backspace();
+	else if (name == wxT("Delete")) Delete();
+	else if (name == wxT("DeleteWord")) Delete(true); 
+	else if (name == wxT("DeleteCurrentLine")) {
+		const bool fromPos = cmd.GetArgBool(0, false);
+		DelCurrentLine(fromPos);
+	}
+	else if (name == wxT("ReplaceCurrentWord")) {
+		const wxString text = cmd.GetArgString(0);
+		ReplaceCurrentWord(text);
+	}
+	else if (name == wxT("Transpose")) Transpose();
+	else if (name == wxT("ConvertCase")) {
+		const wxString conversion = cmd.GetArgString(0);
+		if (conversion == wxT("upper")) ConvertCase(cxUPPERCASE);
+		else if (conversion == wxT("lower")) ConvertCase(cxLOWERCASE);
+		else if (conversion == wxT("title")) ConvertCase(cxTITLECASE);
+		else if (conversion == wxT("reverse")) ConvertCase(cxREVERSECASE);
+	}
+	else if (name == wxT("NextSnippetField")) m_snippetHandler.NextTab();
+	else if (name == wxT("PrevSnippetField")) m_snippetHandler.PrevTab();
+	else if (name == wxT("IndentSelectedLines")) IndentSelectedLines(true);
+	else if (name == wxT("DedentSelectedLines")) IndentSelectedLines(false);
+	else if (name == wxT("FilterThroughCommand")) {
+		const wxString command = cmd.GetArgString(0);
+		const wxString input = cmd.GetArgString(1);
+		const wxString output = cmd.GetArgString(2);
+
+		tmCommand tc;
+		tc.SetContent(command);
+		
+		tc.input = tmCommand::ciNONE;
+		if (input == wxT("selection"))      tc.input = tmCommand::ciSEL;
+		else if (input == wxT("document"))  tc.input = tmCommand::ciDOC;
+		else if (input == wxT("line"))      tc.input = tmCommand::ciLINE;
+		else if (input == wxT("character")) tc.input = tmCommand::ciCHAR;
+		else if (input == wxT("word"))      tc.input = tmCommand::ciWORD;
+		else if (input == wxT("scope"))     tc.input = tmCommand::ciSCOPE;
+
+		tc.output = tmCommand::coNONE;
+		if (input == wxT("discard"))                  tc.output = tmCommand::coNONE;
+		else if (input == wxT("replaceSelectedText")) tc.output = tmCommand::coSEL;
+		else if (input == wxT("replaceDocument"))     tc.output = tmCommand::coDOC;
+		else if (input == wxT("afterSelectedText"))   tc.output = tmCommand::coINSERT;
+		else if (input == wxT("insertAsSnippet"))     tc.output = tmCommand::coSNIPPET;
+		else if (input == wxT("showAsHTML"))          tc.output = tmCommand::coHTML;
+		else if (input == wxT("showAsTooltip"))       tc.output = tmCommand::coTOOLTIP;
+		else if (input == wxT("openAsNewDocument"))   tc.output = tmCommand::coNEWDOC;
+
+		DoAction(tc, NULL, false);
+	}
+	else if (name == wxT("RunCurrentSelectionAsCommand")) {
+		const bool doReplace = cmd.GetArgBool(0);
+		RunCurrentSelectionAsCommand(doReplace);
+	}
+	else if (name == wxT("Find")) {
+		const wxString pattern = cmd.GetArgString(0);
+		int options = 0;
+		if (!cmd.GetArgBool(1)) options |= FIND_MATCHCASE;
+		if (cmd.GetArgBool(2)) options |= FIND_USE_REGEX;
+		if (cmd.GetArgBool(3)) options |= FIND_RESTART;
+
+		Find(pattern, options);
+	}
+	else if (name == wxT("FindNext")) {
+		const wxString pattern = cmd.GetArgString(0);
+		int options = 0;
+		if (!cmd.GetArgBool(1)) options |= FIND_MATCHCASE;
+		if (cmd.GetArgBool(2)) options |= FIND_USE_REGEX;
+		if (cmd.GetArgBool(3)) options |= FIND_RESTART;
+
+		FindNext(pattern, options);
+	}
+	else if (name == wxT("FindPrevious")) {
+		const wxString pattern = cmd.GetArgString(0);
+		int options = 0;
+		if (!cmd.GetArgBool(1)) options |= FIND_MATCHCASE;
+		if (cmd.GetArgBool(2)) options |= FIND_USE_REGEX;
+		if (cmd.GetArgBool(3)) options |= FIND_RESTART;
+
+		FindPrevious(pattern, options);
+	}
+	else if (name == wxT("RunCommandMode")) {
+		const wxString command = cmd.GetArgString(0);
+		m_commandHandler.PlayCommand(command);
+	}
+	else if (name == wxT("RunBundleCommand")) {
+		const wxString uuid = cmd.GetArgString(0);
+		m_syntaxHandler.DoBundleAction(uuid, *this);
+
+	}
+	else return wxVariant(NULL, wxT("Unknown method"));
+
+	return wxVariant();
 }
 
 #ifdef __WXDEBUG__

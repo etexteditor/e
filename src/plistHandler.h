@@ -47,6 +47,7 @@ public:
 	bool AllBundlesUpdated() const {return m_allBundlesUpdated;};
 	void Update(cxUpdateMode mode = UPDATE_FULL);
 	void Commit();
+	void Flush();
 
 	class cxItemRef {
 	public:
@@ -156,6 +157,8 @@ private:
 	void SaveArray(TiXmlElement* parent, unsigned int ndx, const c4_RowRef& rPlist) const;
 	void SaveString(TiXmlElement* parent, unsigned int ndx, const c4_RowRef& rPlist) const;
 
+	void MarkAsModified();
+
 	// Utility functions
 	static wxString MakeValidDir(const wxFileName& path, const wxString& name, const wxString& ext);
 	static wxString MakeValidFilename(const wxFileName& path, const wxString& name, const wxString& ext);
@@ -184,13 +187,13 @@ private:
 	bool m_allBundlesUpdated;
 	const wxFileName m_appPath;
 	const wxFileName m_appDataPath;
+	wxString m_dbPath;
 	c4_Storage m_storage;
 	c4_View m_vThemes;
 	c4_View m_vBundles;
 	c4_View m_vPlists;
 	c4_View m_vFreePlists;
 	c4_View m_vSyntaxAssocs;
-	wxTimer m_commitTimer;
 	wxFileName m_bundleDir;
 	wxFileName m_installedBundleDir;
 	wxFileName m_localBundleDir;
@@ -239,8 +242,11 @@ public:
 	bool GetDict(const char* key, PListDict& dict) const;
 	bool GetArray(const char* key, PListArray& array) const;
 	bool GetInteger(const char* key, int& value) const;
+	bool GetBool(const char* key) const;
 
 	void DeleteItem(const char* key);
+	void SetBool(const char* key, bool value);
+	void SetInt(const char* key, int value);
 	void SetString(const char* key, const char* text);
 	void wxSetString(const char* key, const wxString& text);
 
@@ -276,6 +282,13 @@ public:
 	void Clear();
 
 	unsigned int GetSize() const {return m_vArray.GetSize();};
+
+	bool IsBool(unsigned int ndx) const;
+	bool IsInt(unsigned int ndx) const;
+	bool IsString(unsigned int ndx) const;
+	
+	bool GetBool(unsigned int ndx) const;
+	int GetInt(unsigned int ndx) const;
 	const char* GetString(unsigned int ndx) const;
 	wxString wxGetString(unsigned int ndx) const;
 	bool GetDict(unsigned int ndx, PListDict& dict) const;
@@ -285,12 +298,16 @@ public:
 	PListDict InsertNewDict(unsigned int ndx);
 	PListArray InsertNewArray(unsigned int ndx);
 	void InsertString(unsigned int ndx, const char* str);
+	void AddBool(bool value);
+	void AddInt(int value);
 	void AddString(const char* str);
+	void AddString(const wxString& text);
 
 	// Plist <-> JSON conversion (support functions)
+	wxString GetJSON() const;
 	wxJSONValue GetJSONArray() const;
 	void InsertJSONValues(const wxJSONValue& value);
-
+	
 private:
 	c4_View m_vArray;
 };

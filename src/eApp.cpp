@@ -35,6 +35,8 @@
 #include "EditorCtrl.h"
 #include "eDocumentPath.h"
 #include "AppVersion.h"
+#include "IIpcServer.h"
+#include "ApiHandler.h"
 
 #ifdef __WXMSW__
 #include <wx/msw/registry.h>
@@ -119,6 +121,7 @@ bool eApp::OnInit() {
 	m_catalyst = NULL;
 	m_pSyntaxHandler = NULL;
 	m_checker = NULL;
+	m_apiHandler = NULL;
 
 #ifdef __WXGTK__
 	m_server = NULL;
@@ -138,8 +141,8 @@ bool eApp::OnInit() {
 
 	// App info
 	const wxString appId = wxString::Format(wxT("eApp-%s"), wxGetUserId().c_str());
-	m_version_id = 211;  // <-------------- INTERNAL VERSION NUMBER
-	m_version_name =  wxT("1.0.43"); // <-- VERSION NAME
+	m_version_id = 216;  // <-------------- INTERNAL VERSION NUMBER
+	m_version_name =  wxT("2.0b"); // <-- VERSION NAME
 
 	// Option vars
 	m_lineNum = 0;
@@ -207,14 +210,9 @@ bool eApp::OnInit() {
 #endif //__WXDEBUG__
 
 	// Initialize wxWidgets internals
-	wxImage::AddHandler(new wxJPEGHandler);
 	wxImage::AddHandler(new wxPNGHandler);
-	wxImage::AddHandler(new wxGIFHandler);
-	wxImage::AddHandler(new wxICOHandler);
-	//wxFileSystem::AddHandler(new wxInternetFSHandler);
 
 	// Set up the database
-
 	m_pCatalyst = new Catalyst(m_appDataPath + wxT("e.db"));
 	m_catalyst = new CatalystWrapper(*m_pCatalyst);
 
@@ -284,6 +282,9 @@ bool eApp::OnInit() {
 
 	m_settings.SetApp(this);
 	m_settings.AllowSave();
+	
+	// Start the scripting api server
+	m_apiHandler = new ApiHandler(*this);
 
     return true;
 }
@@ -335,7 +336,7 @@ void eApp::CloseAllFrames() {
 	}
 }
 
-EditorFrame* eApp::GetTopFrame() {
+EditorFrame* eApp::GetTopFrame() const {
 	EditorFrame* win = NULL;
 	wxWindowList::const_iterator i;
     const wxWindowList::const_iterator end = wxTopLevelWindows.end();
@@ -378,6 +379,30 @@ bool eApp::IsLastFrame() const {
 	}
 
 	return (frameCount == 1);
+}
+
+EditorCtrl* eApp::GetActiveEditorCtrl() const {
+	const EditorFrame* frame = GetTopFrame();
+	if (!frame) return NULL;
+
+	return frame->GetEditorCtrl();
+}
+
+EditorCtrl* eApp::GetEditorCtrl(int winId) const {
+	wxWindowList::const_iterator i;
+    const wxWindowList::const_iterator end = wxTopLevelWindows.end();
+
+	// Search all frames for an editor with the given id
+	for ( i = wxTopLevelWindows.begin(); i != end; ++i )
+    {
+		if (!(*i)->IsKindOf(CLASSINFO(EditorFrame))) continue;
+
+		EditorFrame* win = wx_static_cast(EditorFrame*, *i);
+		EditorCtrl* editor = win->GetEditorCtrl(winId);
+		if (editor) return editor;
+	}
+
+	return NULL; // not found
 }
 
 void eApp::ClearState() {
@@ -694,6 +719,7 @@ int eApp::OnExit() {
 #ifndef __WXMSW__
 	if (m_server) delete m_server;
 #endif
+	if (m_apiHandler) delete m_apiHandler;
 	if (m_catalyst) delete m_catalyst;
 	if (m_pCatalyst) delete m_pCatalyst;
 	if (m_checker) delete m_checker;
@@ -821,3 +847,11 @@ int eApp::DaysLeftOfTrial() const {return m_pCatalyst->DaysLeftOfTrial();}
 int eApp::TotalDays() const {return m_pCatalyst->DaysLeftOfTrial();}
 const wxString& eApp::RegisteredUserName() const {return m_pCatalyst->RegisteredUserName();}
 const wxString& eApp::RegisteredUserEmail() const {return m_pCatalyst->RegisteredUserEmail();}
+
+void eApp::OnInputLineChanged(unsigned int nid, const wxString& text) {
+	m_apiHandler->OnInputLineChanged(nid, text);
+}
+
+void eApp::OnInputLineClosed(unsigned int nid) {
+	m_apiHandler->OnInputLineClosed(nid);
+}

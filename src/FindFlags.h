@@ -6,6 +6,7 @@ static const unsigned int FIND_MATCHCASE = 1;
 static const unsigned int FIND_USE_REGEX = 2;
 static const unsigned int FIND_RESTART   = 4;
 static const unsigned int FIND_HIGHLIGHT = 8;
+static const unsigned int FIND_REVERSE   = 16;
 
 enum cxFindResult {
 	cxFOUND,

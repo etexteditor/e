@@ -10,6 +10,7 @@ public:
 	virtual EditorCtrl* GetActiveEditor() = 0;
 	virtual const char** RecommendedIcon() const = 0;
 	virtual void SaveSettings(unsigned int i, eFrameSettings& settings) = 0;
+	virtual void CommandModeEnded() = 0;
 };
 
 #endif // __ITABPAGE_H__

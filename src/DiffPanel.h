@@ -47,6 +47,7 @@ public:
 
 	virtual EditorCtrl* GetActiveEditor();
 	virtual const char** RecommendedIcon() const;
+	virtual void CommandModeEnded();
 
 private:
 	// Event handlers

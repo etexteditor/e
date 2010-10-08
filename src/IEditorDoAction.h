@@ -16,10 +16,13 @@
 #endif
 
 class tmAction;
+class eMacro;
 
 class IEditorDoAction {
 public:
 	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw) = 0;
+	virtual void PlayMacro(const eMacro& macro) = 0;
+	virtual void ReDraw() = 0;
 };
 
 #endif // __IEDITORDOACTION_H__

@@ -289,3 +289,12 @@ bool DetectTextEncoding(const char* buffer, size_t len, wxFontEncoding& encoding
 	encoding = enc;
 	return true;
 }
+
+bool IsWordChar(const wxChar c) {
+	return (wxIsalnum(c) || c == '_');
+}
+
+bool IsBigWordChar(const wxChar c) {
+	return !wxIsspace(c);
+}
+

@@ -58,6 +58,7 @@
 #include "DocHistory.h"
 #include "eDocumentPath.h"
 #include "SearchPanel.h"
+#include "CommandPanel.h"
 #include "StatusBar.h"
 #include "DirWatcher.h"
 #include "FindInProjectDlg.h"
@@ -71,6 +72,7 @@
 #include "SnippetList.h"
 #include "ClipboardHistoryPane.h"
 #include "Accelerators.h"
+#include "InputPanel.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -251,6 +253,10 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_MANAGE_BUNDLES, EditorFrame::OnMenuManageBundles)
 	EVT_MENU(MENU_KEYDIAG, EditorFrame::OnMenuKeyDiagnostics)
 
+	EVT_MENU(MENU_MACRO_REC, EditorFrame::OnMenuMacroRec)
+	EVT_MENU(MENU_MACRO_PLAY, EditorFrame::OnMenuMacroPlay)
+	EVT_MENU(MENU_MACRO_EDIT, EditorFrame::OnMenuMacroEdit)
+
 	// Dynamic sub-menus
 	EVT_MENU_RANGE(1000, 1999, EditorFrame::OnSubmenuSyntax)
 	EVT_MENU_RANGE(2000, 2999, EditorFrame::OnSubmenuEncoding)
@@ -366,6 +372,16 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		box->Add(m_searchPanel, 0, wxEXPAND);
 		box->Show(m_searchPanel, false);
 
+		// Create and add the commandpanel
+		m_commandPanel = new CommandPanel(*this, panel);
+		box->Add(m_commandPanel, 0, wxEXPAND);
+		box->Show(m_commandPanel, false);
+
+		// Create and add the inputpanel
+		m_inputPanel = new InputPanel(*this, panel);
+		box->Add(m_inputPanel, 0, wxEXPAND);
+		box->Show(m_inputPanel, false);
+
 		// Layout main components
 		box->Layout();
 		panel->SetSizer(box);
@@ -388,6 +404,10 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		// Project dock
 		m_projectPane = new ProjectPane(*this, this);
 		m_frameManager.AddPane(m_projectPane, wxAuiPaneInfo().Name(wxT("Project")).Left().Caption(_("Project")).BestSize(wxSize(150,50)));
+
+		// Macro Pane
+		m_macroPane = new MacroPane(*this, this, m_macro);
+		m_frameManager.AddPane(m_macroPane, wxAuiPaneInfo().Name(wxT("Macro")).Hide().Right().Caption(_("Macro")).BestSize(wxSize(150,50)));
 
 		// See if we have saved the layout of the panes
 		wxString perspective;
@@ -867,7 +887,12 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	if (!bundleMenu) bundleMenu = new wxMenu;
 
 	bool enableDebug = false; // default setting
-	m_settings.GetSettingBool(wxT("bundleDebug"), enableDebug);
+	m_generalSettings.GetSettingBool(wxT("bundleDebug"), enableDebug);
+
+	wxMenu *macroMenu = new wxMenu;
+	macroMenu->Append(MENU_MACRO_REC, _("&Start Recording"), _("Start Recording"));
+	macroMenu->Append(MENU_MACRO_PLAY, _("&Play Macro"), _("Play Macro"));
+	macroMenu->Append(MENU_MACRO_EDIT, _("&Edit Macro"), _("Edit Macro"), wxITEM_CHECK);
 
 	wxMenu *funcMenu = new wxMenu;
 	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"), wxITEM_CHECK);
@@ -879,6 +904,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_BUNDLE_FUNCTIONS, _("&Edit Bundles"), funcMenu,  _("Edit Bundles"));
+	bundleMenu->Prepend(MENU_MACRO_FUNCTIONS, _("Macros"), macroMenu,  _("Edit Macros"));
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_FINDCMD, _("&Select Bundle Item...\tCtrl-Alt-T"), _("Select Bundle Item..."));
 
@@ -1378,7 +1404,14 @@ void EditorFrame::UpdateTabs() {
 }
 
 // May be NULL, always check in reciever
-EditorCtrl* EditorFrame::GetEditorCtrl() { return editorCtrl; }
+EditorCtrl* EditorFrame::GetEditorCtrl() const { return editorCtrl; }
+
+// May be NULL, always check in reciever
+EditorCtrl* EditorFrame::GetEditorCtrl(int winId) const {
+	wxWindow* editor = FindWindowById(winId, this);
+	return (EditorCtrl*)editor;
+}
+
 // May be NULL, always check in reciever. Downcast.
 IEditorSearch* EditorFrame::GetSearch() { return editorCtrl; }
 
@@ -1481,11 +1514,12 @@ const map<wxString,wxString>& EditorFrame::GetProjectEnv() const {
 	return m_projectPane->GetEnv();
 }
 
-bool EditorFrame::OpenTxmtUrl(const wxString& url) {
-	if (!url.StartsWith(wxT("txmt:"))) return false;
+bool EditorFrame::OpenTxmtUrl(const wxString& rawurl) {
+	if (!rawurl.StartsWith(wxT("txmt:"))) return false;
+	const wxString url = URLDecode(rawurl);
 
 	// get file, line & column
-	static wxRegEx fileRx(wxT("[&?]url=file://([^&]+)"));
+	static wxRegEx fileRx(wxT("[&?]url=file:///?([^&]+)"));
 	static wxRegEx bundleRx(wxT("[&?]url=(bundle://[^&]+)"));
 	static wxRegEx lineRx(wxT("[&?]line=([[:digit:]]+)"));
 	static wxRegEx columnRx(wxT("[&?]column=([[:digit:]]+)"));
@@ -1516,8 +1550,6 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 	}
 
 	if (!file.empty()) {
-		file = URLDecode(file);
-
 #ifdef __WXMSW__
 		// path may be in unix format, so we have to convert it
 		if (!isBundleItem) file = eDocumentPath::CygwinPathToWin(file);
@@ -1662,6 +1694,16 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 
 	// Bring frame to front
 	BringToFront();
+}
+
+void EditorFrame::SaveMacro() {
+	if (!IsBundlePaneShownAndSelected() || m_macro.IsEmpty()) return;
+
+	m_bundlePane->NewItem(BUNDLE_MACRO, &m_macro);
+}
+
+bool EditorFrame::IsBundlePaneShownAndSelected() const {
+	return (m_bundlePane && m_bundlePane->IsShown() && m_bundlePane->HasSelection());
 }
 
 void EditorFrame::ShowBundlePane() {
@@ -2089,6 +2131,9 @@ void EditorFrame::SaveAllFilesInProject() {
 
 void EditorFrame::ShowSearch(bool show, bool replace) {
 	if (show) {
+		if (box->IsShown(m_commandPanel)) ShowCommandMode(false);
+		else if (box->IsShown(m_inputPanel)) HideInputPanel(); 
+
 		m_searchPanel->InitSearch(editorCtrl->GetSelFirstLine(), replace);
 		box->Show(m_searchPanel);
 	}
@@ -2101,6 +2146,50 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 }
 
 bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
+
+void EditorFrame::ShowCommandMode(bool show) {
+	if (show) {
+		if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel);
+		else if (box->IsShown(m_inputPanel)) HideInputPanel(); 
+		box->Show(m_commandPanel);
+	}
+	else {
+		box->Hide(m_commandPanel);
+		editorCtrl->CommandModeEnded();
+		editorCtrl->SetFocus();
+	}
+	box->Layout();
+}
+
+void EditorFrame::ShowCommand(const wxString& cmd) {
+	m_commandPanel->ShowCommand(cmd);
+}
+
+bool EditorFrame::IsCommandMode() const {
+	return m_commandPanel->IsShown();
+}
+
+void EditorFrame::ShowInputPanel(unsigned int notifier_id, const wxString& caption) {
+	m_inputPanel->Set(notifier_id, caption);
+
+	if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel); 
+	else if (box->IsShown(m_commandPanel)) box->Hide(m_commandPanel); 
+	box->Show(m_inputPanel);
+	box->Layout();
+
+	m_inputPanel->SetFocus();
+}
+
+void EditorFrame::HideInputPanel() {
+	wxGetApp().OnInputLineClosed(m_inputPanel->GetNotifierId());
+
+	box->Hide(m_inputPanel);
+	box->Layout();
+}
+
+void EditorFrame::OnInputPanelChanged(unsigned int notifier_id, const wxString& text) {
+	wxGetApp().OnInputLineChanged(notifier_id, text);
+}
 
 bool EditorFrame::GetSetting(const wxString& name) const {
 	if (name == wxT("search/highlight")) return m_searchHighlight;
@@ -2241,6 +2330,16 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	wxMenuItem* saveasItem = GetMenuBar()->FindItem(wxID_SAVEAS);
 	saveasItem->Enable(!editorCtrl->IsBundleItem());
 
+	// Macros
+	wxMenuItem* macroEdit = GetMenuBar()->FindItem(MENU_MACRO_EDIT);
+	wxAuiPaneInfo& macroPane = m_frameManager.GetPane(wxT("Macro"));
+	if (macroEdit) macroEdit->Check(macroPane.IsShown());
+	wxMenuItem* macroRec = GetMenuBar()->FindItem(MENU_MACRO_REC);
+	if (macroRec) {
+		if (m_macro.IsRecording()) macroRec->SetItemLabel(_("&Stop Recording"));
+		else macroRec->SetItemLabel(_("&Start Recording"));
+	}
+
 	// We handle key events on our own, so disable accels (from menus)
 	//SetAcceleratorTable(wxNullAcceleratorTable);
 }
@@ -2278,7 +2377,7 @@ void EditorFrame::ShowBundleManager() {
 
 void EditorFrame::OnMenuDebugBundles(wxCommandEvent& event) {
 	const bool enableDebug = event.IsChecked();
-	m_settings.SetSettingBool(wxT("bundleDebug"), enableDebug);
+	m_generalSettings.SetSettingBool(wxT("bundleDebug"), enableDebug);
 }
 
 void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
@@ -2294,6 +2393,21 @@ void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
 		if (!bundlePath.empty()) OpenRemoteFile(bundlePath);
 	}
 	else m_syntax_handler.DoBundleAction(event.GetId(), *editorCtrl);
+}
+
+void EditorFrame::OnMenuMacroRec(wxCommandEvent& WXUNUSED(event)) {
+	m_macro.ToogleRecording();
+}
+
+void EditorFrame::OnMenuMacroPlay(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->PlayMacro();
+	editorCtrl->ReDraw();
+}
+
+void EditorFrame::OnMenuMacroEdit(wxCommandEvent& WXUNUSED(event)) {
+	wxAuiPaneInfo& macroPane = m_frameManager.GetPane(wxT("Macro"));
+	macroPane.Show(!macroPane.IsShown()); // Toogle snown/hidden
+	m_frameManager.Update();
 }
 
 void EditorFrame::OnMenuKeyDiagnostics(wxCommandEvent& event) {
@@ -2716,7 +2830,7 @@ void EditorFrame::OnMenuSelectAll(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuSelectWord(wxCommandEvent& WXUNUSED(event)) {
-	editorCtrl->SelectWord(editorCtrl->GetPos());
+	editorCtrl->SelectWord();
 	editorCtrl->ReDraw();
 }
 
@@ -3646,7 +3760,7 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 		if (!m_inAskReload) {
 			// Should we check for changed files?
 			bool doCheckChange = true;  // default
-			m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+			m_generalSettings.GetSettingBool(wxT("checkChange"), doCheckChange);
 
 			// Check if any open files have been modified (in separate thread)
 			if (doCheckChange)

@@ -14,8 +14,6 @@
 #include "tmAction.h"
 #include "tmBundle.h"
 
-#include "AcceleratorsDlg.h"
-
 wxString normalize(wxString str) {
 	str.Replace(wxT("&"), wxT(""));
 	return str.Trim().MakeLower();
@@ -226,8 +224,6 @@ bool Accelerators::HandleKeyEvent(wxKeyEvent& event) {
 #endif
 
 	if(shouldIgnore(event.GetKeyCode())) return true;
-
-	new AcceleratorsDlg(m_editorFrame, this);
 
 	wxLogDebug(wxT("Hash: %d %d %d"), ((hash << 24) | event.GetKeyCode()), hash, event.GetKeyCode());
 	hash = (hash << 24) | event.GetKeyCode();

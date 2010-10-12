@@ -22,8 +22,8 @@
 #include "EditorCtrl.h"
 #include "EditorChangeState.h"
 
-Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl):
-Styler_SearchHL(rev, lines, ranges, theme), m_settings(settings),
+Styler_VariableHL::Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const vector<interval>& ranges, const std::vector<unsigned int>& cursors, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl):
+Styler_SearchHL(rev, lines, ranges, cursors, theme), m_settings(settings),
   m_selectionHighlightColor(m_theme.selectionColor),
   m_searchHighlightColor(m_theme.searchHighlightColor) ,
   m_cursorPosition(0), m_editorCtrl(editorCtrl)

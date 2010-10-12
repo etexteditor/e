@@ -1446,7 +1446,7 @@ bool EditorCtrl::SmartTab() {
 		//If we are not at or past the previous line's indentation level, then let's jump to it
 		if(currentWidth < realWidth) {
 			int difference = realWidth - currentWidth;
-			if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab
+			if (!m_softTabs) {	// Hard Tab
 				//if there are 7 spaces on the line, but the real indent is 12, that is a difference of 5.  Say the tabWidth is 4.
 				//We need to insert two tabs then.  The second line takes care of that by increasing the difference from 5 to 8 in this example.
 				difference += difference % tabWidth;
@@ -1563,7 +1563,7 @@ void EditorCtrl::Tab() {
 	if(SmartTab()) return;
 
 	// If we get to here we have to insert a real tab
-	if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab
+	if (!m_softTabs) {	// Hard Tab
 		InsertChar(wxChar('\t'));
 		return;
 	}
@@ -2791,7 +2791,7 @@ void EditorCtrl::Delete(bool delWord) {
 	}
 
 	// Check if we are at a soft tabpoint
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
 		&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 	{
@@ -2882,7 +2882,7 @@ void EditorCtrl::Backspace(bool delWord) {
 		prevpos = doc.GetPrevCharPos(pos);
 		prevchar = doc.GetChar(prevpos);
 	cxENDLOCK
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	unsigned int newpos;
 
 	// Check if we are at a soft tabpoint
@@ -8079,7 +8079,7 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(wxT("TM_TAB_SIZE"), tabsize);
 
 	// TM_SOFT_TABS
-	env.SetEnv(wxT("TM_SOFT_TABS"), m_parentFrame.IsSoftTabs() ? wxT("YES") : wxT("NO"));
+	env.SetEnv(wxT("TM_SOFT_TABS"), m_softTabs ? wxT("YES") : wxT("NO"));
 
 	// TM_SCOPE
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());

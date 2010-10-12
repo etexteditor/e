@@ -704,7 +704,7 @@ void EditorFrame::InitMenus() {
 	textMenu->Append(MENU_TABSTOSPACES, _("&Tabs to Spaces"), _("Tabs to Spaces"));
 	textMenu->Append(MENU_SPACESTOTABS, _("&Spaces to Tabs"), _("Spaces to Tabs"));
 	textMenu->AppendSeparator();
-	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tEscape"), _("Complete Word"));
+	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tCtrl-Space"), _("Complete Word"));
 	textMenu->AppendSeparator();
 	textMenu->Append(MENU_FILTER, _("&Filter Through Command...\tCtrl-H"), _("Filter Through Command..."));
 	textMenu->Append(MENU_RUN, _("&Run current line/selection\tCtrl-Alt-R"), _("Run current line/selection"));

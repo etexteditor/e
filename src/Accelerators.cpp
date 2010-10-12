@@ -48,11 +48,9 @@ KeyBinding::KeyBinding(wxMenuItem* menuItem) : menuItem(menuItem) {
 KeyChord::KeyChord(wxString chord) : key(chord) { }
 
 Accelerators::Accelerators(EditorFrame* editorFrame) : 
-	m_editorFrame(editorFrame), m_activeChord(NULL) {
+	m_editorFrame(editorFrame), m_activeChord(NULL), m_activeBundleChord(NULL) {
 	ReadCustomShortcuts();
-
-	m_chordActivated = false;
-	m_actionReturned = false;
+	Reset();
 }
 
 void Accelerators::ParseMenu() {
@@ -228,19 +226,17 @@ bool Accelerators::HandleKeyEvent(wxKeyEvent& event) {
 	wxLogDebug(wxT("Hash: %d %d %d"), ((hash << 24) | event.GetKeyCode()), hash, event.GetKeyCode());
 	hash = (hash << 24) | event.GetKeyCode();
 
-	return HandleHash(hash);
+	return MatchMenus(hash);
 }
 
 /**
- * There are four cases:
- *  No custom binding
- *  Custom binding, non-chord
- *  Custom binding, chord
- *  Custom binding, chord, and chord was activated on previous keypress
+ * Takes a bundle and finds the custom key binding for the bundle.
+ * Returns the hash of the two key presses for the bundle.
  */
-bool Accelerators::HandleBundle(int code, int flags, const tmAction* x) {
-	if(shouldIgnore(code)) return false;
-	int hash = (flags << 24) | code;
+void Accelerators::ParseBundleForHash(const tmAction* x, int& outChordHash, int& outFinalHash, wxString& outChordString) {
+	outChordHash = -1;
+	outFinalHash = -1;
+
 	int actionHash = (x->key.modifiers << 24) | x->key.keyCode;
 
 	// now check if there is a custom shortcut
@@ -253,97 +249,154 @@ bool Accelerators::HandleBundle(int code, int flags, const tmAction* x) {
 	}
 
 	if(customAccel.empty()) {
-		// no way to match a non-chord if a chord is active
-		if(m_activeChord != NULL) return false;
-
-		std::map<int, KeyChord*>::iterator iterator;
-		iterator = m_chords.find(actionHash);
-
-		// If there is a chord that uses the same shortcut for the first keypress as this action, then the action will be ignored
-		bool ret = iterator == m_chords.end() && hash == actionHash;
-		m_actionReturned = ret;
-		return ret;
+		outFinalHash = actionHash;
+		return;
 	}
 
 	int pos = customAccel.Find(wxT(" "));
 	if(pos != wxNOT_FOUND) {
 		// Custom shortcut is a chord
 
-		// If we already activated the chord for this key press, then don't do it again
-		// Otherwise the next bundle will think it should try to run the chord
-		if(m_chordActivated) return false;
-
 		// First, find or create the chord object
 		wxString chordAccel = customAccel.Left(pos);
 		wxString finalAccel = customAccel.Mid(pos+1);
 
-		int chordHash = makeHash(chordAccel);
-		int finalHash = makeHash(finalAccel);
-
-		std::map<int, KeyChord*>::iterator iterator;
-		iterator = m_chords.find(chordHash);
-		KeyChord* chord;
-		if(iterator != m_chords.end()) {
-			chord = iterator->second;
-		} else {
-			chord = new KeyChord(chordAccel);
-		}
-		
-		if(m_activeChord != NULL) {
-			// Ctrl-X Ctrl-I and Ctrl-Z Ctrl-I can't match when you press Ctrl-I the second time
-			if(makeHash(m_activeChord->key) != chordHash) return false;
-
-			// chord is active, true if they are the same chord and second key press
-			bool ret = hash == finalHash;
-			m_actionReturned = m_actionReturned || ret;
-			return ret;
-		} else {
-			if(chordHash != hash) return false;
-
-			// chord is not active, so activate it
-			m_activeChord = chord;
-			m_chordActivated = true;
-			return false;
-		}
+		outChordHash = makeHash(chordAccel);
+		outFinalHash = makeHash(finalAccel);
+		outChordString = chordAccel;
 	} else {
-		// no way to match a non-chord if a chord is active
-		if(m_activeChord != NULL) return false;
-
-		// Custom shortcut is just a regular key press
-		// Trust that they will not use Ctrl-X and Ctrl-X Ctrl-C in the same file
-		bool ret = hash == makeHash(customAccel);
-		m_actionReturned = m_actionReturned || ret;
-		return ret;
+		outFinalHash = makeHash(customAccel);
 	}
 }
 
+/**
+ * This builds a hashtable of all of the bundle key bindings.
+ * This is done once to speed up and enhance the accuracy of the search for bundles that match later.
+ * This method is called once for each bundle item.
+ */
+void Accelerators::ParseBundles(const tmAction* x) {
+	int chordHash, finalHash;
+	wxString chordString;
+	ParseBundleForHash(x, chordHash, finalHash, chordString);
+
+	if(chordHash > -1) {
+		std::map<int, BundleKeyChord*>::iterator iterator;
+		iterator = m_bundleChords.find(chordHash);
+		BundleKeyChord* chord;
+		if(iterator != m_bundleChords.end()) {
+			chord = iterator->second;
+		} else {
+			chord = new BundleKeyChord(chordHash, chordString);
+			m_bundleChords[chordHash] = chord;
+		}
+
+		chord->bindings[finalHash] = true;
+	} else {
+		m_bundleBindings[finalHash] = true;
+	}
+}
+
+/**
+ * This method is called when ParseBundles is finished with all the bundles.
+ * It activates a chord / sees if any bundle items will match / determines what set of bindings to search later on.
+ */
+bool Accelerators::BundlesParsed(int code, int flags) {
+	if(shouldIgnore(code)) return true;
+	int hash = (flags << 24) | code;
+
+
+	if(m_activeBundleChord) { // A chord for a bundle was previously activated
+		m_searchBundleChords = true;
+		bool ret = m_activeBundleChord->bindings.find(hash) != m_activeBundleChord->bindings.end();
+		m_actionReturned = ret;
+		return ret;
+	} else if(m_activeChord) { // A chord was previously activated, but no bundle uses it
+		return false;
+	} else {
+		// No chord is activated yet
+		std::map<int, BundleKeyChord*>::iterator bundleChords = m_bundleChords.find(hash);
+		std::map<int, KeyChord*>::iterator chords = m_chords.find(hash);
+		std::map<int, bool>::iterator bundleBindings = m_bundleBindings.find(hash);
+
+		if(bundleChords != m_bundleChords.end()) {
+			m_activeBundleChord = bundleChords->second;
+		}
+		if(chords != m_chords.end()) {
+			m_activeChord = chords->second;
+		}
+
+		if(m_activeBundleChord != NULL || m_activeChord != NULL) {
+			m_chordActivated = true;
+			return true;
+		}
+
+		if(bundleBindings != m_bundleBindings.end()) {
+			m_searchBundleBindings = true;
+			m_actionReturned = true;
+			return true;
+		}
+
+		return false;
+	}
+}
+
+/**
+ * This method is called once for each bundle.
+ * If it returns true, the bundle will be run.
+ * It uses the results of BundlesParsed to check if this bundle matches the set of pressed keys.
+ */
+bool Accelerators::MatchBundle(int code, int flags, const tmAction* x) {
+	if(shouldIgnore(code)) return false;
+	int hash = (flags << 24) | code;
+
+	int chordHash, finalHash;
+	wxString chordString;
+	ParseBundleForHash(x, chordHash, finalHash, chordString);
+
+	if(chordHash > -1) {
+		if(!m_searchBundleChords) return false;
+		if(finalHash != hash) return false;
+
+		std::map<int, BundleKeyChord*>::iterator iterator;
+		iterator = m_bundleChords.find(chordHash);
+
+		if(iterator == m_bundleChords.end()) return false;
+		BundleKeyChord* chord = iterator->second;
+
+		return chord->bindings.find(finalHash) != chord->bindings.end();
+	} else {
+		if(!m_searchBundleBindings) return false;
+		return hash == finalHash;
+	}
+}
+
+void Accelerators::Reset() {
+	m_chordActivated = false;
+	m_actionReturned = false;
+	m_searchBundleBindings = false;
+	m_searchBundleChords = false;
+}
+
+/**
+ * This method causes execution to stop after the bundles IF a chord was activated.
+ * This is important, because of how the code for handling bundles/menus is separated between two different areas.
+ * If removed, 
+ */
 bool Accelerators::WasChordActivated() {
 	bool ret = m_chordActivated;
 
 	// If we get into the bundles and we didn't activate a chord, then clear it out
 	if(m_actionReturned) {
 		m_activeChord = NULL;
+		m_activeBundleChord = NULL;
 	}
 
-	m_chordActivated = false;
-	m_actionReturned = false;
+	Reset();
 
 	return ret;
 }
 
-bool Accelerators::IsChord(int code, int flags) {
-	int hash = (flags << 24) | code;
-	std::map<int, KeyChord*>::iterator iterator;
-	iterator = m_chords.find(hash);
-	if(iterator != m_chords.end()) {
-		m_activeChord = iterator->second;
-		return true;
-	}
-	
-	return false;
-}
-
-bool Accelerators::HandleHash(int hash) {
+bool Accelerators::MatchMenus(int hash) {
 	if(m_activeChord) {
 		std::map<int, KeyBinding*>::iterator iterator;
 		iterator = m_activeChord->bindings.find(hash);
@@ -354,11 +407,11 @@ bool Accelerators::HandleHash(int hash) {
 			event2.SetId(binding->id);
 			event2.SetInt(binding->id);
 			m_editorFrame->GetEventHandler()->ProcessEvent(event2);
-			m_activeChord = NULL;
+			ResetChords();
 		}
 
 		// If we have an active chord and it matches nothing or something, don't let it keep processing either way
-		m_activeChord = NULL;
+		ResetChords();
 		return true;
 	} else {
 		std::map<int, KeyChord*>::iterator iterator;
@@ -377,18 +430,25 @@ bool Accelerators::HandleHash(int hash) {
 			event2.SetId(binding->id);
 			event2.SetInt(binding->id);
 			m_editorFrame->GetEventHandler()->ProcessEvent(event2);
-			m_activeChord = NULL;
+			ResetChords();
 			return true;
 		}
 	}
 
-	m_activeChord = NULL;
+	ResetChords();
 	return false;
+}
+
+void Accelerators::ResetChords() {
+	m_activeBundleChord = NULL;
+	m_activeChord = NULL;
 }
 
 wxString Accelerators::StatusBarText() {
 	if(m_activeChord) {
 		return wxT("Chord ") + (m_activeChord->key) + wxT(" active");
+	} else if(m_activeBundleChord) {
+		return wxT("Chord ") + (m_activeBundleChord->key) + wxT(" active");
 	}
 
 	return wxT("");

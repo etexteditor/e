@@ -9086,8 +9086,14 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 	vector<const tmAction*> actions;
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
 
-	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers, m_parentFrame.GetAccelerators()));
-	if(m_parentFrame.GetAccelerators()->WasChordActivated()) return true;
+	Accelerators* accelerators = m_parentFrame.GetAccelerators();
+	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers, accelerators, true));
+	if(!accelerators->BundlesParsed(keyCode, modifiers)) {
+		accelerators->Reset();
+		return false;
+	}
+	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers, accelerators, false));
+	if(accelerators->WasChordActivated()) return true;
 
 	// Key Diagnostics
 	if (m_parentFrame.IsKeyDiagMode()) {

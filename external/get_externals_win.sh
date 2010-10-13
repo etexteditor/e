@@ -17,12 +17,13 @@ _download()
   
   for url in \
     http://curl.haxx.se/download/curl-7.18.2.tar.gz \
-    http://libtomcrypt.com/files/crypt-1.11.tar.bz2 \
-    http://math.libtomcrypt.com/files/ltm-0.39.tar.bz2 \
+    http://github.com/ajpalkovic/e/raw/master/external/downloads/crypt-1.11.tar.bz2 \
+    http://github.com/ajpalkovic/e/raw/master/external/downloads/ltm-0.39.tar.bz2 \
     http://www.equi4.com/pub/mk/metakit-2.4.9.7.tar.gz \
     ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-7.9.tar.gz \
     http://downloads.sourceforge.net/project/tinyxml/tinyxml/2.5.3/tinyxml_2_5_3.tar.gz \
-    http://downloads.sourceforge.net/project/wxwindows/wxAll/2.8.10/wxWidgets-2.8.10.tar.bz2
+    http://downloads.sourceforge.net/project/wxwindows/wxAll/2.8.10/wxWidgets-2.8.10.tar.bz2 \
+    http://downloads.sourceforge.net/project/boost/boost/1.44.0/boost_1_44_0.tar.gz
   do
     if [[ ! -e `basename $url` ]]; then
       curl -O -L $url
@@ -37,7 +38,7 @@ _backup_existing_patches()
   # Removing previous folders
   tempdir=`mktemp -d back.XXXXXX` || exit 1
   echo "Backing up patched externals..."
-  for dir in  curl libtomcrypt libtommath metakit prce tinyxml wxwidgets
+  for dir in  curl libtomcrypt libtommath metakit prce tinyxml wxwidgets boost
   do
     if [[ -e $dir ]]; then 
       mv $dir $tempdir/$dir; 
@@ -57,6 +58,7 @@ _extract_and_patch()
   tar -xzf $downloads/pcre-*
   tar -xzf $downloads/tinyxml_*
   tar -xjf $downloads/wxWidgets-*
+  tar -xzf $downloads/boost_*
 
   # Rename directories to generic names
   echo "Renaming dirs..."
@@ -68,6 +70,7 @@ _extract_and_patch()
   mv metakit-* metakit
   mv pcre-* pcre
   mv wxWidgets-* wxwidgets
+  mv boost_* boost
 
   # Apply patches
   echo "Applying patches..."
@@ -100,6 +103,8 @@ _next_steps()
   echo "pcre\pcre.sln"
   echo "tinyxml\tinyxml.sln"
   echo "wxwidgets\build\msw\wx.dsw"
+  echo
+  echo "You must also manually compile boost.  build_externals_win.cmd will do this for you."
   echo
   echo "For an automated build, run build_externals_win.cmd in a Visual Studio 2008 Command Prompt."
 }

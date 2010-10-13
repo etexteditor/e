@@ -12,6 +12,7 @@ call :BUILD pcre\pcre.sln
 call :BUILD tinyxml\tinyxml.sln
 
 call build_wxwidgets_win.cmd
+call build_boost_win.cmd
 
 echo Builds complete, check build_logs for possible issues.
 

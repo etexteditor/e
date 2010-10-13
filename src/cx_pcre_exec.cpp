@@ -4611,7 +4611,7 @@ else
   else
     {
     md->nllen = 1;
-    md->nl[0] = newline;
+    md->nl[0] = (uschar)newline;
     }
   }
 

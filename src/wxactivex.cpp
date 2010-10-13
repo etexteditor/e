@@ -2499,7 +2499,7 @@ bool GetSysErrMessage(int err, wxString& s)
 		err,0, buf, sizeof(buf), NULL) == 0)
 		return false;
 
-	buf[sizeof(buf) - 1] = 0;
+	buf[sizeof(buf)/sizeof(buf[0]) - 1] = 0;
 	s = buf;
 	return true;
 };

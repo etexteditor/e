@@ -239,13 +239,13 @@ void RemoteProfileDlg::OnButtonDelete(wxCommandEvent& WXUNUSED(event)) {
 	EnableSettings(false);
 
 	// Delete profile
-	const uintptr_t profile_id = (uintptr_t)m_profileList->GetClientData(item);
+	const wxUIntPtr profile_id = (wxUIntPtr)m_profileList->GetClientData(item);
 	m_settings.DeleteRemoteProfile(profile_id);
 	m_profileList->Delete(item);
 
 	// Adjust subsequent profile id's
 	for (unsigned int i = 0; i < m_profileList->GetCount(); ++i) {
-		const uintptr_t id = (uintptr_t)m_profileList->GetClientData(i);
+		const wxUIntPtr id = (wxUIntPtr)m_profileList->GetClientData(i);
 		if (id > profile_id) {
 			m_profileList->SetClientData(i, (void*)(id-1));
 		}
@@ -277,7 +277,7 @@ void RemoteProfileDlg::OnTextName(wxCommandEvent& event) {
 }
 
 void RemoteProfileDlg::OnProfileList(wxCommandEvent& event) {
-	const uintptr_t profile_id = (uintptr_t)m_profileList->GetClientData(event.GetInt());
+	const wxUIntPtr profile_id = (wxUIntPtr)m_profileList->GetClientData(event.GetInt());
 	SetProfile(profile_id);
 }
 

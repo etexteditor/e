@@ -2870,7 +2870,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	if (askforpath || newpath.empty()) {
 		wxFileDialog dlg(this, _T("Save as..."), _T(""), _T(""), EditorFrame::DefaultFileFilters, wxSAVE|wxCHANGE_DIR);
-		dlg.SetPath( newpath.empty() ? _("Untitled") : newpath );
+		dlg.SetPath( newpath.empty() ? wxString(_("Untitled")) : newpath );
 
 		dlg.Centre();
 		if (dlg.ShowModal() != wxID_OK) return false;
@@ -3472,7 +3472,7 @@ void EditorCtrl::DeleteSelections() {
 				interval& r = m_searchRanges[i];
 				if (end <= r.end) {
 					// Adjust cursor
-					size_t& c = m_cursors[i];
+					unsigned int& c = m_cursors[i];
 					if (c == end) c = start;
 					else if (c > end) c -= len;
 
@@ -9986,7 +9986,7 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		m_syntaxHandler.DoBundleAction(uuid, *this);
 
 	}
-	else return wxVariant(NULL, wxT("Unknown method"));
+	else return wxVariant((wxVariantData*)NULL, wxT("Unknown method"));
 
 	return wxVariant();
 }

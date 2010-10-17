@@ -77,7 +77,7 @@ void ApiHandler::OnIpcCall(wxCommandEvent& event) {
 	const string& m = call->GetMethod();
 	const wxString method(m.c_str(), wxConvUTF8, m.size());
 
-	wxLogDebug(wxT("IPC: %s"), method);
+	wxLogDebug(wxT("IPC: %s"), method.c_str());
 
 	// Call the function (if it exists)
 	bool methodFound = true;
@@ -194,7 +194,7 @@ void ApiHandler::OnIpcClosed(wxCommandEvent& event) {
 	// Remove all notifiers from closed connection
 	map<unsigned int, IConnection*>::iterator p = m_notifiers.begin();
 	while (p != m_notifiers.end()) {
-		if (p->second == conn) p = m_notifiers.erase(p);
+		if (p->second == conn) m_notifiers.erase(p++);
 		else ++p;
 	}
 

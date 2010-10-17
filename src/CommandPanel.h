@@ -17,6 +17,8 @@
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
 #include <wx/panel.h>
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
 #include <wx/string.h>
 #endif
 

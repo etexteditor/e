@@ -70,7 +70,7 @@ private:
 	boost::shared_ptr<connection> keep_alive_; // Ensure that conn is not deleted during calls
 	boost::mutex queue_lock_;
 	std::vector<unsigned char>* reply_ptr_;     // Only one item in queue can be a reply
-	boost::ptr_deque<std::vector<unsigned char>> queue_;
+	boost::ptr_deque< std::vector<unsigned char> > queue_;
 	bool write_in_progress_;
 };
 

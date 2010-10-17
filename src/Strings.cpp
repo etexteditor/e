@@ -258,14 +258,14 @@ bool DetectTextEncoding(const char* buffer, size_t len, wxFontEncoding& encoding
 			}
 
 			// Detect UTF-32 by scanning for newlines (and lack of null chars)
-			if ((uintptr_t)buff_ptr % 4 == 0 && buff_ptr+4 <= buff_end) {
+			if ((wxUIntPtr)buff_ptr % 4 == 0 && buff_ptr+4 <= buff_end) {
 				if (*((wxUint32*)buff_ptr) == 0) ++bad_utf32_count;
 				if (*((wxUint32*)buff_ptr) == wxUINT32_SWAP_ON_BE(0x0A)) ++nl_utf32le_count;
 				if (*((wxUint32*)buff_ptr) == wxUINT32_SWAP_ON_LE(0x0A)) ++nl_utf32be_count;
 			}
 
 			// Detect UTF-16 by scanning for newlines (and lack of null chars)
-			if ((uintptr_t)buff_ptr % 2 == 0  && buff_ptr+4 <= buff_end) {
+			if ((wxUIntPtr)buff_ptr % 2 == 0  && buff_ptr+4 <= buff_end) {
 				if (*((wxUint16*)buff_ptr) == 0) ++bad_utf16_count;
 				if (*((wxUint16*)buff_ptr) == wxUINT16_SWAP_ON_BE(0x0A)) ++nl_utf16le_count;
 				if (*((wxUint16*)buff_ptr) == wxUINT16_SWAP_ON_LE(0x0A)) ++nl_utf16be_count;

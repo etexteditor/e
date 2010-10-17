@@ -69,9 +69,8 @@ END_EVENT_TABLE()
 
 SearchPanel::SearchPanel(IFrameSearchService& searchService, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size):
 	wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL|wxCLIP_CHILDREN|wxNO_BORDER|wxNO_FULL_REPAINT_ON_RESIZE),
-	m_searchService(searchService),
-	m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false),
-	m_settings(eGetSettings())
+	m_searchService(searchService), m_settings(eGetSettings()),
+	m_use_regex(false), m_match_case(false), m_highlight(true), restart_next_search(false), nosearch(false)
 {
 	InitAcceleratorTable();
 
@@ -245,7 +244,7 @@ void SearchPanel::SetState(cxFindResult result, int resultCount) {
 	}
 	searchbox->Refresh();
 
-	wxString results = (0 <= resultCount) ? wxString::Format(wxT("%d results"), resultCount) : wxEmptyString;
+	wxString results = (0 <= resultCount) ? wxString::Format(wxT("%d results"), resultCount) : wxGetEmptyString();
 	commandResults->SetLabel(results);
 }
 

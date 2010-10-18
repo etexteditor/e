@@ -332,7 +332,7 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 	vector<unsigned int> bookmarks;
 
 	// Retrieve the page info
-	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
+	wxASSERT(0 <= page_id && page_id < settings.GetPageCount());
 	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks, (SubPage)subid);
 
 	if (eDocumentPath::IsRemotePath(mirrorPath)) {

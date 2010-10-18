@@ -44,8 +44,8 @@ public:
 	}
 
 	DirState(const wxString& path):
-		walkingFiles(false),
-		prefix(path + wxFILE_SEP_PATH)
+		prefix(path + wxFILE_SEP_PATH),
+		walkingFiles(false)
 	{
 		dir.Open(path);
 	}

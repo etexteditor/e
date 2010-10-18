@@ -224,13 +224,14 @@ PListHandler::PListHandler(const wxString& appPath, const wxString& appDataPath,
 	m_localBundleDir.AppendDir(wxT("Bundles"));
 
 #ifdef __WXDEBUG__
-	wxStartTimer();
+        wxStopWatch perftimer;
+        perftimer.Start();
 #endif
 
 	Update(UPDATE_SYNTAXONLY);
 
 #ifdef __WXDEBUG__
-	wxLogDebug(wxT("Bundle Update Time: %d"), wxGetElapsedTime());
+	wxLogDebug(wxT("Bundle Update Time: %ld"), perftimer.Time());
 #endif
 }
 

@@ -69,6 +69,8 @@ _extract_and_patch()
   patch -Np0 -d webkit < patches/webkit/vis_hidden.patch
   patch -Np1 -d webkit < patches/webkit/cancelledError.patch
   patch -Np1 -d webkit < patches/webkit/local_sec.patch
+  patch -Np1 -d webkit < patches/webkit/icu-fix-56345.diff
+  patch -Np1 -d webkit < patches/webkit/wxtimerfix-gcc-4.5.diff
 }
 
 _next_steps()

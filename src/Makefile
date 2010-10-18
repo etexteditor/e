@@ -46,7 +46,7 @@ WXINCLUDES = $(shell $(EXT_DIR)/bin/wx-config --cppflags)
 
 GTKINCLUDES = $(shell pkg-config --cflags gtk+-2.0 cairo pango atk glib-2.0)
 
-OURINCLUDES = -I$(EXT_DIR)/include -I$(ROOTDIR)/external/pcre/
+OURINCLUDES = -I$(EXT_DIR)/include
 
 INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I$(ROOTDIR)/ecore -I.
 
@@ -66,7 +66,7 @@ EXCEPT = CygwinDlg.cpp \
          ShellContextMenu.cpp \
          wxactivex.cpp
 
-SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp)) 
+SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp hessian_ipc/*.cpp webconnect/*.cpp))
 OBJS = $(SRCS:%.cpp=$(OUTDIR)/%.o)
 DEPS = $(SRCS:%.cpp=$(OUTDIR)/%.d)
 
@@ -83,7 +83,7 @@ $(EXE): $(OBJS)
 	$(SILENT)$(CXX) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS) $(EXTOBJS)
 
 $(OUTDIR)/%.o: %.cpp
-	@-mkdir -p $(OUTDIR)
+	@-mkdir -p $(OUTDIR){,hessian_ipc,webconnect}
 	@$(ECHO) "[CC] $<"
 	$(SILENT)$(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@ $<
 

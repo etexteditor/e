@@ -1,13 +1,14 @@
 #!/bin/bash
 
-if [ x"$1" == x"release" ] ; then
+variant=$1
+if [ x"variant" == x"release" ] ; then
     echo "Building release binaries"
     output=`pwd`/out.release
     cfg_switches=--disable-debug
     tinyxml_switches="DEBUG=YES"
     CPPFLAGS="-O2"
     LDFLAGS="-g"
-elif [ x"$1" == x"debug" ] ; then
+elif [ x"$variant" == x"debug" ] ; then
     echo "Building debug binaries"
     output=`pwd`/out.debug
     tinyxml_switches=
@@ -53,7 +54,7 @@ pushd pcre
     make clean &&
     make &&
     make install &&
-    cp config.h ucp.h $output/include ||
+    cp config.h ucp.h pcre_internal.h $output/include ||
         ( echo "Cannot compile pcre" ; exit 1 )
 popd
 
@@ -104,3 +105,7 @@ PATH="$output/bin:${PATH}" ./WebKitTools/Scripts/build-webkit --wx --wx-args=wxg
         ( echo "Cannot compile WebKit" ; exit 1 )
 popd
 
+# boost
+pushd boost
+./bootstrap.sh && ./bjam link=static runtime-link=static variant=$variant --prefix=$output install
+popd

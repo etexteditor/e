@@ -27,6 +27,7 @@ class ITmThemeHandler;
 
 class wxGrid;
 class wxGridEvent;
+class wxGridRangeSelectEvent;
 
 class ThemeEditor : public wxDialog {
 public:
@@ -70,6 +71,7 @@ private:
 	void OnDelSetting(wxCommandEvent& event);
 	void OnSize(wxSizeEvent& event);
 	void OnGridSelect(wxGridEvent& event);
+	void OnGridSelectRange(wxGridRangeSelectEvent& event);
 	void OnGridLeftDClick(wxGridEvent& event);
 	void OnGridCellChange(wxGridEvent& event);
 	void OnGridRightClick(wxGridEvent& event);
@@ -151,7 +153,7 @@ private:
 	std::vector<PListHandler::cxItemRef> m_themes;
 	int m_themeNdx;
 	int m_currentRow;
-
+	wxArrayInt m_selection;
 	CopyColours copyColours;
 
 	// Member Ctrls

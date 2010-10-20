@@ -235,7 +235,7 @@ BOOL CMiniVersion::GetFixedInfo(VS_FIXEDFILEINFO& rFixedInfo)
 
 ///////////////////////////////////////////////////////////////////////////////
 // GetStringInfo
-BOOL CMiniVersion::GetStringInfo(LPCSTR lpszKey, LPTSTR lpszReturnValue)
+BOOL CMiniVersion::GetStringInfo(LPCTSTR lpszKey, LPTSTR lpszReturnValue)
 {
 	BOOL rc;
 	DWORD *pdwTranslation;
@@ -258,7 +258,7 @@ BOOL CMiniVersion::GetStringInfo(LPCSTR lpszKey, LPTSTR lpszReturnValue)
 	if (!rc)
 		return FALSE;
 
-	char szKey[2000];
+	TCHAR szKey[2000];
 	wsprintf(szKey, _T("\\StringFileInfo\\%04x%04x\\%s"),
 				 LOWORD (*pdwTranslation), HIWORD (*pdwTranslation),
 				 lpszKey);

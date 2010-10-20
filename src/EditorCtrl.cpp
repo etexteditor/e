@@ -4833,7 +4833,8 @@ void EditorCtrl::AddSelection(unsigned int start, unsigned int end, bool allowEm
 	// The positions may come from unverified input
 	// So we have to make sure they are valid
 	cxLOCKDOC_READ(m_doc)
-		start = doc.GetValidCharPos(start);
+		if (start > doc.GetLength()) start = doc.GetLength();
+		else if (start != doc.GetLength()) start = doc.GetValidCharPos(start);
 		if (end > doc.GetLength()) end = doc.GetLength();
 		else if (end != doc.GetLength()) end = doc.GetValidCharPos(end);
 	cxENDLOCK

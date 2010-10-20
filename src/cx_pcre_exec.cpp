@@ -4467,6 +4467,9 @@ real_pcre internal_re;
 const real_pcre *external_re = (const real_pcre *)argument_re;
 const real_pcre *re = external_re;
 
+/* Bound check */
+if (length < start_offset) return PCRE_ERROR_NOMATCH;
+
 /* Plausibility checks */
 
 if ((options & ~PUBLIC_EXEC_OPTIONS) != 0) return PCRE_ERROR_BADOPTION;
@@ -4611,7 +4614,7 @@ else
   else
     {
     md->nllen = 1;
-    md->nl[0] = newline;
+    md->nl[0] = (uschar)newline;
     }
   }
 

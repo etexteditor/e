@@ -115,6 +115,8 @@ wxString& encode(wxString& str) {
 
 void AcceleratorsDialog::ParseMenu(wxMenu* menu, int index, wxString label, int level, int parent) {
 	label.Replace(wxT("&"), wxT(""));
+	if(label == wxT("Recent Files") || label == wxT("Recent Projects") || label == wxT("Tabs")) return;
+
 	int id = ++m_id;
 
 	wxString menuClass = wxT(" menu");

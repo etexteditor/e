@@ -452,6 +452,14 @@ bool Accelerators::WasChordActivated() {
 	return ret;
 }
 
+void RunEvent(int id, EditorFrame* editorFrame) {
+	wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED);
+	event2.SetEventObject(editorFrame);
+	event2.SetId(id);
+	event2.SetInt(id);
+	editorFrame->GetEventHandler()->ProcessEvent(event2);
+}
+
 /**
  * Finds the menu item that matches the given key bidning hash and runs its event.
  */
@@ -461,11 +469,7 @@ bool Accelerators::MatchMenus(int hash) {
 		iterator = m_activeChord->bindings.find(hash);
 		if(iterator != m_activeChord->bindings.end()) {
 			KeyBinding* binding = iterator->second;
-			wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED);
-			event2.SetEventObject(m_editorFrame);
-			event2.SetId(binding->id);
-			event2.SetInt(binding->id);
-			m_editorFrame->GetEventHandler()->ProcessEvent(event2);
+			RunEvent(binding->id, m_editorFrame);
 			ResetChords();
 		}
 
@@ -473,6 +477,16 @@ bool Accelerators::MatchMenus(int hash) {
 		ResetChords();
 		return true;
 	} else {
+		// hack to support Ctrl-1-Ctrl-9 for switching tabs
+		wxString ctrl1 = wxT("Ctrl-1");
+		wxString ctrl9 = wxT("Ctrl-9");
+		if(hash >= makeHash(ctrl1) && hash <= makeHash(ctrl9)) {
+			int id = hash - makeHash(ctrl1) + 40000;
+			RunEvent(id, m_editorFrame);
+			ResetChords();
+			return true;
+		}
+
 		std::map<int, KeyChord*>::iterator iterator;
 		iterator = m_chords.find(hash);
 		if(iterator != m_chords.end()) {
@@ -484,11 +498,7 @@ bool Accelerators::MatchMenus(int hash) {
 		iterator2 = m_bindings.find(hash);
 		if(iterator2 != m_bindings.end()) {
 			KeyBinding* binding = iterator2->second;
-			wxCommandEvent event2(wxEVT_COMMAND_MENU_SELECTED);
-			event2.SetEventObject(m_editorFrame);
-			event2.SetId(binding->id);
-			event2.SetInt(binding->id);
-			m_editorFrame->GetEventHandler()->ProcessEvent(event2);
+			RunEvent(binding->id, m_editorFrame);
 			ResetChords();
 			return true;
 		}

@@ -2950,7 +2950,7 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 void EditorFrame::OnMenuNextTab(wxCommandEvent& evt) {
 	// The user may have configured it to go to last active tab
 	bool gotoLastTab = false;
-	m_settings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
+	m_generalSettings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
 	if (gotoLastTab) {
 		OnMenuLastTab(evt);
 		return;

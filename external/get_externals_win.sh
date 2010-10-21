@@ -79,6 +79,7 @@ _extract_and_patch()
   patch -Np1 -d metakit < patches/metakit.patch
   patch tinyxml/tinyxml.cpp < patches/tinyxml/tinyxml.cpp.patch
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
+  patch -p0 -d wxwidgets < patches/wxWidgetsDisableAccel.patch
 
   # Copy msvc specific project files
   echo "Copying msvc specific project files..."

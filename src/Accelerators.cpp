@@ -14,6 +14,8 @@
 #include "tmAction.h"
 #include "tmBundle.h"
 
+#include "AcceleratorsDialog.h"
+
 wxString normalize(wxString str) {
 	str.Replace(wxT("&"), wxT(""));
 	return str.Trim().MakeLower();
@@ -23,6 +25,24 @@ bool IsChord(wxString& accel) {
 	return accel.Trim().Find(' ') != wxNOT_FOUND;
 }
 
+bool shouldIgnore(int code) {	
+	switch(code) {
+		case WXK_CONTROL:
+		case WXK_ALT:
+		case WXK_SHIFT:
+		case WXK_WINDOWS_LEFT:
+		case WXK_WINDOWS_RIGHT:
+			return true;
+	}
+
+	return false;
+}
+
+/**
+ * For constant time access, each keystroke is mapped to an int.
+ * The first 8 bits are used to store the modifiers.
+ * The remaining 24 bits are used to store the actual wxKeyCode of the key to press.
+ */
 int makeHash(wxString& accel) {
 	int code, flags;
 	wxAcceleratorEntry::ParseAccel(wxT("\t")+accel, &flags, &code);
@@ -45,21 +65,26 @@ KeyBinding::KeyBinding(wxMenuItem* menuItem) : menuItem(menuItem) {
 	id = menuItem->GetId();
 }
 
-KeyChord::KeyChord(wxString chord) : key(chord) { }
-
 Accelerators::Accelerators(EditorFrame* editorFrame) : 
 	m_editorFrame(editorFrame), m_activeChord(NULL), m_activeBundleChord(NULL) {
 	ReadCustomShortcuts();
 	Reset();
 }
 
+/**
+ * Traverses the menubar.
+ * For each menu item, it grabs the binding from the menu
+ * and it checks if there is a custom binding for that menu item.
+ */
 void Accelerators::ParseMenu() {
 	m_chords.clear();
 	m_bindings.clear();
 
+	m_needDefault = m_defaultBindings.size() == 0;
+
 	wxMenuBar* menuBar = m_editorFrame->GetMenuBar();
 	if(!menuBar) return;
-	
+
 	const unsigned int bundles = menuBar->FindMenu(_("&Bundles"));
 	for(unsigned int c = 0; c < menuBar->GetMenuCount(); c++) {
 		if(c == bundles) ParseBundlesMenu(menuBar->GetMenu(c));
@@ -91,6 +116,18 @@ void Accelerators::ParseMenu(wxMenuItem* item) {
 	} else {
 		label = text.Mid(0, tab);
 		accel = text.Mid(tab+1);
+
+		if(m_needDefault) {
+			m_defaultBindings[label] = accel;
+		} else {
+			// When reloading the accelerators, if the user removes a custom accelerator, it needs to reset to the original value
+			map<wxString, wxString>::iterator iterator;
+			iterator = m_defaultBindings.find(normalize(label));
+			if(iterator != m_defaultBindings.end()) {
+				accel = iterator->second;
+			}
+
+		}
 	}
 
 	// now check if there is a custom shortcut
@@ -138,6 +175,10 @@ void Accelerators::InsertBinding(wxMenuItem* item, wxString& accel) {
 	}
 }
 
+/**
+ * Traverses the bundles menu.
+ * For bundle menu items, their bindings are stored differently from other wxMenuItems
+ */
 void Accelerators::ParseBundlesMenu(wxMenu* menu) {
 	wxMenuItemList& items = menu->GetMenuItems();
 	for(unsigned int c = 0; c < items.size(); c++) {
@@ -166,7 +207,8 @@ void Accelerators::ParseBundlesMenu(wxMenuItem* item) {
 	if(iterator != m_customBindings.end()) {
 		wxString accel = iterator->second.Trim();
 		bItem->SetCustomAccel(accel);
-		//InsertBinding(item, accel);
+	} else {
+		bItem->SetCustomAccel(wxT(""));
 	}
 }
 
@@ -192,24 +234,35 @@ void Accelerators::ReadCustomShortcuts() {
 		return;
 	}
 
-	wxArrayString keys = jsonRoot.GetMemberNames();
+	if(!jsonRoot.HasMember(wxT("bindings"))) return;
+	wxJSONValue bindings = jsonRoot[wxT("bindings")];
+
+	m_customBindings.clear();
+	wxArrayString keys = bindings.GetMemberNames();
 	for(unsigned int c = 0; c < keys.size(); c++) {
 		wxString key = keys[c];
-		m_customBindings[normalize(key)] = jsonRoot[key].AsString();
+		m_customBindings[normalize(key)] = bindings[key].AsString();
 	}
 }
 
-bool shouldIgnore(int code) {	
-	switch(code) {
-		case WXK_CONTROL:
-		case WXK_ALT:
-		case WXK_SHIFT:
-		case WXK_WINDOWS_LEFT:
-		case WXK_WINDOWS_RIGHT:
-			return true;
+void Accelerators::SaveCustomShortcuts(wxString& jsonString) {
+	wxJSONReader reader;
+	wxJSONValue bindings;
+	reader.Parse(jsonString, &bindings);
+
+	wxJSONValue root;
+	root[wxT("bindings")] = bindings;
+
+	wxString path = eGetSettings().GetSettingsDir() + wxT("accelerators.cfg");
+	wxFileOutputStream fstream(path);
+	if (!fstream.IsOk()) {
+		wxMessageBox(_("Could not open accelerators settings file."), _("File error"), wxICON_ERROR|wxOK);
+		return;
 	}
 
-	return false;
+	// Write settings
+	wxJSONWriter writer(wxJSONWRITER_STYLED);
+	writer.Write(root, fstream);
 }
 
 bool Accelerators::HandleKeyEvent(wxKeyEvent& event) {
@@ -375,6 +428,9 @@ void Accelerators::Reset() {
 	m_actionReturned = false;
 	m_searchBundleBindings = false;
 	m_searchBundleChords = false;
+
+	m_bundleChords.clear();
+	m_bundleBindings.clear();
 }
 
 /**
@@ -396,6 +452,9 @@ bool Accelerators::WasChordActivated() {
 	return ret;
 }
 
+/**
+ * Finds the menu item that matches the given key bidning hash and runs its event.
+ */
 bool Accelerators::MatchMenus(int hash) {
 	if(m_activeChord) {
 		std::map<int, KeyBinding*>::iterator iterator;

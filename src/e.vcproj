@@ -554,6 +554,18 @@
 			Name="Dialogs"
 			>
 			<File
+				RelativePath=".\AcceleratorsDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AcceleratorsDialog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\AcceleratorsDialogHtml.h"
+				>
+			</File>
+			<File
 				RelativePath="CommitDlg.cpp"
 				>
 			</File>

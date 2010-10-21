@@ -72,6 +72,7 @@
 #include "SnippetList.h"
 #include "ClipboardHistoryPane.h"
 #include "Accelerators.h"
+#include "AcceleratorsDialog.h"
 #include "InputPanel.h"
 
 #ifdef __WXMSW__
@@ -297,6 +298,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_MODE, EditorFrame::OnMenuNavigateSelections)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_NEXT, EditorFrame::OnMenuNavigateSelectionsNext)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_PREVIOUS, EditorFrame::OnMenuNavigateSelectionsPrevious)
+	EVT_MENU(MENU_ACCELERATORS, EditorFrame::OnMenuCustomizeAccelerators)
 
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
@@ -645,6 +647,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
+	editMenu->Append(MENU_ACCELERATORS, _("&Keyboard Shortcuts..."), _("Edit Keyboard Shortcuts"));
 	menuBar->Append(editMenu, _("&Edit"));
 
 	// View menu
@@ -4222,4 +4225,8 @@ void EditorFrame::OnMenuNavigateSelectionsPrevious(wxCommandEvent& WXUNUSED(even
 
 bool EditorFrame::HandleChord(wxKeyEvent& event) {
 	return m_accelerators->HandleKeyEvent(event);
+}
+
+void EditorFrame::OnMenuCustomizeAccelerators(wxCommandEvent& WXUNUSED(event)) {
+	(AcceleratorsDialog(this)).ShowModal();
 }

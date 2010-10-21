@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <head> 
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" /> 
+	<style type='text/css'>
+		#wrapper {
+			width: 97.5%;
+			margin: 1%;
+			height: 500px;
+			overflow: auto;
+		}
+		table, tr, td, div, span, p, input, body {
+			padding: 0;
+			margin: 0;
+			border-spacing: 0;
+		}
+		
+		body {
+			background-color: #F0F0F0;
+		}
+		
+		body, input.textfield {
+			font-family: Calibri;
+			font-size: 12px;
+		}
+		
+		#mainTable {
+			border: 2px groove #FFF;
+			width: 500px;
+		}
+		
+		.toggleArrow {
+			height: 15px;
+			width: 15px;
+		}
+		
+		.menuItemLabel, .menuLabel, .defaultBinding {
+			padding: 1px 5px;
+		}
+		
+		.newBinding {
+			width: 100px;
+		}
+		.defaultBinding {
+			width: 100px;
+		}
+		
+		.odd {
+			background-color: #FAFAFA;
+		}
+		
+		.even {
+			background-color: #E9E9E9;
+		}
+		
+		td {
+			border-top: 1px solid #CCC;
+			border-collapse: collapse;
+		}
+		
+		.save {
+			padding: 2px;
+		}
+		
+		.level0 { padding-left: 0px; }
+		.level1 { padding-left: 15px; }
+		.level2 { padding-left: 30px; }
+		.level3 { padding-left: 45px; }
+		.level4 { padding-left: 60px; }
+		.level5 { padding-left: 75px; }
+		.level6 { padding-left: 90px; }
+		
+		.menuLabel {
+			font-weight: bold;
+		}
+		.menuLabel a, .menuLabel a:visited {
+			color: black;
+			text-decoration: none;
+			padding-right: 5px;
+		}
+		
+	</style>
+</head>
+<body>
+<div id='wrapper'>
+	$1
+</div>
+<center>
+	<input type='button' value='Save' class='save' id='save' />
+</center>
+<script type='text/javascript' src='http://code.jquery.com/jquery-1.4.3.min.js'></script>
+<script type='text/javascript'>
+	// Show only the top level menus
+	$("tr").hide();
+	$("tr.menu0").show();
+	
+	var state = {};
+	
+	$("input.textfield").keyup(function(e) {
+		
+		var code = e.keyCode;
+		switch(code) {
+			case 16: state.shift = false; break;
+			case 17: state.control = false; break;
+			case 18: state.alt = false; break;
+			case 91: state.windows = false; break;
+			case 92: state.windows = false; break;
+		}
+		
+		e.preventDefault();
+		e.stopPropagation();
+		return false;
+	});
+	
+	
+	$("input.textfield").keydown(function(e) {
+		var $this = $(this);
+		var data = $this.data('key');
+		if(!data) {
+			data = {};
+			$this.data('key', data);
+		}
+		
+		var key1 = data.key1 || {};
+		data.key1 = key1;
+		var key2 = data.key2 || {};
+		data.key2 = key2;
+		
+		var key = key1;
+		if(key.done) {
+			if(key2.done) {
+				$this.val("");
+				key = key1 = data.key1 = {};
+				key2 = data.key2 = {};
+			} else {
+				key = key2;
+			}
+		}
+		
+		var code = e.keyCode;
+		switch(code) {
+			case 16: state.shift = true; break;
+			case 17: state.control = true; break;
+			case 18: state.alt = true; break;
+			case 91: state.windows = true; break;
+			case 92: state.windows = true; break;
+			default:
+				key.control = state.control;
+				key.alt = state.alt;
+				key.shift = state.shift;
+				key.windows = state.windows;
+				key.code = code;
+				key.done = true;
+				break;
+		}
+		
+		if(key1.done) {
+			var str = toStr(key1);
+			if(key2.done) str += " "+toStr(key2)
+			$this.val(str);
+		}
+		
+		e.preventDefault();
+		e.stopPropagation();
+		return false;
+	});
+	
+	// Remove blank menus
+	for(var c = 247; c > 0; c--) {
+		if($('tr.menu'+c).length === 0) {
+			$('#menu'+c).closest('tr').remove();
+		}
+	}
+	
+	// Have to recursively close all submenus as well
+	function close(menu) {
+		var openSubMenus = $('tr.'+menu+':visible');
+		for(var c = 0; c < openSubMenus.length; c++) {
+			var link = $(openSubMenus[c]).find('a');
+			link.html("&rarr;");
+			close(link.attr('id'));
+		}
+		openSubMenus.hide();
+	}
+	
+	// Open menus when clicked
+	$("a.expand").live('click', function() {
+			var id = $(this).attr('id');
+			var rows = $("tr."+id);
+			
+			if(rows.is(":visible")) {
+				close(id);
+				rows.hide();
+				$(this).html("&rarr;");
+			} else {
+				rows.show();
+				$(this).html("&darr;");
+			}
+			
+			$("tr:visible:even").removeClass("odd").addClass("even");
+			$("tr:visible:odd").removeClass("even").addClass("odd");
+	});
+	
+	function toStr(key) {
+		var str = "";
+		if(key.control) str += "Ctrl-";
+		if(key.alt) str += "Alt-";
+		if(key.shift) str += "Shift-";
+		if(key.windows) str += "Win-";
+		
+		if(key.code) {
+			var code = keyCodeToStr(key.code);
+			if(code && code.length > 0) {
+				str += code;
+				key.done = true;
+			}
+		}
+		
+		return str;
+	}
+	
+	function keyCodeToStr(code) {
+		if(code >= 48 && code <= 57 || code >= 65 && code <= 90) {
+			return String.fromCharCode(code);
+		}
+		
+		switch(code) {
+			case 3: return "CANCEL";
+			case 8: return "BACK";
+			case 9: return "TAB";
+			case 12: return "CLEAR";
+			case 13: return "RETURN";
+			case 14: return "ENTER";
+			case 19: return "PAUSE";
+			case 20: return "CAPITAL";
+			case 27: return "ESCAPE";
+			case 32: return "SPACE";
+			case 33: return "PGUP";
+			case 34: return "PGDN";
+			case 35: return "END";
+			case 36: return "HOME";
+			case 37: return "LEFT";
+			case 38: return "UP";
+			case 39: return "RIGHT";
+			case 40: return "DOWN";
+			case 44: return "PRINT";
+			case 45: return "INSERT";
+			case 46: return "DELETE";
+			case 59: return ";";
+			case 61: return "=";
+			case 93: return "MENU";
+			case 96: return ""; //num0
+			case 97: return "";
+			case 98: return "";
+			case 99: return "";
+			case 100: return "";
+			case 101: return "";
+			case 102: return "";
+			case 103: return "";
+			case 104: return "";
+			case 105: return "";//num9
+			case 106: return "KP_MULTIPLY";
+			case 107: return "KP_ADD";
+			case 108: return "KP_SEPARATOR";
+			case 109: return "KP_SUBTRACT";
+			case 110: return "KP_DECIMAL";
+			case 111: return "KP_DIVICE";
+			case 112: return "F1";
+			case 113: return "F2";
+			case 114: return "F3";
+			case 115: return "F4";
+			case 116: return "F5";
+			case 117: return "F6";
+			case 118: return "F7";
+			case 119: return "F8";
+			case 120: return "F9";
+			case 121: return "F10";
+			case 122: return "F11";
+			case 123: return "F12";
+			case 124: return "F13";
+			case 125: return "F14";
+			case 126: return "F15";
+			case 127: return "F16";
+			case 128: return "F17";
+			case 129: return "F18";
+			case 130: return "F19";
+			case 131: return "F20";
+			case 132: return "F21";
+			case 133: return "F22";
+			case 134: return "F23";
+			case 135: return "F24";
+			case 144: return "NUM_LOCK";
+			case 145: return "SCOLL_LOCK";
+			case 186: return ";";
+			case 187: return "=";
+			case 188: return ",";
+			case 189: return "-";
+			case 190: return ".";
+			case 191: return "/";
+			case 192: return "`";
+			case 219: return "[";
+			case 220: return "\\";
+			case 221: return "]";
+			case 222: return "'";
+			//case : return "";
+		}
+		
+		return "";
+	}
+	
+	$("#save").click(function() {
+		var bits = $("input.textfield").map(function() { 
+			var name = $(this).attr('name').replace("\"", "\\\"");
+			var binding = $(this).val().replace("\"", "\\\"");
+			if(binding.length == 0) return;
+			return ["\"", name, "\"", ":", "\"", binding, "\""].join("");
+		});
+		var json = "http://localhost/{"+Array.prototype.join.call(bits, ",")+"}";
+		window.location = json;
+	});
+</script>
+</body>
+</html>

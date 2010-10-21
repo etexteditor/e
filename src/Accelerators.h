@@ -8,6 +8,7 @@
 class EditorFrame;
 class tmAction;
 int makeHash(wxString& accel);
+wxString normalize(wxString str);
 
 class KeyBinding {
 public:
@@ -20,7 +21,7 @@ public:
 
 class KeyChord {
 public:
-	KeyChord(wxString chord);
+	KeyChord(wxString chord) : key(chord) {}
 
 	wxString key;
 	std::map<int, KeyBinding*> bindings;
@@ -41,6 +42,7 @@ public:
 	Accelerators(EditorFrame* editorFrame);
 
 	void ReadCustomShortcuts();
+	void SaveCustomShortcuts(wxString& jsonRoot);
 
 	void ParseMenu();
 	void ParseMenu(wxMenu* menu);
@@ -64,9 +66,11 @@ public:
 
 	wxString StatusBarText();
 
+	std::map<wxString, wxString> m_customBindings;
+	std::map<wxString, wxString> m_defaultBindings;
+
 private:
 	EditorFrame* m_editorFrame;
-	std::map<wxString, wxString> m_customBindings;
 	std::map<int, KeyChord*> m_chords;
 	std::map<int, KeyBinding*> m_bindings;
 
@@ -80,6 +84,7 @@ private:
 	bool m_actionReturned;
 	bool m_searchBundleBindings;
 	bool m_searchBundleChords;
+	bool m_needDefault;
 };
 
 #endif

@@ -5418,6 +5418,7 @@ void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 	SetPos(iv.start + byte_len);
 
 	Freeze();
+	DrawLayout();
 }
 
 bool EditorCtrl::HasSearchRange() const {

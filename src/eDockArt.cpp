@@ -174,7 +174,9 @@ void ModernDockArt::DrawPaneButton(wxDC& dc,
 
 ModernTabArt::ModernTabArt() {
 	m_active_close_bmp = wxBitmap(close_xpm);
-	m_hot_close_bmp = wxBitmap(close_hot_xpm);
+	/* FIXME:
+	The correct fix will be to modify the ModernTabArt class to also draw buttons on mouseover. 
+	m_hot_close_bmp = wxBitmap(close_hot_xpm);*/
     m_disabled_close_bmp = wxBitmap(close_disabled_xpm);
 }
 

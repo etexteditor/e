@@ -41,7 +41,7 @@ FILE_PERMISSIONS eDocumentPath::GetPermissions(const wxString& path) {
 #else
         // Get protection
 		struct stat s;
-		int res = stat(path.mb_str(wxConvUTF8), &s);
+		stat(path.mb_str(wxConvUTF8), &s);
 		return s.st_mode;
 #endif
 }

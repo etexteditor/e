@@ -1342,7 +1342,7 @@ search_result Document::RegExFind(const pcre* re, const pcre_extra* study, int s
 	// Copy match info from ovector to result struct
 	sr.error_code = rc;
 	if (rc >= 0) {
-		wxASSERT(ovector[0] >= 0 && ovector[1] <= (int)GetLength());
+		wxASSERT(ovector[0] >= 0 && ovector[0] <= (int)GetLength());
 		wxASSERT(ovector[1] >= ovector[0] && ovector[1] <= (int)GetLength());
 		sr.start = ovector[0];
 		sr.end = ovector[1];

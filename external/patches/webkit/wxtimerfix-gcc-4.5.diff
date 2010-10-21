@@ -1,0 +1,13 @@
+--- webkit/WebCore/platform/wx/SharedTimerWx.cpp.orig	2010-10-18 12:56:48.170000242 +0400
++++ webkit/WebCore/platform/wx/SharedTimerWx.cpp	2010-10-18 12:57:03.796000241 +0400
+@@ -47,9 +47,8 @@ class WebKitTimer: public wxTimer
+         virtual void Notify();
+ };
+ 
+-WebKitTimer::WebKitTimer()
++WebKitTimer::WebKitTimer() : wxTimer()
+ {
+-    wxTimer::wxTimer();
+ }
+ 
+ WebKitTimer::~WebKitTimer()

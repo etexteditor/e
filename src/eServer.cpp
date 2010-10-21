@@ -19,7 +19,7 @@ void eServer::destroy() {
 }
 
 hessian_ipc::connection* eServer::new_connection() {
-	return new eConnection(io_service_, connection_manager_, m_handler);
+	return new eIpcConnection(io_service_, connection_manager_, m_handler);
 }
 
 IIpcServer* NewIpcServer(IIpcHandler& handler) {

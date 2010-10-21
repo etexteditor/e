@@ -3071,7 +3071,7 @@ void EditorFrame::UpdateRecentFiles() {
 	for (unsigned int i = 0; i < m_recentFiles.GetCount(); i++) {
 		wxString filename = m_recentFiles[i];
 		if (i < 9)
-			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename.c_str());
 		m_recentFilesMenu->Append(4000 + i, filename);
 	}
 
@@ -3082,7 +3082,7 @@ void EditorFrame::UpdateRecentFiles() {
 	for (unsigned int i = 0; i < m_recentProjects.GetCount(); i++) {
 		wxString filename = m_recentProjects[i];
 		if (i < 9)
-			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename.c_str());
 		m_recentProjectsMenu->Append(4100 + i, filename);
 	}
 
@@ -4134,7 +4134,7 @@ void EditorFrame::OnDocChange(EditorFrame* self, void* data, int WXUNUSED(filter
 void EditorFrame::OnOpenDoc(EditorFrame* self, void* data, int WXUNUSED(filter)) {
 	if (!self->editorCtrl) return;
 
-	const uintptr_t docId = (uintptr_t)data;
+	const wxUIntPtr docId = (wxUIntPtr)data;
 	const doc_id di(DOCUMENT, docId, 0);
 
 	// If current doc is same just keep it

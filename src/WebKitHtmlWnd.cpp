@@ -19,7 +19,9 @@ BEGIN_EVENT_TABLE(wxBrowser, wxWebView)
 	EVT_WEBVIEW_BEFORE_LOAD(wxID_ANY, wxBrowser::OnBeforeLoad)
 END_EVENT_TABLE()
 
-wxBrowser::wxBrowser(wxWindow *parent, wxWindowID id) : wxWebView(parent, id), m_realLocation(wxT("")) {
+wxBrowser::wxBrowser(wxWindow *parent, wxWindowID id, const wxPoint& point, const wxSize& size) :
+	wxWebView(parent, id, point, size), m_realLocation(wxT(""))
+{
 	/* force JSC threading initialization until Webkit fix this */
 	wxWebView::SetPageSource(wxT("<html><head /><body /></html>"));
 }

@@ -47,7 +47,7 @@ template<class T> void Writer::write_notifier(unsigned int notifier_id, const T&
 
 template<class T> void Writer::write(const vector<T>& value) {
 	out.push_back(0x57); // tag for variable-length untyped list
-	for (vector<T>::const_iterator p = value.begin(); p != value.end(); ++p) {
+	for (typename vector<T>::const_iterator p = value.begin(); p != value.end(); ++p) {
 		write(*p);
 	}
 	out.push_back('Z');
@@ -57,7 +57,7 @@ template<class T1, class T2> void Writer::write(const map<T1,T2>& value) {
 	const size_t len = value.size();
 
 	out.push_back('H'); // tag for untyped map
-	for (map<T1,T2>::const_iterator p = value.begin(); p != value.end(); ++p) {
+	for (typename map<T1,T2>::const_iterator p = value.begin(); p != value.end(); ++p) {
 		write(*(p->first));
 		write(*(p->second));
 	}

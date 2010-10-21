@@ -11,8 +11,8 @@
  *
  ******************************************************************************/
 
-#ifndef __COMMANDPANEL_H__
-#define __COMMANDPANEL_H__
+#ifndef __INPUTPANEL_H__
+#define __INPUTPANEL_H__
 
 #include "wx/wxprec.h"
 #ifndef WX_PRECOMP
@@ -25,27 +25,28 @@
 // pre-definitions
 class EditorFrame;
 
-class CommandPanel : public wxPanel {
+class InputPanel : public wxPanel {
 public:
-	CommandPanel(EditorFrame& parentFrame, wxWindow* parent);
-	~CommandPanel() {};
+	InputPanel(EditorFrame& parentFrame, wxWindow* parent);
+	~InputPanel() {};
 
-	void ShowCommand(const wxString& cmd);
+	void Set(unsigned int notifier_id, const wxString& cmd);
+	unsigned int GetNotifierId() const {return m_notifier_id;};
 
 private:
 	// Event handlers
 	void OnCloseButton(wxCommandEvent& evt);
-	void OnIdle(wxIdleEvent& evt);
+	void OnInputChanged(wxCommandEvent& evt);
+	void OnInputEnter(wxCommandEvent& evt);
 	DECLARE_EVENT_TABLE();
 
 	// Member Ctrls
-	wxTextCtrl* m_commandbox;
-	wxStaticText* m_selStatic;
+	wxTextCtrl* m_inputbox;
+	wxStaticText* m_caption;
 
 	// Member variables
 	EditorFrame& m_parentFrame;
-	size_t m_rangeCount;
-	size_t m_selectionCount;
+	unsigned int m_notifier_id;
 };
 
-#endif //__COMMANDPANEL_H__
+#endif //__INPUTPANEL_H

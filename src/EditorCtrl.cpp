@@ -358,7 +358,7 @@ void EditorCtrl::RestoreSettings(unsigned int page_id, eFrameSettings& settings,
 	vector<unsigned int> bookmarks;
 
 	// Retrieve the page info
-	wxASSERT(0 <= page_id && page_id < (int)settings.GetPageCount());
+	wxASSERT(0 <= page_id && page_id < settings.GetPageCount());
 	settings.GetPageSettings(page_id, mirrorPath, di, newpos, topline, syntax, folds, bookmarks, (SubPage)subid);
 
 	if (eDocumentPath::IsRemotePath(mirrorPath)) {
@@ -3032,7 +3032,7 @@ bool EditorCtrl::SaveText(bool askforpath) {
 
 	if (askforpath || newpath.empty()) {
 		wxFileDialog dlg(this, _T("Save as..."), _T(""), _T(""), EditorFrame::DefaultFileFilters, wxSAVE|wxCHANGE_DIR);
-		dlg.SetPath( newpath.empty() ? _("Untitled") : newpath );
+		dlg.SetPath( newpath.empty() ? wxString(_("Untitled")) : newpath );
 
 		dlg.Centre();
 		if (dlg.ShowModal() != wxID_OK) return false;
@@ -3633,7 +3633,7 @@ void EditorCtrl::DeleteSelections() {
 				interval& r = m_searchRanges[i];
 				if (end <= r.end) {
 					// Adjust cursor
-					size_t& c = m_cursors[i];
+					unsigned int& c = m_cursors[i];
 					if (c == end) c = start;
 					else if (c > end) c -= len;
 
@@ -5019,7 +5019,8 @@ void EditorCtrl::AddSelection(unsigned int start, unsigned int end, bool allowEm
 	// The positions may come from unverified input
 	// So we have to make sure they are valid
 	cxLOCKDOC_READ(m_doc)
-		start = doc.GetValidCharPos(start);
+		if (start > doc.GetLength()) start = doc.GetLength();
+		else if (start != doc.GetLength()) start = doc.GetValidCharPos(start);
 		if (end > doc.GetLength()) end = doc.GetLength();
 		else if (end != doc.GetLength()) end = doc.GetValidCharPos(end);
 	cxENDLOCK
@@ -10205,7 +10206,7 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 		m_syntaxHandler.DoBundleAction(uuid, *this);
 
 	}
-	else return wxVariant(NULL, wxT("Unknown method"));
+	else return wxVariant((wxVariantData*)NULL, wxT("Unknown method"));
 
 	return wxVariant();
 }

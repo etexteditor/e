@@ -1,8 +1,8 @@
 VERBOSE=0
 DEBUG=0
 
-VERSION=1.0
-RELEASE=31
+VERSION=2.0
+RELEASE=1
 ROOTDIR=..
 
 ifeq ($(VERBOSE),0)
@@ -46,7 +46,7 @@ WXINCLUDES = $(shell $(EXT_DIR)/bin/wx-config --cppflags)
 
 GTKINCLUDES = $(shell pkg-config --cflags gtk+-2.0 cairo pango atk glib-2.0)
 
-OURINCLUDES = -I$(EXT_DIR)/include
+OURINCLUDES = -I$(EXT_DIR)/include -I$(ROOTDIR)/external/pcre/
 
 INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I$(ROOTDIR)/ecore -I.
 

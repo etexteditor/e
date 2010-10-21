@@ -35,7 +35,7 @@ public:
 
 	int compare(const unsigned char* string, int length) throw();
 
-	bool operator==(void* nullptr) const throw() {return m_seg_ptr == (const unsigned char*)nullptr;};
+	bool operator==(void* aptr) const throw() {return m_seg_ptr == (const unsigned char*)aptr;};
 	bool operator<(int ndx) const throw() {return m_index < ndx;};
 	bool operator==(const doc_byte_iter& dbi) const throw() {return m_index == dbi.m_index;};
 	bool operator!=(const doc_byte_iter& dbi) const throw() {return m_index != dbi.m_index;};

@@ -45,6 +45,10 @@ functions whose names all begin with "_pcre_". */
 #ifndef PCRE_INTERNAL_H
 #define PCRE_INTERNAL_H
 
+/* This is defined at external pcre which should be compiled with this key.
+In own turn internal pcre could use recursive calls for own needs */
+#undef NO_RECURSE
+
 /* Define DEBUG to get debugging output on stdout. */
 
 #if 0

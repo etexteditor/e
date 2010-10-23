@@ -53,8 +53,9 @@ INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I$(ROOTDIR)/ecore -I.
 OURLIBPATHS = -L$(EXT_DIR)/lib
 WXLIBS = $(shell $(EXT_DIR)/bin/wx-config --libs)
 WEBKIT_LIBS = -lwxwebkit -ljscore
+BOOST_LIBS = -lboost_system
 
-LIBS = $(OURLIBPATHS) -L$(ROOTDIR)/ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre -ltinyxml $(WEBKIT_LIBS) $(WXLIBS)
+LIBS = $(OURLIBPATHS) -L$(ROOTDIR)/ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre -ltinyxml $(WEBKIT_LIBS) $(WXLIBS) $(BOOST_LIBS)
 
 # Exceptions which do not need to be compiled on linux
 EXCEPT = CygwinDlg.cpp \
@@ -83,7 +84,7 @@ $(EXE): $(OBJS)
 	$(SILENT)$(CXX) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS) $(EXTOBJS)
 
 $(OUTDIR)/%.o: %.cpp
-	@-mkdir -p $(OUTDIR){,hessian_ipc,webconnect}
+	@-mkdir -p $(OUTDIR){,/hessian_ipc,/webconnect}
 	@$(ECHO) "[CC] $<"
 	$(SILENT)$(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@ $<
 

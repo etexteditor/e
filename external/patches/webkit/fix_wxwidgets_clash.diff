@@ -1,0 +1,20 @@
+--- ./webkit/WebCore/platform/wx/wxcode/gtk/scrollbar_render.cpp.orig	2010-10-24 01:49:03.999000077 +0400
++++ ./webkit/WebCore/platform/wx/wxcode/gtk/scrollbar_render.cpp	2010-10-24 01:49:20.773000078 +0400
+@@ -73,7 +73,7 @@ GtkWidget* GetButtonWidget()
+ }
+ 
+ 
+-GdkWindow* wxGetGdkWindowForDC(wxWindow* win, wxDC& dc)
++GdkWindow* wxWebKitGetGdkWindowForDC(wxWindow* win, wxDC& dc)
+ {
+     GdkWindow* gdk_window = NULL;
+ #if wxCHECK_VERSION(2, 9, 0)
+@@ -134,7 +134,7 @@ void wxRenderer_DrawScrollbar(wxWindow* 
+     renderer.DrawPushButton(window, dc, wxRect(x,y,buttonLength,buttonLength), wxStyleForPart(wxSCROLLPART_BACKBTNSTART, focusPart, hoverPart, flags));
+ 
+     GtkWidget* button = GetButtonWidget();
+-    GdkWindow* gdk_window = wxGetGdkWindowForDC(window, dc);
++    GdkWindow* gdk_window = wxWebKitGetGdkWindowForDC(window, dc);
+ 
+     GtkArrowType arrowType = GTK_ARROW_UP;
+     if (horiz)

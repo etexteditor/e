@@ -52,7 +52,7 @@ INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I$(ROOTDIR)/ecore -I.
 
 OURLIBPATHS = -L$(EXT_DIR)/lib
 WXLIBS = $(shell $(EXT_DIR)/bin/wx-config --libs)
-WEBKIT_LIBS = -lwxwebkit -lwebcore-wx -ljscore
+WEBKIT_LIBS = -lwxwebkit -ljscore
 
 LIBS = $(OURLIBPATHS) -L$(ROOTDIR)/ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre -ltinyxml $(WEBKIT_LIBS) $(WXLIBS)
 

@@ -13,6 +13,8 @@
 #ifndef __WXWEBCONNECT_WEBFRAME_H
 #define __WXWEBCONNECT_WEBFRAME_H
 
+// HACK wxWebKit and wxWebconnect both define wxWebFrame class so rename one of them
+#define wxWebFrame wxWebconnectFrame
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -36,7 +36,7 @@ template<class T> const Value& proxy::call(const string& method, const T& arg) {
 	m_writer.call(method, arg);
 	const string& out = m_writer.GetOutput();
 
-	return do_hessian_call(out);
+	return do_hessian_call(vector<unsigned char>(out.begin(), out.end()));
 }
 
 template<class T> int proxy::call_int(const string& method, const T& arg) {

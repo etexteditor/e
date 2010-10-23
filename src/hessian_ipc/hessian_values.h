@@ -76,6 +76,7 @@ namespace hessian_ipc {
 		void write(bool value);
 		void write(int value);
 		void write(unsigned int value);
+		void write(unsigned long value);
 		void write(long long value);
 		void write(const char* value);
 		void write(const string& value);

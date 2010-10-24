@@ -12,16 +12,20 @@ wxString normalize(wxString str);
 
 class KeyBinding {
 public:
-	KeyBinding(wxMenuItem* menuItem);
+	KeyBinding(wxMenuItem* menuItem, wxString& accel) :
+	  id(menuItem->GetId()), accel(accel) {}
 
-	wxMenuItem* menuItem;
+	KeyBinding(wxString accel, int id) : 
+	  accel(accel), id(id) {}
+
 	wxString accel, label, finalKey;
 	int id;
 };
 
 class KeyChord {
 public:
-	KeyChord(wxString chord) : key(chord) {}
+	KeyChord(wxString chord) : 
+	  key(chord) {}
 
 	wxString key;
 	std::map<int, KeyBinding*> bindings;
@@ -41,6 +45,8 @@ class Accelerators {
 public:
 	Accelerators(EditorFrame* editorFrame);
 
+	void DefineBinding(wxString accel, int id);
+
 	void ReadCustomShortcuts();
 	void SaveCustomShortcuts(wxString& jsonRoot);
 
@@ -48,6 +54,7 @@ public:
 	void ParseMenu(wxMenu* menu);
 	void ParseMenu(wxMenuItem* menuItem);
 	void InsertBinding(wxMenuItem* item, wxString& accel);
+	void InsertBinding(KeyBinding* binding);
 
 	void ParseBundlesMenu(wxMenu* menu);
 	void ParseBundlesMenu(wxMenuItem* item);
@@ -73,6 +80,7 @@ private:
 	EditorFrame* m_editorFrame;
 	std::map<int, KeyChord*> m_chords;
 	std::map<int, KeyBinding*> m_bindings;
+	std::vector<KeyBinding*> m_definedBindings;
 
 	std::map<int, BundleKeyChord*> m_bundleChords;
 	std::map<int, bool> m_bundleBindings;

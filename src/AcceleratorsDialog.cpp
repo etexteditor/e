@@ -131,9 +131,7 @@ void AcceleratorsDialog::ParseMenu(wxMenu* menu, int index, wxString label, int 
 	m_htmlBits.Add(wxT("<tr class='")+evenOdd(index)+menuClass+wxT("'>"));
 		m_htmlBits.Add(wxT("<td colspan='3' class='menuLabel")+levelClass+wxT("'>"));
 			m_htmlBits.Add(wxT("<a href='javascript:void(0);' class='expand' id='")+menuId+wxT("'>&rarr;</a>"));
-			m_htmlBits.Add(wxT("<span>"));
-				m_htmlBits.Add(encode(label));
-			m_htmlBits.Add(wxT("</span>"));
+			m_htmlBits.Add(encode(label));
 		m_htmlBits.Add(wxT("</td>"));
 	m_htmlBits.Add(wxT("</tr>"));
 

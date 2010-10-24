@@ -52,23 +52,21 @@ int makeHash(wxString& accel) {
 	if(accel.Lower().Contains(wxT("win"))) flags |= 0x0008;
 #endif
 
+	//Win is not recognized as a modifier, so wxwidgets will not auto-capitalize the key codes for us
+	code = wxToupper(code);
+
 	wxLogDebug(wxT("Hash for %s: %d %d %d"), accel, ((flags << 24) | code), flags, code);
 	return (flags << 24) | code;
-}
-
-KeyBinding::KeyBinding(wxMenuItem* menuItem) : menuItem(menuItem) {
-	label = menuItem->GetLabel();
-
-	const wxString& text = menuItem->GetText();
-	accel = text.Mid(text.Index('\t')+1);
-
-	id = menuItem->GetId();
 }
 
 Accelerators::Accelerators(EditorFrame* editorFrame) : 
 	m_editorFrame(editorFrame), m_activeChord(NULL), m_activeBundleChord(NULL) {
 	ReadCustomShortcuts();
 	Reset();
+}
+
+void Accelerators::DefineBinding(wxString accel, int id) {
+	m_definedBindings.push_back(new KeyBinding(accel, id));
 }
 
 /**
@@ -79,6 +77,11 @@ Accelerators::Accelerators(EditorFrame* editorFrame) :
 void Accelerators::ParseMenu() {
 	m_chords.clear();
 	m_bindings.clear();
+
+	for(int c = 0; c < m_definedBindings.size(); c++) {
+		// If the original binding is inserted, and it also appears on the menu, it will be deleted when the menu is reparsed and lead to a later segfault
+		InsertBinding(new KeyBinding(m_definedBindings[c]->accel, m_definedBindings[c]->id));
+	}
 
 	m_needDefault = m_defaultBindings.size() == 0;
 
@@ -150,28 +153,47 @@ void Accelerators::ParseMenu(wxMenuItem* item) {
 
 void Accelerators::InsertBinding(wxMenuItem* item, wxString& accel) {
 	if(accel.Len() == 0) return;
+	KeyBinding* binding = new KeyBinding(item, accel);
+	InsertBinding(binding);
+}
 
-	KeyBinding* binding = new KeyBinding(item);
+void Accelerators::InsertBinding(KeyBinding* binding) {
+	wxString& accel = binding->accel;
 
 	// now parse the accel for a chord
 	int pos = accel.Find(wxT(" "));
-	if(accel.Len() > 0 && pos != wxNOT_FOUND) {
+	if(pos != wxNOT_FOUND) {
 
 		wxString chordAccel = accel.Left(pos);
+		int chordHash = makeHash(chordAccel);
 		binding->finalKey = accel.Mid(pos+1).Trim();
 
 		std::map<int, KeyChord*>::iterator iterator;
-		iterator = m_chords.find(makeHash(chordAccel));
+		iterator = m_chords.find(chordHash);
 		KeyChord* chord;
 		if(iterator != m_chords.end()) {
 			chord = iterator->second;
 		} else {
 			chord = new KeyChord(chordAccel);
-			m_chords.insert(pair<int, KeyChord*>(makeHash(chordAccel), chord));
+			m_chords.insert(pair<int, KeyChord*>(chordHash, chord));
 		}
-		chord->bindings[makeHash(binding->finalKey)] = binding;
+
+		// Prevent a memory leak if there are duplicate bindings
+		int hash = makeHash(binding->finalKey);
+		std::map<int, KeyBinding*>::iterator bindingIterator = chord->bindings.find(hash);
+		if(bindingIterator != chord->bindings.end()) {
+			delete bindingIterator->second;
+		}
+		chord->bindings[hash] = binding;
 	} else {
-		m_bindings[makeHash(accel)] = binding;
+		// Prevent a memory leak if there are duplicate bindings
+		int hash = makeHash(accel);
+		std::map<int, KeyBinding*>::iterator bindingIterator = m_bindings.find(hash);
+		if(bindingIterator != m_bindings.end()) {
+			delete bindingIterator->second;
+		}
+
+		m_bindings[hash] = binding;
 	}
 }
 
@@ -477,16 +499,6 @@ bool Accelerators::MatchMenus(int hash) {
 		ResetChords();
 		return true;
 	} else {
-		// hack to support Ctrl-1-Ctrl-9 for switching tabs
-		wxString ctrl1 = wxT("Ctrl-1");
-		wxString ctrl9 = wxT("Ctrl-9");
-		if(hash >= makeHash(ctrl1) && hash <= makeHash(ctrl9)) {
-			int id = hash - makeHash(ctrl1) + 40000;
-			RunEvent(id, m_editorFrame);
-			ResetChords();
-			return true;
-		}
-
 		std::map<int, KeyChord*>::iterator iterator;
 		iterator = m_chords.find(hash);
 		if(iterator != m_chords.end()) {

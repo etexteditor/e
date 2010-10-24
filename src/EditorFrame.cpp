@@ -534,19 +534,22 @@ void EditorFrame::InitStatusbar() {
 
 void EditorFrame::InitAccelerators() {
 	m_accelerators = new Accelerators(this);
-	const unsigned int accelcount = 9;
-	wxAcceleratorEntry entries[accelcount];
-	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
-	entries[1].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
-	entries[2].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
-	entries[3].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
-	entries[4].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
-	entries[5].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'j', MENU_FIND_NEXT);
-	entries[6].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'k', MENU_FIND_PREVIOUS);
-	entries[7].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'l', MENU_FIND_REPLACE);
-	entries[8].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, ';', MENU_FIND_REPLACE_ALL);
-	wxAcceleratorTable accel(accelcount, entries);
-	SetAcceleratorTable(accel);
+	m_accelerators->DefineBinding(wxT("Ctrl-Shift-P"), MENU_SHIFT_PROJECT_FOCUS);
+	m_accelerators->DefineBinding(wxT("F3"), MENU_FIND_NEXT);
+	m_accelerators->DefineBinding(wxT("Shift-F3"), MENU_FIND_PREVIOUS);
+	m_accelerators->DefineBinding(wxT("Ctrl-F3"), MENU_FIND_CURRENT);
+	m_accelerators->DefineBinding(wxT("Ctrl-F4"), MENU_CLOSE);
+
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-J"), MENU_FIND_NEXT);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-K"), MENU_FIND_PREVIOUS);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-L"), MENU_FIND_REPLACE);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-;"), MENU_FIND_REPLACE_ALL);
+
+	for(int c = 1; c < 10; c++) {
+		wxString str;
+		str.Printf(wxT("Ctrl-%d"), c);
+		m_accelerators->DefineBinding(str, 40000+c);
+	}
 }
 
 void EditorFrame::InitMenus() {
@@ -4229,4 +4232,6 @@ bool EditorFrame::HandleChord(wxKeyEvent& event) {
 
 void EditorFrame::OnMenuCustomizeAccelerators(wxCommandEvent& WXUNUSED(event)) {
 	(AcceleratorsDialog(this)).ShowModal();
+	EditorCtrl* ctrl = GetEditorCtrl();
+	ctrl->DrawLayout();
 }

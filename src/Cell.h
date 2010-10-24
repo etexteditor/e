@@ -28,7 +28,7 @@ public:
 	explicit Cell(const wxDC& dc);
 	virtual ~Cell() {};
 	virtual void Destroy();
-	const int GetWidth();
+	int GetWidth();
 	void SetStyle(const wxColour& fc, const wxColour& bc);
 	virtual void DrawCell(int xoffset, int yoffset, const wxRect& rect)=0;
 

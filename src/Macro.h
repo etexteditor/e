@@ -122,7 +122,7 @@ public:
 
 	const eMacroCmd& GetCommand(size_t ndx) const {return m_cmds[ndx];};
 	eMacroCmd& GetCommand(size_t ndx) {m_isModified = true; return m_cmds[ndx];};
-	const void Last() const {m_cmds.back();};
+	void Last() const {m_cmds.back();};
 	eMacroCmd& Last() {m_isModified = true; return m_cmds.back();};
 
 	eMacroCmd& Add(const wxString& cmd) {

@@ -20,7 +20,7 @@ void Cell::Destroy() {
 	delete this;
 }
 
-const int Cell::GetWidth() {
+int Cell::GetWidth() {
 	return width;
 }
 

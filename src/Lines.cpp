@@ -674,7 +674,7 @@ void Lines::RemoveAllSelections(bool checkShadow, unsigned int pos) {
 }
 
 const vector<interval>& Lines::GetSelections() const { return selections; }
-const interval* const Lines::FirstSelection() const { return selections.empty() ? NULL : &(selections[0]); }
+const interval* Lines::FirstSelection() const { return selections.empty() ? NULL : &(selections[0]); }
 
 void Lines::Clear() {
 	ll->clear();

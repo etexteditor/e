@@ -1,5 +1,5 @@
---- ./webkit/WebCore/platform/wx/wxcode/gtk/scrollbar_render.cpp.orig	2010-10-24 01:49:03.999000077 +0400
-+++ ./webkit/WebCore/platform/wx/wxcode/gtk/scrollbar_render.cpp	2010-10-24 01:49:20.773000078 +0400
+--- webkit/WebCore/platform/wx/wxcode/gtk/scrollbar_render.cpp.orig	2010-10-24 01:49:03.999000077 +0400
++++ webkit/WebCore/platform/wx/wxcode/gtk/scrollbar_render.cpp	2010-10-24 01:49:20.773000078 +0400
 @@ -73,7 +73,7 @@ GtkWidget* GetButtonWidget()
  }
  

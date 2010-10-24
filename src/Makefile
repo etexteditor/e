@@ -84,7 +84,7 @@ $(EXE): $(OBJS)
 	$(SILENT)$(CXX) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS) $(EXTOBJS)
 
 $(OUTDIR)/%.o: %.cpp
-	@-mkdir -p $(OUTDIR){,/hessian_ipc,/webconnect}
+	@-mkdir -p $(OUTDIR) $(OUTDIR)/hessian_ipc $(OUTDIR)/webconnect
 	@$(ECHO) "[CC] $<"
 	$(SILENT)$(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@ $<
 

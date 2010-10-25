@@ -17,6 +17,7 @@
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 #include <wx/spinctrl.h>
+#include <wx/protocol/http.h>
 
 #include "EnvVarsPanel.h"
 
@@ -483,7 +484,13 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void SettingsDlg::OnButtonCheckForUpdates(wxCommandEvent& WXUNUSED(event)) {
-	CheckForUpdates(m_settings, GetAppVersion(), true);
+	wxHTTP* http = new wxHTTP;
+	m_checkForUpdatesButton->SetLabel(wxT("Checking..."));
+	bool available = DoCheckForUpdates(http, GetAppVersion());
+	if(!available) {
+		wxMessageBox(wxT("No new updates available."));
+	}
+	m_checkForUpdatesButton->SetLabel(wxT("Check Now"));
 }
 
 void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {

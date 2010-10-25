@@ -45,12 +45,7 @@ void CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck) {
 	if (updater->Create() == wxTHREAD_NO_ERROR)	updater->Run();
 }
 
-
-// Checking for updates is done in a seperate thread since the
-// socket can block for some time and we don't want the main thread
-// to lock up
-
-void* UpdaterThread::Entry() {
+bool DoCheckForUpdates(wxHTTP* m_http, AppVersion* m_info) {
 	wxASSERT(m_http);
 
 	// Set a cookie so the server can count unique requests
@@ -103,7 +98,16 @@ void* UpdaterThread::Entry() {
 	delete m_http;
 	delete m_info;
 
-	if (newrelease) {
+	return newrelease;
+}
+
+
+// Checking for updates is done in a seperate thread since the
+// socket can block for some time and we don't want the main thread
+// to lock up
+
+void* UpdaterThread::Entry() {
+	if(DoCheckForUpdates(m_http, m_info)) {
 		// Notify main thread that there are new updates available
 		wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, ID_UPDATES_AVAILABLE);
 		wxTheApp->AddPendingEvent(event);

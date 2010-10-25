@@ -9,6 +9,8 @@ enum {
 
 class ISettings;
 class AppVersion;
+class wxHTTP;
 void CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck=false);
+bool DoCheckForUpdates(wxHTTP* http, AppVersion* info);
 
 #endif

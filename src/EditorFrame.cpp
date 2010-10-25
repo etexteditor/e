@@ -1395,7 +1395,7 @@ void EditorFrame::UpdateTabs() {
 		if (!name.empty()) title = name;
 		else title = _("Untitled");
 		
-		if (editorCtrl->IsModified()) {
+		if (page->IsModified()) {
 #ifdef __WXMSW__
 			wxString modifiedBug = wxT("\x2022 ");
 			title = modifiedBug + title;

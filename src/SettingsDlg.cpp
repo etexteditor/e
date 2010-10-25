@@ -145,7 +145,7 @@ wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
 	}
 
 	// Last update label
-	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update:"));
+	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update Check:"));
 	sizer->Add(labelLastUpdate , 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	wxStaticText* labelWhen= new wxStaticText(page, wxID_ANY, when);

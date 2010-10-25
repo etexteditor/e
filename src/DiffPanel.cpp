@@ -44,7 +44,7 @@ DiffPanel::DiffPanel(wxWindow* parent, EditorFrame& parentFrame, CatalystWrapper
 	m_leftEditor->SetScrollbarLeft();
 	m_rightEditor->SetGutterRight();
 	
-	m_diffBar = new DiffBar(this, cw, m_leftEditor, m_rightEditor);
+	m_diffBar = new DiffBar(this, cw, m_leftEditor, m_rightEditor, parentFrame.GetSyntaxHandler());
 	m_leftMarkBar = new DiffMarkBar(this, m_diffBar->GetLineMatches(), m_leftEditor, true);
 	m_rightMarkBar = new DiffMarkBar(this, m_diffBar->GetLineMatches(), m_rightEditor, false);
 

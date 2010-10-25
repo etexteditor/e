@@ -399,6 +399,7 @@ void TmSyntaxHandler::LoadBundles(cxBundleLoad mode) {
 	}
 
 	m_bundleMenu = new wxMenu;
+	m_nextMenuID = 9000;
 
 	// Get the list of all bundles
 	m_bundleList = m_plistHandler.GetBundles();
@@ -503,11 +504,52 @@ void TmSyntaxHandler::ReParseBundles(bool onlyMenu) {
 		ParseInfo(infoDict, *bundle);
 	}
 
+	
 	// Notify that bundle actions have been reloaded
 	m_dispatcher.Notify(wxT("BUNDLE_ACTIONS_RELOADED"), NULL, 0);
 }
 
+// With multiple windows open, the dispatcher would be called for each window
+// This caused m_bundleMenu to be set to NULL before it could be set in the second window.
 wxMenu* TmSyntaxHandler::GetBundleMenu() {
+	if(m_bundleMenu == NULL) {
+		vector<unsigned int> bundles = m_plistHandler.GetBundles();
+
+		// Build a map of the bundles that are already parsed
+		map<unsigned int, tmBundle*> parsedBundles;
+		for (unsigned int i = 0; i < m_bundles.size(); ++i) {
+			const unsigned int bundleId = m_bundles[i]->bundleRef;
+			parsedBundles[bundleId] = m_bundles[i];
+		}
+
+		delete m_bundleMenu;
+		m_nextMenuID = 9000; // range is 9000-11999
+		m_bundleMenu = new wxMenu;
+		
+
+		// Parse Bundles
+		for (unsigned int b = 0; b < bundles.size(); ++b) {
+			const unsigned int bundleId = bundles[b];
+
+			// Check if we already have this bundle
+			tmBundle* bundle;
+			map<unsigned int, tmBundle*>::const_iterator p = parsedBundles.find(bundleId);
+			if (p != parsedBundles.end()) bundle = p->second;
+			else {
+				bundle = new tmBundle;
+				bundle->bundleRef = bundleId;
+				bundle->path = m_plistHandler.GetBundlePath(bundleId);
+
+				// Add new bundle to list
+				m_bundles.push_back(bundle);
+			}
+
+			// Parse Bundle info
+			const PListDict infoDict = m_plistHandler.GetBundleInfo(bundleId);
+			ParseInfo(infoDict, *bundle);
+		}
+	}
+
 	// The menu will be owned by reciever so we set
 	// our ref to NULL to avoid double deletion
 	wxMenu* m = m_bundleMenu;

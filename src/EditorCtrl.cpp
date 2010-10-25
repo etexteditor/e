@@ -6113,9 +6113,29 @@ bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext
 	unsigned int byte_len = 0;
 
 	if (options & FIND_USE_REGEX) {
-		// We need to search again to get captures
+		// Find match
+		search_result result;
+		unsigned int start_pos = iv.start;
 		map<unsigned int,interval> captures;
-		const search_result result = RegExFind(searchtext, iv.start, options & FIND_MATCHCASE, &captures);
+		bool matchcase = options & FIND_MATCHCASE;
+		result.error_code = -1;
+
+		if (m_searchRanges.empty()) {
+			cxLOCKDOC_READ(m_doc)
+				result = doc.RegExFind(searchtext, start_pos, matchcase, &captures);
+			cxENDLOCK
+		}
+		else {
+			vector<interval>::iterator p = m_searchRanges.begin();
+			for (; p != m_searchRanges.end(); ++p) {
+				if (start_pos < p->start) start_pos = p->start;
+
+				cxLOCKDOC_READ(m_doc)
+					result = doc.RegExFind(searchtext, start_pos, matchcase, &captures, p->end);
+				cxENDLOCK
+				if (result.error_code >= 0) break; // match found or error
+			}
+		}
 
 		if (result.error_code >= 0) {
 			const wxString new_replacetext = ParseReplaceString(replacetext, captures);
@@ -6123,7 +6143,6 @@ bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext
 			byte_len = RawInsert(iv.start, new_replacetext, false);
 			m_lines.SetPos(iv.start + byte_len); // move to end of insertion
 		}
-		else wxASSERT(false);
 	}
 	else {
 		RawDelete(iv.start, iv.end);

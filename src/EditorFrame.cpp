@@ -1110,17 +1110,39 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	const unsigned int count = paths.GetCount();
 	for (unsigned int i = 0; i < count; ++i) {
 		const wxString& path = paths[i];
+		bool close = false;
+
+		wxDateTime modTime = modDates[i];
+		if(!modTime.IsValid()) {
+			int answer = wxMessageBox(wxString::Format(wxT("Unable to read file %s.  Would you like to close it?"), path), wxT("Error"), wxYES_NO);
+			if(answer == wxYES) {
+				close = true;
+			}
+		}
 
 		// Find doc with current path
 		const unsigned int pageCount = m_tabBar->GetPageCount();
-		for (unsigned int p = 0; p < pageCount; ++p) {
+		unsigned int p;
+		for (p = 0; p < pageCount; ++p) {
 			const EditorCtrl* page = GetEditorCtrlFromPage(p);
 			const wxString filePath = page->GetPath();
 			if (path == filePath) {
-				pathsToPages.push_back(p);
-				pageDates.push_back(modDates[i]);
+				if(!close) {
+					pathsToPages.push_back(p);
+					pageDates.push_back(modDates[i]);
+				}
 				break;
 			}
+		}
+
+		if(close && p < pageCount) {	
+			Freeze(); // optimize redrawing
+			DeletePage(p, true);
+
+			// If we deleted last editCtrl, then we have to create a new empty one
+			if (m_tabBar->GetPageCount() == 0) AddTab();
+
+			Thaw(); // optimize redrawing
 		}
 	}
 

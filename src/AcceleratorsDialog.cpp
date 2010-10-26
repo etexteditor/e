@@ -60,7 +60,7 @@ AcceleratorsDialog::AcceleratorsDialog(EditorFrame *parent):
 	delete html;
 
 	SetSizer(mainSizer);
-	SetSize(570, 580);
+	SetSize(750, 580);
 	Centre();
 }
 
@@ -90,7 +90,12 @@ void AcceleratorsDialog::ParseMenu() {
 	m_htmlBits.clear();
 	m_id = 0;
 	
-	m_htmlBits.Add(wxT("<table id='mainTable' cellspacing='0' cellpadding='0'>"));
+	m_htmlBits.Add(wxT("<table id='mainTable' cellspacing='0' cellpadding='0'> \
+			<tr id='header'> \
+				<th>Menu Item</th> \
+				<th>Default Binding</th> \
+				<th>Custom Binding</th> \
+			</tr>"));
 
 	wxMenuBar* menuBar = m_editorFrame->GetMenuBar();
 	if(!menuBar) return;

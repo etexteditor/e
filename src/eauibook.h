@@ -14,6 +14,7 @@ public:
 	int PageToTab(size_t page_idx);
     int TabToPage(size_t tab_idx);
 
+	void ChangeTab(bool forward, bool wrap_around);
 	void SelectNextTab(bool wrap_around=true);
 	void SelectPrevTab(bool wrap_around=true);
 

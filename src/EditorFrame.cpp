@@ -58,6 +58,7 @@
 #include "DocHistory.h"
 #include "eDocumentPath.h"
 #include "SearchPanel.h"
+#include "CommandPanel.h"
 #include "StatusBar.h"
 #include "DirWatcher.h"
 #include "FindInProjectDlg.h"
@@ -70,6 +71,9 @@
 #include "DiffDirPane.h"
 #include "SnippetList.h"
 #include "ClipboardHistoryPane.h"
+#include "Accelerators.h"
+#include "AcceleratorsDialog.h"
+#include "InputPanel.h"
 
 #ifdef __WXMSW__
 // For multi-monitor-aware position restore on Windows, include WinUser.h
@@ -250,6 +254,10 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_MANAGE_BUNDLES, EditorFrame::OnMenuManageBundles)
 	EVT_MENU(MENU_KEYDIAG, EditorFrame::OnMenuKeyDiagnostics)
 
+	EVT_MENU(MENU_MACRO_REC, EditorFrame::OnMenuMacroRec)
+	EVT_MENU(MENU_MACRO_PLAY, EditorFrame::OnMenuMacroPlay)
+	EVT_MENU(MENU_MACRO_EDIT, EditorFrame::OnMenuMacroEdit)
+
 	// Dynamic sub-menus
 	EVT_MENU_RANGE(1000, 1999, EditorFrame::OnSubmenuSyntax)
 	EVT_MENU_RANGE(2000, 2999, EditorFrame::OnSubmenuEncoding)
@@ -290,6 +298,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_MODE, EditorFrame::OnMenuNavigateSelections)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_NEXT, EditorFrame::OnMenuNavigateSelectionsNext)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_PREVIOUS, EditorFrame::OnMenuNavigateSelectionsPrevious)
+	EVT_MENU(MENU_ACCELERATORS, EditorFrame::OnMenuCustomizeAccelerators)
 
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
@@ -298,6 +307,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(MENU_INCOMMING_TOOLBAR, EditorFrame::OnMenuIncommingTool)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
 	//EVT_MENU(wxID_PREVIEW, EditorFrame::OnMenuPrintPreview)
+
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
@@ -364,6 +374,16 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		box->Add(m_searchPanel, 0, wxEXPAND);
 		box->Show(m_searchPanel, false);
 
+		// Create and add the commandpanel
+		m_commandPanel = new CommandPanel(*this, panel);
+		box->Add(m_commandPanel, 0, wxEXPAND);
+		box->Show(m_commandPanel, false);
+
+		// Create and add the inputpanel
+		m_inputPanel = new InputPanel(*this, panel);
+		box->Add(m_inputPanel, 0, wxEXPAND);
+		box->Show(m_inputPanel, false);
+
 		// Layout main components
 		box->Layout();
 		panel->SetSizer(box);
@@ -386,6 +406,10 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 		// Project dock
 		m_projectPane = new ProjectPane(*this, this);
 		m_frameManager.AddPane(m_projectPane, wxAuiPaneInfo().Name(wxT("Project")).Left().Caption(_("Project")).BestSize(wxSize(150,50)));
+
+		// Macro Pane
+		m_macroPane = new MacroPane(*this, this, m_macro);
+		m_frameManager.AddPane(m_macroPane, wxAuiPaneInfo().Name(wxT("Macro")).Hide().Right().Caption(_("Macro")).BestSize(wxSize(150,50)));
 
 		// See if we have saved the layout of the panes
 		wxString perspective;
@@ -509,19 +533,23 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
-	const unsigned int accelcount = 9;
-	wxAcceleratorEntry entries[accelcount];
-	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
-	entries[1].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
-	entries[2].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
-	entries[3].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
-	entries[4].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
-	entries[5].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'j', MENU_FIND_NEXT);
-	entries[6].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'k', MENU_FIND_PREVIOUS);
-	entries[7].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, 'l', MENU_FIND_REPLACE);
-	entries[8].Set(wxACCEL_CTRL|wxACCEL_ALT|wxACCEL_SHIFT, ';', MENU_FIND_REPLACE_ALL);
-	wxAcceleratorTable accel(accelcount, entries);
-	SetAcceleratorTable(accel);
+	m_accelerators = new Accelerators(this);
+	m_accelerators->DefineBinding(wxT("Ctrl-Shift-P"), MENU_SHIFT_PROJECT_FOCUS);
+	m_accelerators->DefineBinding(wxT("F3"), MENU_FIND_NEXT);
+	m_accelerators->DefineBinding(wxT("Shift-F3"), MENU_FIND_PREVIOUS);
+	m_accelerators->DefineBinding(wxT("Ctrl-F3"), MENU_FIND_CURRENT);
+	m_accelerators->DefineBinding(wxT("Ctrl-F4"), MENU_CLOSE);
+
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-J"), MENU_FIND_NEXT);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-K"), MENU_FIND_PREVIOUS);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-L"), MENU_FIND_REPLACE);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-;"), MENU_FIND_REPLACE_ALL);
+
+	for(int c = 1; c < 10; c++) {
+		wxString str;
+		str.Printf(wxT("Ctrl-%d"), c);
+		m_accelerators->DefineBinding(str, 40000+c);
+	}
 }
 
 void EditorFrame::InitMenus() {
@@ -622,6 +650,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
+	editMenu->Append(MENU_ACCELERATORS, _("&Keyboard Shortcuts..."), _("Edit Keyboard Shortcuts"));
 	menuBar->Append(editMenu, _("&Edit"));
 
 	// View menu
@@ -681,7 +710,7 @@ void EditorFrame::InitMenus() {
 	textMenu->Append(MENU_TABSTOSPACES, _("&Tabs to Spaces"), _("Tabs to Spaces"));
 	textMenu->Append(MENU_SPACESTOTABS, _("&Spaces to Tabs"), _("Spaces to Tabs"));
 	textMenu->AppendSeparator();
-	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tEscape"), _("Complete Word"));
+	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tCtrl-Space"), _("Complete Word"));
 	textMenu->AppendSeparator();
 	textMenu->Append(MENU_FILTER, _("&Filter Through Command...\tCtrl-H"), _("Filter Through Command..."));
 	textMenu->Append(MENU_RUN, _("&Run current line/selection\tCtrl-Alt-R"), _("Run current line/selection"));
@@ -741,6 +770,7 @@ void EditorFrame::InitMenus() {
 
 	// associate the menu bar with the frame
 	SetMenuBar(menuBar);
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::RestoreState() {
@@ -863,7 +893,12 @@ wxMenu* EditorFrame::GetBundleMenu() {
 	if (!bundleMenu) bundleMenu = new wxMenu;
 
 	bool enableDebug = false; // default setting
-	m_settings.GetSettingBool(wxT("bundleDebug"), enableDebug);
+	m_generalSettings.GetSettingBool(wxT("bundleDebug"), enableDebug);
+
+	wxMenu *macroMenu = new wxMenu;
+	macroMenu->Append(MENU_MACRO_REC, _("&Start Recording"), _("Start Recording"));
+	macroMenu->Append(MENU_MACRO_PLAY, _("&Play Macro"), _("Play Macro"));
+	macroMenu->Append(MENU_MACRO_EDIT, _("&Edit Macro"), _("Edit Macro"), wxITEM_CHECK);
 
 	wxMenu *funcMenu = new wxMenu;
 	funcMenu->Append(MENU_EDIT_BUNDLES, _("Show Bundle &Editor\tCtrl-Shift-B"), _("Show Bundle Editor"), wxITEM_CHECK);
@@ -875,6 +910,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_BUNDLE_FUNCTIONS, _("&Edit Bundles"), funcMenu,  _("Edit Bundles"));
+	bundleMenu->Prepend(MENU_MACRO_FUNCTIONS, _("Macros"), macroMenu,  _("Edit Macros"));
 	bundleMenu->PrependSeparator();
 	bundleMenu->Prepend(MENU_FINDCMD, _("&Select Bundle Item...\tCtrl-Alt-T"), _("Select Bundle Item..."));
 
@@ -893,6 +929,8 @@ void EditorFrame::ResetBundleMenu() {
 	// Insert new bundles menu
 	wxMenu* bundleMenu = GetBundleMenu();
 	menuBar->Insert(menuNdx, bundleMenu, _("&Bundles"));
+
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::ResetSyntaxMenu() {
@@ -909,6 +947,8 @@ void EditorFrame::ResetSyntaxMenu() {
 		m_syntaxMenu->Append(item);
         item->AfterInsert();
 	}
+
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::CreateEncodingMenu(wxMenu& menu) const {
@@ -1070,17 +1110,39 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	const unsigned int count = paths.GetCount();
 	for (unsigned int i = 0; i < count; ++i) {
 		const wxString& path = paths[i];
+		bool close = false;
+
+		wxDateTime modTime = modDates[i];
+		if(!modTime.IsValid()) {
+			int answer = wxMessageBox(wxString::Format(wxT("Unable to read file %s.  Would you like to close it?"), path), wxT("Error"), wxYES_NO);
+			if(answer == wxYES) {
+				close = true;
+			}
+		}
 
 		// Find doc with current path
 		const unsigned int pageCount = m_tabBar->GetPageCount();
-		for (unsigned int p = 0; p < pageCount; ++p) {
+		unsigned int p;
+		for (p = 0; p < pageCount; ++p) {
 			const EditorCtrl* page = GetEditorCtrlFromPage(p);
 			const wxString filePath = page->GetPath();
 			if (path == filePath) {
-				pathsToPages.push_back(p);
-				pageDates.push_back(modDates[i]);
+				if(!close) {
+					pathsToPages.push_back(p);
+					pageDates.push_back(modDates[i]);
+				}
 				break;
 			}
+		}
+
+		if(close && p < pageCount) {	
+			Freeze(); // optimize redrawing
+			DeletePage(p, true);
+
+			// If we deleted last editCtrl, then we have to create a new empty one
+			if (m_tabBar->GetPageCount() == 0) AddTab();
+
+			Thaw(); // optimize redrawing
 		}
 	}
 
@@ -1355,7 +1417,7 @@ void EditorFrame::UpdateTabs() {
 		if (!name.empty()) title = name;
 		else title = _("Untitled");
 		
-		if (editorCtrl->IsModified()) {
+		if (page->IsModified()) {
 #ifdef __WXMSW__
 			wxString modifiedBug = wxT("\x2022 ");
 			title = modifiedBug + title;
@@ -1370,7 +1432,14 @@ void EditorFrame::UpdateTabs() {
 }
 
 // May be NULL, always check in reciever
-EditorCtrl* EditorFrame::GetEditorCtrl() { return editorCtrl; }
+EditorCtrl* EditorFrame::GetEditorCtrl() const { return editorCtrl; }
+
+// May be NULL, always check in reciever
+EditorCtrl* EditorFrame::GetEditorCtrl(int winId) const {
+	wxWindow* editor = FindWindowById(winId, this);
+	return (EditorCtrl*)editor;
+}
+
 // May be NULL, always check in reciever. Downcast.
 IEditorSearch* EditorFrame::GetSearch() { return editorCtrl; }
 
@@ -1473,11 +1542,12 @@ const map<wxString,wxString>& EditorFrame::GetProjectEnv() const {
 	return m_projectPane->GetEnv();
 }
 
-bool EditorFrame::OpenTxmtUrl(const wxString& url) {
-	if (!url.StartsWith(wxT("txmt:"))) return false;
+bool EditorFrame::OpenTxmtUrl(const wxString& rawurl) {
+	if (!rawurl.StartsWith(wxT("txmt:"))) return false;
+	const wxString url = URLDecode(rawurl);
 
 	// get file, line & column
-	static wxRegEx fileRx(wxT("[&?]url=file://([^&]+)"));
+	static wxRegEx fileRx(wxT("[&?]url=file:///?([^&]+)"));
 	static wxRegEx bundleRx(wxT("[&?]url=(bundle://[^&]+)"));
 	static wxRegEx lineRx(wxT("[&?]line=([[:digit:]]+)"));
 	static wxRegEx columnRx(wxT("[&?]column=([[:digit:]]+)"));
@@ -1508,8 +1578,6 @@ bool EditorFrame::OpenTxmtUrl(const wxString& url) {
 	}
 
 	if (!file.empty()) {
-		file = URLDecode(file);
-
 #ifdef __WXMSW__
 		// path may be in unix format, so we have to convert it
 		if (!isBundleItem) file = eDocumentPath::CygwinPathToWin(file);
@@ -1654,6 +1722,16 @@ void EditorFrame::ShowProjectPane(const wxString& project) {
 
 	// Bring frame to front
 	BringToFront();
+}
+
+void EditorFrame::SaveMacro() {
+	if (!IsBundlePaneShownAndSelected() || m_macro.IsEmpty()) return;
+
+	m_bundlePane->NewItem(BUNDLE_MACRO, &m_macro);
+}
+
+bool EditorFrame::IsBundlePaneShownAndSelected() const {
+	return (m_bundlePane && m_bundlePane->IsShown() && m_bundlePane->HasSelection());
 }
 
 void EditorFrame::ShowBundlePane() {
@@ -2081,6 +2159,9 @@ void EditorFrame::SaveAllFilesInProject() {
 
 void EditorFrame::ShowSearch(bool show, bool replace) {
 	if (show) {
+		if (box->IsShown(m_commandPanel)) ShowCommandMode(false);
+		else if (box->IsShown(m_inputPanel)) HideInputPanel(); 
+
 		m_searchPanel->InitSearch(editorCtrl->GetSelFirstLine(), replace);
 		box->Show(m_searchPanel);
 	}
@@ -2093,6 +2174,50 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 }
 
 bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
+
+void EditorFrame::ShowCommandMode(bool show) {
+	if (show) {
+		if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel);
+		else if (box->IsShown(m_inputPanel)) HideInputPanel(); 
+		box->Show(m_commandPanel);
+	}
+	else {
+		box->Hide(m_commandPanel);
+		editorCtrl->CommandModeEnded();
+		editorCtrl->SetFocus();
+	}
+	box->Layout();
+}
+
+void EditorFrame::ShowCommand(const wxString& cmd) {
+	m_commandPanel->ShowCommand(cmd);
+}
+
+bool EditorFrame::IsCommandMode() const {
+	return m_commandPanel->IsShown();
+}
+
+void EditorFrame::ShowInputPanel(unsigned int notifier_id, const wxString& caption) {
+	m_inputPanel->Set(notifier_id, caption);
+
+	if (box->IsShown(m_searchPanel)) box->Hide(m_searchPanel); 
+	else if (box->IsShown(m_commandPanel)) box->Hide(m_commandPanel); 
+	box->Show(m_inputPanel);
+	box->Layout();
+
+	m_inputPanel->SetFocus();
+}
+
+void EditorFrame::HideInputPanel() {
+	wxGetApp().OnInputLineClosed(m_inputPanel->GetNotifierId());
+
+	box->Hide(m_inputPanel);
+	box->Layout();
+}
+
+void EditorFrame::OnInputPanelChanged(unsigned int notifier_id, const wxString& text) {
+	wxGetApp().OnInputLineChanged(notifier_id, text);
+}
 
 bool EditorFrame::GetSetting(const wxString& name) const {
 	if (name == wxT("search/highlight")) return m_searchHighlight;
@@ -2233,6 +2358,16 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	wxMenuItem* saveasItem = GetMenuBar()->FindItem(wxID_SAVEAS);
 	saveasItem->Enable(!editorCtrl->IsBundleItem());
 
+	// Macros
+	wxMenuItem* macroEdit = GetMenuBar()->FindItem(MENU_MACRO_EDIT);
+	wxAuiPaneInfo& macroPane = m_frameManager.GetPane(wxT("Macro"));
+	if (macroEdit) macroEdit->Check(macroPane.IsShown());
+	wxMenuItem* macroRec = GetMenuBar()->FindItem(MENU_MACRO_REC);
+	if (macroRec) {
+		if (m_macro.IsRecording()) macroRec->SetItemLabel(_("&Stop Recording"));
+		else macroRec->SetItemLabel(_("&Start Recording"));
+	}
+
 	// We handle key events on our own, so disable accels (from menus)
 	//SetAcceleratorTable(wxNullAcceleratorTable);
 }
@@ -2270,7 +2405,7 @@ void EditorFrame::ShowBundleManager() {
 
 void EditorFrame::OnMenuDebugBundles(wxCommandEvent& event) {
 	const bool enableDebug = event.IsChecked();
-	m_settings.SetSettingBool(wxT("bundleDebug"), enableDebug);
+	m_generalSettings.SetSettingBool(wxT("bundleDebug"), enableDebug);
 }
 
 void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
@@ -2286,6 +2421,21 @@ void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
 		if (!bundlePath.empty()) OpenRemoteFile(bundlePath);
 	}
 	else m_syntax_handler.DoBundleAction(event.GetId(), *editorCtrl);
+}
+
+void EditorFrame::OnMenuMacroRec(wxCommandEvent& WXUNUSED(event)) {
+	m_macro.ToogleRecording();
+}
+
+void EditorFrame::OnMenuMacroPlay(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->PlayMacro();
+	editorCtrl->ReDraw();
+}
+
+void EditorFrame::OnMenuMacroEdit(wxCommandEvent& WXUNUSED(event)) {
+	wxAuiPaneInfo& macroPane = m_frameManager.GetPane(wxT("Macro"));
+	macroPane.Show(!macroPane.IsShown()); // Toogle snown/hidden
+	m_frameManager.Update();
 }
 
 void EditorFrame::OnMenuKeyDiagnostics(wxCommandEvent& event) {
@@ -2708,7 +2858,7 @@ void EditorFrame::OnMenuSelectAll(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void EditorFrame::OnMenuSelectWord(wxCommandEvent& WXUNUSED(event)) {
-	editorCtrl->SelectWord(editorCtrl->GetPos());
+	editorCtrl->SelectWord();
 	editorCtrl->ReDraw();
 }
 
@@ -2825,7 +2975,7 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 void EditorFrame::OnMenuNextTab(wxCommandEvent& evt) {
 	// The user may have configured it to go to last active tab
 	bool gotoLastTab = false;
-	m_settings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
+	m_generalSettings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
 	if (gotoLastTab) {
 		OnMenuLastTab(evt);
 		return;
@@ -2946,7 +3096,7 @@ void EditorFrame::UpdateRecentFiles() {
 	for (unsigned int i = 0; i < m_recentFiles.GetCount(); i++) {
 		wxString filename = m_recentFiles[i];
 		if (i < 9)
-			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename.c_str());
 		m_recentFilesMenu->Append(4000 + i, filename);
 	}
 
@@ -2957,7 +3107,7 @@ void EditorFrame::UpdateRecentFiles() {
 	for (unsigned int i = 0; i < m_recentProjects.GetCount(); i++) {
 		wxString filename = m_recentProjects[i];
 		if (i < 9)
-			filename = wxString::Format(wxT("&%d %s"), i+1, filename);
+			filename = wxString::Format(wxT("&%d %s"), i+1, filename.c_str());
 		m_recentProjectsMenu->Append(4100 + i, filename);
 	}
 
@@ -3638,7 +3788,7 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 		if (!m_inAskReload) {
 			// Should we check for changed files?
 			bool doCheckChange = true;  // default
-			m_settings.GetSettingBool(wxT("checkChange"), doCheckChange);
+			m_generalSettings.GetSettingBool(wxT("checkChange"), doCheckChange);
 
 			// Check if any open files have been modified (in separate thread)
 			if (doCheckChange)
@@ -4009,7 +4159,7 @@ void EditorFrame::OnDocChange(EditorFrame* self, void* data, int WXUNUSED(filter
 void EditorFrame::OnOpenDoc(EditorFrame* self, void* data, int WXUNUSED(filter)) {
 	if (!self->editorCtrl) return;
 
-	const uintptr_t docId = (uintptr_t)data;
+	const wxUIntPtr docId = (wxUIntPtr)data;
 	const doc_id di(DOCUMENT, docId, 0);
 
 	// If current doc is same just keep it
@@ -4096,4 +4246,14 @@ void EditorFrame::OnMenuNavigateSelectionsPrevious(wxCommandEvent& WXUNUSED(even
 	EditorCtrl* ec = GetEditorCtrl();
 	if(!ec) return;
 	ec->PreviousSelection();
+}
+
+bool EditorFrame::HandleChord(wxKeyEvent& event) {
+	return m_accelerators->HandleKeyEvent(event);
+}
+
+void EditorFrame::OnMenuCustomizeAccelerators(wxCommandEvent& WXUNUSED(event)) {
+	(AcceleratorsDialog(this)).ShowModal();
+	EditorCtrl* ctrl = GetEditorCtrl();
+	ctrl->DrawLayout();
 }

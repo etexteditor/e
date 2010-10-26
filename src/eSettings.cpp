@@ -34,7 +34,10 @@ eSettings::eSettings() {
 	haveApp = true;
 }
 
+eSettings::~eSettings() {}
+
 void eSettings::Load(const wxString& appDataPath) {
+	m_settingsDir = appDataPath;
 	m_path = appDataPath + wxT("e.cfg");
 
 	// Open the settings file

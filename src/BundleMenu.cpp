@@ -15,7 +15,9 @@
 #include "tmAction.h"
 
 #ifdef __WXGTK__
+#define GSocket GlibGSocket
 #include <gtk/gtk.h>
+#undef GSocket
 
 void BundleMenuItem::AfterInsert(void) {
      GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
@@ -94,11 +96,13 @@ bool BundleMenuItem::OnMeasureItem(size_t *pwidth, size_t *pheight) {
 		*pwidth += w + 20;
 	}
 	else if (!m_action.key.shortcut.empty()) {
+		const wxString& shortcut = m_customAccel.empty() ? m_action.key.shortcut : m_customAccel;
+
 		wxMemoryDC dc;
 		dc.SetFont(GetFontToUse());
 
 		wxCoord w; wxCoord h;
-        dc.GetTextExtent(m_action.key.shortcut, &w, &h);
+        dc.GetTextExtent(shortcut, &w, &h);
 
 		*pwidth += w + 10;
 	}
@@ -133,8 +137,8 @@ bool BundleMenuItem::OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxOD
 		dc.DrawText(trig, bg_xpos + 5, bg_ypos - 1 );
 	}
 	else if (!m_action.key.shortcut.empty()) {
-		const wxString& shortcut = m_action.key.shortcut;
-
+		const wxString& shortcut = m_customAccel.empty() ? m_action.key.shortcut : m_customAccel;
+		
 		dc.SetFont(GetFontToUse());
 		int accel_width, accel_height;
         dc.GetTextExtent(shortcut, &accel_width, &accel_height);

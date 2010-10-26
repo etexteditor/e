@@ -95,6 +95,7 @@ void CompareDlg::OnBrowseLeft(wxCommandEvent& WXUNUSED(evt)) {
 	if (dlg.ShowModal() != wxID_OK) return;
 
 	m_leftPathCtrl->SetValue(dlg.GetPath());
+	UpdateOkButton();
 }
 
 void CompareDlg::OnBrowseRight(wxCommandEvent& WXUNUSED(evt)) {
@@ -104,6 +105,7 @@ void CompareDlg::OnBrowseRight(wxCommandEvent& WXUNUSED(evt)) {
 	if (dlg.ShowModal() != wxID_OK) return;
 
 	m_rightPathCtrl->SetValue(dlg.GetPath());
+	UpdateOkButton();
 }
 
 void CompareDlg::OnPathChanged(wxCommandEvent& WXUNUSED(evt)) {

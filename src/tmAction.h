@@ -22,8 +22,15 @@ public:
 	virtual bool IsCommand() const {return false;};
 	virtual bool IsDrag() const {return false;};
 	virtual bool IsSyntax() const {return false;};
+	virtual bool IsMacro() const {return false;};
 	void SwapContent(std::vector<char>& c) {
 		cmdContent.swap(c);
+		contentLoaded = true;
+	};
+	void SetContent(const wxString& cmdStr) {
+		const wxCharBuffer buf = cmdStr.mb_str(wxConvUTF8);
+		const size_t len = strlen(buf.data());
+		cmdContent.assign(buf.data(), buf.data()+len);
 		contentLoaded = true;
 	};
 

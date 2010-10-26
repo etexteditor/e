@@ -26,6 +26,17 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 
 #ifdef __WXMSW__
 	if (isUnix && !eDocumentPath::InitCygwin()) return -1;
+
+	// Cygwin needs to be able to handle windows paths
+	if (isUnix) {
+		wxString cygvar;
+		if (env.GetEnv(wxT("CYGWIN"), cygvar)) {
+			if (cygvar.Find(wxT("dosfilewarning")) == wxNOT_FOUND) {
+				env.SetEnv(wxT("CYGWIN"), cygvar + wxT(" nodosfilewarning"));
+			}
+		}
+		else env.SetEnv(wxT("CYGWIN"), wxT("nodosfilewarning"));
+	}
 #endif
 
 	// Create temp file with command
@@ -83,13 +94,6 @@ long ShellRunner::RawShell(const vector<char>& command, const vector<char>& inpu
 
 		env.SetEnv(wxT("BASH_ENV"), s_bashEnv);
 		execCmd = s_bashCmd;
-
-#ifdef __WXMSW__
-		// Cygwin needs to be able to handle windows paths
-		wxString cygvar;
-		if (env.GetEnv(wxT("CYGWIN"), cygvar)) env.SetEnv(wxT("CYGWIN"), cygvar + wxT(" nodosfilewarning"));
-		else env.SetEnv(wxT("CYGWIN"), wxT("nodosfilewarning"));
-#endif
 	}
 #ifdef __WXMSW__
 	else {

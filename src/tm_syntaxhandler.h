@@ -31,11 +31,14 @@
 #include "tmTheme.h"
 #include "tmKey.h"
 #include "SyntaxInfo.h"
+#include "Macro.h"
 
 #include "IGetPListHandlerRef.h"
 #include "ITmThemeHandler.h"
 #include "ITmGetSyntaxes.h"
 #include "ITmLoadBundles.h"
+
+#include "Accelerators.h"
 
 
 class PListHandler;
@@ -62,6 +65,12 @@ public:
     virtual ~tmDragCommand() {};
 	bool IsDrag() const {return true;};
 	wxArrayString extArray;
+};
+
+class tmMacro : public tmAction {
+public:
+    virtual ~tmMacro() {};
+	bool IsMacro() const {return true;};
 };
 
 struct tmPrefs {
@@ -195,15 +204,20 @@ public:
 
 	class ShortcutMatch : public std::unary_function<const tmAction*, bool> {
 	public:
-		ShortcutMatch(int keyCode, int modifiers)
-			: m_keyCode(keyCode), m_modifiers(modifiers) {};
+		ShortcutMatch(int keyCode, int modifiers, Accelerators* accelerators, bool preProcess)
+			: m_keyCode(keyCode), m_modifiers(modifiers), m_accelerators(accelerators), m_preProcess(preProcess) {};
 		bool operator()(const tmAction* x) const {
-			const tmKey& key = x->key;
-			return (key.keyCode == m_keyCode && key.modifiers == m_modifiers);
+			if(m_preProcess) {
+				m_accelerators->ParseBundles(x);
+				return false;
+			}
+			return m_accelerators->MatchBundle(m_keyCode, m_modifiers, x);
 		};
 	private:
 		const int m_keyCode;
 		const int m_modifiers;
+		Accelerators* m_accelerators;
+		bool m_preProcess;
 	};
 
 	class ExtMatch : public std::unary_function<const tmDragCommand*, bool> {
@@ -230,7 +244,9 @@ public:
 
 	wxMenu* GetBundleMenu();
 	wxString GetBundleItemUriFromMenu(unsigned int id) const;
+	wxString GetBundleItemUriFromUuid(const wxString& uuid) const;
 	void DoBundleAction(unsigned int id, IEditorDoAction& editor);
+	void DoBundleAction(const wxString& uuid, IEditorDoAction& editor);
 
 	// Paths for bundles
 	wxFileName GetBundleSupportPath(unsigned int bundleId) const;
@@ -258,6 +274,7 @@ public:
 	void GetDragActions(const std::deque<const wxString*>& scopes, std::vector<const tmDragCommand*>& result, const ExtMatch& matchfun) const;
 	const std::vector<const tmAction*> GetActions(const wxString& trigger, const std::deque<const wxString*>& scopes) const;
 	const std::vector<char>& GetActionContent(const tmAction& action) const;
+	eMacro GetMacroContent(const tmAction& action) const;
 
 	// Indentation
 	const wxString& GetIndentNonePattern(const std::deque<const wxString*>& scopes) const;
@@ -321,6 +338,11 @@ private:
 
 	// DragCommand parsing
 	bool ParseDragCommand(const tmBundle& bundle, unsigned int commandId);
+
+	// Macro parsing
+	bool ParseMacro(const tmBundle& bundle, unsigned int macroId);
+	bool TranslateMacroCmd(const PListDict& macroDict, eMacro& macro) const;
+	bool TranslateTmMacroCmd(const PListDict& macroDict, eMacro& macro) const;
 
 	// Preference parsing
 	bool ParsePreferences(const PListDict& prefDict, tmBundle* bundle);

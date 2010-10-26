@@ -15,6 +15,8 @@
 #include "EditorCtrl.h"
 #include "StyleRun.h"
 #include "DiffPanel.h"
+#include "tm_syntaxhandler.h"
+#include "tmStyle.h"
 
 BEGIN_EVENT_TABLE(DiffBar, wxControl)
 	EVT_PAINT(DiffBar::OnPaint)
@@ -27,9 +29,9 @@ END_EVENT_TABLE()
 
 const unsigned int DiffBar::s_bracketWidth = 5;
 
-DiffBar::DiffBar(wxWindow* parent, CatalystWrapper& cw, EditorCtrl* leftEditor, EditorCtrl* rightEditor):
+DiffBar::DiffBar(wxWindow* parent, CatalystWrapper& cw, EditorCtrl* leftEditor, EditorCtrl* rightEditor, TmSyntaxHandler& syntax_handler):
 	wxControl(parent, wxID_ANY, wxPoint(-100,-100), wxSize(40,100), wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
-	m_catalyst(cw), m_leftEditor(leftEditor), m_rightEditor(rightEditor), m_leftStyler(m_diffs, true), m_rightStyler(m_diffs, false),
+	m_catalyst(cw), m_leftEditor(leftEditor), m_rightEditor(rightEditor), m_leftStyler(m_diffs, true, syntax_handler), m_rightStyler(m_diffs, false, syntax_handler),
 	m_needRedraw(false), m_needTransform(false), m_highlight(-1) 
 {
 	SetMinSize(wxSize(40, -1));
@@ -299,7 +301,7 @@ void DiffBar::OnMouseMotion(wxMouseEvent& evt) {
 	const unsigned int rightBracket = size.x - s_bracketWidth;
 	int highlight = -1;
 
-	if (mpos.x <= s_bracketWidth) {
+	if (mpos.x <= (int)s_bracketWidth) {
 		std::vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
 		if( p != m_lineMatches.end()) highlight = p->left_start;
 	}
@@ -318,7 +320,7 @@ void DiffBar::OnMouseLeftUp(wxMouseEvent& evt) {
 	const wxSize size = GetClientSize();
 	const wxPoint mpos = evt.GetPosition();
 	
-	if (mpos.x <= s_bracketWidth) {
+	if (mpos.x <= (int)s_bracketWidth) {
 		// Have we clicked a bracket?
 		std::vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
 		if (p == m_lineMatches.end()) return;
@@ -670,13 +672,25 @@ void DiffBar::OnRightDocumentChanged(cxChangeType type, unsigned int pos, unsign
 	self->m_needRedraw = true;
 }
 
+void GetDiffColor(wxString scope, TmSyntaxHandler& syntax_handler, wxColour& color) {
+	std::deque<const wxString*> scopes;
+	scopes.push_back(&scope);
+	const style* s = syntax_handler.GetStyle(scopes);
+	if(s != NULL) {
+		color.Set(s->backgroundcolor.Red(), s->backgroundcolor.Green(), s->backgroundcolor.Blue(), s->backgroundcolor.Alpha());
+	}
+}
+
 // ---- DiffStyler ------------------------------
 
-DiffBar::DiffStyler::DiffStyler(const std::vector<Change>& diffs, bool isLeft):
+DiffBar::DiffStyler::DiffStyler(const std::vector<Change>& diffs, bool isLeft, TmSyntaxHandler& syntax_handler):
 	m_isLeft(isLeft), m_diffs(diffs)
 {
+
 	m_insColor.Set(192, 255, 192); // PASTEL GREEN
 	m_delColor.Set(255, 192, 192); // PASTEL RED
+	GetDiffColor(wxT("markup.inserted"), syntax_handler, m_insColor);
+	GetDiffColor(wxT("markup.deleted"), syntax_handler, m_delColor);
 }
 
 void DiffBar::DiffStyler::Style(StyleRun& sr) {

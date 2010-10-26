@@ -186,6 +186,7 @@ public:
 	bool IsSpanEnd(unsigned int callout_id);
 
 	match_matcher* GetStartMatcher() const {return m_startMatcher;};
+	match_matcher* GetEndMatcher() const {return m_endMatcher;};
 	matcher* GetStartMember(unsigned int callout_id) {return m_startMatcher->GetMember(callout_id);};
 
 	bool SubIsSpanStart(unsigned int) {return true;};

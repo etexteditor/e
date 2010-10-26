@@ -25,6 +25,8 @@
 #include "Catalyst.h"
 #include "key_hook.h"
 #include "eSettings.h"
+#include "Macro.h"
+#include "MacroPane.h"
 
 #include "WrapMode.h"
 
@@ -49,6 +51,7 @@ class BundlePane;
 class DocHistory;
 class UndoHistory;
 class SearchPanel;
+class CommandPanel;
 class TmSyntaxHandler;
 class StatusBar;
 class DirWatcher;
@@ -61,6 +64,8 @@ class IEditorSearch;
 class RemoteThread;
 class SnippetList;
 class ClipboardHistoryPane;
+class Accelerators;
+class InputPanel;
 
 
 class EditorFrame : public KeyHookable<wxFrame>,
@@ -185,7 +190,12 @@ public:
 		MENU_NAVIGATE_SELECTIONS_MODE,
 		MENU_NAVIGATE_SELECTIONS_NEXT,
 		MENU_NAVIGATE_SELECTIONS_PREVIOUS,
-		MENU_CLIPBOARD_HISTORY_PANE
+		MENU_CLIPBOARD_HISTORY_PANE,
+		MENU_MACRO_FUNCTIONS,
+		MENU_MACRO_REC,
+		MENU_MACRO_PLAY,
+		MENU_MACRO_EDIT,
+		MENU_ACCELERATORS
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -204,7 +214,8 @@ public:
 	void UpdateTabs();
 	void GotoPos(int line, int column);
 	bool CloseTab(unsigned int tab_id, bool removetab=true);
-	EditorCtrl* GetEditorCtrl();
+	EditorCtrl* GetEditorCtrl() const; // Gets currently active
+	EditorCtrl* GetEditorCtrl(int winId) const;
 	virtual IEditorSearch* GetSearch();
 
 	// Editor Service methods.
@@ -244,6 +255,16 @@ public:
 	// Search Bar
 	virtual void ShowSearch(bool show=true, bool replace=false);
 	bool IsSearching() const;
+
+	// Command Mode
+	void ShowCommandMode(bool show=true);
+	void ShowCommand(const wxString& cmd=wxEmptyString);
+	bool IsCommandMode() const;
+
+	// Input Panel
+	void ShowInputPanel(unsigned int notifier_id, const wxString& caption);
+	void HideInputPanel();
+	void OnInputPanelChanged(unsigned int notifier_id, const wxString& text);
 
 	// Settings
 	bool GetSetting(const wxString& name) const;
@@ -288,6 +309,13 @@ public:
 	virtual void CloseClipboardHistoryPane();
 	void AddCopyText(wxString& copytext);
 	
+	// Bundle Pane
+	bool IsBundlePaneShownAndSelected() const;
+
+	// Macro
+	eMacro& GetMacro() {return m_macro;};
+	void SaveMacro();
+
 	// DirWatcher & RemoteThread
 	virtual DirWatcher& GetDirWatcher() {wxASSERT(m_dirWatcher); return *m_dirWatcher;};
 
@@ -306,6 +334,9 @@ public:
 	void UpdateEncodingMenu(wxMenu& menu) const;
 
 	static wxString DefaultFileFilters;
+
+	bool HandleChord(wxKeyEvent& event);
+	Accelerators* GetAccelerators() { return m_accelerators; }
 
 protected:
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
@@ -462,6 +493,10 @@ private:
 	void OnMenuNavigateSelections(wxCommandEvent& event);
 	void OnMenuNavigateSelectionsNext(wxCommandEvent& event);
 	void OnMenuNavigateSelectionsPrevious(wxCommandEvent& event);
+	void OnMenuMacroRec(wxCommandEvent& event);
+	void OnMenuMacroPlay(wxCommandEvent& event);
+	void OnMenuMacroEdit(wxCommandEvent& event);
+	void OnMenuCustomizeAccelerators(wxCommandEvent& event);
 
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);
@@ -530,6 +565,8 @@ private:
 	wxBoxSizer* box;
 	wxBoxSizer*	editorbox;
 	SearchPanel* m_searchPanel;
+	CommandPanel* m_commandPanel;
+	InputPanel* m_inputPanel;
 	eAuiNotebook* m_tabBar;
 
 	// Menus
@@ -538,6 +575,8 @@ private:
 	wxMenu* m_recentProjectsMenu;
 	wxMenu* m_syntaxMenu;
 	wxMenu* m_wrapMenu;
+	Accelerators* m_accelerators;
+
 
 	// wxAUI and Panes
 	wxAuiManager m_frameManager;
@@ -552,6 +591,7 @@ private:
 	FindInProjectDlg* m_findInProjectDlg;
 	SnippetList* m_snippetList;
 	ClipboardHistoryPane* m_clipboardHistoryPane;
+	MacroPane* m_macroPane;
 
 	// Statusbar
 	StatusBar* m_pStatBar;
@@ -577,6 +617,9 @@ private:
 	// tab state
 	bool m_softTabs;
 	int m_tabWidth;
+
+	// Macro
+	eMacro m_macro;
 
 	wxArrayString m_recentFiles;
 	wxArrayString m_recentProjects;

@@ -54,6 +54,7 @@ external/pcre/
 external/tinyxml/
 external/wxwidgets/
 external/webkit/
+external/boost/
 
 # Ignore licensing files copied over to enable tests
 e.cfg

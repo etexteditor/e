@@ -41,7 +41,7 @@ FILE_PERMISSIONS eDocumentPath::GetPermissions(const wxString& path) {
 #else
         // Get protection
 		struct stat s;
-		int res = stat(path.mb_str(wxConvUTF8), &s);
+		stat(path.mb_str(wxConvUTF8), &s);
 		return s.st_mode;
 #endif
 }
@@ -307,10 +307,15 @@ bool eDocumentPath_shouldUpdateCygwin(wxDateTime &stampTime, const wxFileName &s
 	if (updateTime == stampTime)
 		return false;
 
+	// If the difference is _exactly_ one hour, it is probably caused by daylight saving time
+	wxTimeSpan t = updateTime.Subtract(stampTime);
+	if (t.IsEqualTo(wxTimeSpan::Hours(1)) || t.IsEqualTo(wxTimeSpan::Hours(-1)))
+		return false;
+
 	// ...else the dates differ and we need to update.
 	wxLogDebug(wxT("InitCygwin: Diff dates"));
-	wxLogDebug(wxT("  e-postinstall: %s"), updateTime.FormatTime());
-	wxLogDebug(wxT("  last-e-update: %s"), stampTime.FormatTime());
+	wxLogDebug(wxT("  e-postinstall: %s"), updateTime.Format());
+	wxLogDebug(wxT("  last-e-update: %s"), stampTime.Format());
 	return true;
 }
 

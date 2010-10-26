@@ -35,6 +35,8 @@
 #include "DetectTripleClicks.h"
 #include "AutoPairs.h"
 #include "Bookmarks.h"
+#include "CommandHandler.h"
+#include "Macro.h"
 
 #include "IFoldingEditor.h"
 #include "IEditorDoAction.h"
@@ -87,7 +89,9 @@ public:
 
 	// Change state
 	void StartChange();
-	void EndChange();
+	void EndChange(int forceTo=-1);
+	bool InChange() const;
+	size_t GetChangeLevel() const;
 
 	// Document info
 	unsigned int GetLength() const;
@@ -100,6 +104,7 @@ public:
 	wxString GetText(unsigned int start, unsigned int end) const;
 	void GetText(vector<char>& text) const;
 	void GetTextPart(unsigned int start, unsigned int end, vector<char>& text) const;
+	void GetLine(unsigned int lineId, vector<char>& text) const;
 	wxString GetCurrentWord() const;
 	wxString GetWord(unsigned int pos) const;
 	void WriteText(wxOutputStream& stream) const;
@@ -111,6 +116,7 @@ public:
 	unsigned int GetCurrentLineNumber();
 	unsigned int GetCurrentColumnNumber();
 	unsigned int GetLineFromPos(unsigned int pos) {return m_lines.GetLineFromCharPos(pos);};
+	interval GetLineExtent(unsigned int line_id) {interval iv; m_lines.GetLineExtent(line_id, iv.start, iv.end); return iv;};
 	bool IsLineStart(unsigned int line_id, unsigned int pos) {return m_lines.IsLineStart(line_id, pos);};
 	bool IsLineEnd(unsigned int pos) {return m_lines.IsLineEnd(pos);};
 
@@ -121,6 +127,10 @@ public:
 	void Insert(const wxString& text);
 	unsigned int InsertNewline();
 	void Delete(unsigned int start, unsigned int end);
+	void Delete(bool delWord=false);
+	void Backspace(bool delWord=false);
+
+	// Undo/Versioning
 	void Freeze();
 	void Commit(const wxString& label, const wxString& desc);
 
@@ -138,7 +148,7 @@ public:
 
 	// Drawing & Layout
 	void EnableRedraw(bool enable) {m_enableDrawing = enable;};
-	inline void ReDraw(){DrawLayout();}
+	virtual void ReDraw(){DrawLayout();}
 	bool Show(bool show);
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);
@@ -166,6 +176,7 @@ public:
 	virtual const DocumentWrapper& GetDocument() const {return m_doc;};
 	bool SetDocument(const doc_id& di, const wxString& path=wxEmptyString, const RemoteProfile* rp=NULL);
 	doc_id GetDocID() const;
+	doc_id GetLastStableDocID() const;
 	virtual wxString GetName() const;
 	virtual const vector<unsigned int>& GetOffsets() const {return m_lines.GetOffsets();};
 
@@ -173,6 +184,7 @@ public:
 	virtual EditorCtrl* GetActiveEditor();
 	virtual const char** RecommendedIcon() const;
 	virtual void SaveSettings(unsigned int i, eFrameSettings& settings);
+	virtual void CommandModeEnded();
 
 	// Bundle Editing
 	bool IsBundleItem() const {return m_remotePath.StartsWith(wxT("bundle://"));};
@@ -200,16 +212,21 @@ public:
 
 	// Selection
 	bool IsSelected() const;
+	bool IsMultiSelected() const;
 	void SelectAll();
-	void Select(unsigned int start, unsigned int end);
+	void Select(unsigned int start, unsigned int end, bool allowEmpty=false);
+	void AddSelection(unsigned int start, unsigned int end, bool allowEmpty=false);
 	const vector<interval>& GetSelections() const {return m_lines.GetSelections();};
 	void RemoveAllSelections();
+	void ReverseSelections();
 	wxString GetFirstSelection() const;
 	wxString GetSelFirstLine();
 	wxString GetSelText() const;
-	void SelectWord(unsigned int pos, bool multiselect=false);
+	void SelectWord(bool multiselect=false);
+	void SelectWordAt(unsigned int pos, bool multiselect=false);
 	void SelectLine(unsigned int lineId, bool multiselect=false);
 	void SelectCurrentLine();
+	void ExtendSelectionToLine(unsigned int sel_id=0);
 	void SelectScope();
 	void SelectParentTag();
 
@@ -217,17 +234,55 @@ public:
 	void NextSelection();
 	void PreviousSelection();
 
+	void SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible=true, bool multiSelect=false);
+
+	// Selection (objects)
+	bool GetNextObjectScope(const wxString& scope, size_t pos, interval& iv, interval& iv_inner) const;
+	bool GetNextObjectWords(size_t count, size_t pos, interval& iv, interval& iv_inner) const;
+	bool GetNextObjectBlock(wxChar c, size_t pos, interval& iv, interval& iv_inner);
+	bool GetNextObjectSentence(size_t pos, interval& iv, interval& iv_inner);
+	bool GetNextObjectParagraph(size_t pos, interval& iv, interval& iv_inner);
+	bool GetContainingObjectString(wxChar c, size_t pos, interval& iv, interval& iv_inner);
+	bool GetContainingObjectBlock(wxChar c, size_t pos, interval& iv, interval& iv_inner);
+
+	enum SelAction {
+		SEL_IGNORE,
+		SEL_REMOVE,
+		SEL_SELECT
+	};
+	
 	// Movement commands
 	void SetPos(unsigned int pos);
 	void SetPos(int line, int column);
 	void PageUp(bool select=false, int count=1);
 	void PageDown(bool select=false, int count=1);
-	void CursorUp(bool select=false);
-	void CursorDown(bool select=false);
-	void CursorLeft(bool select=false);
-	void CursorRight(bool select=false);
-	void CursorWordLeft(bool select=false);
-	void CursorWordRight(bool select=false);
+	void CursorUp(SelAction select);
+	void CursorDown(SelAction select);
+	void CursorLeft(SelAction select);
+	void CursorRight(SelAction select);
+	void CursorWordLeft(SelAction select);
+	void CursorWordRight(SelAction select);
+	void CursorToHome(SelAction select);
+	void CursorToEnd(SelAction select);
+	void CursorToLine(unsigned int line);
+	void CursorToColumn(unsigned int column);
+	void CursorToLineStart(bool soft=true);
+	void CursorToLineEnd();
+	void CursorToNextChar(wxChar c);
+	void CursorToPrevChar(wxChar c);
+	void CursorToWordStart(bool bigword);
+	void CursorToWordEnd(bool bigword);
+	void CursorToPrevWordStart(bool bigword);
+	void CursorToNextLine();
+	void CursorToPrevLine();
+	void CursorToNextSentence();
+	void CursorToPrevSentence();
+	void CursorToNextParagraph();
+	void CursorToParagraphStart();
+	void CursorToNextSymbol();
+	void CursorToPrevSymbol();
+	void CursorToNextCurrent();
+	void CursorToPrevCurrent();
 	void GotoMatchingBracket();
 
 	// Search & Replace
@@ -236,9 +291,11 @@ public:
 	virtual cxFindResult FindPrevious(const wxString& text, int options=0);
 	virtual bool Replace(const wxString& searchtext, const wxString& replacetext, int options=0);
 	virtual int ReplaceAll(const wxString& searchtext, const wxString& replacetext, int options=0);
+	virtual void SetSearchHighlight(const wxString& pattern, int options=0);
 	virtual void ClearSearchHighlight();
 
 	// SnippetHandler and EditorFrame use 3 of the following methods; may need some more refactoring here to capture that
+	search_result SearchDirect(const wxString& pattern, int options, size_t startpos, size_t endpos=0) const;
 	wxString ParseReplaceString(const wxString& replacetext, const map<unsigned int,interval>& captures, const vector<char>* source=NULL) const;
 	search_result RegExFind(const pcre* re, const pcre_extra* study, unsigned int start_pos, map<unsigned int,interval> *captures, unsigned int end_pos, int search_options=0) const;
 	search_result RegExFind(const wxString& searchtext, unsigned int start_pos, bool matchcase, map<unsigned int,interval> *captures=NULL, unsigned int end_pos=0) const;
@@ -246,8 +303,15 @@ public:
 	search_result RawRegexSearch(const char* regex, unsigned int subjectStart, unsigned int subjectEnd, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
 	static search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL);
 	bool FindNextChar(wxChar c, unsigned int start_pos, unsigned int end_pos, interval& iv) const;
+	
+	// Search ranges
+	bool HasSearchRange() const;
 	void SetSearchRange();
+	void AdjustSearchRangeInsert(size_t range_id, int len);
 	void ClearSearchRange(bool reset=false);
+	const vector<interval>& GetSearchRange() const;
+	const vector<unsigned int>& GetSearchRangeCursors() const;
+	void SetSearchRangeCursor(size_t cursor, unsigned int pos);
 
 	// Settings
 	void SaveSettings(unsigned int i, eFrameSettings& settings, unsigned int id);
@@ -269,7 +333,6 @@ public:
 	const wxString& GetSyntaxName() const {return m_syntaxstyler.GetName();};
 	void SetSyntax(const wxString& syntaxName, bool isManual=false);
 	void AddStyler(Styler& styler) {m_lines.AddStyler(styler);};
-	const deque<const wxString*> GetScope();
 
 	// Indentation
 	const wxString& GetIndentUnit() const {return m_indent;};
@@ -295,10 +358,13 @@ public:
 
 	// Commands & Shell
 	void DoActionFromDlg();
-	void ShowScopeTip();
 	virtual void DoAction(const tmAction& action, const map<wxString, wxString>* envVars, bool isRaw);
 	void DoDragCommand(const tmDragCommand &cmd, const wxString& path);
 	void FilterThroughCommand();
+
+	// Scope
+	const deque<const wxString*> GetScope();
+	void ShowScopeTip();
 
 	// Drag-and-drop operations
 	void OnDragOver(wxCoord x, wxCoord y);
@@ -314,6 +380,7 @@ public:
 	void MarkAsModified() {++m_changeToken;};
 	unsigned int GetChangeToken() const {return m_changeToken;};
 	virtual EditorChangeState GetChangeState() const;
+	void GetLinesChangedSince(const doc_id& di, vector<size_t>& lines);
 
 	// Callbacks
 	void SetBeforeRedrawCallback(void(*callback)(void*), void* data) {m_beforeRedrawCallback = callback; if (data) m_callbackData = data;};
@@ -327,6 +394,7 @@ public:
 	// Completion
 	void DoCompletion();
 	wxArrayString GetCompletionList();
+	void ShowCompletionPopup(const wxArrayString& completions);
 
 	// Symbols
 	virtual int GetSymbols(vector<SymbolRef>& symbols) const;
@@ -369,6 +437,30 @@ public:
 
 	// Theme
 	const tmTheme& GetTheme() const { return m_theme; };
+
+	// Snippets
+	SnippetHandler& GetSnippetHandler() {return m_snippetHandler;};
+
+	// Macro
+	void PlayMacro();
+	virtual void PlayMacro(const eMacro& macro);
+	wxVariant PlayCommand(const eMacroCmd& cmd);
+	eMacro& GetMacro() {return m_macro;};
+
+	class MacroDisabler {
+	public:
+		MacroDisabler(eMacro& m) : m_macro(m), m_enable(false) {
+			if (m_macro.IsRecording()) {
+				m_macro.EndRecording();
+				m_enable = true;
+			}
+		}
+		~MacroDisabler() {if (m_enable) m_macro.StartRecording();};
+		bool IsRecording() const {return m_enable;};
+	private:
+		eMacro& m_macro;
+		bool m_enable;
+	};
 
 #ifdef __WXDEBUG__
 	void Print();
@@ -427,11 +519,14 @@ private:
 	void NotifyParentMate();
 	void ClearRemoteInfo();
 
+	bool ProcessCommandModeKey(wxKeyEvent& event);
+
 public:
 	// Used by GutterControl
 	void DrawLayout(bool isScrolling=false);
 
 protected:
+	// Drawing
 	void DrawLayout(wxDC& dc, bool isScrolling=false);
 	bool UpdateScrollbars(unsigned int x, unsigned int y);
 	void HandleScroll(int orientation, int position, wxEventType eventType);
@@ -459,8 +554,6 @@ protected:
 	void InsertColumn(const wxArrayString& text, bool select=false);
 	void WrapSelections(const wxString& front, const wxString& back);
 	bool DeleteInShadow(unsigned int pos, bool nextchar=true);
-	void SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible=true);
-	wxString GetNewIndentAfterNewline(unsigned int lineid);
 	interval GetWordIv(unsigned int pos) const;
 
 	// Line selections
@@ -491,9 +584,11 @@ protected:
 	wxString GetAutoPair(unsigned int pos, const wxString& text);
 	wxString AutoPair(unsigned int pos, const wxString& text, bool addToStack=true);
 	void MatchBrackets();
+	bool FindMatchingBracket(unsigned int pos, unsigned int& pos2);
 
 	// Indentation
 	wxString GetRealIndent(unsigned int lineid, bool newline=false, bool skipWhitespaceOnlyLines=false);
+	wxString GetNewIndentAfterNewline(unsigned int lineid);
 
 	bool IsSpaces(unsigned int start, unsigned int end) const;
 	unsigned int CountMatchingChars(wxChar match, unsigned int start, unsigned int end) const;
@@ -568,6 +663,12 @@ protected:
 	mutable unsigned int m_symbolCacheToken;
 	int m_markCopyStart;
 
+	// Bookmarks
+	Bookmarks bookmarks;
+
+	// Command Mode
+	CommandHandler m_commandHandler;
+
 	// Above: set in constructors' intializer list
 	// ----
 	// Below: not set in initializer list
@@ -606,9 +707,6 @@ protected:
 	unsigned int m_foldLineCount;
 	unsigned int m_foldTooltipLine;
 
-	// Bookmarks
-	Bookmarks bookmarks;
-
 	action lastaction;
 	wxPoint lastMousePos; // Used to check if mouse have really moved
 
@@ -641,6 +739,7 @@ protected:
 
 	// incremental search trackers
 	vector<interval> m_searchRanges;
+	vector<unsigned int> m_cursors;
 	// start/found are used to track state between Find calls
 	unsigned int m_search_start_pos, m_search_found_pos;
 
@@ -668,6 +767,9 @@ protected:
 	// Key state
 	static unsigned long s_ctrlDownTime;
 	static bool s_altGrDown;
+
+	// Macro
+	eMacro& m_macro;
 };
 
 #endif // __EDITORCTRL_H__

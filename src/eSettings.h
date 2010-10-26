@@ -67,6 +67,7 @@ private:
 class eSettings: public ISettings {
 public:
 	eSettings();
+	~eSettings();
 	
 	void Load(const wxString& path);
 	bool Save();
@@ -145,6 +146,8 @@ public:
 	void DoAutoSave();
 	void SetApp(eApp* app);
 
+	wxString GetSettingsDir() { return m_settingsDir; }
+
 private:
 	// Recent files (support functions)
 	static void AddToRecent(const wxString& key, wxJSONValue& jsonArray, size_t max);
@@ -156,6 +159,7 @@ private:
 	static wxString StripSlashes(const wxString& path);
 
 	wxString m_path;
+	wxString m_settingsDir;
 	wxJSONValue m_jsonRoot;
 	auto_vector<RemoteProfile> m_tempRemotes; // cache for remote profiles
 

@@ -411,7 +411,7 @@ void Lines::GetLineExtent(unsigned int lineid, unsigned int& start, unsigned int
 bool Lines::IsLineVirtual(unsigned int lineid) const {
 	wxASSERT(lineid >= 0 && lineid <= ll->size());
 	wxASSERT(NewlineTerminated || lineid != ll->size());
-	return lineid == ll->size() && NewlineTerminated;
+	return lineid == ll->size() && (NewlineTerminated || ll->size() == 0);
 }
 
 bool Lines::IsLineEmpty(unsigned int lineid) const {
@@ -458,6 +458,10 @@ unsigned int Lines::GetLineEndFromPos(unsigned int pos) const {
 
 unsigned int Lines::GetLineStartFromPos(unsigned int pos) const {
 	wxASSERT(pos <= GetLength());
+
+	if (!NewlineTerminated && pos == GetLength()) {
+		return IsEmpty() ? 0 : ll->offset(GetLineCount()-1);
+	}
 
 	return ll->StartFromPos(pos);
 }

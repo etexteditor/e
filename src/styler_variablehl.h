@@ -38,7 +38,7 @@ class Lines;
 
 class Styler_VariableHL : public Styler_SearchHL {
 public:
-	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl);
+	Styler_VariableHL(const DocumentWrapper& rev, const Lines& lines, const std::vector<interval>& ranges, const std::vector<unsigned int>& cursors, const tmTheme& theme, eSettings& settings, EditorCtrl& editorCtrl);
 	virtual ~Styler_VariableHL() {};
 
 	void Clear();

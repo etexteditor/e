@@ -37,6 +37,7 @@ public:
 
 	RemoteProfile() : m_id(PROFILE_TEMP) {};
 	RemoteProfile(const RemoteProfile& rp);
+	~RemoteProfile() {};
 
 	bool IsValid() const {return !m_address.empty();};
 	bool IsTemp() const {return m_id == PROFILE_TEMP;};

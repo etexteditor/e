@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+  <head> 
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" /> 
+	<style type='text/css'>
+		#wrapper {
+			width: 700px;
+			margin: 10px;
+			height: 500px;
+			overflow: auto;
+		}
+		#left {
+			float: left;
+			width: 504px;
+		}
+		#right {
+			width: 175px;
+			float: left;
+		}
+		table, tr, td, div, span, p, input, body {
+			padding: 0;
+			margin: 0;
+			border-spacing: 0;
+		}
+		
+		ul {
+			padding: 0;
+			margin: 0 0 0 20px;
+		}
+		
+		body {
+			background-color: #F0F0F0;
+		}
+		
+		body, input.textfield {
+			font-family: Calibri;
+			font-size: 12px;
+		}
+		
+		input.textfield {
+			margin: 1px 2px 1px 0;
+		}
+		
+		#mainTable {
+			border: 2px groove #FFF;
+			width: 500px;
+		}
+		
+		.toggleArrow {
+			height: 15px;
+			width: 15px;
+		}
+		
+		.menuItemLabel, .menuLabel, .defaultBinding {
+			padding: 1px 5px;
+		}
+		
+		.newBinding {
+			width: 100px;
+		}
+		.defaultBinding {
+			width: 100px;
+		}
+		
+		.odd {
+			background-color: #FAFAFA;
+		}
+		
+		.even {
+			background-color: #E9E9E9;
+		}
+		
+		td {
+			border-top: 1px solid #CCC;
+			border-collapse: collapse;
+		}
+		
+		.save {
+			padding: 2px;
+		}
+		
+		.level0 { padding-left: 0px; }
+		.level1 { padding-left: 15px; }
+		.level2 { padding-left: 30px; }
+		.level3 { padding-left: 45px; }
+		.level4 { padding-left: 60px; }
+		.level5 { padding-left: 75px; }
+		.level6 { padding-left: 90px; }
+		
+		.menuLabel {
+			font-weight: bold;
+		}
+		.menuLabel a, .menuLabel a:visited {
+			color: black;
+			text-decoration: none;
+			padding-right: 5px;
+		}
+		
+	</style>
+</head>
+<body>
+<div id='wrapper'>
+	<div id='left'>
+		$1
+	</div>
+	<div id='right'>
+		<strong>Examples:</strong>
+		<ul>
+			<li>Ctrl-A</li>
+			<li>Ctrl+A</li>
+			<li>Ctrl-X Ctrl-A</li>
+			<li>Ctrl-Alt-Win-Shift-Space</li>
+		</ul>
+		
+		<strong>Notes:</strong>
+		<ul>
+			<li>Only the non-shift character for non-alpha characters works.  In other words, Ctrl-; and Ctrl-: are the same thing.</li>
+			<li>You can use these keys too:</li>
+		</ul>
+		
+		<ul style='list-style-type: none;'>
+			<li>BACK</li>
+			<li>CANCEL</li>
+			<li>CAPITAL</li>
+			<li>CLEAR</li>
+			<li>DELETE</li>
+			<li>DOWN</li>
+			<li>END</li>
+			<li>ENTER</li>
+			<li>ESCAPE</li>
+			<li>F1 -> F24</li>
+			<li>HOME</li>
+			<li>INSERT</li>
+			<li>KP_ADD</li>
+			<li>KP_DECIMAL</li>
+			<li>KP_DIVICE</li>
+			<li>KP_MULTIPLY</li>
+			<li>KP_SEPARATOR</li>
+			<li>KP_SUBTRACT</li>
+			<li>LEFT</li>
+			<li>MENU</li>
+			<li>NUM_LOCK</li>
+			<li>PAUSE</li>
+			<li>PGDN</li>
+			<li>PGUP</li>
+			<li>PRINT</li>
+			<li>RETURN</li>
+			<li>RIGHT</li>
+			<li>SCOLL_LOCK</li>
+			<li>SPACE</li>
+			<li>TAB</li>
+			<li>UP</li>
+		</ul>
+	</div>
+</div>
+<center>
+	<input type='button' value='Save' class='save' id='save' />
+</center>
+<script type='text/javascript' src='http://code.jquery.com/jquery-1.4.3.min.js'></script>
+<script type='text/javascript'>
+	// Show only the top level menus
+	$("tr").hide();
+	$("tr.menu0, #header").show();
+	
+	// Remove blank menus
+	for(var c = 247; c > 0; c--) {
+		if($('tr.menu'+c).length === 0) {
+			$('#menu'+c).closest('tr').remove();
+		}
+	}
+	
+	// Have to recursively close all submenus as well
+	function close(menu) {
+		var openSubMenus = $('tr.'+menu+':visible');
+		for(var c = 0; c < openSubMenus.length; c++) {
+			var link = $(openSubMenus[c]).find('a');
+			link.html("&rarr;");
+			close(link.attr('id'));
+		}
+		openSubMenus.hide();
+	}
+	
+	// Open menus when clicked
+	$("a.expand").live('click', function() {
+			var id = $(this).attr('id');
+			var rows = $("tr."+id);
+			
+			if(rows.is(":visible")) {
+				close(id);
+				rows.hide();
+				$(this).html("&rarr;");
+			} else {
+				rows.show();
+				$(this).html("&darr;");
+			}
+			
+			$("tr:visible:even").removeClass("odd").addClass("even");
+			$("tr:visible:odd").removeClass("even").addClass("odd");
+	});
+	
+	$("#save").click(function() {
+		var bits = $("input.textfield").map(function() { 
+			var name = $(this).attr('name').replace("\"", "\\\"");
+			var binding = $(this).val().replace("\"", "\\\"");
+			if(binding.length == 0) return;
+			return ["\"", name, "\"", ":", "\"", binding, "\""].join("");
+		});
+		var json = "http://localhost/{"+Array.prototype.join.call(bits, ",")+"}";
+		window.location = json;
+	});
+</script>
+</body>
+</html>

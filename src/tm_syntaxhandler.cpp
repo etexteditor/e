@@ -367,6 +367,14 @@ void TmSyntaxHandler::LoadBundle(unsigned int bundleId) {
 		ParseDragCommand(*bundle, commandId);
 	}
 
+	// Parse Macros
+	const vector<unsigned int> macros = m_plistHandler.GetList(BUNDLE_MACRO, bundleId);
+	for (unsigned int d = 0; d < macros.size(); ++d) {
+		const unsigned int macroId = macros[d];
+
+		ParseMacro(*bundle, macroId);
+	}
+
 	// Parse Preferences
 	const vector<unsigned int> prefs = m_plistHandler.GetList(BUNDLE_PREF, bundleId);
 	for (unsigned int p = 0; p < prefs.size(); ++p) {
@@ -391,6 +399,7 @@ void TmSyntaxHandler::LoadBundles(cxBundleLoad mode) {
 	}
 
 	m_bundleMenu = new wxMenu;
+	m_nextMenuID = 9000;
 
 	// Get the list of all bundles
 	m_bundleList = m_plistHandler.GetBundles();
@@ -480,6 +489,14 @@ void TmSyntaxHandler::ReParseBundles(bool onlyMenu) {
 
 				ParseDragCommand(*bundle, commandId);
 			}
+			
+			// Parse Macros
+			const vector<unsigned int> macros = m_plistHandler.GetList(BUNDLE_MACRO, bundleId);
+			for (unsigned int d = 0; d < macros.size(); ++d) {
+				const unsigned int macroId = macros[d];
+
+				ParseMacro(*bundle, macroId);
+			}
 		}
 
 		// Parse Bundle info
@@ -487,11 +504,52 @@ void TmSyntaxHandler::ReParseBundles(bool onlyMenu) {
 		ParseInfo(infoDict, *bundle);
 	}
 
+	
 	// Notify that bundle actions have been reloaded
 	m_dispatcher.Notify(wxT("BUNDLE_ACTIONS_RELOADED"), NULL, 0);
 }
 
+// With multiple windows open, the dispatcher would be called for each window
+// This caused m_bundleMenu to be set to NULL before it could be set in the second window.
 wxMenu* TmSyntaxHandler::GetBundleMenu() {
+	if(m_bundleMenu == NULL) {
+		vector<unsigned int> bundles = m_plistHandler.GetBundles();
+
+		// Build a map of the bundles that are already parsed
+		map<unsigned int, tmBundle*> parsedBundles;
+		for (unsigned int i = 0; i < m_bundles.size(); ++i) {
+			const unsigned int bundleId = m_bundles[i]->bundleRef;
+			parsedBundles[bundleId] = m_bundles[i];
+		}
+
+		delete m_bundleMenu;
+		m_nextMenuID = 9000; // range is 9000-11999
+		m_bundleMenu = new wxMenu;
+		
+
+		// Parse Bundles
+		for (unsigned int b = 0; b < bundles.size(); ++b) {
+			const unsigned int bundleId = bundles[b];
+
+			// Check if we already have this bundle
+			tmBundle* bundle;
+			map<unsigned int, tmBundle*>::const_iterator p = parsedBundles.find(bundleId);
+			if (p != parsedBundles.end()) bundle = p->second;
+			else {
+				bundle = new tmBundle;
+				bundle->bundleRef = bundleId;
+				bundle->path = m_plistHandler.GetBundlePath(bundleId);
+
+				// Add new bundle to list
+				m_bundles.push_back(bundle);
+			}
+
+			// Parse Bundle info
+			const PListDict infoDict = m_plistHandler.GetBundleInfo(bundleId);
+			ParseInfo(infoDict, *bundle);
+		}
+	}
+
 	// The menu will be owned by reciever so we set
 	// our ref to NULL to avoid double deletion
 	wxMenu* m = m_bundleMenu;
@@ -512,6 +570,10 @@ wxString TmSyntaxHandler::GetBundleItemUriFromMenu(unsigned int id) const {
 	}
 	const wxString& uuid = p->second;
 
+	return GetBundleItemUriFromUuid(uuid);
+}
+
+wxString TmSyntaxHandler::GetBundleItemUriFromUuid(const wxString& uuid) const {
 	BundleItemType type;
 	unsigned int bundleId;
 	unsigned int itemId;
@@ -519,6 +581,7 @@ wxString TmSyntaxHandler::GetBundleItemUriFromMenu(unsigned int id) const {
 	
 	return m_plistHandler.GetBundleItemUri(type, bundleId, itemId);
 }
+
 
 void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 	// Get uuid
@@ -529,11 +592,14 @@ void TmSyntaxHandler::DoBundleAction(unsigned int id, IEditorDoAction& editor) {
 	}
 	const wxString& uuid = p->second;
 
+	DoBundleAction(uuid, editor);
+}
+
+void TmSyntaxHandler::DoBundleAction(const wxString& uuid, IEditorDoAction& editor) {
 	// Look for action
 	map<const wxString, tmAction*>::iterator s = m_actions.find(uuid);
 	if (s != m_actions.end()) {
 		tmAction* action = s->second;
-
 		editor.DoAction(*action, NULL, false);
 	}
 	else {
@@ -761,6 +827,145 @@ const vector<char>& TmSyntaxHandler::GetActionContent(const tmAction& action) co
 	else wxASSERT(false);
 
 	return action.cmdContent;
+}
+
+eMacro TmSyntaxHandler::GetMacroContent(const tmAction& action) const {
+	wxASSERT(action.IsMacro());
+	eMacro macro;
+
+	const PListDict macroDict = m_plistHandler.Get(BUNDLE_MACRO, action.bundle->bundleRef, action.plistRef);
+	
+	PListArray commandArray;
+	if (macroDict.GetArray("e_commands", commandArray)) {
+		PListDict cmdDict;
+		for (size_t i = 0; i < commandArray.GetSize(); ++i) {
+			commandArray.GetDict(i, cmdDict);
+			TranslateMacroCmd(cmdDict, macro);
+		}
+	}
+	else if (macroDict.GetArray("commands", commandArray)) {
+		PListDict cmdDict;
+		for (size_t i = 0; i < commandArray.GetSize(); ++i) {
+			commandArray.GetDict(i, cmdDict);
+			TranslateTmMacroCmd(cmdDict, macro);
+		}
+	}
+
+	return macro;
+}
+bool TmSyntaxHandler::TranslateMacroCmd(const PListDict& macroDict, eMacro& macro) const {
+	const wxString cmdStr = macroDict.wxGetString("command");
+	eMacroCmd& cmd = macro.Add(cmdStr);
+
+	PListArray args;
+	if (!macroDict.GetArray("arguments", args)) return true;
+
+	for (size_t i = 0; i < args.GetSize(); ++i) {
+		PListArray arg;
+		if (!args.GetArray(i, arg) || arg.GetSize() != 2) {
+			wxASSERT(false);
+			return false;
+		}
+
+		const wxString name = arg.wxGetString(0);
+		if (arg.IsBool(1)) cmd.AddArg(name, arg.GetBool(1));
+		else if (arg.IsInt(1)) cmd.AddArg(name, arg.GetInt(1));
+		else if (arg.IsString(1)) {
+			const wxString value = arg.wxGetString(1);
+			cmd.AddArg(name, value);
+		}
+		else {
+			wxASSERT(false);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& macro) const {
+	const wxString cmdStr = macroDict.wxGetString("command");
+	PListDict argDict;
+	macroDict.GetDict("argument", argDict);
+
+	if (cmdStr == wxT("selectWord:")) {
+		macro.Add(wxT("SelectWord"));
+	}
+	else if (cmdStr == wxT("moveUp:")) {
+		macro.Add(wxT("CursorUp"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveDown:")) {
+		macro.Add(wxT("CursorDown"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveLeft:")) {
+		macro.Add(wxT("CursorLeft"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveRight:")) {
+		macro.Add(wxT("CursorRight"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveToBeginningOfLine:")) {
+		macro.Add(wxT("CursorToLineStart"), wxT("soft"), false);
+	}
+	else if (cmdStr == wxT("moveToEndOfLine:")) {
+		macro.Add(wxT("CursorToLineEnd"));
+	}
+	else if (cmdStr == wxT("moveToEndOfParagraph:")) {
+		macro.Add(wxT("CursorToLineEnd"));
+	}
+	else if (cmdStr == wxT("moveToEndOfDocumentAndModifySelection:")) {
+		macro.Add(wxT("CursorEnd"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("deleteBackward:")) {
+		macro.Add(wxT("Backspace"));
+	}
+	else if (cmdStr == wxT("deleteWordLeft:")) {
+		macro.Add(wxT("CursorWordLeft"), wxT("select"), true);
+		macro.Add(wxT("Delete"));
+	}
+	else if (cmdStr == wxT("insertNewline:")) {
+		macro.Add(wxT("InsertNewline"));
+	}
+	else if (cmdStr == wxT("insertText:")) {
+		eMacroCmd& cmd = macro.Add(wxT("InsertChars"));
+		cmd.AddArg(wxT("text"), macroDict.wxGetString("argument"));
+	}
+	else if (cmdStr == wxT("executeCommandWithOptions:")) {
+		eMacroCmd& cmd = macro.Add(wxT("FilterThroughCommand"));
+		cmd.AddArg(wxT("command"), argDict.wxGetString("command"));
+		cmd.AddArg(wxT("input"), argDict.wxGetString("input"));
+		cmd.AddArg(wxT("output"), argDict.wxGetString("output"));
+	}
+	else if (cmdStr == wxT("findWithOptions:")) {
+		const wxString action = argDict.wxGetString("action");
+		if (action == wxT("findPrevious")) {
+			eMacroCmd& cmd = macro.Add(wxT("FindPrevious"));
+			cmd.AddArg(wxT("pattern"), argDict.wxGetString("findString"));
+			cmd.AddArg(wxT("ignoreCase"), argDict.GetBool("ignoreCase"));
+			cmd.AddArg(wxT("regularExpression"), argDict.GetBool("regularExpression"));
+			cmd.AddArg(wxT("wrapAround"), argDict.GetBool("wrapAround"));
+		}
+		else if (action == wxT("findNext")) {
+			eMacroCmd& cmd = macro.Add(wxT("FindNext"));
+			cmd.AddArg(wxT("pattern"), argDict.wxGetString("findString"));
+			cmd.AddArg(wxT("ignoreCase"), argDict.GetBool("ignoreCase"));
+			cmd.AddArg(wxT("regularExpression"), argDict.GetBool("regularExpression"));
+			cmd.AddArg(wxT("wrapAround"), argDict.GetBool("wrapAround"));
+		}
+		else {
+			wxASSERT(false);
+			return false;
+		}
+	}
+	else if (cmdStr == wxT("findNext:")) {
+		// ignore for now
+	}
+	else {
+		wxASSERT(false);
+		return false; // unknown command
+	}
+
+	return true;
 }
 
 cxSyntaxInfo* TmSyntaxHandler::GetSyntaxInfo(unsigned int bundleId, unsigned int syntaxId) {
@@ -1637,6 +1842,44 @@ bool TmSyntaxHandler::ParseDragCommand(const tmBundle& bundle, unsigned int comm
 	return true;
 }
 
+bool TmSyntaxHandler::ParseMacro(const tmBundle& bundle, unsigned int macroId) {
+	const PListDict macroDict = m_plistHandler.Get(BUNDLE_MACRO, bundle.bundleRef, macroId);
+
+	const char* name = macroDict.GetString("name");
+	const char* uuid = macroDict.GetString("uuid");
+	if (!name || !uuid) return false;
+
+	// Create the macro
+	tmMacro* cmd = new tmMacro;
+
+	cmd->bundle = &bundle;
+	cmd->plistRef = macroId;
+	cmd->name = wxString(name, wxConvUTF8);
+	cmd->uuid = wxString(uuid, wxConvUTF8);
+	cmd->scope = macroDict.wxGetString("scope");
+
+	// The actual macro content does not get added before GetMacroContent() get called
+#ifdef __WXDEBUG__
+	GetMacroContent(*cmd); // asserts on unknown cmds, to catch new cmds
+#endif
+
+	// Key binding
+	const char* binding = macroDict.GetString("keyEquivalent");
+	if (binding) {
+		cmd->key = tmKey(wxString(binding, wxConvUTF8));
+	}
+
+	// Add to action tree
+	SelectorParser<tmAction> parser(cmd->scope, cmd);
+	sNode<tmAction>* n = parser.ParseExpr();
+	if (n) m_actionNode.Merge(n);
+
+	// Add to action map
+	m_actions[cmd->uuid] = cmd;
+
+	return true;
+}
+
 bool TmSyntaxHandler::ParsePreferences(const PListDict& prefDict, tmBundle* bundle) {
 	const char* scopeStr = prefDict.GetString("scope");
 	const wxString scope = scopeStr ? wxString(scopeStr, wxConvUTF8) : *wxEmptyString;
@@ -1882,6 +2125,9 @@ wxMenu* TmSyntaxHandler::ParseMenu(const PListArray& itemsArray, const PListDict
                 item->AfterInsert();
 				m_menuActions[m_nextMenuID] = action->uuid;
 				++m_nextMenuID;
+			}
+			else {
+				wxLogDebug(wxT("Unknown action ref in menu"));
 			}
 		}
 

@@ -330,7 +330,18 @@ void PreviewDlg::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 
 	// Check if document has changed
 	if (m_pinnedEditor) {
-		if (((m_pinnedEditor == m_editorCtrl || m_editorCtrl->GetName().EndsWith(wxT(".css")))
+		const wxString location = m_locationText->GetValue();
+
+		if (location != m_uncPath) {
+			// If preview is pinned to an external url, refresh on save
+			if (m_editorCtrl->IsSavedForPreview()) {
+				if (m_webcontrol && m_webcontrol->IsShown()) m_webcontrol->Reload();
+				else m_browser->Refresh(wxHTML_REFRESH_NORMAL);
+
+				m_editorCtrl->MarkPreviewDone();
+			}
+		}
+		else if (((m_pinnedEditor == m_editorCtrl || m_editorCtrl->GetName().EndsWith(wxT(".css")))
 			&& m_editorCtrl->GetChangeToken() != m_editorChangeToken)
 			|| m_editorCtrl->IsSavedForPreview() )
 		{
@@ -563,10 +574,15 @@ void PreviewDlg::OnLocationEnter(wxCommandEvent& WXUNUSED(event)) {
 	const wxString location = m_locationText->GetValue();
 	if (location.empty()) return;
 
-	if (location == m_uncPath)
+	if (location == m_uncPath) {
 		UpdateBrowser(cxUPDATE_RELOAD);
-	else
+	}
+	else if (m_webcontrol && m_webcontrol->IsShown()) {
+		m_webcontrol->OpenURI(location, wxWEB_LOAD_NORMAL, NULL, false);
+	}
+	else {
 		m_browser->LoadUrl(location, wxEmptyString, true);
+	}
 }
 
 void PreviewDlg::OnButtonReload(wxCommandEvent& WXUNUSED(event)) {
@@ -574,6 +590,16 @@ void PreviewDlg::OnButtonReload(wxCommandEvent& WXUNUSED(event)) {
 		m_pipeCmd = m_cmdText->GetValue();
 	}
 	else m_pipeCmd.clear();
+
+	// If preview is pinned to an external url, just refresh
+	if (m_pinnedEditor) {
+		const wxString location = m_locationText->GetValue();
+		if (location != m_uncPath) {
+			if (m_webcontrol && m_webcontrol->IsShown()) m_webcontrol->Reload();
+			else m_browser->Refresh(wxHTML_REFRESH_NORMAL);
+			return;
+		}
+	}
 
 	UpdateBrowser(cxUPDATE_RELOAD);
 }

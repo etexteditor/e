@@ -17,6 +17,7 @@
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 #include <wx/spinctrl.h>
+#include <wx/protocol/http.h>
 
 #include "EnvVarsPanel.h"
 
@@ -100,8 +101,8 @@ SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settin
 	wxPanel* encodingPage = CreateEncodingPage(notebook);
 	notebook->AddPage(encodingPage, _("Encoding"));
 	
-	wxPanel* profilePage = CreateProfilePage(notebook);
-	notebook->AddPage(profilePage, _("Profile"));
+	//wxPanel* profilePage = CreateProfilePage(notebook);
+	//notebook->AddPage(profilePage, _("Profile"));
 
 	m_envPage = new EnvVarsPanel(notebook);
 	m_envPage->AddVars(this->m_settings.env);
@@ -145,7 +146,7 @@ wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
 	}
 
 	// Last update label
-	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update:"));
+	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update Check:"));
 	sizer->Add(labelLastUpdate , 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	wxStaticText* labelWhen= new wxStaticText(page, wxID_ANY, when);
@@ -461,7 +462,7 @@ void SettingsDlg::OnCheckBom(wxCommandEvent& event) {
 
 void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	// Check if name & profile pic changed.
-	wxString name = m_ctrlUserName->GetLabel();
+	/*wxString name = m_ctrlUserName->GetLabel();
 	cxLOCK_READ(m_catalyst)
 		if (name == catalyst.GetUserName(0)) name.clear(); // empty string means no change
 	cxENDLOCK
@@ -472,7 +473,7 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 		cxLOCK_WRITE(m_catalyst)
 			catalyst.SetProfile(name, m_userImage);
 		cxENDLOCK
-	}
+	}*/
 
 	if (m_envPage->VarsChanged()) {
 		m_settings.env.clear();
@@ -483,7 +484,13 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void SettingsDlg::OnButtonCheckForUpdates(wxCommandEvent& WXUNUSED(event)) {
-	CheckForUpdates(m_settings, GetAppVersion(), true);
+	wxHTTP* http = new wxHTTP;
+	m_checkForUpdatesButton->SetLabel(wxT("Checking..."));
+	bool available = DoCheckForUpdates(http, GetAppVersion());
+	if(!available) {
+		wxMessageBox(wxT("No new updates available."));
+	}
+	m_checkForUpdatesButton->SetLabel(wxT("Check Now"));
 }
 
 void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {

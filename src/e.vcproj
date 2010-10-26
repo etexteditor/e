@@ -48,8 +48,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\ecore;..\external\wxwidgets\lib\vc_lib\mswud;..\external\wxwidgets\include;..\external\pcre;..\external\libtomcrypt\src\headers;..\external\tinyxml;..\external\curl\include;..\external\metakit\include"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;WINVER=0x500;_MT;wxUSE_GUI=1;__WXDEBUG__;wxUSE_UNICODE=1;WXDEBUG=1;PCRE_STATIC;SUPPORT_UTF8;CURL_STATICLIB;HAVE_CONFIG_H;FEAT_BROWSER"
+				AdditionalIncludeDirectories="..\ecore;..\external\wxwidgets\lib\vc_lib\mswud;..\external\wxwidgets\include;..\external\pcre;..\external\libtomcrypt\src\headers;..\external\tinyxml;..\external\curl\include;..\external\metakit\include;..\external\boost"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;WINVER=0x500;_MT;wxUSE_GUI=1;__WXDEBUG__;wxUSE_UNICODE=1;WXDEBUG=1;PCRE_STATIC;SUPPORT_UTF8;CURL_STATICLIB;HAVE_CONFIG_H;FEAT_BROWSER;_WIN32_WINNT=0x0501;BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB"
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="true"
 				RuntimeLibrary="3"
@@ -212,8 +212,8 @@
 				Optimization="1"
 				InlineFunctionExpansion="2"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\ecore;..\external\wxwidgets\lib\vc_lib\mswu;..\external\wxwidgets\include;..\external\pcre;..\external\libtomcrypt\src\headers;..\external\tinyxml;..\external\curl\include;..\external\metakit\include"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;WINVER=0x500;_MT;wxUSE_GUI=1;wxUSE_UNICODE=1;PCRE_STATIC;SUPPORT_UTF8;CURL_STATICLIB;HAVE_CONFIG_H;FEAT_BROWSER"
+				AdditionalIncludeDirectories="..\ecore;..\external\wxwidgets\lib\vc_lib\mswu;..\external\wxwidgets\include;..\external\pcre;..\external\libtomcrypt\src\headers;..\external\tinyxml;..\external\curl\include;..\external\metakit\include;..\external\boost"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;WINVER=0x500;_MT;wxUSE_GUI=1;wxUSE_UNICODE=1;PCRE_STATIC;SUPPORT_UTF8;CURL_STATICLIB;HAVE_CONFIG_H;FEAT_BROWSER;_WIN32_WINNT=0x0501;BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -353,6 +353,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IConnection.h"
+				>
+			</File>
+			<File
 				RelativePath="IEditorDoAction.h"
 				>
 			</File>
@@ -398,6 +402,14 @@
 			</File>
 			<File
 				RelativePath="IGetPListHandlerRef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IIpcHandler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IIpcServer.h"
 				>
 			</File>
 			<File
@@ -541,6 +553,18 @@
 		<Filter
 			Name="Dialogs"
 			>
+			<File
+				RelativePath=".\AcceleratorsDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AcceleratorsDialog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\AcceleratorsDialogHtml.h"
+				>
+			</File>
 			<File
 				RelativePath="CommitDlg.cpp"
 				>
@@ -938,6 +962,14 @@
 			Name="Editor"
 			>
 			<File
+				RelativePath=".\Accelerators.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Accelerators.h"
+				>
+			</File>
+			<File
 				RelativePath="AutoPairs.cpp"
 				>
 			</File>
@@ -1003,6 +1035,10 @@
 			</File>
 			<File
 				RelativePath="EditorFrame.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Macro.h"
 				>
 			</File>
 			<File
@@ -1166,6 +1202,94 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="hessian_ipc"
+			>
+			<File
+				RelativePath=".\hessian_ipc\connection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\connection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\connection_manager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\connection_manager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\eConnection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\eConnection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\eIpcThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\eIpcThread.h"
+				>
+			</File>
+			<File
+				RelativePath=".\eServer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\eServer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\hessian_reader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\hessian_reader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\hessian_values.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\hessian_values.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\hessian_writers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\proxy.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\proxy.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\server.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hessian_ipc\server.h"
+				>
+			</File>
+		</Filter>
+		<File
+			RelativePath=".\ApiHandler.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ApiHandler.h"
+			>
+		</File>
 		<File
 			RelativePath="application.ico"
 			>
@@ -1252,6 +1376,22 @@
 		</File>
 		<File
 			RelativePath="Colours.h"
+			>
+		</File>
+		<File
+			RelativePath=".\CommandHandler.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CommandHandler.h"
+			>
+		</File>
+		<File
+			RelativePath=".\CommandPanel.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CommandPanel.h"
 			>
 		</File>
 		<File
@@ -1467,6 +1607,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\InputPanel.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\InputPanel.h"
+			>
+		</File>
+		<File
 			RelativePath="Interval.h"
 			>
 		</File>
@@ -1503,6 +1651,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Macro.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\MacroPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\MacroPane.h"
+			>
+		</File>
+		<File
 			RelativePath="matchers.cpp"
 			>
 		</File>
@@ -1528,6 +1688,10 @@
 		</File>
 		<File
 			RelativePath="MultilineDataObject.h"
+			>
+		</File>
+		<File
+			RelativePath=".\public_key.h"
 			>
 		</File>
 		<File
@@ -1656,6 +1820,10 @@
 		</File>
 		<File
 			RelativePath="Utf.h"
+			>
+		</File>
+		<File
+			RelativePath=".\WindowEnabler.h"
 			>
 		</File>
 		<File

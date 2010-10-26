@@ -100,16 +100,16 @@ ProjectSettings::ProjectSettings(wxWindow* parent, const cxProjectInfo& project,
 	}
 
 	if (projectToLoad) {
-		const wxString ind = wxJoin(projectToLoad->includeDirs, wxT('\n'), NULL);
+		const wxString ind = wxJoin(projectToLoad->includeDirs, wxT('\n'), wxT('\0'));
 		m_includeDirs->SetValue(ind);
 
-		const wxString inf = wxJoin(projectToLoad->includeFiles, wxT('\n'), NULL);
+		const wxString inf = wxJoin(projectToLoad->includeFiles, wxT('\n'), wxT('\0'));
 		m_includeFiles->SetValue(inf);
 
-		const wxString exd = wxJoin(projectToLoad->excludeDirs, wxT('\n'), NULL);
+		const wxString exd = wxJoin(projectToLoad->excludeDirs, wxT('\n'), wxT('\0'));
 		m_excludeDirs->SetValue(exd);
 
-		const wxString exf = wxJoin(projectToLoad->excludeFiles, wxT('\n'), NULL);
+		const wxString exf = wxJoin(projectToLoad->excludeFiles, wxT('\n'), wxT('\0'));
 		m_excludeFiles->SetValue(exf);
 	}
 
@@ -142,10 +142,10 @@ void ProjectSettings::GetSettings(cxProjectInfo& project) const {
 	project.ClearFilters();
 
 	if (!m_inheritCheck->GetValue()) {
-		const wxArrayString ind = wxSplit(m_includeDirs->GetValue(), wxT('\n'), NULL);
-		const wxArrayString exd = wxSplit(m_excludeDirs->GetValue(), wxT('\n'), NULL);
-		const wxArrayString inf = wxSplit(m_includeFiles->GetValue(), wxT('\n'), NULL);
-		const wxArrayString exf = wxSplit(m_excludeFiles->GetValue(), wxT('\n'), NULL);
+		const wxArrayString ind = wxSplit(m_includeDirs->GetValue(), wxT('\n'), wxT('\0'));
+		const wxArrayString exd = wxSplit(m_excludeDirs->GetValue(), wxT('\n'), wxT('\0'));
+		const wxArrayString inf = wxSplit(m_includeFiles->GetValue(), wxT('\n'), wxT('\0'));
+		const wxArrayString exf = wxSplit(m_excludeFiles->GetValue(), wxT('\n'), wxT('\0'));
 		project.SetFilters(ind, exd, inf, exf);
 	}
 
@@ -158,16 +158,16 @@ void ProjectSettings::GetSettings(cxProjectInfo& project) const {
 void ProjectSettings::OnInheritCheck(wxCommandEvent& event) {
 	if (event.IsChecked()) {
 
-		const wxString ind = wxJoin(m_parentProject.includeDirs, wxT('\n'), NULL);
+		const wxString ind = wxJoin(m_parentProject.includeDirs, wxT('\n'), wxT('\0'));
 		m_includeDirs->SetValue(ind);
 
-		const wxString inf = wxJoin(m_parentProject.includeFiles, wxT('\n'), NULL);
+		const wxString inf = wxJoin(m_parentProject.includeFiles, wxT('\n'), wxT('\0'));
 		m_includeFiles->SetValue(inf);
 
-		const wxString exd = wxJoin(m_parentProject.excludeDirs, wxT('\n'), NULL);
+		const wxString exd = wxJoin(m_parentProject.excludeDirs, wxT('\n'), wxT('\0'));
 		m_excludeDirs->SetValue(exd);
 
-		const wxString exf = wxJoin(m_parentProject.excludeFiles, wxT('\n'), NULL);
+		const wxString exf = wxJoin(m_parentProject.excludeFiles, wxT('\n'), wxT('\0'));
 		m_excludeFiles->SetValue(exf);
 
 

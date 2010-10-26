@@ -18,14 +18,12 @@
 #include "Env.h"
 #include "matchers.h"
 
-void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippet, cxEnv& env, const tmBundle* bundle) {
-	wxASSERT(editor);
-	m_env = &env;
+void SnippetHandler::StartSnippet(const vector<char>& snippet, cxEnv* env, const tmBundle* bundle) {
+	m_env = env;
 	m_bundle = bundle;
 	Clear();
 	if (snippet.empty()) return;
 
-	m_editor = editor;
 	m_snippet = &snippet;
 
 	// initialize parser
@@ -60,6 +58,13 @@ void SnippetHandler::StartSnippet(EditorCtrl* editor, const vector<char>& snippe
 	// TODO: Notify user if there are parse errors
 }
 
+void SnippetHandler::StartSnippet(const wxString& snippet) {
+	const wxCharBuffer buf = snippet.ToUTF8();
+	const vector<char> str(buf.data(), buf.data() + strlen(buf.data()));
+
+	StartSnippet(str);
+}
+
 void SnippetHandler::GotoEndAndClear() {
 	m_editor->SetPos(m_offset + m_endpos);
 	Clear();
@@ -67,7 +72,6 @@ void SnippetHandler::GotoEndAndClear() {
 
 void SnippetHandler::Clear() {
 	if (m_editor) m_editor->Freeze();
-	m_editor = NULL;
 	m_snippet = NULL;
 
 	m_offset = 0;
@@ -153,7 +157,7 @@ void SnippetHandler::NextTab() {
 		// We are finished with snippet
 		p = m_tabstops.find(0);
 		if (p == m_tabstops.end()) {
-			m_editor->SetPos(m_offset + m_endpos); // Set endpos
+			if (m_endposSet) m_editor->SetPos(m_offset + m_endpos); // Set endpos
 		}
 		else {
 			if (!p->second.pipeCmd.empty()) {
@@ -529,7 +533,7 @@ void SnippetHandler::UpdateIntervals(unsigned int id, int diff) {
 	}
 
 	// Move endpos
-	if (m_endpos >= iv.start) m_endpos += diff;
+	if (m_endpos > iv.start) m_endpos += diff;
 }
 
 void SnippetHandler::UpdateIntervalsFromPos(unsigned int pos, int diff) {
@@ -580,6 +584,33 @@ void SnippetHandler::RemoveChildren(TabStop& ts) {
 			}
 		}
 	}
+}
+
+bool SnippetHandler::AddTabStop(const interval& iv, const wxString& ts) {
+	if (ts.empty()) return false;
+	const wxCharBuffer buf = ts.ToUTF8();
+	const vector<char> str(buf.data(), buf.data() + strlen(buf.data()));
+
+	if (str[0] != '$') return false;
+
+	m_snippet = &str;
+	m_pos = 1;
+	const size_t ivcount = m_intervals.size();
+	const bool endposSet = m_endposSet;	
+
+	if (!ParseReplacement()) return false;
+	
+	if (endposSet != m_endposSet) {
+		m_endpos = iv.start;
+	}
+	else if (m_intervals.size() > ivcount) {
+		// Set tabstop interval to location in text
+		const TabInterval ti = {-1, iv.start, iv.end};
+		m_intervals[ivcount] = ti;
+	}
+	else return false;
+
+	return true;
 }
 
 bool SnippetHandler::Parse(bool isWrapped) {

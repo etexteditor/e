@@ -22,10 +22,11 @@
 class wxBrowser : public wxWebView, public virtual IHtmlWnd {
 	DECLARE_EVENT_TABLE()
 public:
-	wxBrowser(wxWindow *parent, wxWindowID id);
+	wxBrowser(wxWindow *parent, wxWindowID id = wxID_ANY,
+			const wxPoint& point = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	virtual ~wxBrowser();
 	virtual wxWindow* GetWindow();
-	virtual bool LoadString(wxString html);
+	virtual bool LoadString(const wxString& html);
 	virtual void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false);
 	virtual bool Refresh(wxHtmlRefreshLevel level);
 	virtual bool GoBack();

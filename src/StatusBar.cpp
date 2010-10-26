@@ -239,8 +239,8 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 	wxRect encodingRect;
 	GetFieldRect(1, syntaxRect);
 	GetFieldRect(2, tabsRect);
-	GetFieldRect(3, symbolsRect);
-	GetFieldRect(4, encodingRect);
+	GetFieldRect(4, symbolsRect);
+	GetFieldRect(5, encodingRect);
 
 	if (syntaxRect.Contains(x, y)) {
 		PopupSyntaxMenu(syntaxRect);

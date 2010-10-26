@@ -5,29 +5,25 @@
 #ifndef WX_PRECOMP
    #include <wx/wx.h>
 #endif
+#include <wx/treectrl.h>
 
 class EditorFrame;
 class Accelerators;
-class IHtmlWnd;
-class IHtmlWndBeforeLoadEvent;
 
 class AcceleratorsDialog : public wxDialog {
 public:
 	AcceleratorsDialog(EditorFrame *parent);
 
-	wxString* GetHtml();
 	void ParseMenu();
-	void ParseMenu(wxMenu* menuItem, int index, wxString label, int level, int parent);
-	void ParseMenu(wxMenuItem* menuItem, int index, int level, int parent);
+	void ParseMenu(wxMenu* menuItem, wxString label, wxTreeItemId parent);
+	void ParseMenu(wxMenuItem* menuItem, wxTreeItemId parent);
 
 private:
-	void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
+	void OnSave(wxCommandEvent& event);
 
 	EditorFrame* m_editorFrame;
-	IHtmlWnd* m_browser;
-	wxArrayString m_htmlBits;
 	Accelerators* m_accelerators;
-	int m_id;
+	wxTreeCtrl* m_treeView;
 
 	DECLARE_EVENT_TABLE();
 };

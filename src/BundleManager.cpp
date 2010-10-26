@@ -83,7 +83,7 @@ BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLo
 	imageList->Add(wxIcon(exclamation_xpm));
 
 	// Create the controls
-	m_bundleList = new wxListCtrl(this, ID_BUNDLELIST, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxLC_SINGLE_SEL);
+	m_bundleList = new wxListCtrl(this, ID_BUNDLELIST, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxLC_SINGLE_SEL|wxLC_NO_SORT_HEADER);
 	m_bundleList->InsertColumn(0, _("Bundles"));
 	m_bundleList->SetColumnWidth(0, 400);
 	m_bundleList->InsertColumn(1, _("Last Updated"));

@@ -527,11 +527,10 @@ void BundleManager::OnUpdateAllBundles(wxCommandEvent& WXUNUSED(event)) {
 
 		// Get the file info
 		const cxFileInfo* bundle = (cxFileInfo*)m_bundleList->GetItemData(c);
-		const wxString& name = bundle->m_name;
 
 		// Check if bundle is installed
 		BundleState state = BDL_NOT_INSTALLED;
-		cxBundleInfo* info = GetState(bundle, state);
+		GetState(bundle, state);
 
 		switch (state) {
 			case BDL_INSTALLED_OLDER:

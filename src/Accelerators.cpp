@@ -78,7 +78,7 @@ void Accelerators::ParseMenu() {
 	m_chords.clear();
 	m_bindings.clear();
 
-	for(int c = 0; c < m_definedBindings.size(); c++) {
+	for(unsigned int c = 0; c < m_definedBindings.size(); c++) {
 		// If the original binding is inserted, and it also appears on the menu, it will be deleted when the menu is reparsed and lead to a later segfault
 		InsertBinding(new KeyBinding(m_definedBindings[c]->accel, m_definedBindings[c]->id));
 	}

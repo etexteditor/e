@@ -49,6 +49,7 @@ private:
 	void UpdateBundleList();
 	void RestoreBundle();
 	bool InstallBundle();
+	bool InstallBundle(const cxFileInfo* bundle, const wxString& url, long ix);
 	bool DownloadDir(const wxString& url, const wxFileName& path, wxProgressDialog& dlg);
 
 	void AddItems(const wxString& repoName, const std::vector<cxFileInfo>& bundleList);
@@ -58,6 +59,7 @@ private:
 	void SelectItem(long itemId, bool update=false);
 
 	const wxString& GetCurrentRepoUrl() const;
+	const wxString& GetRepoUrl(const wxString& name) const;
 
 	// Event handlers
 	void OnRemoteListReceived(cxRemoteListEvent& event);
@@ -67,6 +69,7 @@ private:
 	void OnDeleteButton(wxCommandEvent& event);
 	void OnClose(wxCloseEvent& event);
 	void OnBeforeLoad(IHtmlWndBeforeLoadEvent& event);
+	void OnUpdateAllBundles(wxCommandEvent& event);
 
 	DECLARE_EVENT_TABLE()
 
@@ -77,6 +80,8 @@ private:
 		BDL_INSTALLED_NEWER,
 		BDL_DISABLED
 	};
+	
+	cxBundleInfo* GetState(const cxFileInfo* bundle, BundleState& state);
 
 	class RepoInfo {
 	public:

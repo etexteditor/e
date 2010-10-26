@@ -48,7 +48,8 @@ enum
 	ID_HTML_DESC = 100,
 	ID_BUNDLELIST,
 	ID_INSTALLBUTTON,
-	ID_DELETEBUTTON
+	ID_DELETEBUTTON,
+	ID_UPDATEALLBUTTON
 };
 
 // Init static vars
@@ -60,6 +61,7 @@ BEGIN_EVENT_TABLE(BundleManager, wxDialog)
 	EVT_LIST_ITEM_SELECTED(ID_BUNDLELIST, BundleManager::OnItemSelected)
 	EVT_BUTTON(ID_INSTALLBUTTON, BundleManager::OnInstallButton)
 	EVT_BUTTON(ID_DELETEBUTTON, BundleManager::OnDeleteButton)
+	EVT_BUTTON(ID_UPDATEALLBUTTON, BundleManager::OnUpdateAllBundles)
 	EVT_CLOSE(BundleManager::OnClose)
 	EVT_HTMLWND_BEFORE_LOAD(ID_HTML_DESC, BundleManager::OnBeforeLoad)
 END_EVENT_TABLE()
@@ -98,6 +100,7 @@ BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLo
 	m_installButton->Hide();
 	m_deleteButton = new wxButton(this, ID_DELETEBUTTON, _("Delete"));
 	m_deleteButton->Hide();
+	wxButton* updateAllButton = new wxButton(this, ID_UPDATEALLBUTTON, _("Update All"));
 
 	// Let the user know that we are downloading bundle info
 	m_bundleList->InsertItem(0, _("Retrieving Bundles..."));
@@ -112,6 +115,7 @@ BundleManager::BundleManager(wxWindow *parent, RemoteThread& remoteThread, ITmLo
 			statusSizer->AddStretchSpacer();
 			statusSizer->Add(m_installButton, 0, wxALIGN_RIGHT|wxLEFT, 5);
 			statusSizer->Add(m_deleteButton, 0, wxALIGN_RIGHT|wxLEFT, 5);
+			statusSizer->Add(updateAllButton, 0, wxALIGN_RIGHT|wxLEFT, 5);
 			m_mainSizer->Add(statusSizer, 0, wxEXPAND|wxLEFT|wxRIGHT, 5);
 		m_mainSizer->Add(m_browser->GetWindow(), 1, wxEXPAND|wxALL, 5);
 
@@ -164,9 +168,12 @@ void BundleManager::UpdateBundleList() {
 
 const wxString& BundleManager::GetCurrentRepoUrl() const {
 	wxASSERT(!m_currentRepo.empty());
+	return GetRepoUrl(m_currentRepo);
+}
 
+const wxString& BundleManager::GetRepoUrl(const wxString& name) const {
 	for (vector<RepoInfo>::const_iterator p = m_repositories.begin(); p != m_repositories.end(); ++p) {
-		if (p->name == m_currentRepo)
+		if (p->name == name)
 			return p->url;
 	}
 
@@ -257,6 +264,24 @@ void BundleManager::OnItemSelected(wxListEvent& event) {
 	SelectItem(itemId);
 }
 
+cxBundleInfo* BundleManager::GetState(const cxFileInfo* bundle, BundleState& state) {
+	state = BDL_NOT_INSTALLED;
+	const wxString& name = bundle->m_name;
+
+	for (vector<cxBundleInfo>::iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
+		if (b->dirName == name) {
+			if (b->isDisabled) state = BDL_DISABLED;
+			else if (b->modDate == bundle->m_modDate) state = BDL_INSTALLED_UPTODATE;
+			else if (b->modDate < bundle->m_modDate) state = BDL_INSTALLED_OLDER;
+			else state = BDL_INSTALLED_NEWER;
+
+			return &*b;
+		}
+	}
+
+	return NULL;
+}
+
 void BundleManager::SelectItem(long itemId, bool update) {
 	m_currentSel = itemId;
 	wxListItem li;
@@ -272,18 +297,7 @@ void BundleManager::SelectItem(long itemId, bool update) {
 
 	// Check if bundle is installed
 	m_currentBundleState = BDL_NOT_INSTALLED;
-	m_currentBundleInfo = NULL;
-	for (vector<cxBundleInfo>::iterator b = m_installedBundles.begin(); b != m_installedBundles.end(); ++b) {
-		if (b->dirName == name) {
-			if (b->isDisabled) m_currentBundleState = BDL_DISABLED;
-			else if (b->modDate == m_currentBundle->m_modDate) m_currentBundleState = BDL_INSTALLED_UPTODATE;
-			else if (b->modDate < m_currentBundle->m_modDate) m_currentBundleState = BDL_INSTALLED_OLDER;
-			else m_currentBundleState = BDL_INSTALLED_NEWER;
-
-			m_currentBundleInfo = &*b;
-			break;
-		}
-	}
+	m_currentBundleInfo = GetState(m_currentBundle, m_currentBundleState);
 
 	Freeze();
 
@@ -438,10 +452,15 @@ void BundleManager::RestoreBundle() {
 
 bool BundleManager::InstallBundle() {
 	wxASSERT(m_currentBundle);
+	bool ret = InstallBundle(m_currentBundle, GetCurrentRepoUrl(), m_currentSel);
+	SelectItem(m_currentSel, true);
+	return ret;
+}
 
+bool BundleManager::InstallBundle(const cxFileInfo* bundle, const wxString& repoUrl, long ix) {
 	// Create temp dir
 	wxString tempDir = wxStandardPaths::Get().GetTempDir();
-	tempDir += wxFILE_SEP_PATH + m_currentBundle->m_name;
+	tempDir += wxFILE_SEP_PATH + bundle->m_name;
 	if (wxDirExists(tempDir)) {
 		// Delete old first
 		DelTree(tempDir);
@@ -449,11 +468,10 @@ bool BundleManager::InstallBundle() {
 	wxMkdir(tempDir);
 
 	// Show progress dialog
-	wxProgressDialog dlg(_("Downloading..."), m_currentBundle->m_name, 200, this, wxPD_AUTO_HIDE|wxPD_APP_MODAL);
+	wxProgressDialog dlg(_("Downloading..."), bundle->m_name, 200, this, wxPD_AUTO_HIDE|wxPD_APP_MODAL);
 
 	// Download bundle
-	const wxString& repoUrl = GetCurrentRepoUrl();
-	const wxString url = repoUrl + m_currentBundle->m_name + wxT('/');
+	const wxString url = repoUrl + bundle->m_name + wxT('/');
 	wxFileName path(tempDir, wxEmptyString);
 	if (!DownloadDir(url, path, dlg)) {
 		DelTree(tempDir); // clean up
@@ -464,12 +482,12 @@ bool BundleManager::InstallBundle() {
 	// Windows does not support changing dates on directories under FAT so
 	// to make sure it works we set the date on info.plist instead
 	path.SetFullName(wxT("info.plist"));
-	path.SetTimes(NULL, &m_currentBundle->m_modDate, NULL);
+	path.SetTimes(NULL, &bundle->m_modDate, NULL);
 
 	// Delete installed version (if any)
 	wxString installPath = GetAppPaths().AppDataPath() + wxT("InstalledBundles") + wxFILE_SEP_PATH;
 	if (!wxDirExists(installPath)) wxMkdir(installPath);
-	installPath += m_currentBundle->m_name;
+	installPath += bundle->m_name;
 	if (wxDirExists(installPath)) DelTree(installPath);
 
 	// Move bundle to install dir
@@ -478,23 +496,54 @@ bool BundleManager::InstallBundle() {
 	// Update list
 	bool inList = false;
 	for (vector<cxBundleInfo>::iterator p = m_installedBundles.begin(); p != m_installedBundles.end(); ++p) {
-		if (p->dirName == m_currentBundle->m_name) {
-			p->modDate = m_currentBundle->m_modDate;
+		if (p->dirName == bundle->m_name) {
+			p->modDate = bundle->m_modDate;
 			inList = true;
 			break;
 		}
 	}
 	if (!inList) {
-		cxBundleInfo bi(-1, m_currentBundle->m_name, m_currentBundle->m_modDate);
+		cxBundleInfo bi(-1, bundle->m_name, bundle->m_modDate);
 		m_installedBundles.push_back(bi);
 	}
 
 	// Update the UI
-	m_bundleList->SetItemImage(m_currentSel, 1); // up-to-date image
-	SelectItem(m_currentSel, true);
+	m_bundleList->SetItemImage(ix, 1); // up-to-date image
 
 	m_needBundleReload = true;
 	return true;
+}
+
+void BundleManager::OnUpdateAllBundles(wxCommandEvent& WXUNUSED(event)) {
+	bool updated = false;
+	for(int c = 0; c < m_bundleList->GetItemCount(); c++) {
+		wxListItem li;
+		li.SetId(c);
+		li.SetColumn(2);
+		li.SetMask(wxLIST_MASK_TEXT);
+		m_bundleList->GetItem(li);
+		const wxString& repo = li.GetText();
+		const wxString& repoUrl = GetRepoUrl(repo);
+
+		// Get the file info
+		const cxFileInfo* bundle = (cxFileInfo*)m_bundleList->GetItemData(c);
+		const wxString& name = bundle->m_name;
+
+		// Check if bundle is installed
+		BundleState state = BDL_NOT_INSTALLED;
+		cxBundleInfo* info = GetState(bundle, state);
+
+		switch (state) {
+			case BDL_INSTALLED_OLDER:
+			case BDL_INSTALLED_NEWER:
+				InstallBundle(bundle, repoUrl, c);
+				updated = true;
+		}
+	}
+
+	if(!updated) {
+		wxMessageBox(wxT("All bundles are already up to date."));
+	}
 }
 
 bool BundleManager::DownloadDir(const wxString& url, const wxFileName& path, wxProgressDialog& dlg) {

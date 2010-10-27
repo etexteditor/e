@@ -75,6 +75,23 @@ void Accelerators::DefineBinding(wxString accel, int id) {
  * and it checks if there is a custom binding for that menu item.
  */
 void Accelerators::ParseMenu() {
+	std::map<int, KeyChord*>::iterator iterator;
+	for(iterator = m_chords.begin(); iterator != m_chords.end(); iterator++) {
+		KeyChord* chord = iterator->second;
+		std::map<int, KeyBinding*>::iterator iterator2;
+		for(iterator2 = chord->bindings.begin(); iterator2 != chord->bindings.end(); iterator2++) {
+			KeyBinding* binding = iterator2->second;
+			delete binding;
+		}
+		delete chord;
+	}
+	
+	std::map<int, KeyBinding*>::iterator iterator2;
+	for(iterator2 = m_bindings.begin(); iterator2 != m_bindings.end(); iterator2++) {
+		KeyBinding* binding = iterator2->second;
+		delete binding;
+	}
+
 	m_chords.clear();
 	m_bindings.clear();
 
@@ -267,11 +284,7 @@ void Accelerators::ReadCustomShortcuts() {
 	}
 }
 
-void Accelerators::SaveCustomShortcuts(wxString& jsonString) {
-	wxJSONReader reader;
-	wxJSONValue bindings;
-	reader.Parse(jsonString, &bindings);
-
+void Accelerators::SaveCustomShortcuts(wxJSONValue& bindings) {
 	wxJSONValue root;
 	root[wxT("bindings")] = bindings;
 
@@ -451,6 +464,11 @@ void Accelerators::Reset() {
 	m_searchBundleBindings = false;
 	m_searchBundleChords = false;
 
+	std::map<int, BundleKeyChord*>::iterator iterator;
+	for(iterator = m_bundleChords.begin(); iterator != m_bundleChords.end(); iterator++) {
+		BundleKeyChord* b = iterator->second;
+		delete b;
+	}
 	m_bundleChords.clear();
 	m_bundleBindings.clear();
 }

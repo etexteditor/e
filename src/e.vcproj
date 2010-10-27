@@ -502,6 +502,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ShortcutChordCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ShortcutChordCtrl.h"
+				>
+			</File>
+			<File
 				RelativePath="ShortcutCtrl.cpp"
 				>
 			</File>
@@ -559,10 +567,6 @@
 			</File>
 			<File
 				RelativePath=".\AcceleratorsDialog.h"
-				>
-			</File>
-			<File
-				RelativePath=".\AcceleratorsDialogHtml.h"
 				>
 			</File>
 			<File

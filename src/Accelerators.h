@@ -7,6 +7,7 @@
 
 class EditorFrame;
 class tmAction;
+class wxJSONValue;
 int makeHash(wxString& accel);
 wxString normalize(wxString str);
 
@@ -48,7 +49,7 @@ public:
 	void DefineBinding(wxString accel, int id);
 
 	void ReadCustomShortcuts();
-	void SaveCustomShortcuts(wxString& jsonRoot);
+	void SaveCustomShortcuts(wxJSONValue& jsonRoot);
 
 	void ParseMenu();
 	void ParseMenu(wxMenu* menu);
@@ -61,7 +62,6 @@ public:
 
 	bool HandleKeyEvent(wxKeyEvent& event);
 	bool MatchMenus(int hash);
-
 	
 	bool MatchBundle(int code, int flags, const tmAction* x);
 	bool BundlesParsed(int code, int flags);

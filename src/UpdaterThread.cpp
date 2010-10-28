@@ -11,20 +11,13 @@
 
 #include "eSettings.h"
 #include "AppVersion.h"
+#include "SettingsDlg.h"
 
-class UpdaterThread : public wxThread {
-public:
-	UpdaterThread(wxHTTP* http, AppVersion* info):
-		m_http(http), m_info(info) {};
-	virtual void *Entry();
-
-private:
-	wxHTTP* m_http;
-	AppVersion* m_info;
+UpdaterThread::UpdaterThread(wxHTTP* http, AppVersion* info):
+	m_http(http), m_info(info), m_CritSectWatcher(), m_Watcher(NULL) {
 };
 
-
-void CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck) {
+UpdaterThread* CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck) {
 	if (!forceCheck) {
 		// Check if it more than 7 days have gone since last update check
 		wxLongLong lastup;
@@ -32,7 +25,7 @@ void CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck) {
 			wxDateTime sevendaysago = wxDateTime::Now() - wxDateSpan(0, 0, 1, 0);
 			wxDateTime lastupdated(lastup);
 
-			if (lastupdated > sevendaysago) return;
+			if (lastupdated > sevendaysago) return NULL;
 		}
 	}
 
@@ -41,8 +34,20 @@ void CheckForUpdates(ISettings& settings, AppVersion* info, bool forceCheck) {
 	wxHTTP* http = new wxHTTP;
 
 	// Start the updater thread
+	wxThreadError res;
 	UpdaterThread *updater = new UpdaterThread(http, info);
-	if (updater->Create() == wxTHREAD_NO_ERROR)	updater->Run();
+	if (wxTHREAD_NO_ERROR == (res = updater->Create())) {
+		if (wxTHREAD_NO_ERROR != (res = updater->Run())) {
+			// need to release resources
+			updater->Delete(); delete updater; updater = NULL;
+			wxLogDebug(wxT("Can't run thread, err %i!"), res);
+		}
+	} else {
+		// need to release resources
+		updater->Delete(); delete updater; updater = NULL;
+		wxLogDebug(wxT("Can't create thread, err %i!"), res);
+	}
+	return updater;
 }
 
 
@@ -114,5 +119,16 @@ void* UpdaterThread::Entry() {
 		wxTheApp->AddPendingEvent(event);
 	}
 
+	// Notify watcher
+	wxCriticalSectionLocker locker(m_CritSectWatcher);
+	if (NULL != m_Watcher) {
+		m_Watcher->NotifyWatcher();
+		m_Watcher = NULL;
+	}
 	return NULL;
+}
+
+void UpdaterThread::SetWatcher(SettingsDlg* dlg) {
+	wxCriticalSectionLocker locker(m_CritSectWatcher);
+	m_Watcher = dlg;
 }

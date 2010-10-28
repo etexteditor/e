@@ -101,6 +101,7 @@ BEGIN_EVENT_TABLE(ThemeEditor, wxDialog)
 	EVT_SIZE(ThemeEditor::OnSize)
 
 	EVT_GRID_SELECT_CELL(ThemeEditor::OnGridSelect)
+	EVT_GRID_RANGE_SELECT(ThemeEditor::OnGridSelectRange)
 	EVT_GRID_CELL_LEFT_DCLICK(ThemeEditor::OnGridLeftDClick)
 	EVT_GRID_CELL_CHANGE(ThemeEditor::OnGridCellChange)
 	EVT_GRID_CELL_RIGHT_CLICK(ThemeEditor::OnGridRightClick)
@@ -115,7 +116,7 @@ END_EVENT_TABLE()
 ThemeEditor::ThemeEditor(wxWindow *parent, ITmThemeHandler& syntaxHandler):
 	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
 	m_syntaxHandler(syntaxHandler), m_plistHandler(m_syntaxHandler.GetPListHandler()),
-	m_themeNdx(-1), m_currentRow(-1) 
+	m_themeNdx(-1), m_currentRow(-1), m_selection()
 {
 	SetTitle (_("Edit Themes"));
 
@@ -316,6 +317,7 @@ ThemeEditor::~ThemeEditor() {
 void ThemeEditor::Clear() {
 	m_themeNdx = -1;
 	m_currentRow = -1;
+	m_selection.Clear();
 
 	m_fgButton->Clear();
 	m_bgButton->Clear();
@@ -363,6 +365,7 @@ void ThemeEditor::EnableCtrls() {
 void ThemeEditor::SetTheme(const PListHandler::cxItemRef& themeRef, bool init) {
 	if (!init && (int)themeRef.ref == m_themeNdx) return;
 	m_currentRow = -1;
+	m_selection.Clear();
 
 	const unsigned int ndx = themeRef.ref;
 	if (!m_plistHandler.GetTheme(ndx, m_themeDict)) return;
@@ -697,21 +700,33 @@ void ThemeEditor::OnNewSetting(wxCommandEvent& WXUNUSED(event)) {
 	EnableCtrls();
 }
 
-void ThemeEditor::OnDelSetting(wxCommandEvent& WXUNUSED(event)) {
-	// WORKAROUND: GetSelectedRows() does not work
-	if (m_currentRow == -1) return;
+// Helper to sort array of ints
+int compare_int(int *a, int *b) {
+	if (*a > *b) return 1;
+	else if (*a < *b) return -1;
+	else return 0;
+};
 
+void ThemeEditor::OnDelSetting(wxCommandEvent& WXUNUSED(event)) {
+	/* WORKAROUND: Sinse GetSelectedRows() does not work
+	/ we need to remove items as per m_selection array */
+	if (m_selection.IsEmpty()) return;
+
+	m_selection.Sort(compare_int);
 	// Make sure the theme is editable
 	if (!m_plistHandler.IsThemeEditable(m_themeNdx)) {
 		m_plistHandler.GetEditableTheme(m_themeNdx, m_themeDict);
 	}
 
 	PListArray settings;
-	if (!m_themeDict.GetArray("settings", settings)) return;
-
-	settings.DeleteItem(m_currentRow + 1);
-	m_grid->DeleteRows(m_currentRow);
+	if (m_themeDict.GetArray("settings", settings)) {
+		for (int i = m_selection.GetCount() - 1; i >= 0 ; i--) {
+			settings.DeleteItem(m_selection[i] + 1);
+			m_grid->DeleteRows(m_selection[i]);
+		}
+	}
 	m_currentRow = -1;
+	m_selection.Clear();
 	EnableCtrls();
 
 	m_grid->ForceRefresh();
@@ -797,9 +812,36 @@ void ThemeEditor::OnSize(wxSizeEvent& event) {
 	event.Skip();
 }
 
+void ThemeEditor::OnGridSelectRange(wxGridRangeSelectEvent& event) {
+
+	// OnGridSelect could already add element from the range, need to check
+	if ((1 == m_selection.GetCount()) && (m_selection[0] >= event.GetTopRow()) \
+		&& (m_selection[0] <= event.GetBottomRow()))
+	{ // need to delete this element
+		m_selection.Clear();
+	}
+
+	for (int i = event.GetTopRow(); i <= event.GetBottomRow(); i++) {
+		if (true == event.Selecting()) { // adding item from new range 
+			m_selection.Add(i);
+		} else { // removing item
+			for (size_t j = 0; j < m_selection.GetCount(); j++) {
+				if (m_selection[j] == i) {
+					m_selection.RemoveAt(j);
+					break;
+				}
+			}
+		}
+	}
+	event.Skip();
+}
+
 void ThemeEditor::OnGridSelect(wxGridEvent& event) {
 	wxASSERT(m_themeDict.IsOk());
 	m_currentRow = event.GetRow();
+	// Single row adding event
+	m_selection.Add(m_currentRow);
+
 	const unsigned int ndx = event.GetRow()+1; // 0 is general settings
 
 	// Allow default grid processing

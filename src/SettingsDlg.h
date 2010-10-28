@@ -20,6 +20,7 @@
 #endif
 
 #include "Catalyst.h"
+#include "UpdaterThread.h"
 
 // Pre-declarations
 class eSettings;
@@ -30,6 +31,8 @@ class EnvVarsPanel;
 class SettingsDlg : public wxDialog {
 public:
 	SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings);
+	// Notify about end of update cheching
+	void NotifyWatcher();
 
 private:
 	wxPanel* CreateSettingsPage(wxWindow* parent);
@@ -63,6 +66,8 @@ private:
 	void OnComboEncoding(wxCommandEvent& event);
 	void OnCheckBom(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
+
+	virtual void EndModal(int retCode);
 
 	// Member variables
 	eSettings& m_settings;
@@ -102,6 +107,8 @@ private:
 	// Updates page
 	wxCheckBox* m_checkForUpdatesAtStartup;
 	wxButton* m_checkForUpdatesButton;
+	wxStaticText* m_labelWhen;
+	UpdaterThread* m_Updater;
 };
 
 #endif // __SETTINGSDLG_H__

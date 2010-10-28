@@ -19,7 +19,6 @@
 #include <wx/spinctrl.h>
 
 #include "EnvVarsPanel.h"
-
 #include "UpdaterThread.h"
 #include "eSettings.h"
 #include "AppVersion.h"
@@ -79,7 +78,7 @@ END_EVENT_TABLE()
 
 SettingsDlg::SettingsDlg(wxWindow *parent, CatalystWrapper cw, eSettings& settings):
 	wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
-	m_settings(settings), m_catalyst(cw), m_ctUserPic(false)
+	m_settings(settings), m_catalyst(cw), m_ctUserPic(false), m_Updater(NULL)
 {
 	SetTitle (_("Settings"));
 
@@ -140,8 +139,8 @@ wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
 	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update:"));
 	sizer->Add(labelLastUpdate , 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
-	wxStaticText* labelWhen= new wxStaticText(page, wxID_ANY, when);
-	sizer->Add(labelWhen, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
+	m_labelWhen = new wxStaticText(page, wxID_ANY, when);
+	sizer->Add(m_labelWhen, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	// Checkbox
 	sizer->AddStretchSpacer();
@@ -448,8 +447,19 @@ void SettingsDlg::OnButtonOk(wxCommandEvent& WXUNUSED(event)) {
 	EndModal(wxID_OK);
 }
 
+void SettingsDlg::EndModal(int retCode) {
+	if (NULL != m_Updater) {
+		m_Updater->SetWatcher(NULL);
+	}
+	wxDialog::EndModal(retCode);
+}
+
 void SettingsDlg::OnButtonCheckForUpdates(wxCommandEvent& WXUNUSED(event)) {
-	CheckForUpdates(m_settings, GetAppVersion(), true);
+	m_Updater = CheckForUpdates(m_settings, GetAppVersion(), true);
+	if (NULL != m_Updater) { // lock button till the checking end
+		m_Updater->SetWatcher(this);
+		m_checkForUpdatesButton->Enable(false);
+	}
 }
 
 void SettingsDlg::OnButtonCygwinAction(wxCommandEvent& WXUNUSED(event)) {
@@ -572,4 +582,15 @@ void SettingsDlg::OnCheckAtomicSave(wxCommandEvent& event) {
 
 void SettingsDlg::OnCheckLastTab(wxCommandEvent& event) {
 	m_settings.SetSettingBool(wxT("gotoLastTab"), event.IsChecked());
+}
+
+void SettingsDlg::NotifyWatcher() {
+	if (NULL != m_labelWhen) {
+		wxString when = wxDateTime::Now().Format();
+		m_labelWhen->SetLabel(when);
+	}
+	if (NULL != m_checkForUpdatesButton) {
+		m_checkForUpdatesButton->Enable(true);
+	}
+	m_Updater = NULL;
 }

@@ -6354,12 +6354,6 @@ void EditorCtrl::OnKeyDown(wxKeyEvent& event) {
 		m_blocksel_ids.clear();
 	}
 
-	if(event.GetKeyCode() == WXK_ALT) return;
-	if(event.GetKeyCode() == WXK_CONTROL) return;
-	if(event.GetKeyCode() == WXK_SHIFT) return;
-
-	if(m_parentFrame.HandleChord(event)) return;
-
 	event.Skip();
 }
 
@@ -9511,6 +9505,10 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 		if (id == WXK_BACK && modifiers == 0x0002) {
 			wxKeyEvent event(CreateKeyEvent(wxEVT_CHAR, id, event.m_rawFlags, event.m_rawCode));
 			ProcessEvent(event);
+			return true;
+		}
+
+		if(m_parentFrame.HandleChord(event)) {
 			return true;
 		}
 #endif

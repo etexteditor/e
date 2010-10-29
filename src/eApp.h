@@ -141,7 +141,7 @@ private:
 	ApiHandler* m_apiHandler;
 
 #ifndef __WXMSW__
-	eServer* m_server;
+	eIpcServer* m_server;
 #endif
 
 	// Option vars

@@ -65,12 +65,12 @@ WXLRESULT eIpcWin::MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) 
 
 #else
 
-// ---- eServer -----------------------------------
+// ---- eIpcServer -----------------------------------
 
-eServer::eServer(IExecuteAppCommand& app) : app(app) {
+eIpcServer::eIpcServer(IExecuteAppCommand& app) : app(app) {
 }
 
-wxConnectionBase* eServer::OnAcceptConnection(const wxString& topic)
+wxConnectionBase* eIpcServer::OnAcceptConnection(const wxString& topic)
 {
     if ( topic == _T("e") )
         return new eConnection(app);

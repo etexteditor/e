@@ -261,7 +261,7 @@ bool eApp::OnInit() {
 #ifdef __WXMSW__
 	new eIpcWin(*this); // hidden win to receive ipc messages
 #else
-	m_server = new eServer(*this);
+	m_server = new eIpcServer(*this);
 	m_server->Create(wxT("eServer"));
 #endif
 

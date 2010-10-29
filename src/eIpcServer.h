@@ -38,10 +38,10 @@ private:
 
 #else
 
-class eServer : public wxServer {
+class eIpcServer : public wxServer {
 public:
-	eServer(IExecuteAppCommand& app);
-    wxConnectionBase *OnAcceptConnection(const wxString& topic);
+	eIpcServer(IExecuteAppCommand& app);
+	wxConnectionBase *OnAcceptConnection(const wxString& topic);
 
 private:
 	IExecuteAppCommand& app;

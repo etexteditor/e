@@ -90,7 +90,7 @@ popd
 # wxwidgets
 pushd wxwidgets
 ./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile \
-                     --without-libtiff --enable-graphics_ctx $cfg_switches \
+                     --without-libtiff --with-libpng=sys --enable-graphics_ctx $cfg_switches \
                      --disable-largefile CPPFLAGS="$CPPCFLAGS $WXWIDGETS_EXTRA_CFLAGS" &&
     make clean &&
     make &&

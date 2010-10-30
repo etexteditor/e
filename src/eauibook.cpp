@@ -14,7 +14,10 @@ class wxTabFrame : public wxWindow
 public:
     wxTabFrame();
     ~wxTabFrame();
-    void SetTabCtrlHeight(int h);
+    void SetTabCtrlHeight(int h)
+    {
+        m_tab_ctrl_height = h;
+    }
     void DoSetSize(int x, int y,
                    int width, int height,
                    int WXUNUSED(sizeFlags = wxSIZE_AUTO));

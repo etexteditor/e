@@ -381,7 +381,6 @@ void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths
 		const int ref = LoadPList(path);
 
 		if (ref != -1) {
-#ifdef __WXDEBUG__
 			// Get the uuid
 			const PListDict plist = GetPlist(ref);
 			const char* uuid = plist.GetString("uuid");
@@ -391,16 +390,16 @@ void PListHandler::UpdatePlists(const wxFileName& path, wxArrayString& filePaths
 			const int plistId = uuid ? vList.Find(pUuid[uuid]) : -1;
 
 			if (plistId != -1) {
-
+#ifdef __WXDEBUG__
 				const c4_RowRef rPlistItem = vList[plistId];
 				const int id = (pLocality(rPlistItem) == PLIST_PRISTINE) ? pPristineRef(rPlistItem) : pLocalRef(rPlistItem);
 				const wxString plistName(pFilename(m_vPlists[id]), wxConvUTF8);
 				wxLogDebug(wxT("WARNING: plist '%s' has same uuid as '%s'"), path.c_str(), plistName.c_str());
-
-				//UpdatePlistItem(ref, loc, vList, plistId);
-			}
 #endif
-			NewPlistItem(ref, loc, vList);
+				UpdatePlistItem(ref, loc, vList, plistId);
+			} else {
+				NewPlistItem(ref, loc, vList);
+			}
 		}
 	}
 }

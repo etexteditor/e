@@ -39,7 +39,6 @@
 #include "IOpenTextmateURL.h"
 #include "ITabPage.h"
 
-
 class EditorCtrl;
 struct EditorChangeState;
 class ProjectPane;
@@ -182,7 +181,8 @@ public:
 		MENU_MACRO_FUNCTIONS,
 		MENU_MACRO_REC,
 		MENU_MACRO_PLAY,
-		MENU_MACRO_EDIT
+		MENU_MACRO_EDIT,
+		MENU_MACRO_CONTINUE
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -462,7 +462,7 @@ private:
 	void OnMenuMacroRec(wxCommandEvent& event);
 	void OnMenuMacroPlay(wxCommandEvent& event);
 	void OnMenuMacroEdit(wxCommandEvent& event);
-
+	void OnMenuMacroContinue(wxCommandEvent& event);
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);
 	void OnEraseBackground(wxEraseEvent& event);

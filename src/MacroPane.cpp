@@ -16,6 +16,18 @@
 #include "EditorFrame.h"
 #include <wx/artprov.h>
 
+// Icons
+#include "images/macropane/play_active.xpm"
+#include "images/macropane/stop_active.xpm"
+#include "images/macropane/delete_active.xpm"
+#include "images/macropane/delete_disabled.xpm"
+#include "images/macropane/save_active.xpm"
+#include "images/macropane/save_disabled.xpm"
+#include "images/macropane/arrow_up_active.xpm"
+#include "images/macropane/arrow_up_disabled.xpm"
+#include "images/macropane/arrow_down_active.xpm"
+#include "images/macropane/arrow_down_disabled.xpm"
+
 // Ctrl id's
 enum {
 	ID_CMDLIST = 100,
@@ -42,19 +54,42 @@ END_EVENT_TABLE()
 MacroPane::MacroPane(EditorFrame& frame, wxWindow* parent, eMacro& macro)
 : wxPanel(parent, wxID_ANY), m_parentFrame(frame), m_recState(false), m_macro(macro)
 {
+	// Icons for buttons
+	const wxBitmap DeleteActiveBitmap(delete_active_xpm);
+	const wxBitmap DeleteDisabledBitmap(delete_disabled_xpm);
+	const wxBitmap SaveActiveBitmap(save_active_xpm);
+	const wxBitmap SaveDisabledBitmap(save_disabled_xpm);
+	const wxBitmap ArrowUpActiveBitmap(arrow_up_active_xpm);
+	const wxBitmap ArrowUpDisabledBitmap(arrow_up_disabled_xpm);
+	const wxBitmap ArrowDownActiveBitmap(arrow_down_active_xpm);
+	const wxBitmap ArrowDownDisabledBitmap(arrow_down_disabled_xpm);
+
 	// Create ctrls
-	m_bitmapStartRec = wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_BUTTON);
-	m_bitmapStopRec = wxArtProvider::GetBitmap(wxART_CROSS_MARK, wxART_BUTTON);
+	m_bitmapStartRec = wxBitmap(play_active_xpm);
+	m_bitmapStopRec = wxBitmap(stop_active_xpm);
 	m_buttonRec = new wxBitmapButton(this, ID_BUTTON_REC, m_bitmapStartRec);
-	//m_buttonNew = new wxBitmapButton(this, ID_BUTTON_NEW, wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON));
-	m_buttonDel = new wxBitmapButton(this, ID_BUTTON_DEL, wxArtProvider::GetBitmap(wxART_DELETE, wxART_BUTTON));
-	m_buttonUp = new wxBitmapButton(this, ID_BUTTON_UP, wxArtProvider::GetBitmap(wxART_GO_UP, wxART_BUTTON));
-	m_buttonDown = new wxBitmapButton(this, ID_BUTTON_DOWN, wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_BUTTON));
-	m_buttonSave = new wxBitmapButton(this, ID_BUTTON_SAVE, wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_BUTTON));
+	m_buttonDel = new wxBitmapButton(this, ID_BUTTON_DEL, DeleteActiveBitmap);
+	if (m_buttonDel) {
+		m_buttonDel->SetToolTip(_("Remove current item\nUse SHIFT to remove all items"));
+		m_buttonDel->SetBitmapDisabled(DeleteDisabledBitmap);
+	}
+	m_buttonUp = new wxBitmapButton(this, ID_BUTTON_UP, ArrowUpActiveBitmap);
+	if (m_buttonUp) {
+		m_buttonUp->SetToolTip(_("Move item up"));
+		m_buttonUp->SetBitmapDisabled(ArrowUpDisabledBitmap);
+	}
+	m_buttonDown = new wxBitmapButton(this, ID_BUTTON_DOWN, ArrowDownActiveBitmap);
+	if (m_buttonDown) {
+		m_buttonDown->SetToolTip(_("Move item down"));
+		m_buttonDown->SetBitmapDisabled(ArrowDownDisabledBitmap);
+	}
+	m_buttonSave = new wxBitmapButton(this, ID_BUTTON_SAVE, SaveActiveBitmap);
+	if (m_buttonSave) {
+		m_buttonSave->SetToolTip(_("Save as Bundle Item\n(select in Bundle Editor)"));
+		m_buttonSave->SetBitmapDisabled(SaveDisabledBitmap);
+	}
 	m_cmdList = new wxListBox(this, ID_CMDLIST);
 	m_argsGrid = new wxGrid(this, ID_ARG_GRID);
-
-	m_buttonSave->SetToolTip(_("Save as Bundle Item\n(select in Bundle Editor)"));
 
 	UpdateButtons();
 
@@ -66,17 +101,16 @@ MacroPane::MacroPane(EditorFrame& frame, wxWindow* parent, eMacro& macro)
 
 	// Create Layout
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
-		wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-			buttonSizer->Add(m_buttonRec, 0, wxALIGN_LEFT);
-			buttonSizer->AddStretchSpacer();
-			//buttonSizer->Add(m_buttonNew, 0, wxALIGN_RIGHT);
-			buttonSizer->Add(m_buttonDel, 0, wxALIGN_RIGHT);
-			buttonSizer->Add(m_buttonUp, 0, wxALIGN_RIGHT);
-			buttonSizer->Add(m_buttonDown, 0, wxALIGN_RIGHT);
-			buttonSizer->Add(m_buttonSave, 0, wxALIGN_RIGHT);
-			mainSizer->Add(buttonSizer, 0, wxEXPAND);
-		mainSizer->Add(m_cmdList, 3, wxEXPAND);
-		mainSizer->Add(m_argsGrid, 1, wxEXPAND);
+	wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+	buttonSizer->Add(m_buttonRec, 0, wxALIGN_LEFT);
+	buttonSizer->AddStretchSpacer();
+	buttonSizer->Add(m_buttonDel, 0, wxALIGN_RIGHT);
+	buttonSizer->Add(m_buttonUp, 0, wxALIGN_RIGHT);
+	buttonSizer->Add(m_buttonDown, 0, wxALIGN_RIGHT);
+	buttonSizer->Add(m_buttonSave, 0, wxALIGN_RIGHT);
+	mainSizer->Add(buttonSizer, 0, wxEXPAND);
+	mainSizer->Add(m_cmdList, 3, wxEXPAND);
+	mainSizer->Add(m_argsGrid, 1, wxEXPAND);
 
 	SetSizer(mainSizer);
 }
@@ -84,12 +118,10 @@ MacroPane::MacroPane(EditorFrame& frame, wxWindow* parent, eMacro& macro)
 void MacroPane::UpdateButtons() {
 	const int ndx = m_cmdList->GetSelection();
 	if (ndx == wxNOT_FOUND) {
-		m_buttonDel->Disable();
 		m_buttonUp->Disable();
 		m_buttonDown->Disable();
 	}
 	else {
-		m_buttonDel->Enable();
 		m_buttonUp->Enable(ndx > 0);
 		m_buttonDown->Enable(ndx+1 < (int)m_macro.GetCount());
 	}
@@ -133,18 +165,25 @@ void MacroPane::OnMacroChanged() {
 }
 
 void MacroPane::OnButtonRec(wxCommandEvent& WXUNUSED(evt)) {
-	if (m_recState) m_macro.EndRecording();
-	else {
+	if (m_recState) {
+		m_macro.EndRecording();
+	} else {
+		if (wxGetKeyState(WXK_SHIFT)) { // remove all macro items
+			m_macro.Clear();
+		}
 		m_macro.StartRecording();
 		m_parentFrame.FocusEditor();
 	}
 }
 
 void MacroPane::OnButtonDel(wxCommandEvent& WXUNUSED(evt)) {
-	const int ndx = m_cmdList->GetSelection();
-	if (ndx == wxNOT_FOUND) return;
-
-	m_macro.Delete(ndx);
+	if (wxGetKeyState(WXK_SHIFT)) { // remove all macro items
+		m_macro.Clear();
+	} else { // remove only current item
+		const int ndx = m_cmdList->GetSelection();
+		if (ndx == wxNOT_FOUND) return;
+		m_macro.Delete(ndx);
+	}
 }
 
 void MacroPane::OnButtonUp(wxCommandEvent& WXUNUSED(evt)) {
@@ -202,7 +241,7 @@ void MacroPane::OnIdle(wxIdleEvent& WXUNUSED(evt)) {
 	else {
 		if (m_recState) {
 			m_buttonRec->SetBitmapLabel(m_bitmapStartRec);
-			m_buttonRec->SetToolTip(_("Start Recording"));
+			m_buttonRec->SetToolTip(_("Macro recording\nUse SHIFT for new macro recording"));
 			m_recState = false;
 		}
 	}

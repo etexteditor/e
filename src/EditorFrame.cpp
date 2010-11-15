@@ -247,6 +247,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_MACRO_REC, EditorFrame::OnMenuMacroRec)
 	EVT_MENU(MENU_MACRO_PLAY, EditorFrame::OnMenuMacroPlay)
 	EVT_MENU(MENU_MACRO_EDIT, EditorFrame::OnMenuMacroEdit)
+	EVT_MENU(MENU_MACRO_CONTINUE, EditorFrame::OnMenuMacroContinue)
 
 	// Dynamic sub-menus
 	EVT_MENU_RANGE(1000, 1999, EditorFrame::OnSubmenuSyntax)
@@ -845,6 +846,7 @@ wxMenu* EditorFrame::GetBundleMenu() {
 
 	wxMenu *macroMenu = new wxMenu;
 	macroMenu->Append(MENU_MACRO_REC, _("&Start Recording"), _("Start Recording"));
+	macroMenu->Append(MENU_MACRO_CONTINUE, _("&Continue Recording"), _("Continue Macro recording"));
 	macroMenu->Append(MENU_MACRO_PLAY, _("&Play Macro"), _("Play Macro"));
 	macroMenu->Append(MENU_MACRO_EDIT, _("&Edit Macro"), _("Edit Macro"), wxITEM_CHECK);
 
@@ -2272,6 +2274,10 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 		if (m_macro.IsRecording()) macroRec->SetItemLabel(_("&Stop Recording"));
 		else macroRec->SetItemLabel(_("&Start Recording"));
 	}
+	wxMenuItem* macroCont = GetMenuBar()->FindItem(MENU_MACRO_CONTINUE);
+	if (macroCont) {
+		macroCont->Enable(!m_macro.IsRecording() && !m_macro.IsEmpty());
+	}
 
 	// We handle key events on our own, so disable accels (from menus)
 	//SetAcceleratorTable(wxNullAcceleratorTable);
@@ -2329,6 +2335,14 @@ void EditorFrame::OnMenuBundleAction(wxCommandEvent& event) {
 }
 
 void EditorFrame::OnMenuMacroRec(wxCommandEvent& WXUNUSED(event)) {
+	if (!m_macro.IsRecording()) {
+		// clean before start recording
+		m_macro.Clear();
+	}
+	m_macro.ToogleRecording();
+}
+
+void EditorFrame::OnMenuMacroContinue(wxCommandEvent& WXUNUSED(event)) {
 	m_macro.ToogleRecording();
 }
 

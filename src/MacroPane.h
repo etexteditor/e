@@ -48,7 +48,6 @@ private:
 	wxBitmap m_bitmapStartRec;
 	wxBitmap m_bitmapStopRec;
 	wxBitmapButton* m_buttonRec;
-	wxBitmapButton* m_buttonNew;
 	wxBitmapButton* m_buttonDel;
 	wxBitmapButton* m_buttonUp;
 	wxBitmapButton* m_buttonDown;

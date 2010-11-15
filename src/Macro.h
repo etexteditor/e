@@ -46,29 +46,29 @@ public:
 
 	const wxString& GetName() const {return m_cmd;};
 	size_t GetArgCount() const {return m_args.size();};
-	const wxString& GetArgName(size_t ndx) const {return (ndx < m_argNames.size()) ? m_argNames[ndx] : wxEmptyString;};
+	const wxString& GetArgName(size_t ndx) const {return (ndx < m_argNames.size()) ? m_argNames[ndx] : wxGetEmptyString();};
 	const wxVariant& GetArg(size_t ndx) const {return m_args[ndx];};
 	wxVariant& GetArg(size_t ndx) {return m_args[ndx];};
 	const std::vector<wxVariant>& GetArgs() const {return m_args;};
 
-	bool GetArgBool(size_t ndx, bool default=false) const {
-		if (ndx >= m_args.size()) return default;
+	bool GetArgBool(size_t ndx, bool dflt=false) const {
+		if (ndx >= m_args.size()) return dflt;
 		const wxVariant& value = m_args[ndx];
-		if (!value.IsType(_("bool"))) return default;
+		if (!value.IsType(_("bool"))) return dflt;
 		return value.GetBool();
 	}
 
-	int GetArgInt(size_t ndx, int default=0) const {
-		if (ndx >= m_args.size()) return default;
+	int GetArgInt(size_t ndx, int dflt=0) const {
+		if (ndx >= m_args.size()) return dflt;
 		const wxVariant& value = m_args[ndx];
-		if (!value.IsType(_("long"))) return default;
+		if (!value.IsType(_("long"))) return dflt;
 		return value.GetLong();
 	}
 
-	wxString GetArgString(size_t ndx, const wxString& default=wxEmptyString) const {
-		if (ndx >= m_args.size()) return default;
+	wxString GetArgString(size_t ndx, const wxString& dflt=wxEmptyString) const {
+		if (ndx >= m_args.size()) return dflt;
 		const wxVariant& value = m_args[ndx];
-		if (!value.IsType(_("string"))) return default;
+		if (!value.IsType(_("string"))) return dflt;
 		return value.GetString();
 	}
 
@@ -122,18 +122,18 @@ public:
 
 	const eMacroCmd& GetCommand(size_t ndx) const {return m_cmds[ndx];};
 	eMacroCmd& GetCommand(size_t ndx) {m_isModified = true; return m_cmds[ndx];};
-	const eMacroCmd& Last() const {m_cmds.back();};
+	void Last() const {m_cmds.back();};
 	eMacroCmd& Last() {m_isModified = true; return m_cmds.back();};
 
 	eMacroCmd& Add(const wxString& cmd) {
-		wxLogDebug(wxT("Adding macro: %s"), cmd);
+		wxLogDebug(wxT("Adding macro: %s"), cmd.c_str());
 		m_cmds.push_back(new eMacroCmd(cmd));
 		m_isModified = true;
 		return m_cmds.back();
 	};
 
 	template<class T> eMacroCmd& Add(const wxString& cmd, const wxString& arg, T value) {
-		wxLogDebug(wxT("Adding macro: %s"), cmd);
+		wxLogDebug(wxT("Adding macro: %s"), cmd.c_str());
 		m_cmds.push_back(new eMacroCmd(cmd));
 		m_cmds.back().AddArg(arg, value);
 		m_isModified = true;

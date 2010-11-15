@@ -1,8 +1,8 @@
 VERBOSE=0
 DEBUG=0
 
-VERSION=1.0
-RELEASE=31
+VERSION=2.0
+RELEASE=1
 ROOTDIR=..
 
 ifeq ($(VERBOSE),0)
@@ -52,9 +52,10 @@ INCLUDES = $(WXINCLUDES) $(OURINCLUDES) $(GTKINCLUDES) -I$(ROOTDIR)/ecore -I.
 
 OURLIBPATHS = -L$(EXT_DIR)/lib
 WXLIBS = $(shell $(EXT_DIR)/bin/wx-config --libs)
-WEBKIT_LIBS = -lwxwebkit -lwebcore-wx -ljscore
+WEBKIT_LIBS = -lwxwebkit -ljscore
+BOOST_LIBS = -lboost_system
 
-LIBS = $(OURLIBPATHS) -L$(ROOTDIR)/ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre -ltinyxml $(WEBKIT_LIBS) $(WXLIBS)
+LIBS = $(OURLIBPATHS) -L$(ROOTDIR)/ecore -l$(ECORE) -lcurl -ltomcrypt -ltommath -lmk4 -lpcre -ltinyxml $(WEBKIT_LIBS) $(WXLIBS) $(BOOST_LIBS)
 
 # Exceptions which do not need to be compiled on linux
 EXCEPT = CygwinDlg.cpp \
@@ -66,7 +67,7 @@ EXCEPT = CygwinDlg.cpp \
          ShellContextMenu.cpp \
          wxactivex.cpp
 
-SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp)) 
+SRCS = $(filter-out $(EXCEPT), $(wildcard *.cpp hessian_ipc/*.cpp webconnect/*.cpp))
 OBJS = $(SRCS:%.cpp=$(OUTDIR)/%.o)
 DEPS = $(SRCS:%.cpp=$(OUTDIR)/%.d)
 
@@ -83,7 +84,7 @@ $(EXE): $(OBJS)
 	$(SILENT)$(CXX) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS) $(EXTOBJS)
 
 $(OUTDIR)/%.o: %.cpp
-	@-mkdir -p $(OUTDIR)
+	@-mkdir -p $(OUTDIR) $(OUTDIR)/hessian_ipc $(OUTDIR)/webconnect
 	@$(ECHO) "[CC] $<"
 	$(SILENT)$(CXX) $(INCLUDES) $(CXXFLAGS) -c -o $@ $<
 

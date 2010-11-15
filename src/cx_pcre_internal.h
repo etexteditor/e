@@ -1708,7 +1708,7 @@ sense, but are not part of the PCRE public API. */
 
 extern BOOL         _pcre_is_newline(USPTR, int, USPTR,
                       int *, BOOL);
-extern int          _pcre_ord2utf8(int, uschar *);
+PCRE_EXP_DECL int          _pcre_ord2utf8(int, uschar *);
 extern real_pcre   *_pcre_try_flipped(const real_pcre *, real_pcre *,
                       const pcre_study_data *, pcre_study_data *);
 extern int          _pcre_valid_utf8(USPTR, int);

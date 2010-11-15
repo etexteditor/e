@@ -20,10 +20,10 @@
 // Pre-definitions
 class IIpcHandler;
 
-class eConnection : public hessian_ipc::connection, public IConnection {
+class eIpcConnection : public hessian_ipc::connection, public IConnection {
 public:
-	explicit eConnection(boost::asio::io_service& io_service, hessian_ipc::connection_manager& manager, IIpcHandler& handler);
-	virtual ~eConnection();
+	explicit eIpcConnection(boost::asio::io_service& io_service, hessian_ipc::connection_manager& manager, IIpcHandler& handler);
+	virtual ~eIpcConnection();
 
 	// Method handling
 	void invoke_method();

@@ -51,7 +51,7 @@ public:
 	int OnExit();
 
 	const wxString& VersionName() const { return m_version_name; }
-	const unsigned int VersionId() const { return m_version_id; }
+	unsigned int VersionId() const { return m_version_id; }
 
 	// Frames
 	EditorFrame* NewFrame();

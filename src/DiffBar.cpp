@@ -299,7 +299,7 @@ void DiffBar::OnMouseMotion(wxMouseEvent& evt) {
 	const unsigned int rightBracket = size.x - s_bracketWidth;
 	int highlight = -1;
 
-	if (mpos.x <= s_bracketWidth) {
+	if (mpos.x <= (int)s_bracketWidth) {
 		std::vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
 		if( p != m_lineMatches.end()) highlight = p->left_start;
 	}
@@ -318,7 +318,7 @@ void DiffBar::OnMouseLeftUp(wxMouseEvent& evt) {
 	const wxSize size = GetClientSize();
 	const wxPoint mpos = evt.GetPosition();
 	
-	if (mpos.x <= s_bracketWidth) {
+	if (mpos.x <= (int)s_bracketWidth) {
 		// Have we clicked a bracket?
 		std::vector<LineMatch>::const_iterator p = OnLeftBracket(mpos.y);
 		if (p == m_lineMatches.end()) return;

@@ -15,7 +15,9 @@
 #include "tmAction.h"
 
 #ifdef __WXGTK__
+#define GSocket GlibGSocket
 #include <gtk/gtk.h>
+#undef GSocket
 
 void BundleMenuItem::AfterInsert(void) {
      GtkWidget *hbox = gtk_hbox_new(FALSE, 0);

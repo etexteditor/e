@@ -132,6 +132,11 @@ void Writer::write(unsigned int value) {
 	write((int)value);
 }
 
+// write unsigned long
+void Writer::write(unsigned long value) {
+	write((long long)value);
+}
+
 // write 64bit integer
 void Writer::write(long long value) {
 	if (-0x08 <= value && value <= 0x0f) {

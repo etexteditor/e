@@ -1232,7 +1232,9 @@ void ProjectPane::OnTreeContextMenu(wxTreeEvent& event) {
 	wxTreeItemId item = event.GetItem();
 	if (!item) return;
 
+#ifdef __WXMSW__
 	bool showExtendedItems = wxGetKeyState(WXK_SHIFT);
+#endif
 
 	// Get the path of the item clicked
 	const DirItemData *data = (DirItemData*)m_prjTree->GetItemData(item);

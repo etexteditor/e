@@ -108,7 +108,7 @@ public:
 	int AddSelection(unsigned int start, unsigned int end);
 	int UpdateSelection(unsigned int sel_id, unsigned int start, unsigned int end);
 	const std::vector<interval>& GetSelections() const;
-	const interval* const FirstSelection() const;
+	const interval* FirstSelection() const;
 	void ShadowSelections(bool isShadow=true) {m_isSelShadow = isShadow;};
 	void RemoveAllSelections(bool checkShadow=false, unsigned int pos=0);
 	void RemoveSelection(unsigned int sel_id);

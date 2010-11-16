@@ -721,7 +721,14 @@ unsigned int FixedLine::DrawText(int xoffset, int x, int y, unsigned int start, 
 		const unsigned int right_border = width - xoffset;
 		vector<unsigned int>::iterator p_start = m_extents.begin() + start;
 		vector<unsigned int>::iterator p = lower_bound(p_start, m_extents.end(), right_border);
-		++p; // may be partially visible
+		
+		unsigned short tmp = utf8_len(buf[distance(m_extents.begin(), p)]);
+		if ((5 == tmp) || (tmp > distance(p, m_extents.end()))) {
+			// bad symbol or incomplete string
+			wxFAIL;
+		} else {
+			p += tmp; // may be partially visible
+		}
 
 		const unsigned int seglen = distance(p_start, p);
 		const unsigned int segend = start + seglen;

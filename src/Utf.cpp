@@ -104,7 +104,10 @@ size_t ConvertFromUTF8toString(const wxCharBuffer& utf8_buff, size_t utf8_buff_l
 
 	// Convert to widechar
 	const size_t wchar_len = UTF8ToWChar(buff, utf8_buff_len, utf8_buff, utf8_buff_len);
-	if (wchar_len == wxCONV_FAILED) return wxCONV_FAILED; // invalid conversion
+	if (wchar_len == wxCONV_FAILED) { // invalid conversion
+		text.UngetWriteBuf(0);
+		return wxCONV_FAILED;
+	}
 
 	text.UngetWriteBuf(wchar_len);
 

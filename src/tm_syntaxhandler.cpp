@@ -842,6 +842,20 @@ bool TmSyntaxHandler::TranslateMacroCmd(const PListDict& macroDict, eMacro& macr
 }
 
 
+/*
+ * @TODO
+ * Add support for at least the following commands (these are found in textmate's bundles):
+ * - findWithOptions with action replaceAll
+ * - centerSelectionInVisibleArea
+ * - indent
+ * - toggleFolding
+ * - shiftLeft
+ * - insertSnippetWithOptions (with arguments: content, name, tabTrigger, scope, uuid - as in snippets files)
+ * - deleteForward
+ * - selectBlock
+ * - selectHardLine
+ * - deleteToBeginningOfLine
+ */
 bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& macro) const {
 	const wxString cmdStr = macroDict.wxGetString("command");
 	PListDict argDict;
@@ -849,6 +863,9 @@ bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& ma
 
 	if (cmdStr == wxT("selectWord:")) {
 		macro.Add(wxT("SelectWord"));
+	}
+	if (cmdStr == wxT("selectAll:")) {
+		macro.Add(wxT("SelectAll"));
 	}
 	else if (cmdStr == wxT("moveUp:")) {
 		macro.Add(wxT("CursorUp"), wxT("select"), false);
@@ -863,16 +880,57 @@ bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& ma
 		macro.Add(wxT("CursorRight"), wxT("select"), false);
 	}
 	else if (cmdStr == wxT("moveToBeginningOfLine:")) {
-		macro.Add(wxT("CursorToLineStart"), wxT("soft"), false);
+		macro.Add(wxT("CursorToLineStart"), wxT("soft"), false)
+			.AddArg(wxT("select"), false);
 	}
 	else if (cmdStr == wxT("moveToEndOfLine:")) {
-		macro.Add(wxT("CursorToLineEnd"));
+		macro.Add(wxT("CursorToLineEnd"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveToBeginningOfDocument:")) {
+		macro.Add(wxT("CursorToHome"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveToEndOfDocument:")) {
+		macro.Add(wxT("CursorToEnd"), wxT("select"), false);
 	}
 	else if (cmdStr == wxT("moveToEndOfParagraph:")) {
-		macro.Add(wxT("CursorToLineEnd"));
+		macro.Add(wxT("CursorToLineEnd"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("pageUp:")) {
+		macro.Add(wxT("PageUp"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("pageDown:")) {
+		macro.Add(wxT("PageDown"), wxT("select"), false);
+	}
+	else if (cmdStr == wxT("moveUpAndModifySelection:")) {
+		macro.Add(wxT("CursorUp"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("moveDownAndModifySelection:")) {
+		macro.Add(wxT("CursorDown"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("moveLeftAndModifySelection:")) {
+		macro.Add(wxT("CursorLeft"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("moveRightAndModifySelection:")) {
+		macro.Add(wxT("CursorRight"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("moveToBeginningOfLineAndModifySelection:")) {
+		macro.Add(wxT("CursorToLineStart"), wxT("soft"), false)
+			.AddArg(wxT("select"), true);
+	}
+	else if (cmdStr == wxT("moveToEndOfLineAndModifySelection:")) {
+		macro.Add(wxT("CursorToLineEnd"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("moveToBeginningOfDocumentAndModifySelection:")) {
+		macro.Add(wxT("CursorToHome"), wxT("select"), true);
 	}
 	else if (cmdStr == wxT("moveToEndOfDocumentAndModifySelection:")) {
-		macro.Add(wxT("CursorEnd"), wxT("select"), true);
+		macro.Add(wxT("CursorToEnd"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("pageUpAndModifySelection:")) {
+		macro.Add(wxT("PageUp"), wxT("select"), true);
+	}
+	else if (cmdStr == wxT("pageDownAndModifySelection:")) {
+		macro.Add(wxT("PageDown"), wxT("select"), true);
 	}
 	else if (cmdStr == wxT("deleteBackward:")) {
 		macro.Add(wxT("Backspace"));

@@ -2290,9 +2290,13 @@ unsigned int EditorCtrl::InsertNewline() {
 
 void EditorCtrl::InsertChar(const wxChar& text) {
 	if (m_macro.IsRecording()) {
-		eMacroCmd& cmd = lastaction != ACTION_INSERT || m_macro.IsEmpty() || m_macro.Last().GetName() != wxT("InsertChars")
-			             ? m_macro.Add(wxT("InsertChars"), wxT("text"), wxT("")) : m_macro.Last();
-		cmd.ExtendString(0, text);
+		if (text == '\n')
+			m_macro.Add(wxT("InsertNewline"));
+		else {
+			eMacroCmd& cmd = lastaction != ACTION_INSERT || m_macro.IsEmpty() || m_macro.Last().GetName() != wxT("InsertChars")
+					     ? m_macro.Add(wxT("InsertChars"), wxT("text"), wxT("")) : m_macro.Last();
+			cmd.ExtendString(0, text);
+		}
 	}
 
 	if (m_snippetHandler.IsActive()) {
@@ -6414,17 +6418,13 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 			case WXK_HOME:
 			case WXK_NUMPAD_HOME:
 			case WXK_NUMPAD_BEGIN:
-				CursorToLineStart(true);
-				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
-				else RemoveAllSelections();
+				CursorToSoftLineStart(event.ShiftDown() ? SEL_SELECT : SEL_REMOVE);
 				lastaction = ACTION_NONE;
 				break;
 
 			case WXK_END:
 			case WXK_NUMPAD_END:
-				CursorToLineEnd();
-				if (event.ShiftDown()) SelectFromMovement(oldpos, GetPos());
-				else RemoveAllSelections();
+				CursorToLineEnd(event.ShiftDown() ? SEL_SELECT : SEL_REMOVE);
 				lastaction = ACTION_NONE;
 				break;
 
@@ -6641,6 +6641,10 @@ void EditorCtrl::SetPos(int line, int column) {
 }
 
 void EditorCtrl::PageUp(bool select, int WXUNUSED(count)) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("PageUp"), wxT("select"), select);
+	}
+
 	const wxSize size = GetClientSize();
 	const int oldpos = m_lines.GetPos();
 	const wxPoint cpos = m_lines.GetCaretPos();
@@ -6659,6 +6663,10 @@ void EditorCtrl::PageUp(bool select, int WXUNUSED(count)) {
 }
 
 void EditorCtrl::PageDown(bool select, int WXUNUSED(count)) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("PageDown"), wxT("select"), select);
+	}
+
 	const wxSize size = GetClientSize();
 	const int oldpos = m_lines.GetPos();
 	const wxPoint cpos = m_lines.GetCaretPos();
@@ -6939,34 +6947,56 @@ void EditorCtrl::CursorToColumn(unsigned int column) {
 	m_lines.SetPos(wxMin(newpos, lineEnd));
 }
 
-void EditorCtrl::CursorToLineStart(bool soft) {
+void EditorCtrl::CursorToLineStart(bool soft, SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorToLineStart"), wxT("soft"), soft)
+			.AddArg(wxT("select"), (select == SEL_SELECT));
+	}
+
 	const unsigned int oldpos = GetPos();
 	const unsigned int currentLine = m_lines.GetCurrentLine();
 	const unsigned int startOfLine = m_lines.GetLineStartpos(currentLine);
 
-	if (!soft) m_lines.SetPos(startOfLine);
+	unsigned int pos;
+
+	if (!soft) pos = startOfLine;
 	else {
 		const unsigned int indentPos = m_lines.GetLineIndentPos(currentLine);
 
 		if (indentPos < oldpos) {
 			// Move to first text after indentation
-			m_lines.SetPos(indentPos);
+			pos = indentPos;
 		}
 		else {
 			if (oldpos == startOfLine) {
 				// Move back to text after indentation
-				m_lines.SetPos(indentPos);
+				pos = indentPos;
 			}
 			else {
 				// Move to start-of-line
-				m_lines.SetPos(startOfLine);
+				pos = startOfLine;
 			}
 		}
 	}
+	m_lines.SetPos(pos);
+
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, pos);
 }
 
-void EditorCtrl::CursorToLineEnd() {
-	m_lines.SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+void EditorCtrl::CursorToLineEnd(SelAction select) {
+	if (m_macro.IsRecording()) {
+		m_macro.Add(wxT("CursorToLineEnd"), wxT("select"), (select == SEL_SELECT));
+	}
+
+	const unsigned int oldpos = GetPos();
+	unsigned int pos = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
+	m_lines.SetPos(pos);
+
+	// Handle selection
+	if (select == SEL_REMOVE) m_lines.RemoveAllSelections();
+	else if (select == SEL_SELECT) SelectFromMovement(oldpos, pos);
 }
 
 void EditorCtrl::CursorToNextChar(wxChar c) {
@@ -9868,6 +9898,23 @@ wxVariant EditorCtrl::PlayCommand(const eMacroCmd& cmd) {
 	else if (name == wxT("CursorToEnd")) {
 		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
 		CursorToEnd(select);
+	}
+	else if (name == wxT("CursorToLineStart")) {
+		const bool soft = cmd.GetArgBool(0);
+		const SelAction select = cmd.GetArgBool(1) ? SEL_SELECT : SEL_REMOVE;
+		CursorToLineStart(soft, select);
+	}
+	else if (name == wxT("CursorToLineEnd")) {
+		const SelAction select = cmd.GetArgBool(0) ? SEL_SELECT : SEL_REMOVE;
+		CursorToLineEnd(select);
+	}
+	else if (name == wxT("PageUp")) {
+		const bool select = cmd.GetArgBool(0);
+		PageUp(select);
+	}
+	else if (name == wxT("PageDown")) {
+		const bool select = cmd.GetArgBool(0);
+		PageDown(select);
 	}
 	else if (name == wxT("SetPos")) {
 		const unsigned int pos = cmd.GetArgInt(0);

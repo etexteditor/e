@@ -19,9 +19,11 @@
 	#include <wx/wx.h>
 #endif
 
+/* This dialog shows list of file modified or deleted by external program for
+reloading or saving purposes */
 class ReloadDlg : public wxDialog {
 public:
-	ReloadDlg(wxWindow *parent, const wxArrayString& paths);
+	ReloadDlg(wxWindow *parent, const wxArrayString& paths, bool isDeleted = false);
 
 	// Access to checklistbox
 	int GetCount() const;
@@ -42,12 +44,20 @@ BEGIN_EVENT_TABLE(ReloadDlg, wxDialog)
 	EVT_BUTTON(wxID_NO, ReloadDlg::OnNo)
 END_EVENT_TABLE()
 
-ReloadDlg::ReloadDlg(wxWindow *parent, const wxArrayString& paths)
+ReloadDlg::ReloadDlg(wxWindow *parent, const wxArrayString& paths, bool isDeleted)
 : wxDialog (parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER ) {
-	SetTitle (_("Files changed on disk"));
+	wxString dlg_title, dlg_label;
 
+	if (isDeleted) {
+		dlg_title = _("Files deleted on disk");
+		dlg_label = _("Do you want to save deleted files?");
+	} else {
+		dlg_title = _("Files changed on disk");
+		dlg_label = _("Do you want to reload modified files?");
+	}
+	SetTitle(dlg_title);
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-	sizer->Add(new wxStaticText(this, -1, _("Do you want to reload modified files?")), 0, wxALL, 5);
+	sizer->Add(new wxStaticText(this, -1, dlg_label), 0, wxALL, 5);
 
 	checklist = new wxCheckListBox(this, -1,wxDefaultPosition, wxDefaultSize, paths);
 	for (unsigned int i = 0; i < checklist->GetCount(); ++i) {

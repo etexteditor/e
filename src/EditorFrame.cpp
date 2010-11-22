@@ -283,6 +283,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_IDLE(EditorFrame::OnIdle)
 	EVT_KEY_UP(EditorFrame::OnKeyUp)
 	EVT_FILESCHANGED(EditorFrame::OnFilesChanged)
+	EVT_FILESDELETED(EditorFrame::OnFilesDeleted)
 
 	EVT_MOUSEWHEEL(EditorFrame::OnMouseWheel)
 
@@ -302,7 +303,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 	m_settings(m_generalSettings.GetFrameSettings(frameId)),
 	m_syntax_handler(syntax_handler),
 
-	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false),
+	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false), m_inAskSave(false),
 	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
 	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
@@ -1075,6 +1076,37 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	wxLogDebug(wxT("OnFilesChanged done"));
 }
 
+void EditorFrame::OnFilesDeleted(wxFilesDeletedEvent& event) {
+	wxLogDebug(wxT("OnFilesDeleted done"));
+	if (wxPendingDelete.Member(this)) {
+		return; // no need to worry about changes if we are closing
+	}
+	if (m_inAskSave) return; // nested calls
+	const wxArrayString& paths = event.GetDeletedFiles();
+	vector<unsigned int> pathsToPages;
+
+	// Match paths with documents
+	const unsigned int count = paths.GetCount();
+	for (unsigned int i = 0; i < count; ++i) {
+		const wxString& path = paths[i];
+
+		// Find doc with current path
+		const unsigned int pageCount = m_tabBar->GetPageCount();
+		for (unsigned int p = 0; p < pageCount; ++p) {
+			const EditorCtrl* page = GetEditorCtrlFromPage(p);
+			const wxString filePath = page->GetPath();
+			if (path == filePath) {
+				pathsToPages.push_back(p);
+				break;
+			}
+		}
+	}
+
+	AskToSaveMulti(pathsToPages);
+
+	wxLogDebug(wxT("OnFilesDeleted done"));
+}
+
 /*
 void EditorFrame::CheckForModifiedFiles() {
 	// Check if we have any documents with modified files
@@ -1206,6 +1238,60 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 	}
 
 	m_inAskReload = false;
+}
+
+/* When some open files was removed by another application we need to ask user
+to save these files once more */
+void EditorFrame::AskToSaveMulti(const vector<unsigned int>& pathToPages) {
+	if (m_inAskSave) return; // nested-calls
+	if (pathToPages.empty()) return;
+
+	// When dialog is closed we will get a second activate event
+	// this var make us aware of this so we can avoid asking twice
+	m_inAskSave = true;
+
+	// Build list of paths (some may be remote)
+	wxArrayString paths;
+	for (unsigned int p = 0; p < pathToPages.size(); ++p) {
+		EditorCtrl* ec = GetEditorCtrlFromPage(pathToPages[p]);
+		paths.Add(ec->GetPath());
+	}
+
+	// Ask the user if he wants to reload them
+	ReloadDlg reloaddlg(this, paths, true);
+	const int result = reloaddlg.ShowModal();
+
+	if (result == wxID_YES) {
+		for (unsigned int i = 0; i < pathToPages.size(); ++i) { // for each file
+			EditorCtrl* ec = GetEditorCtrlFromPage(pathToPages[i]);
+			if (!ec) {
+				wxFAIL_MSG(wxT("invalid page"));
+				continue;
+			}
+			if (reloaddlg.IsChecked(i)) { // Save file
+				ec->SaveText();
+			} else { // Mark as modified
+				cxLOCK_WRITE(m_catalyst)
+					catalyst.SetFileMirrorToModified(paths[i], ec->GetDocID());
+				cxENDLOCK
+			}
+			UpdateWindowTitle(); // Update tabs and title
+		}
+	} else {
+		// Mark files modified and skip saving this file
+		for (unsigned int i = 0; i < pathToPages.size(); ++i) {
+			EditorCtrl* ec = GetEditorCtrlFromPage(pathToPages[i]);
+			if (!ec) {
+				wxFAIL_MSG(wxT("invalid page"));
+				continue;
+			}
+			cxLOCK_WRITE(m_catalyst)
+				catalyst.SetFileMirrorToModified(paths[i], ec->GetDocID());
+			cxENDLOCK
+			UpdateWindowTitle(); // Update tabs and title
+		}
+	}
+	m_inAskSave = false;
 }
 
 void EditorFrame::RemoveRegMenus() {
@@ -3573,7 +3659,7 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 		// If the frame get focus we want to pass it to the currently active editorCtrl
 		editorCtrl->SetFocus();
 
-		if (!m_inAskReload) {
+		if ((!m_inAskReload) || (!m_inAskSave)) {
 			// Should we check for changed files?
 			bool doCheckChange = true;  // default
 			m_generalSettings.GetSettingBool(wxT("checkChange"), doCheckChange);

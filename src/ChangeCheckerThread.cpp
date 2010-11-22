@@ -18,6 +18,7 @@
 using namespace std;
 
 DEFINE_EVENT_TYPE(wxEVT_FILESCHANGED)
+DEFINE_EVENT_TYPE(wxEVT_FILESDELETED)
 
 ChangeCheckerThread::ChangeCheckerThread(const vector<ChangePath>& paths, wxEvtHandler& evtHandler, RemoteThread& rt, ChangeCheckerThread*& pointer)
 : m_paths(paths), m_evtHandler(evtHandler), m_remoteThread(rt), m_pointer(pointer) {
@@ -31,6 +32,7 @@ void* ChangeCheckerThread::Entry() {
 	if (m_paths.empty()) return NULL;
 
 	wxArrayString changedFiles;
+	wxArrayString deletedFiles;
 	vector<wxDateTime> modDates;
 
 	for (vector<ChangePath>::const_iterator p = m_paths.begin(); p != m_paths.end(); ++p) {
@@ -51,7 +53,10 @@ void* ChangeCheckerThread::Entry() {
 			else {
 				// Check if file exists
 				wxFileName fn(p->path);
-				if (!fn.FileExists()) continue;
+				if (!fn.FileExists()) { // not exist is deleted file
+					deletedFiles.Add(p->path);
+					continue;
+				}
 
 				modDate = fn.GetModificationTime();
 			}
@@ -81,9 +86,14 @@ void* ChangeCheckerThread::Entry() {
 		modDates.push_back(modDate);
 	}
 
-	// Send the event
+	// Send changed files event
 	if (!changedFiles.IsEmpty()) {
 		wxFilesChangedEvent event(changedFiles, modDates);
+		m_evtHandler.AddPendingEvent(event);
+	}
+	// Send deleted files event
+	if (!deletedFiles.IsEmpty()) {
+		wxFilesDeletedEvent event(deletedFiles);
 		m_evtHandler.AddPendingEvent(event);
 	}
 

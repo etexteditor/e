@@ -57,6 +57,7 @@ private:
 // Declare custom event
 BEGIN_DECLARE_EVENT_TYPES()
 	DECLARE_EVENT_TYPE(wxEVT_FILESCHANGED, 801)
+	DECLARE_EVENT_TYPE(wxEVT_FILESDELETED, 802)
 END_DECLARE_EVENT_TYPES()
 
 class wxFilesChangedEvent : public wxEvent {
@@ -80,6 +81,26 @@ typedef void (wxEvtHandler::*wxFilesChangedEventFunction) (wxFilesChangedEvent&)
 
 #define wxFilesChangedEventHandler(func) (wxObjectEventFunction)(wxEventFunction) (wxFilesChangedEventFunction) &func
 #define EVT_FILESCHANGED(func) wx__DECLARE_EVT0(wxEVT_FILESCHANGED, wxFilesChangedEventHandler(func))
+
+class wxFilesDeletedEvent : public wxEvent {
+public:
+	wxFilesDeletedEvent(const wxArrayString& paths, int id = 0)
+		: wxEvent(id, wxEVT_FILESDELETED), m_deletedFiles(paths) {};
+	wxFilesDeletedEvent(const wxFilesDeletedEvent& event)
+		: wxEvent(event), m_deletedFiles(event.m_deletedFiles) {};
+	virtual wxEvent* Clone() const {
+		return new wxFilesDeletedEvent(*this);
+	};
+
+	const wxArrayString& GetDeletedFiles() const {return m_deletedFiles;};
+
+private:
+	const wxArrayString m_deletedFiles;
+};
+typedef void (wxEvtHandler::*wxFilesDeletedEventFunction) (wxFilesDeletedEvent&);
+
+#define wxFilesDeletedEventHandler(func) (wxObjectEventFunction)(wxEventFunction) (wxFilesDeletedEventFunction) &func
+#define EVT_FILESDELETED(func) wx__DECLARE_EVT0(wxEVT_FILESDELETED, wxFilesDeletedEventHandler(func))
 
 
 #endif //__CHANGECHECKERTHREAD_H__

@@ -45,6 +45,7 @@ class ProjectPane;
 class PreviewDlg;
 class SymbolList;
 class wxFilesChangedEvent;
+class wxFilesDeletedEvent;
 class ChangeCheckerThread;
 class BundlePane;
 class DocHistory;
@@ -341,6 +342,9 @@ private:
 	// Changed files
 	void AskToReloadMulti(const vector<unsigned int>& pathToPages, const vector<wxDateTime>& modDates);
 
+	// Deleted files
+	void AskToSaveMulti(const vector<unsigned int>& pathToPages);
+
 	// State
 	void SaveState();
 	void LoadSize();
@@ -488,6 +492,7 @@ private:
 	void OnPaneClose(wxAuiManagerEvent& event);
 	void OnKeyUp(wxKeyEvent& event);
 	void OnFilesChanged(wxFilesChangedEvent& event);
+	void OnFilesDeleted(wxFilesDeletedEvent& event);
 	//void OnMenuRevTooltip(wxCommandEvent& event);
 	//void OnMenuIncomming(wxCommandEvent& event);
 	//void OnMenuIncommingTool(wxCommandEvent& event);
@@ -522,6 +527,7 @@ private:
 	bool m_needStateSave;
 	bool m_keyDiags;
 	bool m_inAskReload;
+	bool m_inAskSave;
 	ChangeCheckerThread* m_changeCheckerThread;
 
 	// Main Panel

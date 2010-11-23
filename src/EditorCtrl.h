@@ -530,7 +530,7 @@ protected:
 	int ShowPopupList(wxMenu& menu);
 
 	void Tab();
-	bool DoTabTrigger(unsigned int wordstart, unsigned int wordend);
+	bool DoTabTrigger(unsigned int pos);
 
 	void DeleteSelections();
 	void InsertOverSelections(const wxString& text);

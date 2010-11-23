@@ -191,6 +191,24 @@ private:
 	void Tokenize(const wxString& scope, wxArrayString& words) const;
 };
 
+// Compare class for triggers
+class TriggerCompare {
+public:
+	bool operator()(const wxString& a, const wxString &b) {
+		size_t a_len = a.Len(), b_len = b.Len();
+		for (size_t i = 1; i <= a_len; i++) {
+			if (b_len < i) return true;
+			if (a[a_len - i] > b[b_len - i]) {
+				return false;
+			} else if (a[a_len - i] < b[b_len - i]) {
+				return true;
+			}
+		}
+		return false;
+	};
+};
+typedef std::map<const wxString, sNode<tmAction>*, class TriggerCompare> Triggers;
+
 class TmSyntaxHandler:
 	public ITmThemeHandler,
 	public ITmLoadBundles,
@@ -368,7 +386,7 @@ private:
 	sNode<tmAction> m_actionNode;
 	sNode<tmDragCommand> m_dragNode;
 	std::map<const wxString, tmAction*> m_actions;
-	std::map<const wxString, sNode<tmAction>*> m_actionTriggers;
+	Triggers m_actionTriggers;
 	std::map<unsigned int, wxString> m_menuActions;
 	wxMenu* m_bundleMenu;
 	unsigned int m_nextMenuID;

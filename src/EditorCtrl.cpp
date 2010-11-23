@@ -1358,49 +1358,12 @@ void EditorCtrl::Tab() {
 		return;
 	}
 
+	unsigned int pos = GetPos();
 	if (m_macro.IsRecording()) m_macro.Add(wxT("Tab"));
 
 	// If the tab is preceded by a word it can trigger a snippet
-	const unsigned int pos = GetPos();
-	unsigned int wordstart = pos;
-
-	// First check if we can get a trigger before first non-alnum char
-	cxLOCKDOC_READ(m_doc)
-		while (wordstart) {
-			const unsigned int prevchar = doc.GetPrevCharPos(wordstart);
-			const wxChar c = doc.GetChar(prevchar);
-			if (!Isalnum(c)) break;
-			wordstart = prevchar;
-		}
-	cxENDLOCK
-	if (wordstart < pos && DoTabTrigger(wordstart, pos)) return;
-
-	// If that did not give a trigger, try to first whitespace
-	cxLOCKDOC_READ(m_doc)
-		while (wordstart) {
-			const unsigned int prevchar = doc.GetPrevCharPos(wordstart);
-			const wxChar c = doc.GetChar(prevchar);
-			if (wxIsspace(c)) break;
-			wordstart = prevchar;
-		}
-	cxENDLOCK
-	if (wordstart < pos) {
-		if (DoTabTrigger(wordstart, pos)) return;
-
-		// If we still don't have a trigger, check if we are in quotes or parans
-		// (needed for the rare case when trigger is non-alnum)
-		unsigned int qstart = pos;
-		cxLOCKDOC_READ(m_doc)
-			while (qstart > wordstart) {
-				const unsigned int prevchar = doc.GetPrevCharPos(qstart);
-				const wxChar c = doc.GetChar(prevchar);
-				if (c == wxT('"') || c == wxT('\'') || c == wxT('(') || c == wxT('{') || c == wxT('[')) break;
-				qstart = prevchar;
-			}
-		cxENDLOCK
-		if (qstart < pos && qstart != wordstart && DoTabTrigger(qstart, pos)) return;
-	}
-
+	if (DoTabTrigger(pos)) return;
+	
 	// If we get to here we have to insert a real tab
 	if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab
 		InsertChar(wxChar('\t'));
@@ -1429,21 +1392,18 @@ void EditorCtrl::Tab() {
 	Insert(indent);
 }
 
-bool EditorCtrl::DoTabTrigger(unsigned int wordstart, unsigned int wordend) {
-	wxASSERT(wordstart < wordend && wordend <= m_lines.GetLength());
+bool EditorCtrl::DoTabTrigger(unsigned int pos) {
+	wxASSERT(pos <= m_lines.GetLength());
 
-	wxString trigger;
+	wxString strPart; // part of the current line to check trigger actions
 	cxLOCKDOC_READ(m_doc)
-		trigger = doc.GetTextPart(wordstart, wordend);
+		strPart = doc.GetTextPart(doc.GetLineStart(pos), pos);
 	cxENDLOCK
 
-	const deque<const wxString*> scope = m_syntaxstyler.GetScope(wordend);
-	const vector<const tmAction*> actions = m_syntaxHandler.GetActions(trigger, scope);
+	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
+	const vector<const tmAction*> actions = m_syntaxHandler.GetActions(strPart, scope);
 
 	if (actions.empty()) return false; // no action found for trigger
-
-	//wxLogDebug(wxT("%s (%u)"), trigger, snippets.size());
-	//wxLogDebug(wxT("%s"), actions[0]->content);
 
 	// Present user with a list of actions
 	int actionIndex = 0;
@@ -1460,7 +1420,7 @@ bool EditorCtrl::DoTabTrigger(unsigned int wordstart, unsigned int wordend) {
 
 	// Remove the trigger
 	Freeze();
-	RawDelete(wordstart, wordend);
+	RawDelete(pos - actions[actionIndex]->trigger.Len(), pos);
 
 	// Do the Action
 	DoAction(*actions[actionIndex], NULL, true);

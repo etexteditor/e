@@ -29,6 +29,8 @@
 #include "IAppPaths.h"
 #include "IEditorDoAction.h"
 
+bool Isalnum(wxChar c); // defined in EditorCtrl.cpp
+
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__
     #pragma warning(push, 1)
@@ -298,7 +300,7 @@ void TmSyntaxHandler::ClearBundleActions() {
 	m_actions.clear();
 
 	// Release allocated triggers
-	for (map<const wxString, sNode<tmAction>*>::iterator t = m_actionTriggers.begin(); t != m_actionTriggers.end(); ++t) {
+	for (Triggers::iterator t = m_actionTriggers.begin(); t != m_actionTriggers.end(); ++t) {
 		delete t->second;
 	}
 	m_actionTriggers.clear();
@@ -742,15 +744,24 @@ void TmSyntaxHandler::GetDragActions(const deque<const wxString*>& scopes, vecto
 	m_dragNode.GetMatches(scopes, result, matchfun);
 }
 
-const vector<const tmAction*> TmSyntaxHandler::GetActions(const wxString& trigger, const deque<const wxString*>& scopes) const {
-	map<const wxString, sNode<tmAction>*>::const_iterator p = m_actionTriggers.find(trigger);
+const vector<const tmAction*> TmSyntaxHandler::GetActions(
+	const wxString& strPart, const deque<const wxString*>& scopes) const {
 
-	if (p != m_actionTriggers.end()) {
-		p->second->Print();
-		const vector<const tmAction*>* s = (const vector<const tmAction*>*)p->second->GetMatch(scopes);
-		if (s) return *s;
+	Triggers::const_iterator p = m_actionTriggers.lower_bound(strPart);
+	wxString key = p->first;
+	while ((p != m_actionTriggers.end()) &&
+		((key[key.Len() - 1] == strPart[strPart.Len() - 1]))) {
+
+		if (!strPart.EndsWith(key)) {
+		} else if ((key.Len() < strPart.Len()) && (Isalnum(key[0])) && 
+			(Isalnum(strPart[strPart.Len() - key.Len() - 1]))) {
+		} else {
+			const vector<const tmAction*>* s = (const vector<const tmAction*>*)p->second->GetMatch(scopes);
+			if (s) return *s;
+		}
+		++p;
+		key = p->first;
 	}
-
 	return vector<const tmAction*>();
 }
 

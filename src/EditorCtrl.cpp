@@ -1400,6 +1400,8 @@ bool EditorCtrl::DoTabTrigger(unsigned int pos) {
 		strPart = doc.GetTextPart(doc.GetLineStart(pos), pos);
 	cxENDLOCK
 
+	if (strPart.empty()) return false; // empty string is not trigger
+
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(pos);
 	const vector<const tmAction*> actions = m_syntaxHandler.GetActions(strPart, scope);
 

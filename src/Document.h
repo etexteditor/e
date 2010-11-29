@@ -169,12 +169,8 @@ private:
 	c4_View vNodes;
 	c4_View vHistory;
 	doc_id m_docId;
-	DataText m_textData;
-
-	bool in_change;
-	int change_level;
 	bool do_notify;
-	int do_notify_top;
+	DataText m_textData;
 
 	// Cache of last compiled regex
 	mutable wxString m_regex_cache;
@@ -184,6 +180,10 @@ private:
 	// Change Tracking Callback
 	void(*m_trackChanges)(cxChangeType, unsigned int, unsigned int, void*);
 	void* m_trackChangesData;
+
+	bool in_change;
+	int change_level;
+	int do_notify_top;
 
 	// Support functions
 	void PrepareForChange();

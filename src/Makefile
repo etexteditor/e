@@ -24,7 +24,7 @@ ifeq ($(DEBUG),0)
 	EXE      = e
 	PKGSUFF  =
 else
-	ECORE    = ecore
+	ECORE    = ecored
 	CXXFLAGS = -O0 -g
 	LDFLAGS  = -g
 	EXT_DIR  = $(ROOTDIR)/external/out.debug

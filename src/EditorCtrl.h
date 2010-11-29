@@ -251,8 +251,10 @@ public:
 	void CursorToEnd(SelAction select);
 	void CursorToLine(unsigned int line);
 	void CursorToColumn(unsigned int column);
-	void CursorToLineStart(bool soft=true);
-	void CursorToLineEnd();
+	void CursorToLineStart(bool soft=true, SelAction select = SEL_REMOVE);
+	void CursorToSoftLineStart(SelAction select) {CursorToLineStart(true, select);};
+	void CursorToHardLineStart(SelAction select) {CursorToLineStart(false, select);};
+	void CursorToLineEnd(SelAction select);
 	void CursorToNextChar(wxChar c);
 	void CursorToPrevChar(wxChar c);
 	void CursorToWordStart(bool bigword);

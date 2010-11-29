@@ -81,6 +81,7 @@ _extract_and_patch()
   patch tinyxml/tinyxml.h < patches/tinyxml/tinyxml.h.patch
 	echo "---- Applying wxwidget patches ----"
   patch -Np1 -d wxwidgets < patches/wxWidgets-gsock.patch
+  patch -Np1 -d wxwidgets < patches/wxWidgets-r63137.patch
 	echo "---- Applying webkit patches ----"
   patch -Np1 -d webkit < patches/webkit/webkit_688833_to_git_trunk.diff
   patch -Np1 -d webkit < patches/webkit/fully-static.patch

@@ -90,7 +90,7 @@ popd
 # wxwidgets
 pushd wxwidgets
 ./configure --prefix=$output --enable-monolithic=yes --enable-shared=no --enable-unicode --enable-ffile \
-                     --without-libtiff --enable-graphics_ctx $cfg_switches \
+                     --without-libtiff --with-libpng=sys --enable-graphics_ctx $cfg_switches \
                      --disable-largefile CPPFLAGS="$CPPCFLAGS $WXWIDGETS_EXTRA_CFLAGS" &&
     make clean &&
     make &&
@@ -100,8 +100,9 @@ popd
 
 # wxwebkit
 pushd webkit
+WebKitTools/Scripts/set-webkit-configuration --${variant}
 PATH="$output/bin:${PATH}" ./WebKitTools/Scripts/build-webkit --wx --wx-args=wxgc,ENABLE_OFFLINE_WEB_APPLICATIONS=0,ENABLE_DOM_STORAGE=1,ENABLE_DATABASE=0,ENABLE_ICONDATABASE=0,ENABLE_XPATH=1,ENABLE_XSLT=1,ENABLE_VIDEO=0,ENABLE_SVG=0,ENABLE_COVERAGE=0,ENABLE_WML=0,ENABLE_WORKERS=0 &&
-    mv ./WebKitBuild/${webkit_output}.*/*.a $output/lib &&
+    mv ./WebKitBuild/${webkit_output}*/*.a $output/lib &&
     cp ./WebKit/wx/*.h $output/include/wx-2.8/wx &&
     strip -g $output/lib/libwxwebkit.a ||
         ( echo "Cannot compile WebKit" ; exit 1 )

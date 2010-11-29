@@ -172,13 +172,13 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorRight), EditorCtrl::SEL_IGNORE));
 				break;
 			case '0':
-				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), false));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToHardLineStart), EditorCtrl::SEL_IGNORE));
 				break;
 			case '^':
-				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), true));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToSoftLineStart), EditorCtrl::SEL_IGNORE));
 				break;
 			case '$':
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToLineEnd));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineEnd), EditorCtrl::SEL_IGNORE));
 				break;
 			case 'G':
 				if (m_count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLine), count));
@@ -186,7 +186,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				break;
 			case '|':
 				if (m_count) DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToColumn), count));
-				else DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), false));
+				else DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToHardLineStart), EditorCtrl::SEL_IGNORE));
 				break;
 			case 'f':
 				m_state = state_findchar;
@@ -367,7 +367,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				}
 				else if (!m_editor.HasSearchRange()) {
 					// Insert line below current
-					m_editor.CursorToLineEnd();
+					m_editor.CursorToLineEnd(EditorCtrl::SEL_IGNORE);
 					m_editor.InsertNewline();
 					m_parentFrame.ShowCommandMode(false);
 					Clear();
@@ -376,7 +376,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 			case 'O':
 				if (!selected && !m_editor.HasSearchRange()) {
 					// Insert line above current
-					m_editor.CursorToLineStart();
+					m_editor.CursorToSoftLineStart(EditorCtrl::SEL_IGNORE);
 					m_editor.InsertNewline();
 					m_editor.CursorLeft(EditorCtrl::SEL_IGNORE);
 					m_parentFrame.ShowCommandMode(false);
@@ -412,13 +412,13 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				Clear();
 				return true;
 			case 'I':
-				DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), true));
+				DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToSoftLineStart), EditorCtrl::SEL_IGNORE));
 				m_editor.ClearSearchRange(true);
 				m_parentFrame.ShowCommandMode(false);
 				Clear();
 				return true;
 			case 'A':
-				DoMovement(1, mem_fun_ref(&EditorCtrl::CursorToLineEnd));
+				DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineEnd), EditorCtrl::SEL_IGNORE));
 				m_editor.ClearSearchRange(true);
 				m_parentFrame.ShowCommandMode(false);
 				Clear();
@@ -427,9 +427,9 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				if (m_state == state_change) {
 					// Change current line
 					m_select = false;
-					DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineStart), true), false);
+					DoMovement(1, bind2nd(mem_fun_ref(&EditorCtrl::CursorToSoftLineStart), EditorCtrl::SEL_IGNORE), false);
 					m_select = true;
-					DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToLineEnd), false);
+					DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineEnd), EditorCtrl::SEL_IGNORE), false);
 					if (m_editor.IsSelected()) m_editor.Delete();
 					m_editor.ClearSearchRange(true);
 					m_parentFrame.ShowCommandMode(false);
@@ -443,7 +443,7 @@ bool CommandHandler::ProcessCommand(const wxKeyEvent& evt, bool record) {
 				break;
 			case 'C':
 				m_select = true;
-				DoMovement(count, mem_fun_ref(&EditorCtrl::CursorToLineEnd));
+				DoMovement(count, bind2nd(mem_fun_ref(&EditorCtrl::CursorToLineEnd), EditorCtrl::SEL_IGNORE));
 				if (m_editor.IsSelected()) m_editor.Delete();
 				m_editor.ClearSearchRange(true);
 				m_parentFrame.ShowCommandMode(false);

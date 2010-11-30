@@ -196,7 +196,7 @@ private:
 // Compare class for triggers
 class TriggerCompare {
 public:
-	bool operator()(const wxString& a, const wxString &b) {
+	bool operator()(const wxString& a, const wxString &b) const {
 		size_t a_len = a.Len(), b_len = b.Len();
 		for (size_t i = 1; i <= a_len; i++) {
 			if (b_len < i) return true;

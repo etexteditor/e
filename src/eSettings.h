@@ -19,12 +19,13 @@
 #include <wx/string.h>
 #endif
 
+#include <time.h>
 #include "jsonval.h"
 #include "Catalyst.h"
 #include "auto_vector.h"
 #include "ISettings.h"
 
-
+class eApp;
 class RemoteProfile;
 
 enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
@@ -32,6 +33,8 @@ enum SubPage {SP_MAIN=0, SP_LEFT, SP_RIGHT};
 class eFrameSettings {
 public:
 	eFrameSettings(wxJSONValue& framesettings);
+
+	void AutoSave();
 
 	// Get setting values
 	bool GetSettingBool(const wxString& name, bool& value) const;
@@ -131,6 +134,19 @@ public:
 
 	// Environmental variables
 	map<wxString, wxString> env;
+	
+	// Tab Settings
+	bool GetTabWidth(const wxString& name, unsigned int& width) const;
+	bool IsSoftTabs(const wxString& name, bool& softTabs) const;
+
+	bool ShouldSave();
+	void DontSave();
+	void AllowSave();
+	void AutoSave();
+	void DoAutoSave();
+	void SetApp(eApp* app);
+
+	wxString GetSettingsDir() { return m_settingsDir; }
 
 private:
 	// Recent files (support functions)
@@ -143,8 +159,15 @@ private:
 	static wxString StripSlashes(const wxString& path);
 
 	wxString m_path;
+	wxString m_settingsDir;
 	wxJSONValue m_jsonRoot;
 	auto_vector<RemoteProfile> m_tempRemotes; // cache for remote profiles
+
+	eApp* m_app;
+	bool haveApp;
+	bool needSave;
+	int m_blockCount;
+	time_t lastChange;
 };
 
 eSettings& eGetSettings(void);

@@ -49,6 +49,7 @@ class eApp : public wxApp,
 public:
 	virtual bool OnInit();
 	int OnExit();
+	void CatalystCommit();
 
 	const wxString& VersionName() const { return m_version_name; }
 	unsigned int VersionId() const { return m_version_id; }

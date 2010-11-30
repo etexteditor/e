@@ -1,0 +1,61 @@
+diff -crB src/common/menucmn.cpp src/common/menucmn.cpp
+*** src/common/menucmn.cpp	2010-02-12 00:05:09.505159000 -0500
+--- src/common/menucmn.cpp	2010-09-18 00:52:08.285646800 -0400
+***************
+*** 190,197 ****
+--- 190,203 ----
+      // parse the accelerator string
+      int accelFlags = wxACCEL_NORMAL;
+      wxString current;
++     int size = label.length();
+      for ( size_t n = (size_t)posTab + 1; n < label.length(); n++ )
+      {
++         char c1 = label[n];
++         
++         // ignore chords
++         if(label[n] == ' ') return false;
++ 
+          if ( (label[n] == '+') || (label[n] == '-') )
+          {
+              // differentiate between a ctrl that will be translated to cmd on mac
+diff -crB src/msw/menu.cpp src/msw/menu.cpp
+*** src/msw/menu.cpp	2010-02-12 00:05:18.754688000 -0500
+--- src/msw/menu.cpp	2010-09-18 15:48:21.112913700 -0400
+***************
+*** 289,294 ****
+--- 289,295 ----
+  
+  void wxMenu::UpdateAccel(wxMenuItem *item)
+  {
++     return;
+      if ( item->IsSubMenu() )
+      {
+          wxMenu *submenu = item->GetSubMenu();
+diff -crB include/wx/accel.h include/wx/accel.h
+*** include/wx/accel.h	2010-02-12 00:04:49.566018500 -0500
+--- include/wx/accel.h	2010-09-17 12:19:28.018812500 -0400
+***************
+*** 124,134 ****
+      bool FromString(const wxString& str);
+  
+  
+- private:
+      // common part of Create() and FromString()
+      static bool ParseAccel(const wxString& str, int *flags, int *keycode);
+  
+  
+      int m_flags;    // combination of wxACCEL_XXX constants
+      int m_keyCode;  // ASCII or virtual keycode
+      int m_command;  // Command id to generate
+--- 124,134 ----
+      bool FromString(const wxString& str);
+  
+  
+      // common part of Create() and FromString()
+      static bool ParseAccel(const wxString& str, int *flags, int *keycode);
+  
+  
++ private:
+      int m_flags;    // combination of wxACCEL_XXX constants
+      int m_keyCode;  // ASCII or virtual keycode
+      int m_command;  // Command id to generate

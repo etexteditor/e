@@ -57,7 +57,8 @@ VersionTree::VersionTree(wxWindow* parent, wxWindowID id, const wxPoint& pos, co
 	nodespacing = yoffset*2;
 	needRecalc = false;
 	needRedrawing = false;
-	scrollPos = 0;
+	verticalScrollPos = 0;
+	horizontalScrollPos = 0;
 	lineheight = nodeheight + nodespacing;
 	treeWidth = xoffset*2 + nodewidth;
 
@@ -172,7 +173,7 @@ void VersionTree::DrawTree(wxRect& rect) {
 	// Clear the background
 	mdc.SetBrush(bgBrush);
 	mdc.SetPen(*wxWHITE_PEN);
-	mdc.DrawRectangle(rect.x, rect.y - scrollPos, rect.width, rect.height);
+	mdc.DrawRectangle(rect.x-horizontalScrollPos, rect.y - verticalScrollPos, rect.width, rect.height);
 
 	const size_t nodecount = parents.size();
 	if (!nodecount) return;
@@ -207,22 +208,25 @@ void VersionTree::DrawTree(wxRect& rect) {
 		const int style = vt_event.GetItemStyle();
 		const int ypos = node_ypos[i] + yoffset;
 
+        int x = node_xpos[i]-horizontalScrollPos;
+        int y = ypos - verticalScrollPos;
+        
 		if (style & VTREESTYLE_DRAFT) {
-			if (i == selectedNode) mdc.DrawBitmap(m_bmDraftSelected, node_xpos[i], ypos - scrollPos, true);
-			else mdc.DrawBitmap(m_bmDraft, node_xpos[i], ypos - scrollPos, true);
+			if (i == selectedNode) mdc.DrawBitmap(m_bmDraftSelected, x, y, true);
+			else mdc.DrawBitmap(m_bmDraft, x, y, true);
 		}
 		else {
 			// Draw base node
-			if (style & VTREESTYLE_PENDING) mdc.DrawBitmap(m_bmDocPending, node_xpos[i], ypos - scrollPos, true);
-			else mdc.DrawBitmap(m_bmDoc, node_xpos[i], ypos - scrollPos, true);
+			if (style & VTREESTYLE_PENDING) mdc.DrawBitmap(m_bmDocPending, x, y, true);
+			else mdc.DrawBitmap(m_bmDoc, x, y, true);
 
 			// Draw color overlay (selected or unread)
-			if (i == selectedNode) mdc.DrawBitmap(m_bmOverlaySelected, node_xpos[i], ypos - scrollPos, true);
-			else if (style & VTREESTYLE_UNREAD) mdc.DrawBitmap(m_bmOverlayUnread, node_xpos[i], ypos - scrollPos, true);
+			if (i == selectedNode) mdc.DrawBitmap(m_bmOverlaySelected, x, y, true);
+			else if (style & VTREESTYLE_UNREAD) mdc.DrawBitmap(m_bmOverlayUnread, x, y, true);
 		}
 
 		// Draw mirror overlay
-		if (style & VTREESTYLE_SAVED) mdc.DrawBitmap(m_bmOverlayMirrored, node_xpos[i], ypos - scrollPos, true);
+		if (style & VTREESTYLE_SAVED) mdc.DrawBitmap(m_bmOverlayMirrored, x, y, true);
 	}
 
 	// Draw lines between the nodes
@@ -230,13 +234,15 @@ void VersionTree::DrawTree(wxRect& rect) {
 	for (size_t m = 1; m < nodecount; ++m) {
 		const size_t parent = parents[m];
 		if (parent <= endnode && m >= topnode) {
-			const int parentypos = (node_ypos[parent] + yoffset) - scrollPos;
-			const int nodeypos = (node_ypos[m] + yoffset) - scrollPos;
-			mdc.DrawLine(node_xpos[parent] + halfwidth, parentypos + nodeheight,
-                         node_xpos[m] + halfwidth, parentypos + nodeheight + nodespacing);
+			const int parentypos = (node_ypos[parent] + yoffset) - verticalScrollPos;
+			const int nodeypos = (node_ypos[m] + yoffset) - verticalScrollPos;
+			const int parentxpos = node_xpos[parent] + halfwidth - horizontalScrollPos;
+			const int nodexpos = node_xpos[m] + halfwidth - horizontalScrollPos;
+			mdc.DrawLine(parentxpos, parentypos + nodeheight,
+                         nodexpos, parentypos + nodeheight + nodespacing);
 
-			mdc.DrawLine(node_xpos[m] + halfwidth, parentypos + nodeheight + nodespacing,
-                         node_xpos[m] + halfwidth, nodeypos);
+			mdc.DrawLine(nodexpos, parentypos + nodeheight + nodespacing,
+                         nodexpos, nodeypos);
 		}
 	}
 }
@@ -252,7 +258,7 @@ void VersionTree::UpdateTree() {
 
 	wxSize size = GetClientSize();
 
-	wxRect rect(0,scrollPos,size.x,size.y);
+	wxRect rect(horizontalScrollPos,verticalScrollPos,size.x,size.y);
 	DrawTree(rect);
 
 	// Copy MemoryDC to Display
@@ -262,34 +268,35 @@ void VersionTree::UpdateTree() {
 	needRedrawing = false;
 }
 
-void VersionTree::Scroll(int pos) {
-	if (pos == scrollPos) return;
+void VersionTree::ScrollVertical(int pos) {
+    Scroll(horizontalScrollPos, pos);
+}
+
+void VersionTree::Scroll(int xpos, int ypos) {
+    if(xpos == horizontalScrollPos && ypos == verticalScrollPos) return;
 
 	const wxSize size = GetClientSize();
 	wxRect rect;
 
-	if (needRedrawing) {
-		scrollPos = pos;
-		rect = wxRect(0,scrollPos,size.x,size.y);
-	}
-	else {
+    rect = wxRect(xpos,ypos,size.x,size.y);
+    //If the user scrolls horizontally, then we just do a full redraw.  There is no way to shift the image both left and up and then do a redraw on a six sided region.
+	if (!needRedrawing && xpos == horizontalScrollPos) {
 		// If there is overlap, then move the image
-		if (pos + size.y > scrollPos && pos < scrollPos + size.y) {
-			const int top = wxMax(pos, scrollPos);
-			const int bottom = wxMin(pos, scrollPos) + size.y;
+		if (ypos + size.y > verticalScrollPos && ypos < verticalScrollPos + size.y) {
+			const int top = wxMax(ypos, verticalScrollPos);
+			const int bottom = wxMin(ypos, verticalScrollPos) + size.y;
 			const int overlap_height = bottom - top;
-			mdc.Blit(0, (top - scrollPos) + (scrollPos - pos),  size.x, overlap_height, &mdc, 0, top - scrollPos);
+			mdc.Blit(0, (top - verticalScrollPos) + (verticalScrollPos - ypos),  treeWidth, overlap_height, &mdc, 0, top - verticalScrollPos);
 
 			const int new_height = size.y - overlap_height;
-			const int newtop = (top == pos) ? bottom : pos;
-			scrollPos = pos;
-			rect = wxRect(0,newtop,size.x,new_height);
+			const int newtop = (top == ypos) ? bottom : ypos;
+			rect = wxRect(horizontalScrollPos,newtop,size.x,new_height);
 		}
-		else {
-			scrollPos = pos;
-			rect = wxRect(0,scrollPos,size.x,size.y);
-		}
+		
 	}
+	verticalScrollPos = ypos;
+	horizontalScrollPos = xpos;
+
 	DrawTree(rect);
 
 	// Copy updated MemoryDC to Display
@@ -308,17 +315,26 @@ void VersionTree::MakeNodeVisible(size_t node_id, bool doCenter) {
 	const wxSize size = GetClientSize();
 	const int ypos = node_ypos[node_id];
 	const int ybottom = ypos + lineheight;
+	const int xpos = node_xpos[node_id];
 
 	if (doCenter) {
 		const int centertop = ypos - (size.y / 2);
-		const int maxscrollpos = treeHeight - size.y;
+		const int maxyscrollpos = treeHeight - size.y;
+		const int centerLeft = xpos - (size.x / 2);
+		const int maxxscrollpos = treeWidth - size.x;
 
-		scrollPos = (centertop > 0) ? centertop : 0;
-		if (maxscrollpos >= 0 && scrollPos > maxscrollpos) scrollPos = maxscrollpos;
+		verticalScrollPos = (centertop > 0) ? centertop : 0;
+		if (maxyscrollpos >= 0 && verticalScrollPos > maxyscrollpos) verticalScrollPos = maxyscrollpos;
+		
+		horizontalScrollPos = (centerLeft > 0) ? centerLeft : 0;
+		if (maxxscrollpos >= 0 && horizontalScrollPos > maxxscrollpos) horizontalScrollPos = maxxscrollpos;
 	}
 	else {
-		if (scrollPos > ypos) scrollPos = ypos;
-		else if (scrollPos + size.y < ybottom) scrollPos = ybottom - size.y;
+		if (verticalScrollPos > ypos) verticalScrollPos = ypos;
+		else if (verticalScrollPos + size.y < ybottom) verticalScrollPos = ybottom - size.y;
+		
+		//Always focus the version tree on the selected node
+		horizontalScrollPos = xpos;
 	}
 
 	// Redraw the tree with new position
@@ -365,7 +381,7 @@ void VersionTree::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 
 void VersionTree::OnMouseLeftDown(wxMouseEvent& event) {
 	//int x = event.GetX();
-	const int y = event.GetY() + scrollPos;
+	const int y = event.GetY() + verticalScrollPos;
 	if (y < 0 || y >= treeHeight) return;
 
 	// Which node was clicked on?
@@ -407,7 +423,7 @@ void VersionTree::OnMouseLeftDown(wxMouseEvent& event) {
 }
 
 void VersionTree::OnMouseRightDown(wxMouseEvent& event) {
-	const int y = event.GetY() + scrollPos;
+	const int y = event.GetY() + verticalScrollPos;
 	if (y < 0 || y >= treeHeight) return;
 
 	// Which node was clicked on?
@@ -430,7 +446,7 @@ void VersionTree::OnMouseRightDown(wxMouseEvent& event) {
 
 void VersionTree::OnMouseDClick(wxMouseEvent& event) {
 	//int x = event.GetX();
-	const int y = event.GetY() + scrollPos;
+	const int y = event.GetY() + verticalScrollPos;
 	if (y < 0 || y >= treeHeight) return;
 
 	// Which node was clicked on?
@@ -451,7 +467,7 @@ void VersionTree::OnMouseDClick(wxMouseEvent& event) {
 }
 
 void VersionTree::OnMouseMotion(wxMouseEvent& event) {
-	const int y = event.GetY() + scrollPos;
+	const int y = event.GetY() + verticalScrollPos;
 
 	if (y >= 0 && y < treeHeight) {
 		// Which node is pointer over?

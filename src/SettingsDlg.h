@@ -61,10 +61,14 @@ private:
 	void OnCheckCheckForUpdates(wxCommandEvent& event);
 	void OnCheckAtomicSave(wxCommandEvent& event);
 	void OnCheckLastTab(wxCommandEvent& event);
+	void OnCheckHighlightVariables(wxCommandEvent& event);
+	void OnCheckHighlightHtml(wxCommandEvent& event);
 	void OnMarginSpin(wxSpinEvent& event);
 	void OnComboEol(wxCommandEvent& event);
 	void OnComboEncoding(wxCommandEvent& event);
 	void OnCheckBom(wxCommandEvent& event);
+	void OnSymbolListFilters(wxCommandEvent& event);
+	void OnCheckSmartTabs(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	virtual void EndModal(int retCode);

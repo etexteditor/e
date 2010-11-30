@@ -46,9 +46,9 @@ public:
 	wxWindow* GetWindow();
 
 	void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false);
-    bool LoadString(const wxString& html);
-    bool LoadStream(istream *strm);
-    bool LoadStream(wxInputStream *is);
+    bool LoadString(const wxString& html, bool prependHtml=true);
+    bool LoadStream(istream *strm, bool prependHtml=true);
+    bool LoadStream(wxInputStream *is, bool prependHtml=true);
 
 	bool AppendString(const wxString& html);
 
@@ -72,7 +72,7 @@ public:
 	void FreezeRedraw(bool on);
 protected:
     void SetupBrowser();
-    bool LoadStream(IStreamAdaptorBase *pstrm);
+    bool LoadStream(IStreamAdaptorBase *pstrm, bool prependHtml=true);
 
 	wxAutoOleInterface<IWebBrowser2>		m_webBrowser;
 private:

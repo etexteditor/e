@@ -280,10 +280,19 @@ bool eApp::OnInit() {
 			CheckForUpdates(m_settings, GetAppVersion());
 	}
 
+	m_settings.SetApp(this);
+	m_settings.AllowSave();
+	
 	// Start the scripting api server
 	m_apiHandler = new ApiHandler(*this);
 
     return true;
+}
+
+void eApp::CatalystCommit() {
+	cxLOCK_WRITE((*m_catalyst))
+		catalyst.Commit();
+	cxENDLOCK
 }
 
 EditorFrame* eApp::OpenFrame(size_t frameId) {

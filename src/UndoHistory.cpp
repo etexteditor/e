@@ -38,7 +38,7 @@ BEGIN_EVENT_TABLE(UndoHistory, wxControl)
 END_EVENT_TABLE()
 
 UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int win_id, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size):
-	wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE),
+	wxControl(parent, id, pos, size, wxNO_BORDER|wxWANTS_CHARS|wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE|wxHSCROLL),
 	m_catalyst(cw), m_doc(cw), m_dispatcher(cw.GetDispatcher()), m_mdc(), m_bitmap(1,1), m_cell(m_mdc, m_doc), 
 	m_ignoreUpdates(false), m_editorCtrl(NULL), m_parentFrame(parentFrame), m_source_win_id(win_id)
 {
@@ -46,7 +46,8 @@ UndoHistory::UndoHistory(CatalystWrapper& cw, IFrameUndoPane* parentFrame, int w
 
 	// Initialize variables
 	m_needRedrawing = true; // Make sure the ctrl gets drawn on first idle event
-	m_scrollPos = 0;
+	m_verticalScrollPos = 0;
+	m_horizontalScrollPos = 0;
 	m_isScrolling = false;
 	m_lineHeight = 18;
 
@@ -87,7 +88,8 @@ void UndoHistory::Clear() {
 	m_editorCtrl = NULL;
 	m_sourceDoc.Invalidate();
 	m_pTree->Clear();
-	m_scrollPos = 0;
+	m_verticalScrollPos = 0;
+	m_horizontalScrollPos = 0;
 	m_needRedrawing = true;
 }
 
@@ -147,7 +149,8 @@ void UndoHistory::UpdateTree(bool doCenter) {
 	// Make the version visible
 	m_pTree->Select(m_selectedNode);
 	m_pTree->MakeNodeVisible(m_selectedNode, doCenter);
-	m_scrollPos = m_pTree->GetScrollPos();
+	m_verticalScrollPos = m_pTree->GetVerticalScrollPos();
+	m_horizontalScrollPos = m_pTree->GetHorizontalScrollPos();
 
 	m_needRedrawing = true;
 }
@@ -162,50 +165,67 @@ void UndoHistory::DrawLayout(wxDC& dc) {
 	const wxSize size = GetClientSize();
 	const size_t lineCount = m_pTree->GetNodeCount();
 	m_treeHeight = (int)lineCount * m_lineHeight;
+	m_treeWidth = m_pTree->GetWidth();
 
 	wxRect rect;
+	//If an image is moved both horizontally and vertically, then there is no way to capture the area to be redrawn in a single rectangle.
+	//So, this optimization is only used if the vertical scrollbar is used.
 	if (m_isScrolling) {
 		// If there is overlap, then move the image
-		if (m_scrollPos + size.y > m_oldScrollPos && m_scrollPos < m_oldScrollPos + size.y) {
-			const int top = wxMax(m_scrollPos, m_oldScrollPos);
-			const int bottom = wxMin(m_scrollPos, m_oldScrollPos) + size.y;
+		if (m_verticalScrollPos + size.y > m_oldVerticalScrollPos && m_verticalScrollPos < m_oldVerticalScrollPos + size.y) {
+			const int top = wxMax(m_verticalScrollPos, m_oldVerticalScrollPos);
+			const int bottom = wxMin(m_verticalScrollPos, m_oldVerticalScrollPos) + size.y;
 			const int overlap_height = bottom - top;
-			m_mdc.Blit(0, (top - m_oldScrollPos) + (m_oldScrollPos - m_scrollPos),  size.x, overlap_height, &m_mdc, 0, top - m_oldScrollPos);
+			m_mdc.Blit(m_horizontalScrollPos, (top - m_oldVerticalScrollPos) + (m_oldVerticalScrollPos - m_verticalScrollPos),  size.x, overlap_height, &m_mdc, m_horizontalScrollPos, top - m_oldVerticalScrollPos);
 
 			const int new_height = size.y - overlap_height;
-			const int newtop = (top == m_scrollPos) ? bottom : m_scrollPos;
-			rect = wxRect(0,newtop,size.x,new_height); // Just redraw the revealed part
+			const int newtop = (top == m_verticalScrollPos) ? bottom : m_verticalScrollPos;
+			rect = wxRect(m_horizontalScrollPos,newtop,size.x,new_height); // Just redraw the revealed part
 		}
 		else {
-			rect = wxRect(0,m_scrollPos,size.x,size.y);
+			rect = wxRect(m_horizontalScrollPos,m_verticalScrollPos,size.x,size.y);
 		}
 
-		SetScrollPos(wxVERTICAL, m_scrollPos);
+		SetScrollPos(wxVERTICAL, m_verticalScrollPos);
+		SetScrollPos(wxHORIZONTAL, m_horizontalScrollPos);
 		m_isScrolling = false;
 	}
 	else {
 		// Check if we need a scrollbar
 		bool hasScroll = (GetScrollThumb(wxVERTICAL) != 0);
 		if (m_treeHeight > size.y) {
-			SetScrollbar(wxVERTICAL, m_scrollPos, size.y, m_treeHeight);
+			SetScrollbar(wxVERTICAL, m_verticalScrollPos, size.y, m_treeHeight);
 			if (!hasScroll) return; // have sent a size event
 		}
 		else {
 			SetScrollbar(wxVERTICAL, 0, 0, 0);
 			if (hasScroll) return; // have sent a size event
 		}
+		
+		bool hasHorizontalScroll = (GetScrollThumb(wxHORIZONTAL) != 0);
+		if (m_treeWidth > size.x) {
+			SetScrollbar(wxHORIZONTAL, m_horizontalScrollPos, size.x, m_treeWidth);
+			if (!hasHorizontalScroll) return; // have sent a size event
+		}
+		else {
+			SetScrollbar(wxHORIZONTAL, 0, 0, 0);
+			if (hasHorizontalScroll) return; // have sent a size event
+		}
 
 		// Can we make room for more of the history?
-		if (m_scrollPos + size.y > m_treeHeight) {
-			m_scrollPos = wxMax(0, m_treeHeight-size.y);
+		if (m_verticalScrollPos + size.y > m_treeHeight) {
+			m_verticalScrollPos = wxMax(0, m_treeHeight-size.y);
 		}
-		rect = wxRect(0, m_scrollPos, size.x, size.y);
+		if (m_horizontalScrollPos + size.x > m_treeWidth) {
+			m_horizontalScrollPos = wxMax(0, m_treeWidth-size.x);
+		}
+		rect = wxRect(m_horizontalScrollPos, m_verticalScrollPos, size.x, size.y);
 	}
 
 	// Resize & scroll the versiontree
 	const wxSize treesize = m_pTree->GetBestSize();
 	m_pTree->SetSize(wxSize(treesize.x, size.y));
-	m_pTree->Scroll(m_scrollPos);
+	m_pTree->Scroll(m_horizontalScrollPos, m_verticalScrollPos);
 
 	// Calculate visible node-range
 	const int topnode = rect.y ? (rect.y-1) / (m_lineHeight) : 0;
@@ -216,7 +236,7 @@ void UndoHistory::DrawLayout(wxDC& dc) {
 	const int ypos = m_lineHeight * (int)lineCount;
 	const int textpos = 3; // indent the text a bit
 	const int textwidth = size.x - xpos;
-	rect = wxRect(xpos, rect.y, size.x-xpos, rect.height);
+	rect = wxRect(xpos, rect.y, textwidth, rect.height);
 
 	// resize the bitmap used for doublebuffering
 	if (m_bitmap.GetWidth() < textwidth || m_bitmap.GetHeight() < size.y) {
@@ -228,12 +248,12 @@ void UndoHistory::DrawLayout(wxDC& dc) {
 	// Clear the background
 	m_mdc.SetBrush(bgBrush);
 	m_mdc.SetPen(*wxWHITE_PEN);
-	m_mdc.DrawRectangle(0, rect.y - m_scrollPos, textwidth, rect.height);
+	m_mdc.DrawRectangle(0, rect.y - m_verticalScrollPos, textwidth, rect.height);
 
 	if (lineCount) {
 		// Draw vertical seperator
 		m_mdc.SetPen(linePen);
-		m_mdc.DrawLine(0, 0, 0, ypos - m_scrollPos);
+		m_mdc.DrawLine(0, 0, 0, ypos - m_verticalScrollPos);
 
 		// Draw the diffs
 		if (textwidth >= 0) m_cell.SetWidth(textwidth);
@@ -241,11 +261,11 @@ void UndoHistory::DrawLayout(wxDC& dc) {
 			if (textwidth > 0) {
 				// Draw text colums
 				m_mdc.SetPen(linePen);
-				const int bottom = m_lineHeight * (i+1) - m_scrollPos;
+				const int bottom = m_lineHeight * (i+1) - m_verticalScrollPos;
 				m_mdc.DrawLine(0, bottom, textwidth, bottom);
 
 				// Draw the diff
-				const int top = 1 + m_lineHeight*i - m_scrollPos;
+				const int top = 1 + m_lineHeight*i - m_verticalScrollPos;
 				if (m_rangeHistory.empty()) {
 					if (m_sourceDoc.IsDraft()) {
 						doc_id di;
@@ -352,26 +372,28 @@ void UndoHistory::OnMouseWheel(wxMouseEvent& event) {
 	// Only handle scrollwheel if we have a scrollbar
 	if (!GetScrollThumb(wxVERTICAL)) return;
 
-	const int rotation = event.GetWheelRotation();
+	const double rotation = event.GetWheelRotation();
 	if (rotation == 0) return; // No net rotation.
 
 	const wxSize size = GetClientSize();
-	const int linescount = (abs(rotation) / event.GetWheelDelta()) * event.GetLinesPerAction();
+	const double linescount = (abs(rotation) / ((double)event.GetWheelDelta())) * ((double)event.GetLinesPerAction());
 
-	int pos = m_scrollPos;
+	int pos = m_verticalScrollPos;
 
 	if (rotation > 0) { // up
-		pos = pos - (pos % m_lineHeight) - (m_lineHeight * linescount);
+		pos = pos - (pos % m_lineHeight) - (((double)m_lineHeight) * linescount);
 		if (pos < 0) pos = 0;
 	}
 	else if (rotation < 0) { // down
-		pos = pos - (pos % m_lineHeight) + (m_lineHeight * linescount);
-		if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
+		pos = pos + (pos % m_lineHeight) + (((double)m_lineHeight) * linescount);
+		if (pos > m_treeHeight - size.y) {
+			pos = m_treeHeight - size.y;
+		}
 	}
 
-	if (pos != m_scrollPos) {
-		m_oldScrollPos = m_scrollPos;
-		m_scrollPos = pos;
+	if (pos != m_verticalScrollPos) {
+		m_oldVerticalScrollPos = m_verticalScrollPos;
+		m_verticalScrollPos = pos;
 		m_isScrolling = true;
 
 		wxClientDC dc(this);
@@ -381,44 +403,88 @@ void UndoHistory::OnMouseWheel(wxMouseEvent& event) {
 
 void UndoHistory::OnScroll(wxScrollWinEvent& event) {
 	wxSize size = GetClientSize();
-	int pos = m_scrollPos;
 
-	if (event.GetEventType() == wxEVT_SCROLLWIN_THUMBTRACK ||
-		event.GetEventType() == wxEVT_SCROLLWIN_THUMBRELEASE)
-	{
-		pos = event.GetPosition();
-	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEUP) {
-		pos -= size.y;
-		if (pos < 0) pos = 0;
-	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEDOWN) {
-		pos += size.y;
-		if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
-	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEUP) {
-		pos = pos - (pos % m_lineHeight) - m_lineHeight;
-		if (pos < 0) pos = 0;
-	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEDOWN) {
-		pos = pos - (pos % m_lineHeight) + m_lineHeight;
-		if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
-	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_TOP) {
-		pos = 0;
-	}
-	else if (event.GetEventType() == wxEVT_SCROLLWIN_BOTTOM) {
-		pos = m_treeHeight - size.y;
-		if (pos < 0) pos = 0;
-	}
+	if(event.GetOrientation() == wxVERTICAL) {
+		int pos = m_verticalScrollPos;
 
-	if (pos != m_scrollPos) {
-		m_oldScrollPos = m_scrollPos;
-		m_scrollPos = pos;
-		m_isScrolling = true;
+		if (event.GetEventType() == wxEVT_SCROLLWIN_THUMBTRACK ||
+			event.GetEventType() == wxEVT_SCROLLWIN_THUMBRELEASE)
+		{
+			pos = event.GetPosition();
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEUP) {
+			pos -= size.y;
+			if (pos < 0) pos = 0;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEDOWN) {
+			pos += size.y;
+			if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEUP) {
+			pos = pos - (pos % m_lineHeight) - m_lineHeight;
+			if (pos < 0) pos = 0;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEDOWN) {
+			pos = pos - (pos % m_lineHeight) + m_lineHeight;
+			if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_TOP) {
+			pos = 0;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_BOTTOM) {
+			pos = m_treeHeight - size.y;
+			if (pos < 0) pos = 0;
+		}
 
-		wxClientDC dc(this);
-		DrawLayout(dc);
+		if (pos != m_verticalScrollPos) {
+			m_oldVerticalScrollPos = m_verticalScrollPos;
+			m_verticalScrollPos = pos;
+			m_isScrolling = true;
+
+			wxClientDC dc(this);
+			DrawLayout(dc);
+		}
+	} else {
+		int pos = m_horizontalScrollPos;
+
+		if (event.GetEventType() == wxEVT_SCROLLWIN_THUMBTRACK ||
+			event.GetEventType() == wxEVT_SCROLLWIN_THUMBRELEASE)
+		{
+			pos = event.GetPosition();
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEUP) {
+			pos -= size.x;
+			if (pos < 0) pos = 0;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_PAGEDOWN) {
+			pos += size.x;
+			if (pos > m_treeWidth - size.x) pos = m_treeWidth - size.x;
+		}
+		/* These events don't make sense for horizontal scrolling.
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEUP) {
+			pos = pos - (pos % m_lineHeight) - m_lineHeight;
+			if (pos < 0) pos = 0;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_LINEDOWN) {
+			pos = pos - (pos % m_lineHeight) + m_lineHeight;
+			if (pos > m_treeHeight - size.y) pos = m_treeHeight - size.y;
+		}*/
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_TOP) {
+			pos = 0;
+		}
+		else if (event.GetEventType() == wxEVT_SCROLLWIN_BOTTOM) {
+			pos = m_treeWidth - size.x;
+			if (pos < 0) pos = 0;
+		}
+
+		if (pos != m_horizontalScrollPos) {
+			m_oldHorizontalScrollPos = m_horizontalScrollPos;
+			m_horizontalScrollPos = pos;
+			m_isScrolling = false;
+
+			wxClientDC dc(this);
+			DrawLayout(dc);
+		}
 	}
 }
 
@@ -522,6 +588,11 @@ void UndoHistory::OnVersionTreeSel(VersionTreeEvent& event) {
 		wxCommandEvent evt(wxEVT_COMMAND_LISTBOX_DOUBLECLICKED);
 		GetEventHandler()->ProcessEvent(evt);
 	}
+
+	// Select the clicked version
+	m_selectedNode = item_id;
+	m_pTree->Select(m_selectedNode);
+	m_needRedrawing = true;
 }
 
 void UndoHistory::OnVersionTreeContextMenu(VersionTreeEvent& event) {

@@ -4,6 +4,7 @@
 #include <wx/platform.h>
 #include <vector>
 
+struct ckBookmark;
 struct cxFold;
 class interval;
 class BracketHighlight;
@@ -18,6 +19,7 @@ public:
 	// The only pubilc use of this member is in Lines; the underlying EditorCtrl member
 	// is used internally in the editor control.
 	virtual const BracketHighlight& GetHlBracket() const = 0;
+	virtual void BuildBookmarkMap(std::map<int, bool>& bookmarksMap) const = 0;
 };
 
 #endif // __IFOLDINGEDITOR_H__

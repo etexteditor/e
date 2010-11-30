@@ -46,6 +46,7 @@
 #include "IAppPaths.h"
 #include "Strings.h"
 #include "ReplaceStringParser.h"
+#include "Accelerators.h"
 
 // Document Icons
 #include "document.xpm"
@@ -163,7 +164,10 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_lines(mdc, m_doc, *this, m_theme),
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme, eGetSettings(), *this),
+	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
+	m_selectionsStyler(m_doc, m_lines, m_theme, *this),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -186,6 +190,11 @@ EditorCtrl::EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap,
 	m_options_cache(0), 
 	m_re(NULL), 
 	m_symbolCacheToken(0),
+
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
@@ -214,7 +223,10 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_lines(mdc, m_doc, *this, m_theme),
 	
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme, eGetSettings(), *this),
+	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
+	m_selectionsStyler(m_doc, m_lines, m_theme, *this),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP),
 	m_activeTooltip(NULL),
@@ -238,6 +250,11 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 	m_re(NULL),
 	m_symbolCacheToken(0),
 
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
+
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
 	m_snippetHandler(*this),
@@ -259,6 +276,7 @@ EditorCtrl::EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrap
 
 	// Set the syntax to match the new document
 	m_syntaxstyler.UpdateSyntax();
+	SetTabWidthFromSyntax();
 
 	// Init Folding
 	FoldingClear();
@@ -279,7 +297,10 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_lines(mdc, m_doc, *this, m_theme), 
 
 	m_search_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme),
+	m_variable_hl_styler(m_doc, m_lines, m_searchRanges, m_cursors, m_theme, eGetSettings(), *this),
+	m_html_hl_styler(m_doc, m_lines, m_theme, eGetSettings(), *this),
 	m_syntaxstyler(m_doc, m_lines, &m_syntaxHandler),
+	m_selectionsStyler(m_doc, m_lines, m_theme, *this),
 
 	m_foldTooltipTimer(this, TIMER_FOLDTOOLTIP), 
 	m_activeTooltip(NULL),
@@ -302,6 +323,11 @@ EditorCtrl::EditorCtrl(CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, 
 	m_options_cache(0), 
 	m_re(NULL), 
 	m_symbolCacheToken(0),
+
+	m_tabSettingsFromSyntax(false),
+	m_tabSettingsOverriden(false),
+	m_tabWidth(0),
+	m_softTabs(false),
 
 	bookmarks(m_lines),
 	m_commandHandler(parentFrame, *this),
@@ -442,9 +468,14 @@ void EditorCtrl::Init() {
 	//m_lines.AddStyler(m_usersStyler);
 	m_lines.AddStyler(m_syntaxstyler);
 	m_lines.AddStyler(m_search_hl_styler);
+	m_lines.AddStyler(m_variable_hl_styler);
+	m_lines.AddStyler(m_html_hl_styler);
+	m_lines.AddStyler(m_selectionsStyler);
 
 	// Set initial tabsize
-	SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs());
+	if(!m_tabSettingsFromSyntax) {
+		SetTabWidth(m_parentFrame.GetTabWidth(), m_parentFrame.IsSoftTabs(), false);
+	}
 
 	// Should we show margin line?
 	if (!doShowMargin) marginChars = 0;
@@ -566,7 +597,7 @@ unsigned int EditorCtrl::GetCurrentColumnNumber() {
 	const unsigned int pos = m_lines.GetPos();
 
 	// Calculate pos with tabs expanded.
-	const unsigned int tab_size = this->m_parentFrame.GetTabWidth();
+	const unsigned int tab_size = this->m_tabWidth;
 	unsigned int tabpos = 0;
 	cxLOCKDOC_READ(m_doc)
 		for (doc_byte_iter dbi(doc, linestart); (unsigned int)dbi.GetIndex() < pos; ++dbi) {
@@ -761,7 +792,17 @@ void EditorCtrl::SetWordWrap(cxWrapMode wrapMode) {
 	DrawLayout();
 }
 
-void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
+void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs, bool force, bool activeEditor) {
+	//If they set the tab size in the status bar, it changes it for all editors by default
+	//But, if they have applied a syntax specific tab size, and this is not the open editor, then ignore it.
+	if(!activeEditor && m_tabSettingsFromSyntax) return;
+
+	//If this is the open editor and the tab settings are set from the status bar, then ignore any settings from the syntax
+	if(force && activeEditor) {
+		m_tabSettingsOverriden = true;
+		m_tabSettingsFromSyntax = false;
+	}
+
 	// m_indent is the string used for indentation, either a real tab character
 	// or an appropriate number of spaces
 	if (soft_tabs) 
@@ -769,10 +810,40 @@ void EditorCtrl::SetTabWidth(unsigned int width, bool soft_tabs) {
 	else 
 		m_indent = wxString(wxT("\t"));
 
+	m_tabWidth = width;
+	m_softTabs = soft_tabs;
+
 	m_lines.SetTabWidth(width);
 	FoldingReIndent();
 
 	MarkAsModified();
+}
+
+void EditorCtrl::SetTabWidthFromSyntax() {
+	//If the user sets the tab settings from the status bar, then we are not going to override that with the syntax settings
+	if(m_tabSettingsOverriden) return;
+
+	unsigned int width;
+	bool softTabs;
+
+	eSettings& settings = eGetSettings();
+	wxString syntaxName = GetSyntaxName();
+
+	if(settings.GetTabWidth(syntaxName, width)) {
+		m_tabSettingsFromSyntax = true;
+	} else {
+		width = m_tabWidth;
+	}
+
+	if(settings.IsSoftTabs(syntaxName, softTabs)) {
+		m_tabSettingsFromSyntax = true;
+	} else {
+		softTabs = m_softTabs;
+	}
+
+	if(m_tabSettingsFromSyntax) {
+		SetTabWidth(width, softTabs, false);
+	}
 }
 
 const wxFont& EditorCtrl::GetEditorFont() const { return mdc.GetFont(); }
@@ -1146,7 +1217,7 @@ wxString EditorCtrl::GetNewIndentAfterNewline(unsigned int lineid) {
 	return m_lines.GetLineIndent( (i == -1) ? 0 : i );
 }
 
-wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
+wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline, bool skipWhitespaceOnlyLines) {
 	if (lineid == 0) return m_lines.GetLineIndent(0);
 	wxASSERT(lineid < m_lines.GetLineCount());
 
@@ -1173,7 +1244,20 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 
 				// Ignore unindented lines
 				const search_result res = RegExFind(unIndentedLinePattern, linestart, false, NULL, lineend);
-				if (res.error_code <= 0) {validLine = i; break;}
+				if (res.error_code <= 0) {
+					if(skipWhitespaceOnlyLines) {
+						cxLOCKDOC_READ(m_doc)
+							while(linestart < lineend) {
+								const wxChar c = doc.GetChar(linestart);
+								if(!(c == ' ' || c == '\t')) break;
+								linestart++;
+							}
+						cxENDLOCK
+						if(linestart == lineend) continue;
+					}
+					validLine = i;
+					break;
+				}
 			}
 		}
 		if (validLine == lineid) break;
@@ -1237,7 +1321,7 @@ wxString EditorCtrl::GetRealIndent(unsigned int lineid, bool newline) {
 			if (res.error_code > 0) {
 				// Decrease tab level with one
 				if (!indent.empty()) {
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 					if (indent[0] == wxT('\t')) indent.Remove(0, 1);
 					else if (indent.size() >= tabWidth) indent.Remove(0, tabWidth);
 				}
@@ -1317,6 +1401,81 @@ void EditorCtrl::GetTextPart(unsigned int start, unsigned int end, vector<char>&
 	cxENDLOCK
 }
 
+int GetTabWidthInSpaces(wxString text, int tabWidth) {
+	int length = 0;
+	for(unsigned int c = 0; c < text.length(); c++) {
+		if(text[c] == ' ') {
+			length++;
+		} else if(text[c] == '\t') {
+			//If a line just has \t...., then the tab will expand to 4 spaces, for a total of 8.
+			//If a line has ..\t.... though, it might only 'take up' 2 spaces, for a total of 8.
+			length += (tabWidth - (length%tabWidth));
+		}
+	}
+	return length;
+}
+
+bool EditorCtrl::SmartTab() {
+	bool smartTabsEnabled = false;
+	eGetSettings().GetSettingBool(wxT("smartTabs"), smartTabsEnabled);
+	if(!smartTabsEnabled) return false;
+
+	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
+	const unsigned int lineend = m_lines.GetLineEndpos(m_lines.GetCurrentLine());
+	const unsigned int tabWidth = m_tabWidth;
+	unsigned int whitespaceEnd = linestart;
+	unsigned int pos = GetPos();
+	
+	cxLOCKDOC_READ(m_doc)
+		while(whitespaceEnd < lineend) {
+			const wxChar c = doc.GetChar(whitespaceEnd);
+			if(!(c == ' ' || c == '\t')) break;
+			whitespaceEnd++;
+		}
+	cxENDLOCK
+	
+	if(whitespaceEnd >= lineend) {
+		//the line is all whitespace
+		wxString realIndent = GetRealIndent(m_lines.GetCurrentLine(), false, true);
+		int realWidth = GetTabWidthInSpaces(realIndent, tabWidth);
+		int currentWidth = 0;
+		cxLOCKDOC_READ(m_doc)
+			currentWidth = GetTabWidthInSpaces(doc.GetTextPart(linestart, lineend), tabWidth);
+		cxENDLOCK
+		
+		//If we are not at or past the previous line's indentation level, then let's jump to it
+		if(currentWidth < realWidth) {
+			int difference = realWidth - currentWidth;
+			if (!m_softTabs) {	// Hard Tab
+				//if there are 7 spaces on the line, but the real indent is 12, that is a difference of 5.  Say the tabWidth is 4.
+				//We need to insert two tabs then.  The second line takes care of that by increasing the difference from 5 to 8 in this example.
+				difference += difference % tabWidth;
+				for(int numTabs = difference / tabWidth; numTabs > 0; numTabs--) {
+					InsertChar(wxChar('\t'));
+				}
+			} else {
+				const wxString indent(wxT(' '), difference);
+				Insert(indent);
+			}
+			SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+			return true;
+		} else if (GetPos() < lineend && !m_lines.IsSelected()) {
+			//We are somewhere in the middle of a line of indentation, but we already have enough indents to match the previous line.
+			//First just jump to the end of the line.  Subsequent tabs will insert tabs, but this will not.
+			SetPos(m_lines.GetLineEndpos(m_lines.GetCurrentLine()));
+			return true;
+		} else {
+			// Insert a new tab (done below)
+		}
+	} else if(pos < whitespaceEnd) {
+		//the cursor is in the leading whitespace of the line, so we will move the cursor to the end of the whitespace
+		SetPos(whitespaceEnd);
+		return true;
+	}
+	
+	return false;
+}
+
 void EditorCtrl::GetLine(unsigned int lineid, vector<char>& text) const {
 	unsigned int start;
 	unsigned int end;
@@ -1364,15 +1523,17 @@ void EditorCtrl::Tab() {
 	// If the tab is preceded by a word it can trigger a snippet
 	if (DoTabTrigger(pos)) return;
 	
+	if(SmartTab()) return;
+
 	// If we get to here we have to insert a real tab
-	if (!m_parentFrame.IsSoftTabs()) {	// Hard Tab
+	if (!m_softTabs) {	// Hard Tab
 		InsertChar(wxChar('\t'));
 		return;
 	}
 
 	// Soft Tab (incremental number of spaces)
 	const unsigned int linestart = m_lines.GetLineStartpos(m_lines.GetCurrentLine());
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 
 	// Calculate pos with tabs expanded
 	unsigned int tabpos = 0;
@@ -2168,6 +2329,7 @@ unsigned int EditorCtrl::RawDelete(unsigned int start, unsigned int end) {
 	m_autopair.AdjustEndsDown(del_len);
 
 	MarkAsModified();
+
 	return del_len;
 }
 
@@ -2225,8 +2387,8 @@ unsigned int EditorCtrl::InsertNewline() {
 		if (!atLineEnd) {
 			// Get the correct indentation for new line
 			const wxString newindent = GetRealIndent(lineid+1);
-			const unsigned int indentlevel = CountTextIndent(indent, m_parentFrame.GetTabWidth());
-			const unsigned int newindentlevel = CountTextIndent(newindent, m_parentFrame.GetTabWidth());
+			const unsigned int indentlevel = CountTextIndent(indent, m_tabWidth);
+			const unsigned int newindentlevel = CountTextIndent(newindent, m_tabWidth);
 
 			// Only double the newlines if the new line will be de-dented
 			if (newindentlevel < indentlevel) {
@@ -2330,7 +2492,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 				}
 
 				if (indentChange != 0) {
-					const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+					const unsigned int tabWidth = m_tabWidth;
 
 					// Get the indentation len based on the line above
 					const wxString currentIndent = lineid == 0 ? *wxEmptyString : GetNewIndentAfterNewline(lineid-1);
@@ -2595,7 +2757,7 @@ void EditorCtrl::Delete(bool delWord) {
 	}
 
 	// Check if we are at a soft tabpoint
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()
 		&& pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 	{
@@ -2686,7 +2848,7 @@ void EditorCtrl::Backspace(bool delWord) {
 		prevpos = doc.GetPrevCharPos(pos);
 		prevchar = doc.GetChar(prevpos);
 	cxENDLOCK
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	unsigned int newpos;
 
 	// Check if we are at a soft tabpoint
@@ -3187,15 +3349,14 @@ void EditorCtrl::ApplyDiff(const doc_id& oldDoc, bool moveToFirstChange) {
 	
 	// Lines has to be made valid first
 	m_lines.ApplyDiff(changes);
-
+	
 	// When applying changes to the syntax, we have to be very carefull
 	// not to do any reads of text from stale refs. To avoid this we only
 	// apply changes as full lines.
 	const vector<cxLineChange> linechanges = m_lines.ChangesToFullLines(changes);
 
-	m_syntaxstyler.ApplyDiff(linechanges);
+	StylersApplyDiff(changes);
 	FoldingApplyDiff(linechanges);
-	m_search_hl_styler.ApplyDiff(changes);
 	if (!changes.empty()) bookmarks.ApplyChanges(changes);
 
 	// Move caret to position of first change
@@ -3253,29 +3414,29 @@ interval EditorCtrl::UndoSelection(const cxDiffEntry& de) {
 }
 
 void EditorCtrl::StylersClear() {
-	m_search_hl_styler.Clear();
-	m_syntaxstyler.Clear();
+	m_lines.StylersClear();
 	FoldingClear();
 }
 
 void EditorCtrl::StylersInvalidate() {
-	m_search_hl_styler.Invalidate();
-	m_syntaxstyler.Invalidate();
+	m_lines.StylersInvalidate();
 	FoldingClear();
 }
 
 void EditorCtrl::StylersInsert(unsigned int pos, unsigned int length) {
-	m_search_hl_styler.Insert(pos, length);
-	m_syntaxstyler.Insert(pos, length);
+	m_lines.StylersInsert(pos, length);
 	FoldingInsert(pos, length);
 	bookmarks.InsertChars(pos, length);
 }
 
 void EditorCtrl::StylersDelete(unsigned int start, unsigned int end) {
-	m_search_hl_styler.Delete(start, end);
-	m_syntaxstyler.Delete(start, end);
+	m_lines.StylersDelete(start, end);
 	FoldingDelete(start, end);
 	bookmarks.DeleteChars(start, end);
+}
+
+void EditorCtrl::StylersApplyDiff(vector<cxChange>& changes) {
+	m_lines.StylersApplyDiff(changes);
 }
 
 unsigned int EditorCtrl::GetChangePos(const doc_id& old_version_id) const {
@@ -3813,7 +3974,7 @@ void EditorCtrl::TabsToSpaces() {
 
 	wxBusyCursor busy;
 
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 	const wxString indentString(wxT(' '), tabWidth);
 	unsigned int pos = m_lines.GetPos();
 
@@ -3932,7 +4093,7 @@ void EditorCtrl::SpacesToTabs() {
 
 	wxBusyCursor busy;
 
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	const unsigned int tabWidth = m_tabWidth;
 
 	// Get list of lines to be converted
 	if (m_lines.IsSelected()) {
@@ -4092,7 +4253,7 @@ void EditorCtrl::IndentSelectedLines(bool add_indent) {
 	else sel_lines.push_back(m_lines.GetCurrentLine());
 
 	unsigned int pos = m_lines.GetPos();
-	unsigned int tabWidth = m_parentFrame.GetTabWidth();
+	unsigned int tabWidth = m_tabWidth;
 
 	// Insert the indentations
 	for (vector<unsigned int>::const_iterator i = sel_lines.begin(); i != sel_lines.end(); ++i) {
@@ -4500,6 +4661,7 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	wxEndBusyCursor();
 
 	// We also have to reparse the foldings
+	SetTabWidthFromSyntax();
 	FoldingClear();
 
 	MarkAsModified(); // flush symbol cache
@@ -4507,6 +4669,25 @@ void EditorCtrl::SetSyntax(const wxString& syntaxName, bool isManual) {
 	DrawLayout();
 	MarkAsModified();
 };
+
+/**
+ * The goal of this method is to allow the user to type and copy text at the same time.
+ * They can press ctrl+shift+c, then start typing, then press ctrl+shift+c again, and that text
+ * will be copied to the clipboard.
+ */
+void EditorCtrl::OnMarkCopy() {
+	unsigned int pos = GetPos();
+	
+	if(m_markCopyStart >= 0 && (unsigned int)m_markCopyStart <= m_lines.GetLength()) {
+		RemoveAllSelections();
+		Select(m_markCopyStart, pos);
+		OnCopy();
+		RemoveAllSelections();
+		m_markCopyStart = -1;
+	} else {
+		m_markCopyStart = pos;
+	}
+}
 
 void EditorCtrl::OnCopy() {
 	if (m_macro.IsRecording()) m_macro.Add(wxT("Copy"));
@@ -4523,6 +4704,11 @@ void EditorCtrl::OnCopy() {
 		}
 	}
 
+	m_parentFrame.AddCopyText(copytext);
+	DoCopy(copytext);
+}
+
+void EditorCtrl::DoCopy(wxString& copytext) {
 	if (!copytext.empty()) {
 #ifdef __WXMSW__
 		// WINDOWS ONLY!! newline conversion
@@ -4854,6 +5040,15 @@ wxString EditorCtrl::GetCurrentWord() const {
 	cxENDLOCK
 }
 
+wxString EditorCtrl::GetWord(unsigned int pos) const {
+	const interval iv = GetWordIv(pos);
+	if (iv.empty()) return wxEmptyString;
+
+	cxLOCKDOC_READ(m_doc)
+		return doc.GetTextPart(iv.start, iv.end);
+	cxENDLOCK
+}
+
 wxString EditorCtrl::GetCurrentLine() {
 	const unsigned int cl = m_lines.GetCurrentLine();
 	const unsigned int start = m_lines.GetLineStartpos(cl);
@@ -4992,6 +5187,10 @@ void EditorCtrl::SelectScope() {
 	// Keep state (only used if we have hit top)
 	if (m_lastScopePos == -1)
 		m_lastScopePos = pos;
+}
+
+void EditorCtrl::SelectParentTag() {
+	m_html_hl_styler.SelectParentTag();
 }
 
 void EditorCtrl::GetCompletionMatches(interval wordIv, wxArrayString& result, bool precharbase) const {
@@ -5185,6 +5384,7 @@ void EditorCtrl::ReplaceCurrentWord(const wxString& word) {
 	SetPos(iv.start + byte_len);
 
 	Freeze();
+	DrawLayout();
 }
 
 bool EditorCtrl::HasSearchRange() const {
@@ -5697,7 +5897,7 @@ search_result EditorCtrl::RawRegexSearch(const char* regex, unsigned int subject
 	return sr;
 }
 
-search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures) const {
+search_result EditorCtrl::RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures) {
 	wxASSERT(regex);
 	wxASSERT(pos < subject.size() || pos == 0);
 
@@ -5879,9 +6079,29 @@ bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext
 	unsigned int byte_len = 0;
 
 	if (options & FIND_USE_REGEX) {
-		// We need to search again to get captures
+		// Find match
+		search_result result;
+		unsigned int start_pos = iv.start;
 		map<unsigned int,interval> captures;
-		const search_result result = RegExFind(searchtext, iv.start, options & FIND_MATCHCASE, &captures);
+		bool matchcase = options & FIND_MATCHCASE;
+		result.error_code = -1;
+
+		if (m_searchRanges.empty()) {
+			cxLOCKDOC_READ(m_doc)
+				result = doc.RegExFind(searchtext, start_pos, matchcase, &captures);
+			cxENDLOCK
+		}
+		else {
+			vector<interval>::iterator p = m_searchRanges.begin();
+			for (; p != m_searchRanges.end(); ++p) {
+				if (start_pos < p->start) start_pos = p->start;
+
+				cxLOCKDOC_READ(m_doc)
+					result = doc.RegExFind(searchtext, start_pos, matchcase, &captures, p->end);
+				cxENDLOCK
+				if (result.error_code >= 0) break; // match found or error
+			}
+		}
 
 		if (result.error_code >= 0) {
 			const wxString new_replacetext = ParseReplaceString(replacetext, captures);
@@ -5889,7 +6109,6 @@ bool EditorCtrl::Replace(const wxString& searchtext, const wxString& replacetext
 			byte_len = RawInsert(iv.start, new_replacetext, false);
 			m_lines.SetPos(iv.start + byte_len); // move to end of insertion
 		}
-		else wxASSERT(false);
 	}
 	else {
 		RawDelete(iv.start, iv.end);
@@ -6100,6 +6319,7 @@ void EditorCtrl::OnKeyDown(wxKeyEvent& event) {
 		m_blockKeyState = BLOCKKEY_INIT;
 		m_blocksel_ids.clear();
 	}
+
 	event.Skip();
 }
 
@@ -6420,7 +6640,7 @@ void EditorCtrl::OnChar(wxKeyEvent& event) {
 				{
 					const bool delWord = event.ControlDown();
 					Backspace(delWord);
-				}	
+				}
 				break;
 
 			case WXK_RETURN:
@@ -6704,7 +6924,7 @@ void EditorCtrl::CursorLeft(SelAction select) {
 
 		// Check if we are at a soft tabpoint
 		if (prevchar == wxT(' ') && m_lines.IsAtTabPoint()) {
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+			const unsigned int tabWidth = m_tabWidth;
 			if (pos >= tabWidth && IsSpaces(pos - tabWidth, pos))
 				prevpos = pos - tabWidth;
 		}
@@ -6740,7 +6960,7 @@ void EditorCtrl::CursorRight(SelAction select) {
 
 		// Check if we are at a soft tabpoint
 		if (nextchar == wxT(' ') && m_lines.IsAtTabPoint()) {
-			const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+			const unsigned int tabWidth = m_tabWidth;
 			if (pos + tabWidth <= m_lines.GetLength() && IsSpaces(pos, pos + tabWidth))
 				nextpos = pos + tabWidth;
 		}
@@ -7862,11 +8082,11 @@ void EditorCtrl::SetEnv(cxEnv& env, bool isUnix, const tmBundle* bundle) {
 	env.SetEnv(wxT("TM_COLUMN_NUMBER"), wxString::Format(wxT("%u"), columnIndex));
 
 	// TM_TAB_SIZE
-	const wxString tabsize = wxString::Format(wxT("%u"), m_parentFrame.GetTabWidth());
+	const wxString tabsize = wxString::Format(wxT("%u"), m_tabWidth);
 	env.SetEnv(wxT("TM_TAB_SIZE"), tabsize);
 
 	// TM_SOFT_TABS
-	env.SetEnv(wxT("TM_SOFT_TABS"), m_parentFrame.IsSoftTabs() ? wxT("YES") : wxT("NO"));
+	env.SetEnv(wxT("TM_SOFT_TABS"), m_softTabs ? wxT("YES") : wxT("NO"));
 
 	// TM_SCOPE
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
@@ -8077,7 +8297,6 @@ void EditorCtrl::OnMouseLeftDown(wxMouseEvent& event) {
 	}
 
 	m_tripleClicks.Reset();
-
 	DrawLayout();
 
 	// Make sure we capure all mouse events; this is released in OnMouseLeftUp()
@@ -8740,8 +8959,8 @@ void EditorCtrl::OnIdle(wxIdleEvent& event) {
 	if (m_lines.NeedIdle())
 		m_lines.OnIdle();
 
-	// Update syntax
-	const bool syntaxNeedIdle = m_syntaxstyler.OnIdle();
+	// Update syntax and variable stylers
+	bool syntaxNeedIdle = m_lines.StylersOnIdle();
 
 	// Update foldings
 	ParseFoldMarkers();
@@ -8873,7 +9092,15 @@ bool EditorCtrl::DoShortcut(int keyCode, int modifiers) {
 	// Get list of all actions available from current scope
 	vector<const tmAction*> actions;
 	const deque<const wxString*> scope = m_syntaxstyler.GetScope(GetPos());
-	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers));
+
+	Accelerators* accelerators = m_parentFrame.GetAccelerators();
+	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers, accelerators, true));
+	if(!accelerators->BundlesParsed(keyCode, modifiers)) {
+		accelerators->Reset();
+		return false;
+	}
+	m_syntaxHandler.GetActions(scope, actions, TmSyntaxHandler::ShortcutMatch(keyCode, modifiers, accelerators, false));
+	if(accelerators->WasChordActivated()) return true;
 
 	// Key Diagnostics
 	if (m_parentFrame.IsKeyDiagMode()) {
@@ -9270,6 +9497,10 @@ bool EditorCtrl::OnPreKeyDown(wxKeyEvent& event) {
 		if (id == WXK_BACK && modifiers == 0x0002) {
 			wxKeyEvent event(CreateKeyEvent(wxEVT_CHAR, id, event.m_rawFlags, event.m_rawCode));
 			ProcessEvent(event);
+			return true;
+		}
+
+		if(m_parentFrame.HandleChord(event)) {
 			return true;
 		}
 #endif
@@ -9783,10 +10014,12 @@ void EditorCtrl::ToogleBookmarkOnCurrentLine() {
 void EditorCtrl::AddBookmark(unsigned int line_id, bool toggle) {
 	wxASSERT(line_id < m_lines.GetLineCount());
 	bookmarks.AddBookmark(line_id, toggle);
+	DrawLayout();
 }
 
 void EditorCtrl::DeleteBookmark(unsigned int line_id) {
 	bookmarks.DeleteBookmark(line_id);
+	DrawLayout();
 }
 
 void EditorCtrl::GotoNextBookmark() {
@@ -9805,6 +10038,10 @@ void EditorCtrl::GotoPrevBookmark() {
 		MakeCaretVisible();
 		DrawLayout();
 	}
+}
+
+void EditorCtrl::BuildBookmarkMap(std::map<int, bool>& bookmarksMap) const {
+	bookmarks.BuildMap(bookmarksMap);
 }
 
 EditorChangeState EditorCtrl::GetChangeState() const {
@@ -10098,4 +10335,18 @@ wxDragResult DragDropTarget::OnData(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), wx
 	}
 
 	return def;
+}
+
+void EditorCtrl::NavigateSelections() {
+	m_selectionsStyler.EnableNavigation();
+}
+
+void EditorCtrl::NextSelection() {
+	m_selectionsStyler.NextSelection();
+	DrawLayout();
+}
+
+void EditorCtrl::PreviousSelection() {
+	m_selectionsStyler.PreviousSelection();
+	DrawLayout();
 }

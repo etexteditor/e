@@ -250,7 +250,7 @@ public:
     }
 };
 
-bool  wxIEHtmlWin::LoadString(const wxString& html)
+bool  wxIEHtmlWin::LoadString(const wxString& html, bool prependHtml)
 {
     char *data = NULL;
     size_t len = html.length();
@@ -259,15 +259,15 @@ bool  wxIEHtmlWin::LoadString(const wxString& html)
 #endif
     data = (char *) malloc(len);
     memcpy(data, html.c_str(), len);
-	return LoadStream(new wxOwnedMemInputStream(data, len));
+	return LoadStream(new wxOwnedMemInputStream(data, len), prependHtml);
 };
 
-bool wxIEHtmlWin::LoadStream(IStreamAdaptorBase *pstrm)
+bool wxIEHtmlWin::LoadStream(IStreamAdaptorBase *pstrm, bool prependHtml)
 {
 	// need to prepend this as poxy MSHTML will not recognise a HTML comment
 	// as starting a html document and treats it as plain text
 	// Does nayone know how to force it to html mode ?
-	pstrm->prepend = "<html>";
+	if(prependHtml) pstrm->prepend = "<html>";
 
 	// strip leading whitespace as it can confuse MSHTML
 	wxAutoOleInterface<IStream>	strm(pstrm);
@@ -296,22 +296,22 @@ bool wxIEHtmlWin::LoadStream(IStreamAdaptorBase *pstrm)
 	    return false;
 };
 
-bool  wxIEHtmlWin::LoadStream(istream *is)
+bool  wxIEHtmlWin::LoadStream(istream *is, bool prependHtml)
 {
 	// wrap reference around stream
     IStreamAdaptor *pstrm = new IStreamAdaptor(is);
 	pstrm->AddRef();
 
-    return LoadStream(pstrm);
+    return LoadStream(pstrm, prependHtml);
 };
 
-bool wxIEHtmlWin::LoadStream(wxInputStream *is)
+bool wxIEHtmlWin::LoadStream(wxInputStream *is, bool prependHtml)
 {
 	// wrap reference around stream
     IwxStreamAdaptor *pstrm = new IwxStreamAdaptor(is);
 	pstrm->AddRef();
 
-    return LoadStream(pstrm);
+    return LoadStream(pstrm, prependHtml);
 };
 
 

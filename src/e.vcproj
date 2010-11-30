@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="e"
 	ProjectGUID="{34A9B5C4-22D3-4F14-A896-0F12FDF194C5}"
 	RootNamespace="e"
@@ -459,6 +459,15 @@
 			<File
 				RelativePath="eauibook.cpp"
 				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						InlineFunctionExpansion="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="eauibook.h"
@@ -490,6 +499,14 @@
 			</File>
 			<File
 				RelativePath="SeparatorLine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ShortcutChordCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ShortcutChordCtrl.h"
 				>
 			</File>
 			<File
@@ -544,6 +561,14 @@
 		<Filter
 			Name="Dialogs"
 			>
+			<File
+				RelativePath=".\AcceleratorsDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AcceleratorsDialog.h"
+				>
+			</File>
 			<File
 				RelativePath="CommitDlg.cpp"
 				>
@@ -941,6 +966,14 @@
 			Name="Editor"
 			>
 			<File
+				RelativePath=".\Accelerators.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Accelerators.h"
+				>
+			</File>
+			<File
 				RelativePath="AutoPairs.cpp"
 				>
 			</File>
@@ -1118,6 +1151,62 @@
 			</File>
 		</Filter>
 		<Filter
+			Name="Stylers"
+			>
+			<File
+				RelativePath="styler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_htmlhl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_htmlhl.h"
+				>
+			</File>
+			<File
+				RelativePath="styler_searchhl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="styler_searchhl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_selections.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_selections.h"
+				>
+			</File>
+			<File
+				RelativePath="styler_syntax.cpp"
+				>
+			</File>
+			<File
+				RelativePath="styler_syntax.h"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_variablehl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\styler_variablehl.h"
+				>
+			</File>
+			<File
+				RelativePath="StyleRun.cpp"
+				>
+			</File>
+			<File
+				RelativePath="StyleRun.h"
+				>
+			</File>
+		</Filter>
+		<Filter
 			Name="hessian_ipc"
 			>
 			<File
@@ -1271,6 +1360,18 @@
 		</File>
 		<File
 			RelativePath="ChangeCheckerThread.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ClassDiagram1.cd"
+			>
+		</File>
+		<File
+			RelativePath=".\ClipboardHistoryPane.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ClipboardHistoryPane.h"
 			>
 		</File>
 		<File
@@ -1642,6 +1743,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\SnippetList.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SnippetList.h"
+			>
+		</File>
+		<File
 			RelativePath="StatusBar.cpp"
 			>
 		</File>
@@ -1663,34 +1772,6 @@
 		</File>
 		<File
 			RelativePath="Strings.h"
-			>
-		</File>
-		<File
-			RelativePath="styler.h"
-			>
-		</File>
-		<File
-			RelativePath="styler_searchhl.cpp"
-			>
-		</File>
-		<File
-			RelativePath="styler_searchhl.h"
-			>
-		</File>
-		<File
-			RelativePath="styler_syntax.cpp"
-			>
-		</File>
-		<File
-			RelativePath="styler_syntax.h"
-			>
-		</File>
-		<File
-			RelativePath="StyleRun.cpp"
-			>
-		</File>
-		<File
-			RelativePath="StyleRun.h"
 			>
 		</File>
 		<File

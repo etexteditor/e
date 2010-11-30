@@ -62,6 +62,9 @@ class DiffDirPane;
 class DiffPanel;
 class IEditorSearch;
 class RemoteThread;
+class SnippetList;
+class ClipboardHistoryPane;
+class Accelerators;
 class InputPanel;
 
 
@@ -99,6 +102,7 @@ public:
 		MENU_SELECTLINE,
 		MENU_SELECTSCOPE,
 		MENU_SELECTFOLD,
+		MENU_SELECTTAG,
 		MENU_SYNTAX,
 		MENU_EDIT_THEME,
 		MENU_SETTINGS,
@@ -116,6 +120,7 @@ public:
 		MENU_INCOMMING_TOOLBAR,
 		MENU_SHOWPROJECT,
 		MENU_SHOWSYMBOLS,
+		MENU_SHOWSNIPPETS,
 		MENU_SHIFT_PROJECT_FOCUS,
 		MENU_PREVIEW,
 		MENU_STATUSBAR,
@@ -178,12 +183,20 @@ public:
 		MENU_BOOKMARK_PREVIOUS,
 		MENU_BOOKMARK_TOGGLE,
 		MENU_BOOKMARK_CLEAR,
-
+		MENU_MARK_COPY,
+		MENU_FIND_REPLACE,
+		MENU_FIND_REPLACE_ALL,
+		MENU_NAVIGATE_SELECTIONS,
+		MENU_NAVIGATE_SELECTIONS_MODE,
+		MENU_NAVIGATE_SELECTIONS_NEXT,
+		MENU_NAVIGATE_SELECTIONS_PREVIOUS,
+		MENU_CLIPBOARD_HISTORY_PANE,
 		MENU_MACRO_FUNCTIONS,
 		MENU_MACRO_REC,
 		MENU_MACRO_PLAY,
 		MENU_MACRO_EDIT,
-		MENU_MACRO_CONTINUE
+		MENU_MACRO_CONTINUE,
+		MENU_ACCELERATORS
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -288,6 +301,15 @@ public:
 	void ShowSymbolList(bool keepOpen=true);
 	virtual void CloseSymbolList();
 
+	// Snippet List (pane)
+	void ShowSnippetList();
+	virtual void CloseSnippetList();
+	
+	// ClipboardHistory (pane)
+	void ShowClipboardHistoryPane();
+	virtual void CloseClipboardHistoryPane();
+	void AddCopyText(wxString& copytext);
+	
 	// Bundle Pane
 	bool IsBundlePaneShownAndSelected() const;
 
@@ -313,6 +335,9 @@ public:
 	void UpdateEncodingMenu(wxMenu& menu) const;
 
 	static wxString DefaultFileFilters;
+
+	bool HandleChord(wxKeyEvent& event);
+	Accelerators* GetAccelerators() { return m_accelerators; }
 
 protected:
 	virtual bool OnPreKeyUp(wxKeyEvent& event);
@@ -388,12 +413,15 @@ private:
 	void OnMenuRedo(wxCommandEvent& event);
 	void OnMenuCut(wxCommandEvent& event);
 	void OnMenuCopy(wxCommandEvent& event);
+	void OnMenuMarkCopy(wxCommandEvent& event);
 	void OnMenuPaste(wxCommandEvent& event);
 	void OnMenuFind(wxCommandEvent& event);
 	void OnMenuFindInProject(wxCommandEvent& event);
 	void OnMenuFindInSel(wxCommandEvent& event);
 	void OnMenuFindNext(wxCommandEvent& event);
 	void OnMenuFindPrevious(wxCommandEvent& event);
+	void OnMenuFindReplace(wxCommandEvent& event);
+	void OnMenuFindReplaceAll(wxCommandEvent& event);
 	void OnMenuFindCurrent(wxCommandEvent& event);
 	void OnMenuReplace(wxCommandEvent& event);
 	void OnMenuConvUpper(wxCommandEvent& event);
@@ -411,6 +439,7 @@ private:
 	void OnMenuSelectLine(wxCommandEvent& event);
 	void OnMenuSelectScope(wxCommandEvent& event);
 	void OnMenuSelectFold(wxCommandEvent& event);
+	void OnMenuSelectTag(wxCommandEvent& event);
 	void OnMenuEditTheme(wxCommandEvent& event);
 	void OnMenuSettings(wxCommandEvent& event);
 	void OnMenuFilter(wxCommandEvent& event);
@@ -437,6 +466,8 @@ private:
 	void OnMenuCommit(wxCommandEvent& event);
 	void OnMenuShowProject(wxCommandEvent& event);
 	void OnMenuShowSymbols(wxCommandEvent& event);
+	void OnMenuShowSnippets(wxCommandEvent& event);
+	void OnMenuShowClipboardHistoryPane(wxCommandEvent& event);
 	void OnMenuSymbols(wxCommandEvent& event);
 	void OnMenuRevisionHistory(wxCommandEvent& event);
 	void OnMenuUndoHistory(wxCommandEvent& event);
@@ -463,10 +494,14 @@ private:
 	void OnMenuEditBundles(wxCommandEvent& event);
 	void OnMenuManageBundles(wxCommandEvent& event);
 	void OnMenuBundleAction(wxCommandEvent& event);
+	void OnMenuNavigateSelections(wxCommandEvent& event);
+	void OnMenuNavigateSelectionsNext(wxCommandEvent& event);
+	void OnMenuNavigateSelectionsPrevious(wxCommandEvent& event);
 	void OnMenuMacroRec(wxCommandEvent& event);
 	void OnMenuMacroPlay(wxCommandEvent& event);
 	void OnMenuMacroEdit(wxCommandEvent& event);
 	void OnMenuMacroContinue(wxCommandEvent& event);
+	void OnMenuCustomizeAccelerators(wxCommandEvent& event);
 	void OnMenuKeyDiagnostics(wxCommandEvent& event);
 	void OnTabsShowDropdown(wxCommandEvent& event);
 	void OnEraseBackground(wxEraseEvent& event);
@@ -546,6 +581,8 @@ private:
 	wxMenu* m_recentProjectsMenu;
 	wxMenu* m_syntaxMenu;
 	wxMenu* m_wrapMenu;
+	Accelerators* m_accelerators;
+
 
 	// wxAUI and Panes
 	wxAuiManager m_frameManager;
@@ -558,6 +595,8 @@ private:
 	DiffDirPane* m_diffPane;
 	SymbolList* m_symbolList;
 	FindInProjectDlg* m_findInProjectDlg;
+	SnippetList* m_snippetList;
+	ClipboardHistoryPane* m_clipboardHistoryPane;
 	MacroPane* m_macroPane;
 
 	// Statusbar

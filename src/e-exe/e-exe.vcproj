@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="e-exe"
 	ProjectGUID="{22870FD4-6D33-4353-BF9E-D96EC13BCAB2}"
 	RootNamespace="eexe"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\;..\..\external\wxwidgets\lib\vc_lib\mswud;..\..\external\wxwidgets\include;..\..\external\pcre;..\..\external\libtomcrypt\src\headers;..\..\external\tinyxml;..\..\external\curl\include;..\..\external\metakit\include;..\..\external\boost"
+				AdditionalIncludeDirectories="..\..\ecore;..\;..\..\external\wxwidgets\lib\vc_lib\mswud;..\..\external\wxwidgets\include;..\..\external\pcre;..\..\external\libtomcrypt\src\headers;..\..\external\tinyxml;..\..\external\curl\include;..\..\external\metakit\include;..\..\external\boost"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"

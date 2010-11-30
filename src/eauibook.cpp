@@ -218,25 +218,42 @@ bool eAuiNotebook::LoadPerspective(const wxString& layout) {
 	return true;
 }
 
-void eAuiNotebook::SelectNextTab(bool wrap_around) {
+// This code is based largely on the following patch, but modified to work with the wrap_around parameter
+// http://trac.wxwidgets.org/attachment/ticket/10848/wxAuiNotebook.patch
+void eAuiNotebook::ChangeTab(bool forward, bool wrap_around) {
 	if (GetPageCount() <= 1) return;
 
-	unsigned int newtab = this->GetSelection() + 1;
-	if (wrap_around || ( newtab < GetPageCount() ))
-		this->SetSelection(newtab % GetPageCount());
+	int currentSelection = this->GetSelection();
+	wxAuiTabCtrl* tabCtrl = 0; 
+	int idx = -1; 
+
+	if(!FindTab(GetPage(currentSelection), &tabCtrl, &idx)) return; 
+	if(!tabCtrl || idx < 0) return;
+
+	wxWindow* page = 0; 
+	int pageCount = tabCtrl->GetPageCount(); 
+
+	forward ? idx++ : idx--;
+
+	if(idx < 0) {
+		idx = wrap_around ? pageCount - 1 : 0;
+	} else if(idx >= pageCount) {
+		idx = wrap_around ? 0 : pageCount-1;
+	}
+
+	page = tabCtrl->GetPage(idx).window;
+	if(page) { 
+		currentSelection = GetPageIndex(page); 
+		SetSelection(currentSelection); 
+	} 
+}
+
+void eAuiNotebook::SelectNextTab(bool wrap_around) {
+	ChangeTab(true, wrap_around);
 }
 
 void eAuiNotebook::SelectPrevTab(bool wrap_around) {
-	if (GetPageCount() <= 1) return;
-
-	unsigned int newtab = GetSelection();
-	if (newtab == 0) {
-		if(!wrap_around) return;
-		newtab = GetPageCount()-1;
-	}
-	else newtab -=  1;
-
-	this->SetSelection(newtab);
+	ChangeTab(false, wrap_around);
 }
 
 void eAuiNotebook::OnMouseWheel(wxMouseEvent& event) {

@@ -23,6 +23,7 @@
 #include "EditorCtrl.h"
 #include "BundleMenu.h"
 #include "ITmGetSyntaxes.h"
+#include "Accelerators.h"
 
 class OtherTabDlg : public wxDialog {
 public:
@@ -43,7 +44,7 @@ OtherTabDlg::OtherTabDlg(EditorFrame& parent):
 	wxDialog(&parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER),
 	m_parentFrame(parent)
 {
-	const unsigned int width = parent.GetTabWidth();
+	const unsigned int width = parent.GetEditorCtrl()->GetTabWidth();
 
 	SetTitle (_("Other Tab Size"));
 
@@ -95,7 +96,7 @@ StatusBar::StatusBar(EditorFrame& parent, wxWindowID id, const ITmGetSyntaxes* s
 	m_syntax_handler(syntax_handler),
 	m_editorCtrl(NULL) 
 {
-	const int widths[] = {160, 120, 100, -1, 150 };
+	const int widths[] = {160, 120, 100, 120, -1, 150 };
 	SetFieldsCount(WXSIZEOF(widths), widths);
 }
 
@@ -104,6 +105,9 @@ void StatusBar::SetPanelTextIfDifferent(const wxString& newText, const int panel
 }
 
 void StatusBar::UpdateBarFromActiveEditor() {
+	// Chords
+	SetStatusText(m_parentFrame.GetAccelerators()->StatusBarText(), 3);
+
 	EditorCtrl* editorCtrl = m_parentFrame.GetEditorCtrl();
 	if (!editorCtrl) return;
 
@@ -124,7 +128,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	m_editorCtrlId = id;
 
 	Freeze();
-	UpdateTabs();
+	UpdateTabs(editorCtrl);
 
 	if (editorCtrl) {
 		// Caret position
@@ -156,7 +160,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 			for (std::vector<SymbolRef>::reverse_iterator p = m_symbols.rbegin(); p != m_symbols.rend(); ++p) {
 				if (pos >= p->start) {
 					const SymbolRef& sr = *p;
-					SetStatusText(editorCtrl->GetSymbolString(sr), 3);
+					SetStatusText(editorCtrl->GetSymbolString(sr), 4);
 					break;
 				}
 			}
@@ -178,7 +182,7 @@ void StatusBar::UpdateBarFromActiveEditor() {
 		else if (eol == wxTextFileType_Unix) encoding += wxT(" lf");
 		else if (eol == wxTextFileType_Mac) encoding += wxT(" cr");
 
-		SetStatusText(encoding, 4);
+		SetStatusText(encoding, 5);
 
 		m_pos = pos;
 	}
@@ -186,12 +190,12 @@ void StatusBar::UpdateBarFromActiveEditor() {
 	Thaw();
 }
 
-void StatusBar::UpdateTabs() {
-	const unsigned int tabWidth = m_parentFrame.GetTabWidth();
-	const bool isSoftTabs = m_parentFrame.IsSoftTabs();
+void StatusBar::UpdateTabs(EditorCtrl* editorCtrl) {
+	const unsigned int tabWidth = editorCtrl->GetTabWidth();
+	const bool isSoftTabs = editorCtrl->IsSoftTabs();
 	if (tabWidth == m_tabWidth && isSoftTabs == m_isSoftTabs) return;
 		
-	if (m_parentFrame.IsSoftTabs())
+	if (isSoftTabs)
 		SetStatusText(wxString::Format(wxT("Soft Tabs: %u"), tabWidth), 2);
 	else
 		SetStatusText(wxString::Format(wxT("Tab Size: %u"), tabWidth), 2);
@@ -235,8 +239,8 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 	wxRect encodingRect;
 	GetFieldRect(1, syntaxRect);
 	GetFieldRect(2, tabsRect);
-	GetFieldRect(3, symbolsRect);
-	GetFieldRect(4, encodingRect);
+	GetFieldRect(4, symbolsRect);
+	GetFieldRect(5, encodingRect);
 
 	if (syntaxRect.Contains(x, y)) {
 		PopupSyntaxMenu(syntaxRect);
@@ -252,7 +256,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 		tabsMenu.AppendSeparator();
 		tabsMenu.Append(MENU_TABS_SOFT, _("Soft Tabs (Spaces)"), wxEmptyString, wxITEM_CHECK);
 
-		const unsigned int tabWidth = m_parentFrame.GetTabWidth();
+		const unsigned int tabWidth = m_editorCtrl->GetTabWidth();
 		if (tabWidth == 2) tabsMenu.Check(MENU_TABS_2, true);
 		else if (tabWidth == 3) tabsMenu.Check(MENU_TABS_3, true);
 		else if (tabWidth == 4) tabsMenu.Check(MENU_TABS_4, true);
@@ -262,7 +266,7 @@ void StatusBar::OnMouseLeftDown(wxMouseEvent& event) {
 			tabsMenu.Check(MENU_TABS_OTHER, true);
 		}
 
-		if (m_parentFrame.IsSoftTabs()) tabsMenu.Check(MENU_TABS_SOFT, true);
+		if (m_editorCtrl->IsSoftTabs()) tabsMenu.Check(MENU_TABS_SOFT, true);
 
 		PopupMenu(&tabsMenu, tabsRect.x, tabsRect.y);
 	}
@@ -336,7 +340,7 @@ void StatusBar::OnMenuTabsOther(wxCommandEvent& WXUNUSED(event)) {
 
 void StatusBar::OnMenuTabsSoft(wxCommandEvent& WXUNUSED(event)) {
 	// WORKAROUND: event.IsChecked() gives wrong value
-	const bool isSoftTabs = !m_parentFrame.IsSoftTabs();
+	const bool isSoftTabs = !m_editorCtrl->IsSoftTabs();
 
 	m_parentFrame.SetSoftTab(isSoftTabs);
 }

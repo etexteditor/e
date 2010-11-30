@@ -24,6 +24,8 @@
 #include "Catalyst.h"
 #include "Lines.h"
 #include "styler_searchhl.h"
+#include "styler_variablehl.h"
+#include "styler_htmlhl.h"
 #include "styler_syntax.h"
 #include "SnippetHandler.h"
 #include "key_hook.h"
@@ -42,6 +44,7 @@
 #include "IEditorSymbols.h"
 #include "IEditorSearch.h"
 #include "ITabPage.h"
+#include "styler_selections.h"
 
 
 class wxFileName;
@@ -103,6 +106,7 @@ public:
 	void GetTextPart(unsigned int start, unsigned int end, vector<char>& text) const;
 	void GetLine(unsigned int lineId, vector<char>& text) const;
 	wxString GetCurrentWord() const;
+	wxString GetWord(unsigned int pos) const;
 	void WriteText(wxOutputStream& stream) const;
 
 	// Position
@@ -149,7 +153,10 @@ public:
 	void SetWordWrap(cxWrapMode wrapMode);
 	void SetShowGutter(bool showGutter);
 	void SetShowIndent(bool showIndent);
-	void SetTabWidth(unsigned int width, bool soft_tabs);
+	void SetTabWidth(unsigned int width, bool soft_tabs, bool force, bool activeEditor=true);
+	unsigned int GetTabWidth() { return m_tabWidth; }
+	bool IsSoftTabs() { return m_softTabs; }
+	void SetTabWidthFromSyntax();
 	void SetGutterRight(bool doMove=true);
 	const wxFont& GetEditorFont() const;
 	void SetScrollbarLeft(bool doMove=true);
@@ -200,6 +207,8 @@ public:
 	void OnCopy();
 	void OnCut();
 	void OnPaste();
+	void OnMarkCopy();
+	void DoCopy(wxString& copytext);
 
 	// Selection
 	bool IsSelected() const;
@@ -219,6 +228,12 @@ public:
 	void SelectCurrentLine();
 	void ExtendSelectionToLine(unsigned int sel_id=0);
 	void SelectScope();
+	void SelectParentTag();
+
+	void NavigateSelections();
+	void NextSelection();
+	void PreviousSelection();
+
 	void SelectFromMovement(unsigned int oldpos, unsigned int newpos, bool makeVisible=true, bool multiSelect=false);
 
 	// Selection (objects)
@@ -288,7 +303,7 @@ public:
 	search_result RegExFind(const wxString& searchtext, unsigned int start_pos, bool matchcase, map<unsigned int,interval> *captures=NULL, unsigned int end_pos=0) const;
 	search_result RegExFindBackwards(const wxString& searchtext, unsigned int start_pos, unsigned int end_pos, bool matchcase) const;
 	search_result RawRegexSearch(const char* regex, unsigned int subjectStart, unsigned int subjectEnd, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
-	search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL) const;
+	static search_result RawRegexSearch(const char* regex, const vector<char>& subject, unsigned int pos, map<unsigned int,interval> *captures=NULL);
 	bool FindNextChar(wxChar c, unsigned int start_pos, unsigned int end_pos, interval& iv) const;
 	
 	// Search ranges
@@ -417,6 +432,7 @@ public:
 	void GotoNextBookmark();
 	void GotoPrevBookmark();
 	const vector<cxBookmark>& GetBookmarks() const;
+	void BuildBookmarkMap(std::map<int, bool>& bookmarksMap) const;
 
 	// Scroll Position
 	int GetYScrollPos() const { return scrollPos; };
@@ -532,6 +548,8 @@ protected:
 	int ShowPopupList(wxMenu& menu);
 
 	void Tab();
+
+	bool SmartTab();
 	bool DoTabTrigger(unsigned int pos);
 
 	void DeleteSelections();
@@ -572,7 +590,7 @@ protected:
 	bool FindMatchingBracket(unsigned int pos, unsigned int& pos2);
 
 	// Indentation
-	wxString GetRealIndent(unsigned int lineid, bool newline=false);
+	wxString GetRealIndent(unsigned int lineid, bool newline=false, bool skipWhitespaceOnlyLines=false);
 	wxString GetNewIndentAfterNewline(unsigned int lineid);
 
 	bool IsSpaces(unsigned int start, unsigned int end) const;
@@ -585,6 +603,7 @@ protected:
 	void StylersInvalidate();
 	void StylersInsert(unsigned int pos, unsigned int length);
 	void StylersDelete(unsigned int start, unsigned int end);
+	void StylersApplyDiff(vector<cxChange>& changes);
 
 	// Folding
 	void FoldingClear();
@@ -619,7 +638,10 @@ protected:
 	Lines m_lines;
 
 	Styler_SearchHL m_search_hl_styler;
+	Styler_VariableHL m_variable_hl_styler;
+	Styler_HtmlHL m_html_hl_styler;
 	Styler_Syntax m_syntaxstyler;
+	Styler_Selections m_selectionsStyler;
 
 	wxTimer m_foldTooltipTimer;
 	TextTip* m_activeTooltip;
@@ -642,6 +664,7 @@ protected:
 	mutable int m_options_cache; // for compiled regex
 	mutable pcre *m_re; // for last compiled regex
 	mutable unsigned int m_symbolCacheToken;
+	int m_markCopyStart;
 
 	// Bookmarks
 	Bookmarks bookmarks;
@@ -652,6 +675,11 @@ protected:
 	// Above: set in constructors' intializer list
 	// ----
 	// Below: not set in initializer list
+
+	bool m_softTabs;
+	unsigned int m_tabWidth;
+	bool m_tabSettingsOverriden;
+	bool m_tabSettingsFromSyntax;
 
 	int lastxpos; // Used to keep Up/Down in line
 

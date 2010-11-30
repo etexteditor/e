@@ -35,9 +35,12 @@ public:
 	void Select(size_t node_id);
 	void MakeNodeVisible(size_t node_id, bool doCenter=false);
 
-	void Scroll(int pos);
-	int GetScrollPos() const {return scrollPos;};
+	void ScrollVertical(int pos);
+	void Scroll(int xpos, int ypos);
+	int GetVerticalScrollPos() const {return verticalScrollPos;};
+	int GetHorizontalScrollPos() const {return horizontalScrollPos;};
 	void UpdateTree();
+	int GetWidth() { return treeWidth; }
 
 protected:
 	wxSize DoGetBestSize() const {return wxSize(treeWidth,-1);};
@@ -59,7 +62,7 @@ private:
 	wxMemoryDC mdc;
 	wxBitmap bitmap;
 
-	int scrollPos;
+	int verticalScrollPos, horizontalScrollPos;
 	bool needRecalc;
 	bool needRedrawing;
 	wxBrush bgBrush;

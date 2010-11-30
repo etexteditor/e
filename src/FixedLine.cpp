@@ -1076,3 +1076,41 @@ full_pos FixedLine::ClickOnLine(int xpos, int ypos) const {
 void FixedLine::AddStyler(Styler& styler) {
 	m_stylers.push_back(&styler);
 }
+
+void FixedLine::StylersClear() {
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		m_stylers[c]->Clear();
+	}
+}
+
+void FixedLine::StylersInvalidate() {
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		m_stylers[c]->Invalidate();
+	}
+}
+
+void FixedLine::StylersInsert(unsigned int pos, unsigned int len) {
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		m_stylers[c]->Insert(pos, len);
+	}
+}
+
+void FixedLine::StylersDelete(unsigned int start, unsigned int end) {
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		m_stylers[c]->Delete(start, end);
+	}
+}
+
+void FixedLine::StylersApplyDiff(vector<cxChange>& changes) {
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		m_stylers[c]->ApplyDiff(changes);
+	}
+}
+
+bool FixedLine::StylersOnIdle() {
+	bool ret = false;
+	for(unsigned int c = 0; c < m_stylers.size(); c++) {
+		ret = m_stylers[c]->OnIdle() || ret;
+	}
+	return ret;
+}

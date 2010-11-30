@@ -27,10 +27,11 @@
 // pre-definitions
 class EditorFrame;
 class EditorCtrl;
+class TmSyntaxHandler;
 
 class DiffBar : public wxControl {
 public:
-	DiffBar(wxWindow* parent, CatalystWrapper& cw, EditorCtrl* leftEditor, EditorCtrl* rightEditor);
+	DiffBar(wxWindow* parent, CatalystWrapper& cw, EditorCtrl* leftEditor, EditorCtrl* rightEditor, TmSyntaxHandler& syntax_handler);
 	void Init();
 	void SetCallbacks();
 
@@ -62,7 +63,7 @@ private:
 
 	class DiffStyler : public Styler {
 	public:
-		DiffStyler(const vector<Change>& diffs, bool isLeft);
+		DiffStyler(const vector<Change>& diffs, bool isLeft, TmSyntaxHandler& syntax_handler);
 		void SwapSide() {m_isLeft = !m_isLeft;};
 		void Style(StyleRun& sr);
 	private:

@@ -17,6 +17,7 @@
 #include <wx/notebook.h>
 #include <wx/fontmap.h>
 #include <wx/spinctrl.h>
+#include <wx/protocol/http.h>
 
 #include "EnvVarsPanel.h"
 #include "UpdaterThread.h"
@@ -47,12 +48,16 @@ enum {
 	CTRL_MARGINSPIN,
 	CTRL_ATOMICSAVE,
 	CTRL_LASTTAB,
+	CTRL_HIGHLIGHTVARIABLES,
+	CTRL_HIGHLIGHTHTML,
 	CTRL_LINEENDING,
 	CTRL_ENCODING,
 	CTRL_BOM,
 	CTRL_CYGWIN_ACTION, // Only added on Windows
 	CTRL_CHECK_FOR_UPDATES,
 	CTRL_AUTOUPDATE,
+	CTRL_SYMBOL_LIST_FILTERS,
+	CTRL_SMART_TABS
 };
 
 BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
@@ -69,10 +74,14 @@ BEGIN_EVENT_TABLE(SettingsDlg, wxDialog)
 	EVT_CHECKBOX(CTRL_AUTOUPDATE, SettingsDlg::OnCheckCheckForUpdates)
 	EVT_CHECKBOX(CTRL_ATOMICSAVE, SettingsDlg::OnCheckAtomicSave)
 	EVT_CHECKBOX(CTRL_LASTTAB, SettingsDlg::OnCheckLastTab)
+	EVT_CHECKBOX(CTRL_HIGHLIGHTVARIABLES, SettingsDlg::OnCheckHighlightVariables)
+	EVT_CHECKBOX(CTRL_HIGHLIGHTHTML, SettingsDlg::OnCheckHighlightHtml)
 	EVT_SPINCTRL(CTRL_MARGINSPIN, SettingsDlg::OnMarginSpin) 
 	EVT_COMBOBOX(CTRL_LINEENDING, SettingsDlg::OnComboEol)
 	EVT_COMBOBOX(CTRL_ENCODING, SettingsDlg::OnComboEncoding)
 	EVT_CHECKBOX(CTRL_BOM, SettingsDlg::OnCheckBom)
+	EVT_CHECKBOX(CTRL_SMART_TABS, SettingsDlg::OnCheckSmartTabs)
+	EVT_TEXT(CTRL_SYMBOL_LIST_FILTERS, SettingsDlg::OnSymbolListFilters)
 END_EVENT_TABLE()
 
 
@@ -136,7 +145,7 @@ wxPanel* SettingsDlg::CreateUpdatePage(wxWindow* parent) {
 	}
 
 	// Last update label
-	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update:"));
+	wxStaticText* labelLastUpdate = new wxStaticText(page, wxID_ANY, _("Last Update Check:"));
 	sizer->Add(labelLastUpdate , 0, wxALIGN_CENTER_VERTICAL|wxALL, 5);
 
 	m_labelWhen = new wxStaticText(page, wxID_ANY, when);
@@ -178,6 +187,10 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	m_wrapMargin = new wxCheckBox(settingsPage, CTRL_WRAPMARGIN, _("Wrap at margin line"));
 	wxCheckBox* atomicSave = new wxCheckBox(settingsPage, CTRL_ATOMICSAVE, _("Atomic save"));
 	wxCheckBox* lastTab = new wxCheckBox(settingsPage, CTRL_LASTTAB, _("Go to last active tab on Ctrl-Tab"));
+	wxCheckBox* highlightVariables = new wxCheckBox(settingsPage, CTRL_HIGHLIGHTVARIABLES, _("Highlight occurances of a variable when clicked"));
+	wxCheckBox* highlightHtml = new wxCheckBox(settingsPage, CTRL_HIGHLIGHTHTML, _("Highlight matching html tags"));
+	wxCheckBox* smartTabs = new wxCheckBox(settingsPage, CTRL_SMART_TABS, _("Use Smart tabs"));
+	wxTextCtrl* symbolListFilters = new wxTextCtrl(settingsPage, CTRL_SYMBOL_LIST_FILTERS, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 
 	wxBoxSizer* settingsSizer = new wxBoxSizer(wxVERTICAL);
 		settingsSizer->Add(autoPair, 0, wxALL, 5);
@@ -191,6 +204,11 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 		settingsSizer->Add(m_wrapMargin, 0, wxALL, 5);
 		settingsSizer->Add(atomicSave, 0, wxALL, 5);
 		settingsSizer->Add(lastTab, 0, wxALL, 5);
+		settingsSizer->Add(highlightVariables, 0, wxALL, 5);
+		settingsSizer->Add(highlightHtml, 0, wxALL, 5);
+		settingsSizer->Add(smartTabs, 0, wxALL, 5);
+		settingsSizer->Add(new wxStaticText(settingsPage, wxID_ANY, _("Exclude Regex's For Symbol List:")), 0, wxALL, 5);
+		settingsSizer->Add(symbolListFilters, 0, wxALL, 5);
 	settingsPage->SetSizer(settingsSizer);
 
 	// Settings defaults.
@@ -202,7 +220,11 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	bool doWrapMargin = false;
 	bool noAtomicSave = false;
 	bool doLastTab = false;
+	bool doHighlightVariables = false;
+	bool doHighlightHtml = false;
+	bool doSmartTabs = false;
 	int marginChars = 80;  
+	wxString symbolListFiltersText = wxEmptyString;
 
 	m_settings.GetSettingBool(wxT("autoPair"), doAutoPair);
 	m_settings.GetSettingBool(wxT("autoWrap"), doAutoWrap);
@@ -213,6 +235,10 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	m_settings.GetSettingInt(wxT("marginChars"), marginChars);
 	m_settings.GetSettingBool(wxT("disable_atomic_save"), noAtomicSave);
 	m_settings.GetSettingBool(wxT("gotoLastTab"), doLastTab);
+	m_settings.GetSettingBool(wxT("highlightVariables"), doHighlightVariables);
+	m_settings.GetSettingBool(wxT("highlightHtml"), doHighlightHtml);
+	m_settings.GetSettingString(wxT("symbolListFilters"), symbolListFiltersText);
+	m_settings.GetSettingBool(wxT("smartTabs"), doSmartTabs);
 
 	// Update ctrls
 	autoPair->SetValue(doAutoPair);
@@ -228,6 +254,10 @@ wxPanel* SettingsDlg::CreateSettingsPage(wxWindow* parent) {
 	}
 	atomicSave->SetValue(!noAtomicSave);
 	lastTab->SetValue(doLastTab);
+	highlightVariables->SetValue(doHighlightVariables);
+	highlightHtml->SetValue(doHighlightHtml);
+	symbolListFilters->SetValue(symbolListFiltersText);
+	smartTabs->SetValue(doSmartTabs);
 
 	return settingsPage;
 }
@@ -395,6 +425,11 @@ void SettingsDlg::UpdateEncoding() {
 
 	m_defBom->Enable(encoding_allows_bom(enc));
 	m_defBom->SetValue(bom);
+}
+
+void SettingsDlg::OnSymbolListFilters(wxCommandEvent& event) {
+	wxString value = event.GetString();
+	m_settings.SetSettingString(wxT("symbolListFilters"), value);
 }
 
 void SettingsDlg::OnComboEol(wxCommandEvent& event) {
@@ -582,6 +617,18 @@ void SettingsDlg::OnCheckAtomicSave(wxCommandEvent& event) {
 
 void SettingsDlg::OnCheckLastTab(wxCommandEvent& event) {
 	m_settings.SetSettingBool(wxT("gotoLastTab"), event.IsChecked());
+}
+
+void SettingsDlg::OnCheckHighlightVariables(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("highlightVariables"), event.IsChecked());
+}
+
+void SettingsDlg::OnCheckHighlightHtml(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("highlightHtml"), event.IsChecked());
+}
+
+void SettingsDlg::OnCheckSmartTabs(wxCommandEvent& event) {
+	m_settings.SetSettingBool(wxT("smartTabs"), event.IsChecked());
 }
 
 void SettingsDlg::NotifyWatcher() {

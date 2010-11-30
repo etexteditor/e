@@ -1,6 +1,7 @@
 #include "Bookmarks.h"
 #include "Catalyst.h"
 #include "Lines.h"
+#include <map>
 
 typedef std::vector<cxBookmark>::iterator bookmark_iter;
 
@@ -143,5 +144,11 @@ void Bookmarks::ApplyChanges(const std::vector<cxChange>& changes) {
 	for (bookmark_iter p = bookmarks.begin(); p != bookmarks.end(); ++p) {
 		p->line_id = lines.GetLineFromStartPos(p->start);
 		p->end = lines.GetLineEndpos(p->line_id);
+	}
+}
+
+void Bookmarks::BuildMap(std::map<int, bool>& bookmarksMap) const {
+	for(unsigned int c = 0; c < bookmarks.size(); c++) {
+		bookmarksMap[bookmarks[c].line_id] = true;
 	}
 }

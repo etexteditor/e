@@ -13,6 +13,9 @@
 
 #include "SymbolList.h"
 #include "IFrameSymbolService.h"
+#include "eSettings.h"
+#include "EditorCtrl.h"
+#include "Strings.h"
 
 #include <algorithm>
 
@@ -66,12 +69,34 @@ bool SymbolList::Destroy() {
 	return true;
 }
 
+void SymbolList::LoadFilters() {
+	wxLogDebug(wxT("Load Filters"));
+	wxString filters;
+	eGetSettings().GetSettingString(wxT("symbolListFilters"), filters);
+	m_filters = filters;
+	
+	const wxArrayString filtersList = wxSplit(m_filters, wxT('\n'), NULL);
+	m_regexFilters.clear();
+	
+	for(unsigned int c = 0; c < filtersList.GetCount(); c++) {
+		//m_regexes.push_back(Compile(filters[c]));
+		if(filtersList[c].Trim().Len() == 0) continue;
+		m_regexFilters.push_back(filtersList[c]);
+	}
+}
+
 void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	EditorChangeType newStatus;
 	IEditorSymbols* editorSymbols = dynamic_cast<IEditorSymbols*>(m_parentFrame.GetEditorAndChangeType(this->m_editorChangeState, newStatus));
-
+	wxString filters;
+	eGetSettings().GetSettingString(wxT("symbolListFilters"), filters);
+	
 	// If we lost the editor, or there was no change, then do nothing.
-	if(!editorSymbols || (newStatus == ECT_NO_CHANGE)) return;
+	if(!editorSymbols || (newStatus == ECT_NO_CHANGE && filters == m_filters)) return;
+	
+	if(filters != m_filters) {
+		LoadFilters();
+	}
 
 	bool newEditor = (newStatus == ECT_NEW_EDITOR);
 	this->m_editorSymbols = editorSymbols;
@@ -80,12 +105,33 @@ void SymbolList::OnIdle(wxIdleEvent& WXUNUSED(event)) {
 	m_symbols.clear();
 	m_symbolStrings.Empty();
 	const int res = m_editorSymbols->GetSymbols(m_symbols);
+	std::vector<SymbolRef> symbolsTemp;
 	if (res == 1) {
 		// reload symbol strings
+		wxLogDebug(wxT("Doing Search"));
 		for (vector<SymbolRef>::const_iterator p = m_symbols.begin(); p != m_symbols.end(); ++p) {
 			const SymbolRef& sr = *p;
-			m_symbolStrings.Add(m_editorSymbols->GetSymbolString(sr));
+			wxString symbol = m_editorSymbols->GetSymbolString(sr);
+			std::vector<char> symbolVector;
+			for(unsigned int c = 0; c < symbol.Len(); c++) {
+				symbolVector.push_back(symbol[c]);
+			}
+
+			bool good = true;
+			for(unsigned int c = 0; c < m_regexFilters.size(); c++) {
+				search_result sr = EditorCtrl::RawRegexSearch(m_regexFilters[c].mb_str(wxConvUTF8), symbolVector, 0, NULL);
+				if(sr.error_code > 0) {
+					good = false;
+					break;
+				}
+			}
+			if(!good) continue;
+
+			symbolsTemp.push_back(sr);
+			m_symbolStrings.Add(symbol);
 		}
+
+		m_symbols = symbolsTemp;
 		m_listBox->SetAllItems();
 	}
 	else if (res == 2) { // DEBUG: double implementation to view path in crash dump (remove when bug is solved)

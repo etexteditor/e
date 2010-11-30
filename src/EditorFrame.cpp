@@ -69,6 +69,10 @@
 #include "CurrentTabsPopup.h"
 #include "eauibook.h"
 #include "DiffDirPane.h"
+#include "SnippetList.h"
+#include "ClipboardHistoryPane.h"
+#include "Accelerators.h"
+#include "AcceleratorsDialog.h"
 #include "InputPanel.h"
 
 #ifdef __WXMSW__
@@ -144,6 +148,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(wxID_REDO, EditorFrame::OnMenuRedo)
 	EVT_MENU(wxID_CUT, EditorFrame::OnMenuCut)
 	EVT_MENU(wxID_COPY, EditorFrame::OnMenuCopy)
+	EVT_MENU(MENU_MARK_COPY, EditorFrame::OnMenuMarkCopy)
 	EVT_MENU(wxID_PASTE, EditorFrame::OnMenuPaste)
 
 	EVT_MENU(wxID_SELECTALL, EditorFrame::OnMenuSelectAll)
@@ -151,12 +156,15 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_SELECTLINE, EditorFrame::OnMenuSelectLine)
 	EVT_MENU(MENU_SELECTSCOPE, EditorFrame::OnMenuSelectScope)
 	EVT_MENU(MENU_SELECTFOLD, EditorFrame::OnMenuSelectFold)
+	EVT_MENU(MENU_SELECTTAG, EditorFrame::OnMenuSelectTag)
 
 	EVT_MENU(wxID_FIND, EditorFrame::OnMenuFind)
 	EVT_MENU(MENU_FIND_IN_PROJECT, EditorFrame::OnMenuFindInProject)
 	EVT_MENU(MENU_FIND_IN_SEL, EditorFrame::OnMenuFindInSel)
 	EVT_MENU(MENU_FIND_NEXT, EditorFrame::OnMenuFindNext)
 	EVT_MENU(MENU_FIND_PREVIOUS, EditorFrame::OnMenuFindPrevious)
+	EVT_MENU(MENU_FIND_REPLACE, EditorFrame::OnMenuFindReplace)
+	EVT_MENU(MENU_FIND_REPLACE_ALL, EditorFrame::OnMenuFindReplaceAll)
 	EVT_MENU(MENU_FIND_CURRENT, EditorFrame::OnMenuFindCurrent)
 	EVT_MENU(wxID_REPLACE, EditorFrame::OnMenuReplace)
 
@@ -167,6 +175,8 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_SHOWPROJECT, EditorFrame::OnMenuShowProject)
 	EVT_MENU(MENU_SHIFT_PROJECT_FOCUS, EditorFrame::OnShiftProjectFocus)
 	EVT_MENU(MENU_SHOWSYMBOLS, EditorFrame::OnMenuShowSymbols)
+	EVT_MENU(MENU_SHOWSNIPPETS, EditorFrame::OnMenuShowSnippets)
+	EVT_MENU(MENU_CLIPBOARD_HISTORY_PANE, EditorFrame::OnMenuShowClipboardHistoryPane)
 	EVT_MENU(MENU_REVHIS, EditorFrame::OnMenuRevisionHistory)
 	EVT_MENU(MENU_UNDOHIS, EditorFrame::OnMenuUndoHistory)
 	EVT_MENU(MENU_COMMANDOUTPUT, EditorFrame::OnMenuShowCommandOutput)
@@ -286,6 +296,11 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_FILESDELETED(EditorFrame::OnFilesDeleted)
 
 	EVT_MOUSEWHEEL(EditorFrame::OnMouseWheel)
+	
+	EVT_MENU(MENU_NAVIGATE_SELECTIONS_MODE, EditorFrame::OnMenuNavigateSelections)
+	EVT_MENU(MENU_NAVIGATE_SELECTIONS_NEXT, EditorFrame::OnMenuNavigateSelectionsNext)
+	EVT_MENU(MENU_NAVIGATE_SELECTIONS_PREVIOUS, EditorFrame::OnMenuNavigateSelectionsPrevious)
+	EVT_MENU(MENU_ACCELERATORS, EditorFrame::OnMenuCustomizeAccelerators)
 
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
@@ -294,6 +309,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	//EVT_MENU(MENU_INCOMMING_TOOLBAR, EditorFrame::OnMenuIncommingTool)
 	//EVT_MENU(MENU_HL_USERS, EditorFrame::OnMenuHighlightUsers)
 	//EVT_MENU(wxID_PREVIEW, EditorFrame::OnMenuPrintPreview)
+
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler):
@@ -305,7 +321,7 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 
 	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false), m_inAskSave(false),
 	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
-	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL),
+	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_snippetList(NULL), m_clipboardHistoryPane(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
 	//,m_incommingBmp(incomming_xpm), m_incommingFullBmp(incomming_full_xpm)
@@ -440,6 +456,13 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 			if (showsymbols) ShowSymbolList();
 		}
 
+		// Check if we should show the clipboard history pane
+		{
+			bool showClipboardHistory = false;
+			m_settings.GetSettingBool(wxT("showClipboardHistory"), showClipboardHistory);
+			if (showClipboardHistory) ShowClipboardHistoryPane();
+		}
+
 		m_frameManager.Update();
 
 		InitAccelerators();
@@ -512,15 +535,23 @@ void EditorFrame::InitStatusbar() {
 }
 
 void EditorFrame::InitAccelerators() {
-	const unsigned int accelcount = 5;
-	wxAcceleratorEntry entries[accelcount];
-	entries[0].Set(wxACCEL_CTRL|wxACCEL_SHIFT, (int)'P', MENU_SHIFT_PROJECT_FOCUS);
-	entries[1].Set(wxACCEL_NORMAL, WXK_F3, MENU_FIND_NEXT);
-	entries[2].Set(wxACCEL_SHIFT, WXK_F3, MENU_FIND_PREVIOUS);
-	entries[3].Set(wxACCEL_CTRL, WXK_F3, MENU_FIND_CURRENT);
-	entries[4].Set(wxACCEL_CTRL, WXK_F4, MENU_CLOSE);
-	wxAcceleratorTable accel(accelcount, entries);
-	SetAcceleratorTable(accel);
+	m_accelerators = new Accelerators(this);
+	m_accelerators->DefineBinding(wxT("Ctrl-Shift-P"), MENU_SHIFT_PROJECT_FOCUS);
+	m_accelerators->DefineBinding(wxT("F3"), MENU_FIND_NEXT);
+	m_accelerators->DefineBinding(wxT("Shift-F3"), MENU_FIND_PREVIOUS);
+	m_accelerators->DefineBinding(wxT("Ctrl-F3"), MENU_FIND_CURRENT);
+	m_accelerators->DefineBinding(wxT("Ctrl-F4"), MENU_CLOSE);
+
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-J"), MENU_FIND_NEXT);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-K"), MENU_FIND_PREVIOUS);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-L"), MENU_FIND_REPLACE);
+	m_accelerators->DefineBinding(wxT("Ctrl-Alt-Shift-;"), MENU_FIND_REPLACE_ALL);
+
+	for(int c = 1; c < 10; c++) {
+		wxString str;
+		str.Printf(wxT("Ctrl-%d"), c);
+		m_accelerators->DefineBinding(str, 40000+c);
+	}
 }
 
 void EditorFrame::InitMenus() {
@@ -589,6 +620,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(wxID_CUT, _("&Cut\tCtrl+X"), _("Cut"));
 	editMenu->Append(wxID_COPY, _("&Copy\tCtrl+C"), _("Copy"));
+	editMenu->Append(MENU_MARK_COPY, _("&Mark Copy\tCtrl+Alt+M"), _("Mark Copy"));
 	editMenu->Append(wxID_PASTE, _("&Paste\tCtrl+V"), _("Paste"));
 	editMenu->AppendSeparator();
 
@@ -598,7 +630,14 @@ void EditorFrame::InitMenus() {
 		selectMenu->Append(MENU_SELECTLINE, _("&Line\tCtrl+Shift+L"), _("Select Line"));
 		selectMenu->Append(MENU_SELECTSCOPE, _("&Current Scope\tCtrl+Shift+Space"), _("Select Current Scope"));
 		selectMenu->Append(MENU_SELECTFOLD, _("Current &Fold\tShift-F1"), _("Select Current Fold"));
+		selectMenu->Append(MENU_SELECTTAG, _("Tag &Content\tCtrl+,"), _("Select Parent Tag Content"));
 		editMenu->Append(MENU_SELECT, _("&Select"), selectMenu,  _("Select"));
+
+	wxMenu* navigateSelectionsMenu = new wxMenu;
+		navigateSelectionsMenu->Append(MENU_NAVIGATE_SELECTIONS_MODE, _("&Navigate Selections\tCtrl+Alt+Shift+N"), _("Navigate Selections"));
+		navigateSelectionsMenu->Append(MENU_NAVIGATE_SELECTIONS_NEXT, _("&Next Selection\tCtrl+Alt+Shift+U"), _("Next Selection"));
+		navigateSelectionsMenu->Append(MENU_NAVIGATE_SELECTIONS_PREVIOUS, _("&Previous Selection\tCtrl+Alt+Shift+I"), _("Previous Selection"));
+		editMenu->Append(MENU_NAVIGATE_SELECTIONS, _("&Navigate Selections"), navigateSelectionsMenu, _("Navigate Selections"));
 
 	editMenu->AppendSeparator();
 	wxMenu* findMenu = new wxMenu;
@@ -613,6 +652,7 @@ void EditorFrame::InitMenus() {
 	editMenu->AppendSeparator();
 	editMenu->Append(MENU_EDIT_THEME, _("Edit &Theme..."), _("Edit Theme"));
 	editMenu->Append(MENU_SETTINGS, _("S&ettings..."), _("Edit Settings"));
+	editMenu->Append(MENU_ACCELERATORS, _("&Keyboard Shortcuts..."), _("Edit Keyboard Shortcuts"));
 	menuBar->Append(editMenu, _("&Edit"));
 
 	// View menu
@@ -621,6 +661,8 @@ void EditorFrame::InitMenus() {
 	//viewMenu->Append(MENU_INCOMMING, _("&Incoming\tF2"), _("Show Incomming Documents"), wxITEM_CHECK);
 	//viewMenu->Check(MENU_INCOMMING, true);
 	viewMenu->Append(MENU_SHOWSYMBOLS, _("&Symbol List\tCtrl+Alt+L"), _("Show Symbol List"), wxITEM_CHECK);
+	viewMenu->Append(MENU_SHOWSNIPPETS, _("&Snippet List\tCtrl+Alt+S"), _("Show Snippet List"), wxITEM_CHECK);
+	viewMenu->Append(MENU_CLIPBOARD_HISTORY_PANE, _("&Clipboard History"), _("Show Clipboard History Pane"), wxITEM_CHECK);
 	viewMenu->Append(MENU_REVHIS, _("&Revision History\tF6"), _("Show Revision History"), wxITEM_CHECK);
 	viewMenu->Check(MENU_REVHIS, true);
 	viewMenu->Append(MENU_UNDOHIS, _("&Undo History\tF7"), _("Show Undo History"), wxITEM_CHECK);
@@ -670,7 +712,7 @@ void EditorFrame::InitMenus() {
 	textMenu->Append(MENU_TABSTOSPACES, _("&Tabs to Spaces"), _("Tabs to Spaces"));
 	textMenu->Append(MENU_SPACESTOTABS, _("&Spaces to Tabs"), _("Spaces to Tabs"));
 	textMenu->AppendSeparator();
-	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tEscape"), _("Complete Word"));
+	textMenu->Append(MENU_COMPLETE, _("Complete &Word\tCtrl-Space"), _("Complete Word"));
 	textMenu->AppendSeparator();
 	textMenu->Append(MENU_FILTER, _("&Filter Through Command...\tCtrl-H"), _("Filter Through Command..."));
 	textMenu->Append(MENU_RUN, _("&Run current line/selection\tCtrl-Alt-R"), _("Run current line/selection"));
@@ -730,6 +772,7 @@ void EditorFrame::InitMenus() {
 
 	// associate the menu bar with the frame
 	SetMenuBar(menuBar);
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::RestoreState() {
@@ -835,6 +878,15 @@ void EditorFrame::RestoreState() {
 	// Set last active tab to current
 	m_lastActiveTab = m_tabBar->GetSelection();
 
+	//The Snippet handler would occasionally segfault when it was initialized in its previous place.
+	//Moving it after the above call to SetSyntax seems to fix the problem
+	// Check if we should show snippet list
+	{
+		bool showsnippets = false;
+		m_settings.GetSettingBool(wxT("showsnippets"), showsnippets);
+		if (showsnippets) ShowSnippetList();
+	}
+
 #endif // __WXMSW__
 }
 
@@ -880,6 +932,8 @@ void EditorFrame::ResetBundleMenu() {
 	// Insert new bundles menu
 	wxMenu* bundleMenu = GetBundleMenu();
 	menuBar->Insert(menuNdx, bundleMenu, _("&Bundles"));
+
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::ResetSyntaxMenu() {
@@ -896,6 +950,8 @@ void EditorFrame::ResetSyntaxMenu() {
 		m_syntaxMenu->Append(item);
         item->AfterInsert();
 	}
+
+	m_accelerators->ParseMenu();
 }
 
 void EditorFrame::CreateEncodingMenu(wxMenu& menu) const {
@@ -1057,17 +1113,39 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	const unsigned int count = paths.GetCount();
 	for (unsigned int i = 0; i < count; ++i) {
 		const wxString& path = paths[i];
+		bool close = false;
+
+		wxDateTime modTime = modDates[i];
+		if(!modTime.IsValid()) {
+			int answer = wxMessageBox(wxString::Format(wxT("Unable to read file %s.  Would you like to close it?"), path), wxT("Error"), wxYES_NO);
+			if(answer == wxYES) {
+				close = true;
+			}
+		}
 
 		// Find doc with current path
 		const unsigned int pageCount = m_tabBar->GetPageCount();
-		for (unsigned int p = 0; p < pageCount; ++p) {
+		unsigned int p;
+		for (p = 0; p < pageCount; ++p) {
 			const EditorCtrl* page = GetEditorCtrlFromPage(p);
 			const wxString filePath = page->GetPath();
 			if (path == filePath) {
-				pathsToPages.push_back(p);
-				pageDates.push_back(modDates[i]);
+				if(!close) {
+					pathsToPages.push_back(p);
+					pageDates.push_back(modDates[i]);
+				}
 				break;
 			}
+		}
+
+		if(close && p < pageCount) {	
+			Freeze(); // optimize redrawing
+			DeletePage(p, true);
+
+			// If we deleted last editCtrl, then we have to create a new empty one
+			if (m_tabBar->GetPageCount() == 0) AddTab();
+
+			Thaw(); // optimize redrawing
 		}
 	}
 
@@ -1376,6 +1454,7 @@ void EditorFrame::AddTab(wxWindow* page) {
 	// Notify that we are editing a new document
 	dispatcher.Notify(wxT("WIN_CHANGEDOC"), editorCtrl, GetId());
 	UpdateTabMenu();
+	m_generalSettings.AutoSave();
 }
 
 ITabPage* EditorFrame::GetPage(size_t idx) {
@@ -1426,7 +1505,7 @@ void EditorFrame::UpdateTabs() {
 		if (!name.empty()) title = name;
 		else title = _("Untitled");
 		
-		if (editorCtrl->IsModified()) {
+		if (page->IsModified()) {
 #ifdef __WXMSW__
 			wxString modifiedBug = wxT("\x2022 ");
 			title = modifiedBug + title;
@@ -2065,6 +2144,8 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 		return false;
 	}
 
+	ec->SetTabWidthFromSyntax();
+
 	// Add to recent files list
 	m_generalSettings.AddRecentFile(filepath);
 	UpdateRecentFiles();
@@ -2075,6 +2156,9 @@ bool EditorFrame::DoOpenFile(const wxString& filepath, wxFontEncoding enc, const
 		if (isBundleItem && editorCtrl->IsEmpty()) DeletePage(m_tabBar->GetSelection());
 		
 		AddTab(page);
+	} else {
+		//if AddTab is not called, then SaveState will never get called.
+		m_generalSettings.AutoSave();
 	}
 	UpdateWindowTitle();
 	editorCtrl->ReDraw();
@@ -2174,6 +2258,7 @@ void EditorFrame::ShowSearch(bool show, bool replace) {
 		editorCtrl->SetFocus();
 	}
 	box->Layout();
+	m_generalSettings.AutoSave();
 }
 
 bool EditorFrame::IsSearching() const { return m_searchPanel->IsShown(); }
@@ -2243,9 +2328,10 @@ void EditorFrame::SetSoftTab(bool isSoft)  {
 	m_softTabs = isSoft;
 
 	// update all editor pages
+	EditorCtrl* activeEditor = GetEditorCtrl();
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
-		page->SetTabWidth(m_tabWidth, m_softTabs);
+		page->SetTabWidth(m_tabWidth, m_softTabs, true, page == activeEditor);
 	}
 }
 
@@ -2258,9 +2344,10 @@ void EditorFrame::SetTabWidth(unsigned int width) {
 	m_tabWidth = width;
 
 	// Invalidate all editor pages
+	EditorCtrl* activeEditor = GetEditorCtrl();
 	for (unsigned int i = 0; i < m_tabBar->GetPageCount(); ++i) {
 		EditorCtrl* page = GetEditorCtrlFromPage(i);
-		page->SetTabWidth(m_tabWidth, m_softTabs);
+		page->SetTabWidth(m_tabWidth, m_softTabs, true, page == activeEditor);
 	}
 
 	// Redraw current
@@ -2306,6 +2393,14 @@ void EditorFrame::OnOpeningMenu(wxMenuEvent& WXUNUSED(event)) {
 	// "Show Symbol List"
 	wxMenuItem* slItem = GetMenuBar()->FindItem(MENU_SHOWSYMBOLS);
 	if (slItem) slItem->Check(m_symbolList != NULL);
+
+	// "Show Snippet List"
+	wxMenuItem* snItem = GetMenuBar()->FindItem(MENU_SHOWSNIPPETS);
+	if (snItem) snItem->Check(m_snippetList != NULL);
+
+	// "Show Clipboard History"
+	wxMenuItem* chItem = GetMenuBar()->FindItem(MENU_CLIPBOARD_HISTORY_PANE);
+	if (chItem) chItem->Check(m_clipboardHistoryPane != NULL);
 
 	// "Highlight Authors"
 	wxMenuItem* hlItem = GetMenuBar()->FindItem(MENU_HL_USERS);
@@ -2783,6 +2878,11 @@ void EditorFrame::OnMenuCopy(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->ReDraw();
 }
 
+void EditorFrame::OnMenuMarkCopy(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->OnMarkCopy();
+	editorCtrl->ReDraw();
+}
+
 void EditorFrame::OnMenuPaste(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->OnPaste();
 	editorCtrl->MakeCaretVisible();
@@ -2818,6 +2918,22 @@ void EditorFrame::OnMenuFindNext(wxCommandEvent& WXUNUSED(event)) {
 void EditorFrame::OnMenuFindPrevious(wxCommandEvent& WXUNUSED(event)) {
 	if (m_searchPanel->HasSearchString()) {
 		m_searchPanel->FindPrevious();
+		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
+	}
+	else ShowSearch(true);
+}
+
+void EditorFrame::OnMenuFindReplace(wxCommandEvent& WXUNUSED(event)) {
+	if (m_searchPanel->HasSearchString()) {
+		m_searchPanel->Replace();
+		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
+	}
+	else ShowSearch(true);
+}
+
+void EditorFrame::OnMenuFindReplaceAll(wxCommandEvent& WXUNUSED(event)) {
+	if (m_searchPanel->HasSearchString()) {
+		m_searchPanel->ReplaceAll();
 		if (!m_searchPanel->IsActive()) editorCtrl->SetFocus();
 	}
 	else ShowSearch(true);
@@ -2860,6 +2976,11 @@ void EditorFrame::OnMenuSelectScope(wxCommandEvent& WXUNUSED(event)) {
 
 void EditorFrame::OnMenuSelectFold(wxCommandEvent& WXUNUSED(event)) {
 	editorCtrl->SelectFold();
+	editorCtrl->ReDraw();
+}
+
+void EditorFrame::OnMenuSelectTag(wxCommandEvent& WXUNUSED(event)) {
+	editorCtrl->SelectParentTag();
 	editorCtrl->ReDraw();
 }
 
@@ -2954,7 +3075,7 @@ void EditorFrame::OnKeyUp(wxKeyEvent& event) {
 void EditorFrame::OnMenuNextTab(wxCommandEvent& evt) {
 	// The user may have configured it to go to last active tab
 	bool gotoLastTab = false;
-	m_settings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
+	m_generalSettings.GetSettingBool(wxT("gotoLastTab"), gotoLastTab);
 	if (gotoLastTab) {
 		OnMenuLastTab(evt);
 		return;
@@ -3253,6 +3374,7 @@ void EditorFrame::TogglePane(wxWindow* targetPane, bool showPane) {
 	wxAuiPaneInfo& pane = m_frameManager.GetPane(targetPane);
 	pane.Show(showPane);
 	m_frameManager.Update();
+	m_generalSettings.AutoSave();
 }
 
 void EditorFrame::OnMenuRevisionHistory(wxCommandEvent& event) {
@@ -3356,6 +3478,16 @@ void EditorFrame::OnMenuShowSymbols(wxCommandEvent& event) {
 	else CloseSymbolList();
 }
 
+void EditorFrame::OnMenuShowSnippets(wxCommandEvent& event) {
+	if (event.IsChecked()) ShowSnippetList();
+	else CloseSnippetList();
+}
+
+void EditorFrame::OnMenuShowClipboardHistoryPane(wxCommandEvent& event) {
+	if (event.IsChecked()) ShowClipboardHistoryPane();
+	else CloseClipboardHistoryPane();
+}
+
 void EditorFrame::OnMenuSymbols(wxCommandEvent& WXUNUSED(event)) {
 	if (m_symbolList) {
 		// If symbol list is already open, we switch focus
@@ -3428,6 +3560,86 @@ void EditorFrame::CloseSymbolList() {
 	m_frameManager.Update();
 }
 
+void EditorFrame::ShowSnippetList() {
+	if (m_snippetList) return; // already shown
+	
+	// Create the pane
+	m_snippetList = new SnippetList(*this);
+	wxAuiPaneInfo paneInfo;
+	paneInfo.Name(wxT("Snippet Shortcuts")).Right().Caption(_("Snippet Shortcuts")).BestSize(wxSize(150,50)); // defaults
+
+	// Load pane settings
+	wxString panePerspective;
+	m_settings.GetSettingString(wxT("snippet_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showsnippets"), true);
+	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);
+
+	// Add to manager
+	m_frameManager.AddPane(m_snippetList, paneInfo);
+	m_frameManager.Update();
+}
+
+void EditorFrame::CloseSnippetList() {
+	if (!m_snippetList) return; // already closed
+
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_snippetList);
+
+	// Save pane settings
+	const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+	m_settings.SetSettingString(wxT("snippet_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showsnippets"), false);
+
+	// Delete the snippet pane
+	m_frameManager.DetachPane(m_snippetList);
+	m_snippetList->Hide();
+	m_snippetList->Destroy();
+	m_snippetList = NULL;
+	m_frameManager.Update();
+}
+
+void EditorFrame::ShowClipboardHistoryPane() {
+	if (m_clipboardHistoryPane) return; // already shown
+	
+	// Create the pane
+	m_clipboardHistoryPane = new ClipboardHistoryPane(*this);
+	wxAuiPaneInfo paneInfo;
+	paneInfo.Name(wxT("Clipboard History")).Right().Caption(_("Clipboard History")).BestSize(wxSize(150,50)); // defaults
+
+	// Load pane settings
+	wxString panePerspective;
+	m_settings.GetSettingString(wxT("clipboardHistory_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showClipboardHistory"), true);
+	if (!panePerspective.empty()) m_frameManager.LoadPaneInfo(panePerspective, paneInfo);
+
+	// Add to manager
+	m_frameManager.AddPane(m_clipboardHistoryPane, paneInfo);
+	m_frameManager.Update();
+}
+
+void EditorFrame::CloseClipboardHistoryPane() {
+	if (!m_clipboardHistoryPane) return; // already closed
+
+	wxAuiPaneInfo& pane = m_frameManager.GetPane(m_clipboardHistoryPane);
+
+	// Save pane settings
+	const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+	m_settings.SetSettingString(wxT("clipboardHistory_pane"), panePerspective);
+	m_settings.SetSettingBool(wxT("showClipboardHistory"), false);
+
+	// Delete the snippet pane
+	m_frameManager.DetachPane(m_clipboardHistoryPane);
+	m_clipboardHistoryPane->Hide();
+	m_clipboardHistoryPane->Destroy();
+	m_clipboardHistoryPane = NULL;
+	m_frameManager.Update();
+}
+
+void EditorFrame::AddCopyText(wxString& copytext) {
+	if(m_clipboardHistoryPane) {
+		m_clipboardHistoryPane->AddCopyText(copytext);
+	}
+}
+
 void EditorFrame::CloseWebPreview() {
 	if (!m_previewDlg) return; // already closed
 
@@ -3475,6 +3687,20 @@ void EditorFrame::OnPaneClose(wxAuiManagerEvent& event) {
 	}
 	else if (event.GetPane()->window == m_symbolList) {
 		CloseSymbolList();
+
+		// We have already deleted the window
+		// so we don't want aui to do any close handling
+		event.Veto();
+	}
+	else if (event.GetPane()->window == m_snippetList) {
+		CloseSnippetList();
+
+		// We have already deleted the window
+		// so we don't want aui to do any close handling
+		event.Veto();
+	}
+	else if (event.GetPane()->window == m_clipboardHistoryPane) {
+		CloseClipboardHistoryPane();
 
 		// We have already deleted the window
 		// so we don't want aui to do any close handling
@@ -3761,6 +3987,11 @@ void EditorFrame::SaveState() {
 	if (!m_needStateSave) return;
 	if (!editorCtrl) return;
 
+	//This functions makes a lot of calls to change the settings.  It is silly to write them every time, so instead we do it once at the very end.
+	//Moreover, if we enter SaveState via OnIdle, then we shouldn't write the settings to a file, as it gets to be a little too much.
+	m_generalSettings.DontSave();
+
+
 	if (m_sizeChanged) SaveSize();
 
 	//wxLogDebug(wxT("SaveState"));
@@ -3809,6 +4040,26 @@ void EditorFrame::SaveState() {
 		m_settings.SetSettingBool(wxT("showsymbols"), true);
 	}
 
+	// Save snippet list layout
+	if (m_snippetList) {
+		wxAuiPaneInfo& pane = m_frameManager.GetPane(m_snippetList);
+
+		// Save pane settings
+		const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+		m_settings.SetSettingString(wxT("snippet_pane"), panePerspective);
+		m_settings.SetSettingBool(wxT("showsnippets"), true);
+	}
+
+	// Save snippet list layout
+	if (m_clipboardHistoryPane) {
+		wxAuiPaneInfo& pane = m_frameManager.GetPane(m_clipboardHistoryPane);
+
+		// Save pane settings
+		const wxString panePerspective = m_frameManager.SavePaneInfo(pane);
+		m_settings.SetSettingString(wxT("clipboardHistory_pane"), panePerspective);
+		m_settings.SetSettingBool(wxT("showClipboardHistory"), true);
+	}
+
 	m_settings.SetSettingBool(wxT("showproject"), projectPane.IsShown());
 	m_settings.SetSettingString(wxT("topwin/panes"), perspective);
 	if (m_tabBar->GetPageCount() != 0) m_settings.SetSettingInt(wxT("topwin/page_id"), m_tabBar->GetSelection());
@@ -3818,15 +4069,25 @@ void EditorFrame::SaveState() {
 
 	// Only save once if window is inactive
 	if (!IsActive()) m_needStateSave = false;
+	m_generalSettings.AllowSave();
+	m_generalSettings.AutoSave(); 
 }
 
 void EditorFrame::OnIdle(wxIdleEvent& event) {
 	if (!editorCtrl) {event.Skip();return;}
 	wxASSERT(m_tabBar->GetPageCount() != 0);
-
-	//wxLogDebug(wxT("EditorFrame::OnIdle"));
-
+	//SaveState updates the variables for the e.cfg file.
+	//Computing that and writing the file are somewhat expensive operations.
+	//So, first we disable SaveState from writing the file at all.
+	//Then, if any other function as called m_generalSettings.AutoSave, a boolean will be set to true, which just marks the settings as requiring a save.
+	//It is actually saved in OnIdle so the editor is more responsive.
+	m_generalSettings.DontSave();
 	SaveState();
+	m_generalSettings.AllowSave();
+
+	//Writing the file can be expensive.  Rather than doing it when an action actually occurrs, this does it when the editor is idle so the editor is more responsive.
+	m_generalSettings.DoAutoSave();
+
 	event.Skip();
 }
 
@@ -3887,6 +4148,7 @@ void EditorFrame::OnTabClosed(wxAuiNotebookEvent& WXUNUSED(event)) {
 	if (m_tabBar->GetPageCount() == 0) AddTab();
 
 	UpdateTabMenu();
+	m_generalSettings.AutoSave();
 }
 
 void EditorFrame::OnDoCloseTab(wxCommandEvent& WXUNUSED(event)) {
@@ -3974,6 +4236,8 @@ bool EditorFrame::DeletePage(unsigned int page_id, bool removetab) {
 	}
 
 	if (removetab) m_tabBar->DeletePage(page_id);
+
+	m_generalSettings.AutoSave();
 
 	return true;
 }
@@ -4064,4 +4328,32 @@ void EditorFrame::OnBundlesReloaded(EditorFrame* self, void* WXUNUSED(data), int
 void EditorFrame::OnMouseWheel(wxMouseEvent& event) {
 	// If no one else handled the event, send it to the editor.
 	this->editorCtrl->ProcessMouseWheel(event);
+}
+
+void EditorFrame::OnMenuNavigateSelections(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ec = GetEditorCtrl();
+	if(!ec) return;
+	ec->NavigateSelections();
+}
+
+void EditorFrame::OnMenuNavigateSelectionsNext(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ec = GetEditorCtrl();
+	if(!ec) return;
+	ec->NextSelection();
+}
+
+void EditorFrame::OnMenuNavigateSelectionsPrevious(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ec = GetEditorCtrl();
+	if(!ec) return;
+	ec->PreviousSelection();
+}
+
+bool EditorFrame::HandleChord(wxKeyEvent& event) {
+	return m_accelerators->HandleKeyEvent(event);
+}
+
+void EditorFrame::OnMenuCustomizeAccelerators(wxCommandEvent& WXUNUSED(event)) {
+	(AcceleratorsDialog(this)).ShowModal();
+	EditorCtrl* ctrl = GetEditorCtrl();
+	ctrl->DrawLayout();
 }

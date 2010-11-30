@@ -63,7 +63,13 @@ void* ChangeCheckerThread::Entry() {
 
 			// file could be locked by another app
 			// or the remote site could be unavailable
-			if (!modDate.IsValid()) continue;
+			// or we could not have permission to see it
+			// handle this in the event thread
+			if (!modDate.IsValid()) {
+				changedFiles.Add(p->path);
+				modDates.push_back(modDate);
+				continue;
+			}
 
 			// Check if this change have been marked to be skipped
 			if (p->skipDate.IsValid() && modDate == p->skipDate) continue;

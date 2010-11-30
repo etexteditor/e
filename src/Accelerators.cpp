@@ -44,8 +44,10 @@ bool shouldIgnore(int code) {
  * The remaining 24 bits are used to store the actual wxKeyCode of the key to press.
  */
 int makeHash(wxString& accel) {
-	int code, flags;
-	wxAcceleratorEntry::ParseAccel(wxT("\t")+accel, &flags, &code);
+	wxAcceleratorEntry entry;
+	entry.FromString(wxT("\t")+accel);
+	int code = entry.GetKeyCode();
+	int flags = entry.GetFlags();
 	
 #ifdef __WXMSW__
 	// ParseAccel does not support windows key

@@ -252,14 +252,12 @@ public:
 
 bool  wxIEHtmlWin::LoadString(const wxString& html, bool prependHtml)
 {
+    const wxCharBuffer buf = html.utf8_str();
     char *data = NULL;
-    size_t len = html.length();
-#ifdef UNICODE
-    len *= 2;
-#endif
+    size_t len = strlen(buf.data());
     data = (char *) malloc(len);
-    memcpy(data, html.c_str(), len);
-	return LoadStream(new wxOwnedMemInputStream(data, len), prependHtml);
+    memcpy(data, buf, len);
+    return LoadStream(new wxOwnedMemInputStream(data, len), prependHtml);
 };
 
 bool wxIEHtmlWin::LoadStream(IStreamAdaptorBase *pstrm, bool prependHtml)

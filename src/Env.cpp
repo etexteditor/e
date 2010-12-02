@@ -105,29 +105,7 @@ void cxEnv::GetEnvBlock(wxString& env) const {
 
 		//wxLogDebug(wxT("%d: %s"), i, line);
 
-#ifdef __WXMSW__
-		// Convert to utf8
-		const wxCharBuffer buf = line.mb_str(wxConvUTF8);
-
-		// to avoid unicode chars being mangled by windows automatic
-		// conversion to oem, we first convert the utf8 text to unicode
-		// as if it was oem. Windows will convert it back to oem, which
-		// will then preserve the utf8 encoding.
-		// We use native MultiByteToWideChar to ensure we get the right
-		// codepage no matter the current locale.
-		const size_t len = ::MultiByteToWideChar(CP_OEMCP, 0, buf.data(), -1, NULL, 0);
-		if (len) {
-			wxWCharBuffer wBuf(len);
-			::MultiByteToWideChar(CP_OEMCP, 0, buf.data(), -1, wBuf.data(), len);
-			env += wBuf;
-		}
-		else wxASSERT(false);
-
-		//const wxString oemEnv(buf, wxCSConv(wxFONTENCODING_CP437));
-
-#else
 		env += line;
-#endif
 
 		env += wxT('\0');
 	}

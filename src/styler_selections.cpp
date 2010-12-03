@@ -38,12 +38,16 @@ void Styler_Selections::EnableNavigation() {
 	if(m_enabled) {
 		m_nextSelection = -1;
 		m_selections = m_editorCtrl.GetSelections();
-		NextSelection();
+		if (m_selections.empty()) {
+			m_enabled = false;
+		} else {
+			NextSelection();
+		}
 	}
 }
 
 void Styler_Selections::NextSelection() {
-	if(!m_enabled) return;
+	if(!m_enabled || m_selections.empty()) return;
 
 	m_nextSelection++;
 	if((unsigned int)m_nextSelection >= m_selections.size()) {
@@ -57,7 +61,7 @@ void Styler_Selections::NextSelection() {
 }
 
 void Styler_Selections::PreviousSelection() {
-	if(!m_enabled) return;
+	if(!m_enabled || m_selections.empty()) return;
 
 	m_nextSelection--;
 	if(m_nextSelection < 0) {

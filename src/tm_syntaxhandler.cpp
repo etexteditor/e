@@ -789,10 +789,11 @@ void TmSyntaxHandler::GetDragActions(const deque<const wxString*>& scopes, vecto
 const vector<const tmAction*> TmSyntaxHandler::GetActions(
 	const wxString& strPart, const deque<const wxString*>& scopes) const {
 
-	Triggers::const_iterator p = m_actionTriggers.lower_bound(strPart);
-	wxString key = p->first;
-	while ((p != m_actionTriggers.end()) &&
-		((key[key.Len() - 1] == strPart[strPart.Len() - 1]))) {
+	for(Triggers::const_iterator p = m_actionTriggers.lower_bound(strPart);
+		(p != m_actionTriggers.end()) &&
+			((p->first[p->first.Len() - 1] == strPart[strPart.Len() - 1])) ;
+		++p) {
+		const wxString& key = p->first;
 
 		if (!strPart.EndsWith(key)) {
 		} else if ((key.Len() < strPart.Len()) && (Isalnum(key[0])) && 
@@ -801,8 +802,6 @@ const vector<const tmAction*> TmSyntaxHandler::GetActions(
 			const vector<const tmAction*>* s = (const vector<const tmAction*>*)p->second->GetMatch(scopes);
 			if (s) return *s;
 		}
-		++p;
-		key = p->first;
 	}
 	return vector<const tmAction*>();
 }

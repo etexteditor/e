@@ -8356,9 +8356,6 @@ void EditorCtrl::OnMouseRightDown(wxMouseEvent& event) {
 }
 
 static bool should_start_drag(const wxPoint& start, const wxPoint& end) {
-	// If no start position was given, we're not dragging.
-	if (start == wxDefaultPosition) return false;
-
 	// Drag metric can be changed by user at any time, so always get it.
 	const int drag_x_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_X);
 	const int drag_y_threshold = wxSystemSettings::GetMetric(wxSYS_DRAG_Y);
@@ -8409,11 +8406,14 @@ void EditorCtrl::OnMouseMotion(wxMouseEvent& event) {
 
 		MakeCaretVisible();
 
+		// click&move initiated in selection area - don't changing selection
+		if (m_dragStartPos != wxDefaultPosition) {
 		// Check if we should start dragging
-		if (should_start_drag(m_dragStartPos, mpos)) {
-			wxLogDebug(wxT("Starting text drag"));
-			StartDragSelectedText();
-			m_dragStartPos = wxDefaultPosition; // reset drag state
+			if (should_start_drag(m_dragStartPos, mpos)) {
+				wxLogDebug(wxT("Starting text drag"));
+				StartDragSelectedText();
+				m_dragStartPos = wxDefaultPosition; // reset drag state
+			}
 			return;
 		}
 

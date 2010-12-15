@@ -917,7 +917,7 @@ bool TmSyntaxHandler::TranslateTmMacroCmd(const PListDict& macroDict, eMacro& ma
 	if (cmdStr == wxT("selectWord:")) {
 		macro.Add(wxT("SelectWord"));
 	}
-	if (cmdStr == wxT("selectAll:")) {
+	else if (cmdStr == wxT("selectAll:")) {
 		macro.Add(wxT("SelectAll"));
 	}
 	else if (cmdStr == wxT("moveUp:")) {

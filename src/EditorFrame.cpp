@@ -1117,7 +1117,7 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 
 		wxDateTime modTime = modDates[i];
 		if(!modTime.IsValid()) {
-			int answer = wxMessageBox(wxString::Format(wxT("Unable to read file %s.  Would you like to close it?"), path), wxT("Error"), wxYES_NO);
+			int answer = wxMessageBox(wxString::Format(wxT("Unable to read file %s.  Would you like to close it?"), path.c_str()), wxT("Error"), wxYES_NO);
 			if(answer == wxYES) {
 				close = true;
 			}

@@ -29,9 +29,11 @@ public:
 #ifdef __WXMSW__
 	bool OnMeasureItem(size_t *pwidth, size_t *pheight);
 	bool OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxODStatus stat);
+	void SetCustomAccel(wxString accel) { m_customAccel = accel; }
+#else
+	void SetCustomAccel(wxString WXUNUSED(accel)) { }
 #endif
 
-	void SetCustomAccel(wxString accel) { m_customAccel = accel; }
 	const tmAction& GetAction() { return m_action; }
 
 #ifdef __WXGTK__

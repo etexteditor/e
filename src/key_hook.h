@@ -52,9 +52,12 @@ wxLogDebug(wxT("registering 0x%x\n"), handle);
 	};
 	static void Unregister(_keyBindBase* bind) {
 		RecursiveCriticalSectionLocker lock(critsect);
-		for(binds_map::iterator i = binds.begin(); i != binds.end(); i++)
+		for(binds_map::iterator i = binds.begin(); i != binds.end(); /* empty */)
 			if (i->second == bind)
-				binds.erase(i);
+				binds.erase(i++);
+			else
+				++i;
+
 	};
 };
 #endif

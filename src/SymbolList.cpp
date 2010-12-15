@@ -75,7 +75,7 @@ void SymbolList::LoadFilters() {
 	eGetSettings().GetSettingString(wxT("symbolListFilters"), filters);
 	m_filters = filters;
 	
-	const wxArrayString filtersList = wxSplit(m_filters, wxT('\n'), NULL);
+	const wxArrayString filtersList = wxSplit(m_filters, wxT('\n'), wxT('\0'));
 	m_regexFilters.clear();
 	
 	for(unsigned int c = 0; c < filtersList.GetCount(); c++) {

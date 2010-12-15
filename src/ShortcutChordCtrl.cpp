@@ -152,7 +152,7 @@ bool ShortcutChordCtrl::OnPreKeyUp(wxKeyEvent& event) {
 	}
 
 	if(!value.empty()) {
-		value = wxString::Format(wxT("%s %s"), value, binding);
+		value = wxString::Format(wxT("%s %s"), value.c_str(), binding.c_str());
 	} else {
 		value = binding;
 	}

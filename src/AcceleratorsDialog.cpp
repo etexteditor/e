@@ -43,8 +43,8 @@ BEGIN_EVENT_TABLE(AcceleratorsDialog::AcceleratorDialog, wxDialog)
 END_EVENT_TABLE()
 
 AcceleratorsDialog::AcceleratorsDialog(EditorFrame *parent):
-	m_editorFrame(parent), m_accelerators(parent->GetAccelerators()),
-	wxDialog ((wxWindow*)parent, wxID_ANY, wxEmptyString, wxDefaultPosition)
+	wxDialog ((wxWindow*)parent, wxID_ANY, wxEmptyString, wxDefaultPosition),
+	m_editorFrame(parent), m_accelerators(parent->GetAccelerators())
 {
 	SetTitle(_("Customize Keyboard Shortcuts"));
 
@@ -156,9 +156,9 @@ void AcceleratorsDialog::ParseMenu(wxMenuItem* item, wxTreeItemId parent) {
 
 	wxString display = label;
 	if(!customAccel.empty()) {
-		display = wxString::Format(wxT("%s  ->  %s"), label, customAccel);
+		display = wxString::Format(wxT("%s  ->  %s"), label.c_str(), customAccel.c_str());
 	} else if(!accel.empty()) {
-		display = wxString::Format(wxT("%s  ->  %s"), label, accel);
+		display = wxString::Format(wxT("%s  ->  %s"), label.c_str(), accel.c_str());
 
 	}
 
@@ -209,7 +209,7 @@ void AcceleratorsDialog::OnSave(wxCommandEvent& WXUNUSED(event)) {
 			message << wxT("  ") << conflicts[c] << wxT("\n");
 		}
 
-		int result = wxMessageBox(wxString::Format(wxT("Some keystrokes are bound to multiple items:\n\n%s\nTo fix this, press Cancel.  To ignore, press Ok."), message), wxT("Warning"), wxOK|wxCANCEL);
+		int result = wxMessageBox(wxString::Format(wxT("Some keystrokes are bound to multiple items:\n\n%s\nTo fix this, press Cancel.  To ignore, press Ok."), message.c_str()), wxT("Warning"), wxOK|wxCANCEL);
 		if(result == wxCANCEL) {
 			return;
 		}
@@ -250,9 +250,9 @@ void AcceleratorsDialog::OnClick(wxTreeEvent& event) {
 		
 		wxString display = data.label;
 		if(!data.customAccel.empty()) {
-			display = wxString::Format(wxT("%s  ->  %s"), data.label, data.customAccel);
+			display = wxString::Format(wxT("%s  ->  %s"), data.label.c_str(), data.customAccel.c_str());
 		} else if(!data.defaultAccel.empty()) {
-			display = wxString::Format(wxT("%s  ->  %s"), data.label, data.defaultAccel);
+			display = wxString::Format(wxT("%s  ->  %s"), data.label.c_str(), data.defaultAccel.c_str());
 		}
 
 		m_treeView->SetItemText(id, display);
@@ -262,10 +262,10 @@ void AcceleratorsDialog::OnClick(wxTreeEvent& event) {
 AcceleratorsDialog::AcceleratorDialog::AcceleratorDialog(AcceleratorData& data, AcceleratorsDialog* parent) :
 	wxDialog ((wxWindow*)parent, wxID_ANY, wxEmptyString, wxDefaultPosition), save(false)
 {
-	SetTitle(wxString::Format(wxT("Customize %s"), data.label));
+	SetTitle(wxString::Format(wxT("Customize %s"), data.label.c_str()));
 
-	wxStaticText* defaultBinding = new wxStaticText(this, wxID_ANY, wxString::Format(wxT("Default Binding: %s"), data.defaultAccel));
-	wxStaticText* customBinding = new wxStaticText(this, wxID_ANY, wxString::Format(wxT("Custom Binding: %s"), data.customAccel));
+	wxStaticText* defaultBinding = new wxStaticText(this, wxID_ANY, wxString::Format(wxT("Default Binding: %s"), data.defaultAccel.c_str()));
+	wxStaticText* customBinding = new wxStaticText(this, wxID_ANY, wxString::Format(wxT("Custom Binding: %s"), data.customAccel.c_str()));
 	m_chordCtrl = new ShortcutChordCtrl(this, CTRL_ACCELERATORS_KEY);
 	m_chordCtrl->SetValue(data.customAccel);
 

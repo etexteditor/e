@@ -26,7 +26,7 @@ public:
 			const wxPoint& point = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 	virtual ~wxBrowser();
 	virtual wxWindow* GetWindow();
-	virtual bool LoadString(const wxString& html);
+	virtual bool LoadString(const wxString& html, bool prependHtml=true);
 	virtual void LoadUrl(const wxString &_url, const wxString &_frame = wxEmptyString, bool keepHistory=false);
 	virtual bool Refresh(wxHtmlRefreshLevel level);
 	virtual bool GoBack();

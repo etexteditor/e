@@ -57,7 +57,7 @@ int makeHash(wxString& accel) {
 	//Win is not recognized as a modifier, so wxwidgets will not auto-capitalize the key codes for us
 	code = wxToupper(code);
 
-	wxLogDebug(wxT("Hash for %s: %d %d %d"), accel, ((flags << 24) | code), flags, code);
+	wxLogDebug(wxT("Hash for %s: %d %d %d"), accel.c_str(), ((flags << 24) | code), flags, code);
 	return (flags << 24) | code;
 }
 

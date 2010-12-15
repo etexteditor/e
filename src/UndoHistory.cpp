@@ -376,7 +376,7 @@ void UndoHistory::OnMouseWheel(wxMouseEvent& event) {
 	if (rotation == 0) return; // No net rotation.
 
 	const wxSize size = GetClientSize();
-	const double linescount = (abs(rotation) / ((double)event.GetWheelDelta())) * ((double)event.GetLinesPerAction());
+	const double linescount = (fabs(rotation) / ((double)event.GetWheelDelta())) * ((double)event.GetLinesPerAction());
 
 	int pos = m_verticalScrollPos;
 

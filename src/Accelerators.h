@@ -14,7 +14,7 @@ wxString normalize(wxString str);
 class KeyBinding {
 public:
 	KeyBinding(wxMenuItem* menuItem, wxString& accel) :
-	  id(menuItem->GetId()), accel(accel) {}
+	  accel(accel), id(menuItem->GetId()) {}
 
 	KeyBinding(wxString accel, int id) : 
 	  accel(accel), id(id) {}
@@ -35,7 +35,7 @@ public:
 class BundleKeyChord {
 public:
 	BundleKeyChord(int hash, wxString& chord) : 
-	  hash(hash), key(chord) {};
+	  key(chord), hash(hash) {};
 
 	wxString key;
 	std::map<int, bool> bindings;

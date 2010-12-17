@@ -16,8 +16,8 @@
 // The following symbols should be updated for each new component release
 // since some kind of tests, like those of AM_WXCODE_CHECKFOR_COMPONENT_VERSION()
 // for "configure" scripts under unix, use them.
-#define wxJSON_MAJOR          0
-#define wxJSON_MINOR          5
+#define wxJSON_MAJOR          1
+#define wxJSON_MINOR          2
 #define wxJSON_RELEASE        1
 
 // For non-Unix systems (i.e. when building without a configure script),
@@ -56,12 +56,11 @@
 
 // the __PRETTY_FUNCTION__ macro expands to the full class's
 // member name in the GNU GCC.
-// For other compilers you have to set the correct macro
-//#if !defined( __GNUC__ )
-//  #define __PRETTY_FUNCTION__   __WXFUNCTION__
-//#endif
+// For other compilers we use the standard __wxFUNCTION__ macro
+#if !defined( __GNUC__ )
+  #define __PRETTY_FUNCTION__   __WXFUNCTION__
+#endif
 
-#define __PRETTY_FUNCTION__   __WXFUNCTION__
 
 
 // define wxJSON_USE_UNICODE if wxWidgets was built with
@@ -69,7 +68,6 @@
 #if defined( wxJSON_USE_UNICODE )
   #undef wxJSON_USE_UNICODE
 #endif
-
 // do not modify the following lines
 #if wxUSE_UNICODE == 1
   #define wxJSON_USE_UNICODE
@@ -77,9 +75,8 @@
 
 // the following macro, if defined, cause the wxJSONValue to store
 // pointers to C-strings as pointers to statically allocated
-// C-strings
-// by default this macro is not defined
-// #define WXJSON_USE_CSTRING
+// C-strings. By default this macro is not defined
+// #define wxJSON_USE_CSTRING
 
 
 // the following macro, if defined, cause the wxJSONvalue and its
@@ -125,7 +122,86 @@
 #endif
 
 #if !defined( LLONG_MIN )
-  #define LLONG_MIN     -9223372036854775808    
+  #define LLONG_MIN     -9223372036854775808
 #endif
+
+
+
+// the same applies for all other integer constants
+#if !defined( INT_MIN )
+  #define INT_MIN       -32768
+#endif
+#if !defined( INT_MAX )
+  #define INT_MAX        32767
+#endif
+#if !defined( UINT_MAX )
+  #define UINT_MAX       65535
+#endif
+#if !defined( LONG_MIN )
+  #define LONG_MIN       -2147483648
+#endif
+#if !defined( LONG_MAX )
+  #define LONG_MAX       2147483647
+#endif
+#if !defined( ULONG_MAX )
+  #define ULONG_MAX       4294967295
+#endif
+#if !defined( SHORT_MAX )
+  #define SHORT_MAX	32767
+#endif
+#if !defined( SHORT_MIN )
+  #define SHORT_MIN	-32768
+#endif
+#if !defined( USHORT_MAX )
+  #define USHORT_MAX	65535
+#endif
+
+
+
+//
+// define the wxJSON_ASSERT() macro to expand to wxASSERT()
+// unless the wxJSON_NOABORT_ASSERT is defined
+// #define wxJSON_NOABORT_ASSERT
+#if defined( wxJSON_NOABORT_ASSERT )
+  #define wxJSON_ASSERT( cond )
+#else
+  #define wxJSON_ASSERT( cond )		wxASSERT( cond );
+#endif
+
+
+//
+// the following macros are used by the wxJSONWriter::WriteStringValues()
+// when the wxJSONWRITER_SPLIT_STRING flag is set
+#define wxJSONWRITER_LAST_COL	50
+#define wxJSONWRITER_SPLIT_COL	75
+#define wxJSONWRITER_MIN_LENGTH	15
+#define wxJSONWRITER_TAB_LENGTH  4
+
+
+//
+// some compilers (i.e. MSVC++) defines their own 'snprintf' function
+// so if it is not defined, define it in the following lines
+// please note that we cannot use the wxWidget's counterpart 'wxSnprintf'
+// because the latter uses 'wxChar' but wxJSON only use 'char'
+#if !defined(snprintf) && defined(_MSC_VER)
+#define snprintf _snprintf
+#endif
+
+
+//
+// check if wxWidgets is compiled using --enable-stl in which case
+// we have to use different aproaches when declaring the array and
+// key/value containers (see the docs: wxJSON internals: array and hash_map
+#undef wxJSON_USE_STL
+#if defined( wxUSE_STL ) && wxUSE_STL == 1
+#define wxJSON_USE_STL
+#endif
+
+//
+// defines the MIN and MAX macro for numeric arguments
+// note that the safest way to define such functions is using templates
+#define MIN(a,b)    a < b ? a : b
+#define MAX(a,b)    a > b ? a : b
+
 
 #endif // _WX_JSON_DEFS_H_

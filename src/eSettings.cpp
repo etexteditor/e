@@ -65,10 +65,12 @@ void eSettings::Load(const wxString& appDataPath) {
 
 	if (m_jsonRoot.HasMember(wxT("env"))) {
 		const wxJSONValue envNode = m_jsonRoot.ItemAt(wxT("env"));
-		const wxArrayString keys = envNode.GetMemberNames();
-		for( size_t i = 0; i < keys.Count(); i++){
-			const wxString& key = keys[i];
-			env[key] = envNode.ItemAt(key).AsString();
+		if (envNode.IsObject()) {
+			const wxArrayString keys = envNode.GetMemberNames();
+			for( size_t i = 0; i < keys.Count(); i++){
+				const wxString& key = keys[i];
+				env[key] = envNode.ItemAt(key).AsString();
+			}
 		}
 	}
 

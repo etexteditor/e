@@ -17,7 +17,7 @@
 
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
- 
+
 #ifdef __BORLANDC__
     #pragma hdrstop
 #endif
@@ -36,120 +36,113 @@
 
 // The flags of the parser
 enum {
-  wxJSONREADER_STRICT          = 0,
-  wxJSONREADER_ALLOW_COMMENTS  = 1,
-  wxJSONREADER_STORE_COMMENTS  = 2,
-  wxJSONREADER_CASE            = 4,
-  wxJSONREADER_MISSING         = 8,
-  wxJSONREADER_MULTISTRING     = 16,
-  wxJSONREADER_COMMENTS_AFTER  = 32,
-  wxJSONREADER_TOLERANT        = wxJSONREADER_ALLOW_COMMENTS | wxJSONREADER_CASE |
+    wxJSONREADER_STRICT          = 0,
+    wxJSONREADER_ALLOW_COMMENTS  = 1,
+    wxJSONREADER_STORE_COMMENTS  = 2,
+    wxJSONREADER_CASE            = 4,
+    wxJSONREADER_MISSING         = 8,
+    wxJSONREADER_MULTISTRING     = 16,
+    wxJSONREADER_COMMENTS_AFTER  = 32,
+    wxJSONREADER_NOUTF8_STREAM   = 64,
+    wxJSONREADER_MEMORYBUFF      = 128,
+
+    wxJSONREADER_TOLERANT        = wxJSONREADER_ALLOW_COMMENTS | wxJSONREADER_CASE |
                                  wxJSONREADER_MISSING | wxJSONREADER_MULTISTRING,
-  wxJSONREADER_COMMENTS_BEFORE = wxJSONREADER_ALLOW_COMMENTS | wxJSONREADER_STORE_COMMENTS
+    wxJSONREADER_COMMENTS_BEFORE = wxJSONREADER_ALLOW_COMMENTS | wxJSONREADER_STORE_COMMENTS
 };
 
 
 class WXDLLIMPEXP_JSON  wxJSONReader
 {
 public:
-  wxJSONReader( int flags = wxJSONREADER_TOLERANT, int maxErrors = 30 );
-  virtual ~wxJSONReader();
+    wxJSONReader( int flags = wxJSONREADER_TOLERANT, int maxErrors = 30 );
+    virtual ~wxJSONReader();
 
-  int Parse( const wxString& doc, wxJSONValue* val );
-  int Parse( wxInputStream& doc, wxJSONValue* val );
+    int Parse( const wxString& doc, wxJSONValue* val );
+    int Parse( wxInputStream& doc, wxJSONValue* val );
 
-  int   GetErrorCount() const;
-  int   GetWarningCount() const;
+    int   GetDepth() const;
+    int   GetErrorCount() const;
+    int   GetWarningCount() const;
+    const wxArrayString& GetErrors() const;
+    const wxArrayString& GetWarnings() const;
 
-  static int  UTF8NumBytes( char ch );
+    static int  UTF8NumBytes( char ch );
 
 #if defined( wxJSON_64BIT_INT )
-  static bool Strtoll( const wxString& str, wxInt64* i64 );
-  static bool Strtoull( const wxString& str, wxUint64* ui64 );
+    static bool Strtoll( const wxString& str, wxInt64* i64 );
+    static bool Strtoull( const wxString& str, wxUint64* ui64 );
+    static bool DoStrto_ll( const wxString& str, wxUint64* ui64, wxChar* sign );
 #endif
-
-  const wxArrayString& GetErrors() const;
-  const wxArrayString& GetWarnings() const;
 
 protected:
 
-  int  Parse( wxJSONValue* val );
-  int  DoRead( wxJSONValue& val );
-  void AddError( const wxString& descr );
-  void AddError( const wxString& fmt, const wxString& str );
-  void AddError( const wxString& fmt, wxChar ch );
-  void AddWarning( int type, const wxString& descr );
-  int  GetStart();
-  int  ReadChar();
-  int  GetChar();
-  int  PeekChar();
-  void StoreValue( int ch, const wxString& key, wxJSONValue& value, wxJSONValue& parent );
-  int  SkipWhiteSpace();
-  int  SkipComment();
-  void StoreComment( const wxJSONValue* parent );
-  int  ReadString( wxJSONValue& val );
-  int  ReadToken( int ch, wxString& s );
-  int  ReadValue( int ch, wxJSONValue& val );
-  int  ReadUnicode( long int& hex );
-  int  AppendUnicodeSequence( wxString& s, int hex );
-  int  NumBytes();
+    int  DoRead( wxInputStream& doc, wxJSONValue& val );
+    void AddError( const wxString& descr );
+    void AddError( const wxString& fmt, const wxString& str );
+    void AddError( const wxString& fmt, wxChar ch );
+    void AddWarning( int type, const wxString& descr );
+    int  GetStart( wxInputStream& is );
+    int  ReadChar( wxInputStream& is );
+    int  PeekChar( wxInputStream& is );
+    void StoreValue( int ch, const wxString& key, wxJSONValue& value, wxJSONValue& parent );
+    int  SkipWhiteSpace( wxInputStream& is );
+    int  SkipComment( wxInputStream& is );
+    void StoreComment( const wxJSONValue* parent );
+    int  ReadString(  wxInputStream& is, wxJSONValue& val );
+    int  ReadToken(  wxInputStream& is, int ch, wxString& s );
+    int  ReadValue(  wxInputStream& is, int ch, wxJSONValue& val );
+    int  ReadUES(  wxInputStream& is, char* uesBuffer );
+    int  AppendUES( wxMemoryBuffer& utf8Buff, const char* uesBuffer );
+    int  NumBytes( char ch );
+    int  ConvertCharByChar( wxString& s, const wxMemoryBuffer& utf8Buffer );
+    int  ReadMemoryBuff( wxInputStream& is, wxJSONValue& val );
 
-  static bool DoStrto_ll( const wxString& str, wxUint64* ui64, wxChar* sign );
+    //! Flag that control the parser behaviour,
+    int  m_flags;
 
-  // constructor's parameters
+    //! Maximum number of errors stored in the error's array
+    int  m_maxErrors;
 
-  //! Flag that control the parser behaviour,
-  int  m_flags;
+    //! The current line number (start at 1).
+    int  m_lineNo;
 
-  //! aximum number of errors stored in the error's array
-  int  m_maxErrors;
+    //! The current column number (start at 1).
+    int  m_colNo;
 
-  // data for the Parse() function
+    //! The current level of object/array annidation (start at ZERO).
+    int  m_level;
 
-  //! The current line number (start at 1).
-  int  m_lineNo;
+    //! The depth level of the read JSON text
+    int  m_depth;
 
-  //! The current column number (start at 1).
-  int  m_colNo;
+    //! The pointer to the value object that is being read.
+    wxJSONValue* m_current;
 
-  //! The current level of object/array annidation (start at ZERO).
-  int  m_level;
+    //! The pointer to the value object that was last stored.
+    wxJSONValue* m_lastStored;
 
-  //! The pointer to the value object that is being read.
-  wxJSONValue* m_current;
+    //! The pointer to the value object that will be read.
+    wxJSONValue* m_next;
 
-  //! The pointer to the value object that was last stored.
-  wxJSONValue* m_lastStored;
+    //! The comment string read by SkipComment().
+    wxString     m_comment;
 
-  //! The pointer to the value object that will be read.
-  wxJSONValue* m_next;
+    //! The starting line of the comment string.
+    int          m_commentLine;
 
-  //! The comment string read by SkipComment().
-  wxString     m_comment;
+    //! The array of error messages.
+    wxArrayString m_errors;
 
-  //! The starting line of the comment string.
-  int          m_commentLine;
+    //! The array of warning messages.
+    wxArrayString m_warnings;
 
-  //! The array of error messages.
-  wxArrayString m_errors;
+    //! The character read by the PeekChar() function (-1 none)
+    int           m_peekChar;
 
-  //! The array of warning messages.
-  wxArrayString m_warnings;
-
-  //! The current character position for string input
-  int           m_charPos;
-
-  //! The input type (0=string, 1=stream)
-  int           m_inType;
-
-  //! The pointer to the input object (a string or a stream)
-  void*         m_inObject;
-
-  //! The character read by the PeekChar() function (-1 none)
-  int           m_peekChar;
-
-  //! The conversion object (can only be NULL or the pointer to a UTF-8 converter)
-  wxMBConv*     m_conv;
+    //! ANSI: do not convert UTF-8 strings
+    bool        m_noUtf8;
 };
 
-#endif			// not defined _WX_JSONREADER_H
+
+#endif            // not defined _WX_JSONREADER_H

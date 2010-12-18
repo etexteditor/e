@@ -20,6 +20,7 @@
 #endif
 
 #include <vector>
+#include "EditorCtrl.h"
 
 class RemoteThread;
 class RemoteProfile;
@@ -33,14 +34,14 @@ public:
 			path = cp.path.c_str();
 			remoteProfile = cp.remoteProfile;
 			date = cp.date;
-			skipDate = cp.skipDate;
+			skipState = cp.skipState;
 			isModified = cp.isModified;
 		};
 
 		wxString path;
 		const RemoteProfile* remoteProfile;
 		wxDateTime date;
-		wxDateTime skipDate;
+		EditorCtrl::ModSkipState skipState;
 		bool isModified;
 	};
 

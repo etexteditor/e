@@ -73,6 +73,19 @@ class EditorCtrl : public KeyHookable<wxControl>,
 	public ITabPage
 {
 public:
+	class ModSkipState {
+		public:
+		enum {
+			SKIP_STATE_ASK,
+			SKIP_STATE_SKIP,
+			SKIP_STATE_UNAVAIL
+		} m_state;
+		wxDateTime m_date;
+		ModSkipState() : m_state(SKIP_STATE_ASK) {}
+		ModSkipState(const class ModSkipState& o) : m_state(o.m_state), m_date(o.m_date) {}
+		class ModSkipState& operator=(const class ModSkipState& o) {m_state = o.m_state; m_date = o.m_date; return *this;}
+	};
+
 	EditorCtrl(const doc_id di, const wxString& mirrorPath, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame, const wxPoint& pos = wxPoint(-100,-100), const wxSize& size = wxDefaultSize);
 
 	EditorCtrl(const int page_id, CatalystWrapper& cw, wxBitmap& bitmap, wxWindow* parent, EditorFrame& parentFrame);
@@ -195,8 +208,7 @@ public:
 	interval UndoSelection(const cxDiffEntry& de);
 
 	// Skip reloading of modified file?
-	const wxDateTime& GetModSkipDate() const {return m_modSkipDate;};
-	void SetModSkipDate(const wxDateTime& skipDate) {m_modSkipDate = skipDate;};
+	ModSkipState& GetModSkipState() {return m_modSkipState;}
 
 	// Path
 	const wxFileName& GetFilePath() const {return m_path;};
@@ -698,8 +710,8 @@ protected:
 	vector<int> commandStack;
 	static const unsigned int m_caretWidth;
 	unsigned int m_caretHeight;
-	wxDateTime m_modSkipDate;
 	wxString m_mate;
+	ModSkipState m_modSkipState;
 
 	// Callback data
 	void* m_callbackData;

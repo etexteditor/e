@@ -319,8 +319,8 @@ EditorFrame::EditorFrame(CatalystWrapper cat, unsigned int frameId,  const wxStr
 	m_settings(m_generalSettings.GetFrameSettings(frameId)),
 	m_syntax_handler(syntax_handler),
 
-	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskReload(false), m_inAskSave(false),
-	m_changeCheckerThread(NULL), editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
+	m_sizeChanged(false), m_needStateSave(true), m_keyDiags(false), m_inAskUpdate(false), m_changeCheckerThread(NULL),
+	editorCtrl(0), m_recentFilesMenu(NULL), m_recentProjectsMenu(NULL), m_bundlePane(NULL), m_diffPane(NULL),
 	m_symbolList(NULL), m_findInProjectDlg(NULL), m_pStatBar(NULL), m_snippetList(NULL), m_clipboardHistoryPane(NULL),
 	m_previewDlg(NULL), m_ctrlHeldDown(false), m_lastActiveTab(0), m_showGutter(true), m_showIndent(false),
 	bitmap(1,1)
@@ -1041,6 +1041,7 @@ void EditorFrame::ShowOutput(const wxString& title, const wxString& output) {
 
 void EditorFrame::CheckForModifiedFilesAsync() {
 	if (m_changeCheckerThread) return; // check in progress
+	wxASSERT(!m_inAskUpdate);
 
 	// On network drives, looking at files can lock up for a long
 	// time. So we do it in a separate thread.
@@ -1062,7 +1063,7 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 		cxENDLOCK
 
 		// Check if this change have been marked to be skipped
-		wxDateTime skipDate = page->GetModSkipDate();
+		EditorCtrl::ModSkipState skipState = page->GetModSkipState();
 
 		// Bundle items are checked for changes straight away
 		// (but results will come back with rest)
@@ -1078,9 +1079,10 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 			const wxDateTime bundleModDate = itemDict.GetModDate();
 			
 			// Only added if modified
-			if (mDate == bundleModDate || (skipDate.IsValid() && bundleModDate == skipDate)) continue;
+			if (mDate == bundleModDate ||
+				(skipState.m_state == EditorCtrl::ModSkipState::SKIP_STATE_SKIP && bundleModDate == skipState.m_date)) continue;
 
-			skipDate = bundleModDate;
+			skipState.m_date = bundleModDate;
 			isModified = true;
 		}
 
@@ -1089,7 +1091,7 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 		path.path = mirrorPath; // may be remote
 		path.remoteProfile = page->GetRemoteProfile();
 		path.date = mDate;
-		path.skipDate = skipDate;
+		path.skipState = skipState;
 		path.isModified = isModified;
 		changeList.push_back(path);
 	}
@@ -1102,7 +1104,7 @@ void EditorFrame::CheckForModifiedFilesAsync() {
 void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	wxLogDebug(wxT("OnFilesChanged"));
 	if (wxPendingDelete.Member(this)) return; // no need to worry about changes if we are closing
-	if (m_inAskReload) return; // nested calls
+	if (m_inAskUpdate) return;
 
 	const wxArrayString& paths = event.GetChangedFiles();
 	const vector<wxDateTime> modDates = event.GetModDates();
@@ -1113,39 +1115,17 @@ void EditorFrame::OnFilesChanged(wxFilesChangedEvent& event) {
 	const unsigned int count = paths.GetCount();
 	for (unsigned int i = 0; i < count; ++i) {
 		const wxString& path = paths[i];
-		bool close = false;
-
-		wxDateTime modTime = modDates[i];
-		if(!modTime.IsValid()) {
-			int answer = wxMessageBox(wxString::Format(wxT("Unable to read file %s.  Would you like to close it?"), path.c_str()), wxT("Error"), wxYES_NO);
-			if(answer == wxYES) {
-				close = true;
-			}
-		}
 
 		// Find doc with current path
 		const unsigned int pageCount = m_tabBar->GetPageCount();
-		unsigned int p;
-		for (p = 0; p < pageCount; ++p) {
+		for (unsigned int p = 0; p < pageCount; ++p) {
 			const EditorCtrl* page = GetEditorCtrlFromPage(p);
 			const wxString filePath = page->GetPath();
 			if (path == filePath) {
-				if(!close) {
-					pathsToPages.push_back(p);
-					pageDates.push_back(modDates[i]);
-				}
+				pathsToPages.push_back(p);
+				pageDates.push_back(modDates[i]);
 				break;
 			}
-		}
-
-		if(close && p < pageCount) {	
-			Freeze(); // optimize redrawing
-			DeletePage(p, true);
-
-			// If we deleted last editCtrl, then we have to create a new empty one
-			if (m_tabBar->GetPageCount() == 0) AddTab();
-
-			Thaw(); // optimize redrawing
 		}
 	}
 
@@ -1159,7 +1139,7 @@ void EditorFrame::OnFilesDeleted(wxFilesDeletedEvent& event) {
 	if (wxPendingDelete.Member(this)) {
 		return; // no need to worry about changes if we are closing
 	}
-	if (m_inAskSave) return; // nested calls
+	if (m_inAskUpdate) return; // nested calls
 	const wxArrayString& paths = event.GetDeletedFiles();
 	vector<unsigned int> pathsToPages;
 
@@ -1238,12 +1218,12 @@ void EditorFrame::CheckForModifiedFiles() {
 }*/
 
 void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, const vector<wxDateTime>& modDates) {
-	if (m_inAskReload) return; // nested-calls
+	if (m_inAskUpdate) return; // nested-calls
 	if (pathToPages.empty()) return;
 
 	// When dialog is closed we will get a second activate event
 	// this var make us aware of this so we can avoid asking twice
-	m_inAskReload = true;
+	m_inAskUpdate = true;
 
 	// Build list of paths (some may be remote)
 	wxArrayString paths;
@@ -1296,7 +1276,9 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 				cxENDLOCK
 
 				// Mark editorCtrl to skip reloading of this change
-				ec->SetModSkipDate(modDates[i]);
+				ec->GetModSkipState().m_date = modDates[i];
+				ec->GetModSkipState().m_state = modDates[i].IsValid() ?
+					EditorCtrl::ModSkipState::SKIP_STATE_SKIP : EditorCtrl::ModSkipState::SKIP_STATE_UNAVAIL;
 			}
 
 			UpdateWindowTitle(); // Update tabs and title
@@ -1311,22 +1293,24 @@ void EditorFrame::AskToReloadMulti(const vector<unsigned int>& pathToPages, cons
 				continue;
 			}
 
-			ec->SetModSkipDate(modDates[i]);
+			ec->GetModSkipState().m_date = modDates[i];
+			ec->GetModSkipState().m_state = modDates[i].IsValid() ?
+				EditorCtrl::ModSkipState::SKIP_STATE_SKIP : EditorCtrl::ModSkipState::SKIP_STATE_UNAVAIL;
 		}
 	}
 
-	m_inAskReload = false;
+	m_inAskUpdate = false;
 }
 
 /* When some open files was removed by another application we need to ask user
 to save these files once more */
 void EditorFrame::AskToSaveMulti(const vector<unsigned int>& pathToPages) {
-	if (m_inAskSave) return; // nested-calls
+	if (m_inAskUpdate) return; // nested-calls
 	if (pathToPages.empty()) return;
 
 	// When dialog is closed we will get a second activate event
 	// this var make us aware of this so we can avoid asking twice
-	m_inAskSave = true;
+	m_inAskUpdate = true;
 
 	// Build list of paths (some may be remote)
 	wxArrayString paths;
@@ -1354,6 +1338,8 @@ void EditorFrame::AskToSaveMulti(const vector<unsigned int>& pathToPages) {
 				cxENDLOCK
 			}
 			UpdateWindowTitle(); // Update tabs and title
+
+			ec->GetModSkipState().m_state = EditorCtrl::ModSkipState::SKIP_STATE_UNAVAIL;
 		}
 	} else {
 		// Mark files modified and skip saving this file
@@ -1367,9 +1353,11 @@ void EditorFrame::AskToSaveMulti(const vector<unsigned int>& pathToPages) {
 				catalyst.SetFileMirrorToModified(paths[i], ec->GetDocID());
 			cxENDLOCK
 			UpdateWindowTitle(); // Update tabs and title
+
+			ec->GetModSkipState().m_state = EditorCtrl::ModSkipState::SKIP_STATE_UNAVAIL;
 		}
 	}
-	m_inAskSave = false;
+	m_inAskUpdate = false;
 }
 
 void EditorFrame::RemoveRegMenus() {
@@ -3885,7 +3873,7 @@ void EditorFrame::OnActivate(wxActivateEvent& event) {
 		// If the frame get focus we want to pass it to the currently active editorCtrl
 		editorCtrl->SetFocus();
 
-		if ((!m_inAskReload) || (!m_inAskSave)) {
+		if (!m_inAskUpdate) {
 			// Should we check for changed files?
 			bool doCheckChange = true;  // default
 			m_generalSettings.GetSettingBool(wxT("checkChange"), doCheckChange);

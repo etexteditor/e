@@ -2931,7 +2931,8 @@ cxFileResult EditorCtrl::LoadText(const wxString& newpath, wxFontEncoding enc, c
 	topline = -1;
 	m_currentSel = -1;
 
-	m_modSkipDate = wxInvalidDateTime;
+	m_modSkipState.m_state = EditorCtrl::ModSkipState::SKIP_STATE_ASK;
+	m_modSkipState.m_date = wxInvalidDateTime;
 	MarkAsModified();
 
 	// re-set the width

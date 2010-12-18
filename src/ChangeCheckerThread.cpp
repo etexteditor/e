@@ -39,7 +39,7 @@ void* ChangeCheckerThread::Entry() {
 		wxDateTime modDate;
 		if (p->isModified) {
 			// Some file types (like bundle items) may already have been checked
-			modDate = p->skipDate;
+			modDate = p->skipState.m_date;
 		}
 		else {
 			if (p->remoteProfile) {
@@ -54,7 +54,8 @@ void* ChangeCheckerThread::Entry() {
 				// Check if file exists
 				wxFileName fn(p->path);
 				if (!fn.FileExists()) { // not exist is deleted file
-					deletedFiles.Add(p->path);
+					if (p->skipState.m_state != EditorCtrl::ModSkipState::SKIP_STATE_UNAVAIL)
+						deletedFiles.Add(p->path);
 					continue;
 				}
 
@@ -66,13 +67,16 @@ void* ChangeCheckerThread::Entry() {
 			// or we could not have permission to see it
 			// handle this in the event thread
 			if (!modDate.IsValid()) {
-				changedFiles.Add(p->path);
-				modDates.push_back(modDate);
+				if (p->skipState.m_state != EditorCtrl::ModSkipState::SKIP_STATE_UNAVAIL) {
+					changedFiles.Add(p->path);
+					modDates.push_back(modDate);
+				}
 				continue;
 			}
 
 			// Check if this change have been marked to be skipped
-			if (p->skipDate.IsValid() && modDate == p->skipDate) continue;
+			if (p->skipState.m_state == EditorCtrl::ModSkipState::SKIP_STATE_SKIP
+				&& modDate == p->skipState.m_date) continue;
 
 			bool isChanged = false;
 			if (!p->date.IsValid()) isChanged = true;

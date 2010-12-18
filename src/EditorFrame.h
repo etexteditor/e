@@ -561,8 +561,7 @@ private:
 	bool m_sizeChanged;
 	bool m_needStateSave;
 	bool m_keyDiags;
-	bool m_inAskReload;
-	bool m_inAskSave;
+	bool m_inAskUpdate;
 	ChangeCheckerThread* m_changeCheckerThread;
 
 	// Main Panel

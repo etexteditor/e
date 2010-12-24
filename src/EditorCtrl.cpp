@@ -2458,7 +2458,7 @@ void EditorCtrl::InsertChar(const wxChar& text) {
 		RawInsert(pos, text, true);
 		pos = m_lines.GetPos();
 
-		if (atLineEnd) {
+		if (atLineEnd && text != wxT('\t') && text != wxT(' ')) {
 			// We only check for indentation change when inserting at end of line
 			// this makes it possible to manually adjust indentation.
 			const unsigned int linestart = m_lines.GetLineStartpos(lineid);

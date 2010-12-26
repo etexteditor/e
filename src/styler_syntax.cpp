@@ -184,60 +184,97 @@ const deque<const wxString*> Styler_Syntax::GetScope(unsigned int pos) {
 		scopes.push_back(&m_topMatches.subMatcher->GetName());
 	}
 
-	GetSubScope(pos, m_topMatches, scopes);
+	GetSubScopeIntervals(pos, m_topMatches, scopes);
 	return scopes;
-}
-
-void Styler_Syntax::GetSubScope(unsigned int pos, const submatch& sm, deque<const wxString*>& scopes) const {
-	for (auto_vector<stxmatch>::const_iterator p = sm.matches.begin(); p != sm.matches.end(); ++p) {
-		const stxmatch& m = *(*p);
-
-		if (pos >= m.start && pos < m.end) {
-			if (!m.m_name.empty()) scopes.push_back( &m.m_name );
-
-			// Check if there are submatches
-			if (m.subMatch.get()) {
-				wxASSERT(pos >= m.start);
-				GetSubScope(pos - m.start, *m.subMatch, scopes);
-			}
-			return;
-		}
-		else if (m.start > pos) break;
-	}
 }
 
 const deque<interval> Styler_Syntax::GetScopeIntervals(unsigned int pos) const {
 	wxASSERT(pos <= m_doc.GetLength());
 	if(!HaveActiveSyntax()) return deque<interval>();
 
-	deque<interval> scopes;
-	const wxString& topScope = m_topMatches.subMatcher->GetName();
-	if (!topScope.empty()) {
-		scopes.push_back(interval(0, m_doc.GetLength()));
+	deque<interval> intervals;
+	deque<const wxString*> scopes;
+
+	GetSubScopeIntervals(pos, m_topMatches, scopes, 0, &intervals);
+	// expand scope intervals
+	if (!intervals.empty()) {
+		while(intervals.back().start > 0) {
+			if (!ExpandScopeIntervals(intervals.back().start-1, scopes, intervals))
+				break;
+		}
+		while(intervals.back().end < m_doc.GetLength()) {
+			if (!ExpandScopeIntervals(intervals.back().end, scopes, intervals))
+				break;
+		}
 	}
 
-	GetSubScopeIntervals(pos, 0, m_topMatches, scopes);
-	return scopes;
+	const wxString& topScope = m_topMatches.subMatcher->GetName();
+	if (!topScope.empty()) {
+		intervals.push_front(interval(0, m_doc.GetLength()));
+	}
+	return intervals;
 }
 
-void Styler_Syntax::GetSubScopeIntervals(unsigned int pos, unsigned int offset, const submatch& sm, deque<interval>& scopes) const {
+void Styler_Syntax::GetSubScopeIntervals(unsigned int pos, const submatch& sm, deque<const wxString*>& scopes, unsigned int offset, deque<interval>* intervals) const {
 	for (auto_vector<stxmatch>::const_iterator p = sm.matches.begin(); p != sm.matches.end(); ++p) {
 		const stxmatch& m = *(*p);
 
 		if (pos >= m.start && pos < m.end) {
 			if (!m.m_name.empty()) {
-				scopes.push_back(interval(offset+m.start, offset+m.end));
+				if (intervals != NULL && !intervals->empty() && intervals->back() == interval(offset+m.start, offset+m.end)) {
+					scopes.back() = &m.m_name;
+				} else {
+					scopes.push_back(&m.m_name);
+					if (intervals) intervals->push_back(interval(offset+m.start, offset+m.end));
+				}
 			}
 
 			// Check if there are submatches
 			if (m.subMatch.get()) {
 				wxASSERT(pos >= m.start);
-				GetSubScopeIntervals(pos - m.start, offset+m.start, *m.subMatch, scopes);
+				GetSubScopeIntervals(pos - m.start, *m.subMatch, scopes, offset+m.start, intervals);
 			}
 			return;
 		}
 		else if (m.start > pos) break;
 	}
+}
+bool Styler_Syntax::ExpandScopeIntervals(unsigned int pos, deque<const wxString*>& scopes, deque<interval>& intervals) const {
+	deque<const wxString*>::const_iterator i, j;
+	deque<interval>::const_iterator from;
+	deque<interval>::iterator to;
+
+	deque<interval> new_intervals;
+	deque<const wxString*> new_scopes;
+
+	GetSubScopeIntervals(pos, m_topMatches, new_scopes, 0, &new_intervals);
+	wxASSERT(new_scopes.size() == new_intervals.size());
+
+	// new scope can contain more captures than original scope
+	deque<interval> part_intervals;
+	for(i = scopes.begin(), j = new_scopes.begin(), from = new_intervals.begin(); i != scopes.end(); ++j, ++from) {
+		if (j == new_scopes.end())
+			return false;
+		if (*(*i) == *(*j)) {
+			part_intervals.push_back(*from);
+			++i;
+		}
+	}
+	if (i != scopes.end()) // but last capture must be the same
+		return false;
+
+	// same scope, merge intervals
+	wxASSERT(intervals.size() == part_intervals.size());
+
+	for(from = part_intervals.begin(), to = intervals.begin(); from != part_intervals.end(); ++from, ++to) {
+		if (from->end == to->start)
+			to->start = from->start;
+		else if (from->start == to->end)
+			to->end = from->end;
+		else
+			wxASSERT(from->start >= to->start && from->end <= to->end);
+	}
+	return true;
 }
 
 const style* Styler_Syntax::GetStyle(stxmatch& m) const {

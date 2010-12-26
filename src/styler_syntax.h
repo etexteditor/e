@@ -132,9 +132,9 @@ private:
 	const style* GetStyle(stxmatch& m) const;
 	void ReStyleSub(const submatch& sm);
 
-	void GetSubScope(unsigned int pos, const submatch& sm, deque<const wxString*>& scopes) const;
-	void GetSubScopeIntervals(unsigned int pos, unsigned int offset, const submatch& sm, deque<interval>& scopes) const;
+	void GetSubScopeIntervals(unsigned int pos, const submatch& sm, deque<const wxString*>& scopes, unsigned int offset = 0, deque<interval>* intervals = NULL) const;
 	bool GetSubNextMatch(const submatch& sm, const wxString& scope, unsigned int startpos, interval& match, interval& content) const;
+	bool ExpandScopeIntervals(unsigned int pos, deque<const wxString*>& scopes, deque<interval>& intervals) const;
 
 	void AddCaptures(matcher& m, stxmatch& sm, unsigned int offset, const SearchInfo& si, int rc, int* ovector);
 	void ReInitSpan(span_matcher& sm, unsigned int start, const SearchInfo& si, int rc=0, int* ovector=NULL);

@@ -158,12 +158,22 @@ void RemoteProfileDlg::EnableSettings(bool enable) {
 	m_openButton->Enable(enable);
 }
 
+struct UncasedLess : public std::binary_function<wxString, wxString, bool> {
+	bool operator()(const wxString& __x, const wxString& __y) const {
+		return __x.CmpNoCase(__y) < 0;
+	}
+};
 void RemoteProfileDlg::Init() {
-	const unsigned int profile_count = m_settings.GetRemoteProfileCount();
+	typedef std::multimap<const wxString, unsigned int, UncasedLess> profile_list_t;
+	profile_list_t profile_list;
 
-	for (unsigned int i = 0; i < profile_count; ++i) {
-		const wxString profileName = m_settings.GetRemoteProfileName(i);
-		m_profileList->Append(profileName, (void*)i);
+	const unsigned int profile_count = m_settings.GetRemoteProfileCount();
+	for(unsigned int i = 0; i < profile_count; ++i) {
+		profile_list.insert(profile_list_t::value_type(m_settings.GetRemoteProfileName(i), i));
+	}
+
+	for(profile_list_t::const_iterator i = profile_list.begin(); i != profile_list.end(); ++i) {
+		m_profileList->Append(i->first, (void*)i->second);
 	}
 
 	// Initially no profile is selected

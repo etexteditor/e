@@ -371,7 +371,7 @@ RemoteProfile* eSettings::DoGetRemoteProfile(size_t profile_id)  {
 			return *p;
 
 	// Get the profile
-	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
+	const wxJSONValue remotes = GetRemoteProfiles();
 	wxASSERT((int)profile_id < remotes.Size());
 	const wxJSONValue profile = remotes.ItemAt(profile_id);
 	
@@ -391,28 +391,26 @@ RemoteProfile* eSettings::DoGetRemoteProfile(size_t profile_id)  {
 
 size_t eSettings::GetRemoteProfileCount() const {
 	if (!m_jsonRoot.HasMember(wxT("remoteProfiles"))) return 0;
-
 	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
-	return remotes.Size();
+	return remotes.IsArray() ? remotes.Size() : 0;
 }
 
 wxString eSettings::GetRemoteProfileName(size_t profile_id) const {
-	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
+	const wxJSONValue remotes = GetRemoteProfiles();
 	wxASSERT((int)profile_id < remotes.Size());
 	const wxJSONValue profile = remotes.ItemAt(profile_id);
 	return profile.ItemAt(wxT("name")).AsString();
 }
 
 size_t eSettings::AddRemoteProfile(const RemoteProfile& profile) {
-	wxJSONValue& remotes = m_jsonRoot[wxT("remoteProfiles")];
-	const size_t profile_id = remotes.Size();
+	const size_t profile_id = GetRemoteProfileCount();
 	SetRemoteProfile(profile_id, profile);
 	AutoSave();
 	return profile_id;
 }
 
 void eSettings::SetRemoteProfile(size_t profile_id, const RemoteProfile& profile) {
-	wxJSONValue& remotes = m_jsonRoot[wxT("remoteProfiles")];
+	wxJSONValue& remotes = GetRemoteProfiles();
 
 	// Add new profile if needed
 	wxASSERT((int)profile_id <= remotes.Size());
@@ -475,7 +473,7 @@ const RemoteProfile* eSettings::GetRemoteProfileFromUrl(const wxString& url, boo
 	}
 
 	// See if we can find a matching profile in settings
-	const wxJSONValue remotes = m_jsonRoot.ItemAt(wxT("remoteProfiles"));
+	const wxJSONValue remotes = GetRemoteProfiles();
 	const int profile_count = remotes.Size();
 	for (int i = 0; i < profile_count; ++i) {
 		const wxJSONValue profile = remotes.ItemAt(i);
@@ -535,7 +533,7 @@ void eSettings::SetRemoteProfileLogin(const RemoteProfile* profile, const wxStri
 }
 
 void eSettings::DeleteRemoteProfile(size_t profile_id) {
-	wxJSONValue& remotes = m_jsonRoot[wxT("remoteProfiles")];
+	wxJSONValue& remotes = GetRemoteProfiles();
 	wxASSERT((int)profile_id < remotes.Size());
 
 	// Remove from db
@@ -553,7 +551,7 @@ void eSettings::DeleteRemoteProfile(size_t profile_id) {
 }
 
 void eSettings::SaveRemoteProfile(RemoteProfile* rp) {
-	wxJSONValue& remotes = m_jsonRoot[wxT("remoteProfiles")];
+	wxJSONValue& remotes = GetRemoteProfiles();
 
 	// Add new profile if needed
 	if (rp->IsTemp()) rp->m_id = remotes.Size();

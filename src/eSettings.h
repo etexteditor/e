@@ -154,6 +154,13 @@ private:
 	static void GetRecents(const wxJSONValue& jarray, wxArrayString& recents);
 
 	// Remote profile (support functions)
+	wxJSONValue& GetRemoteProfiles() {
+		wxJSONValue& res = m_jsonRoot[wxT("remoteProfiles")];
+		res.SetType(wxJSONTYPE_ARRAY);
+		return res;
+	}
+	const wxJSONValue GetRemoteProfiles() const {return m_jsonRoot.ItemAt(wxT("remoteProfiles"));}
+
 	RemoteProfile* DoGetRemoteProfile(size_t profile_id);
 	void SaveRemoteProfile(RemoteProfile* rp);
 	static wxString StripSlashes(const wxString& path);

@@ -1,5 +1,10 @@
-#include "Strings.h"
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
 #include <wx/tokenzr.h>
+
+#include "Strings.h"
 #include "Utf.h"
 
 #ifdef __WXMSW__

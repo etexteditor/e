@@ -279,10 +279,12 @@ void Accelerators::ReadCustomShortcuts() {
 	wxJSONValue bindings = jsonRoot[wxT("bindings")];
 
 	m_customBindings.clear();
-	wxArrayString keys = bindings.GetMemberNames();
-	for(unsigned int c = 0; c < keys.size(); c++) {
-		wxString key = keys[c];
-		m_customBindings[normalize(key)] = bindings[key].AsString();
+	if (bindings.IsObject()) {
+		const wxArrayString keys = bindings.GetMemberNames();
+		for(unsigned int c = 0; c < keys.size(); c++) {
+			const wxString key = keys[c];
+			m_customBindings[normalize(key)] = bindings[key].AsString();
+		}
 	}
 }
 

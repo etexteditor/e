@@ -41,5 +41,12 @@ WXDLLIMPEXP_BASE wxArrayString wxSplit(const wxString& str,
                                        const wxChar sep,
                                        const wxChar escape = wxT('\\'));
 
+inline bool Isalnum(wxChar c) {
+#ifdef __WXMSW__
+	return ::IsCharAlphaNumeric(c) != 0;
+#else
+	return wxIsalnum(c);
+#endif
+}
 
 #endif // __STRINGS_H__

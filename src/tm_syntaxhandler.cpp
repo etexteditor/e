@@ -25,11 +25,10 @@
 #include "Dispatcher.h"
 #include "BundleMenu.h"
 #include "tmStyle.h"
+#include "Strings.h"
 
 #include "IAppPaths.h"
 #include "IEditorDoAction.h"
-
-bool Isalnum(wxChar c); // defined in EditorCtrl.cpp
 
 // tinyxml includes unused vars so it can't compile with Level 4
 #ifdef __WXMSW__

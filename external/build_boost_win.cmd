@@ -3,4 +3,4 @@
 echo Building boost...
 pushd boost
 
-.\bootstrap && .\bjam link=static runtime-link=static && popd
+.\bootstrap && .\bjam toolset=msvc-9.0 link=static runtime-link=shared  && popd

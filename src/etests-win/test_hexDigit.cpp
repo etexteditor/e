@@ -1,4 +1,10 @@
 #include "stdafx.h"
+
+#include "wx/wxprec.h"
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
+
 #include <limits.h>
 #include "Strings.h"
 #include <gtest/gtest.h>

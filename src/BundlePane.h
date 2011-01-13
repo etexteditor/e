@@ -75,6 +75,8 @@ private:
 	void OnTreeEndDrag(wxTreeEvent& event);
 	void OnTreeKeyDown(wxTreeEvent& event);
 	void OnTreeMenu(wxTreeEvent& event);
+	void OnTreeBeginLabelEdit(wxTreeEvent& event);
+	void OnTreeEndLabelEdit(wxTreeEvent& event);
 	void OnButtonPlus(wxCommandEvent& event);
 	void OnButtonMinus(wxCommandEvent& event);
 	void OnButtonManage(wxCommandEvent& event);

@@ -93,6 +93,8 @@ BEGIN_EVENT_TABLE(BundlePane, wxPanel)
 	EVT_TREE_END_DRAG(CTRL_BUNDLETREE, BundlePane::OnTreeEndDrag)
 	EVT_TREE_KEY_DOWN(CTRL_BUNDLETREE, BundlePane::OnTreeKeyDown)
 	EVT_TREE_ITEM_MENU(CTRL_BUNDLETREE, BundlePane::OnTreeMenu)
+	EVT_TREE_BEGIN_LABEL_EDIT(CTRL_BUNDLETREE, BundlePane::OnTreeBeginLabelEdit)
+	EVT_TREE_END_LABEL_EDIT(CTRL_BUNDLETREE, BundlePane::OnTreeEndLabelEdit)
 	EVT_BUTTON(CTRL_NEWBUNDLEITEM, BundlePane::OnButtonPlus)
 	EVT_BUTTON(CTRL_DELBUNDLE, BundlePane::OnButtonMinus)
 	EVT_BUTTON(CTRL_MANAGE, BundlePane::OnButtonManage)
@@ -1121,6 +1123,60 @@ void BundlePane::NewItem(BundleItemType type, const eMacro* macro) {
 	const wxString bundlePath = m_plistHandler.GetBundleItemUri(type, bundleId, itemId);
 	if (bundlePath.empty()) return;
 	m_parentFrame.Open(bundlePath);
+}
+
+void BundlePane::OnTreeBeginLabelEdit(wxTreeEvent& event) {
+	wxTreeItemId id = event.GetItem();
+	if (id.IsOk()) {
+	    const BundleItemData* data = (BundleItemData*)m_bundleTree->GetItemData( id );
+		if (data) {
+			switch(data->m_type) {
+				case BUNDLE_BUNDLE:
+				case BUNDLE_COMMAND:
+				case BUNDLE_SNIPPET:
+				case BUNDLE_PREF:
+				case BUNDLE_MACRO:
+				case BUNDLE_DRAGCMD:
+				case BUNDLE_LANGUAGE:
+					return;
+			}
+		}
+	}
+	event.Veto();
+}
+
+void BundlePane::OnTreeEndLabelEdit(wxTreeEvent& event) {
+	wxTreeItemId id = event.GetItem();
+	if (!id.IsOk()) {event.Veto(); return;}
+    const BundleItemData* data = (BundleItemData*)m_bundleTree->GetItemData( id );
+	if (!data) {event.Veto(); return;}
+	const wxString new_text = event.GetLabel();
+	if (new_text.empty()) {event.Veto(); return;}
+
+	switch(data->m_type) {
+		case BUNDLE_BUNDLE: {
+			PListDict infoDict = m_plistHandler.GetEditableBundleInfo(data->m_bundleId);
+			infoDict.wxSetString("name", new_text);
+			m_plistHandler.SaveBundle(data->m_bundleId);
+			m_syntaxHandler->ReParseBundles();
+			break;
+		}
+		case BUNDLE_COMMAND:
+		case BUNDLE_SNIPPET:
+		case BUNDLE_PREF:
+		case BUNDLE_MACRO:
+		case BUNDLE_DRAGCMD:
+		case BUNDLE_LANGUAGE: {
+			PListDict itemDict = m_plistHandler.GetEditable(data->m_type, data->m_bundleId, data->m_itemId);
+			itemDict.wxSetString("name", new_text);
+			m_plistHandler.Save(data->m_type, data->m_bundleId, data->m_itemId);
+			m_syntaxHandler->ReParseBundles();
+			break;
+		}
+		default:
+			wxFAIL; /* edit should've been blocked by BeginLabelEdit */
+			break;
+	}
 }
 
 // ---- SortTreeCtrl ----------------------------------------------------------------------------------------------

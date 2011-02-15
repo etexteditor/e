@@ -56,6 +56,8 @@ public:
 	void RefreshReplaceHistory();
 	void UpdateReplaceHistory();
 
+	IFrameSearchService& GetSearchService() { return m_searchService; }
+
 private:
 	void InitAcceleratorTable();
 	int GetOptionFlags();

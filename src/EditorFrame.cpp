@@ -301,6 +301,7 @@ BEGIN_EVENT_TABLE(EditorFrame, wxFrame)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_NEXT, EditorFrame::OnMenuNavigateSelectionsNext)
 	EVT_MENU(MENU_NAVIGATE_SELECTIONS_PREVIOUS, EditorFrame::OnMenuNavigateSelectionsPrevious)
 	EVT_MENU(MENU_ACCELERATORS, EditorFrame::OnMenuCustomizeAccelerators)
+	EVT_MENU(MENU_INDENT_LINES, EditorFrame::OnMenuIndentLines)
 
 	//EVT_MENU(MENU_DOC_OPEN, EditorFrame::OnMenuDocOpen)
 	//EVT_MENU(MENU_DOC_SHARE, EditorFrame::OnMenuDocShare)
@@ -716,6 +717,8 @@ void EditorFrame::InitMenus() {
 	textMenu->AppendSeparator();
 	textMenu->Append(MENU_FILTER, _("&Filter Through Command...\tCtrl-H"), _("Filter Through Command..."));
 	textMenu->Append(MENU_RUN, _("&Run current line/selection\tCtrl-Alt-R"), _("Run current line/selection"));
+	textMenu->AppendSeparator();
+	textMenu->Append(MENU_INDENT_LINES, _("&Indent Lines"), _("Indent Lines"));
 	menuBar->Append(textMenu, _("&Text"));
 
 	// Navigation menu
@@ -4344,4 +4347,10 @@ void EditorFrame::OnMenuCustomizeAccelerators(wxCommandEvent& WXUNUSED(event)) {
 	(AcceleratorsDialog(this)).ShowModal();
 	EditorCtrl* ctrl = GetEditorCtrl();
 	ctrl->DrawLayout();
+}
+
+void EditorFrame::OnMenuIndentLines(wxCommandEvent& WXUNUSED(event)) {
+	EditorCtrl* ctrl = GetEditorCtrl();
+	if(!ctrl) return;
+	ctrl->IndentLines();
 }

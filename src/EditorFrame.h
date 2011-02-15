@@ -196,7 +196,8 @@ public:
 		MENU_MACRO_PLAY,
 		MENU_MACRO_EDIT,
 		MENU_MACRO_CONTINUE,
-		MENU_ACCELERATORS
+		MENU_ACCELERATORS,
+		MENU_INDENT_LINES
 	};
 
 	EditorFrame(CatalystWrapper cat, unsigned int frameId, const wxString& title, const wxRect& rect, TmSyntaxHandler& syntax_handler);
@@ -535,6 +536,7 @@ private:
 	//void OnMenuDocOpen(wxCommandEvent& event);
 	//void OnMenuDocShare(wxCommandEvent& event);
 	void OnMouseWheel(wxMouseEvent& event);
+	void OnMenuIndentLines(wxCommandEvent& event);
 	DECLARE_EVENT_TABLE();
 
 	// Static Notification handlers

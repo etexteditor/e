@@ -355,6 +355,7 @@ public:
 	wxString GetLineIndentFromPos(unsigned int pos);
 	void TabsToSpaces();
 	void SpacesToTabs();
+	void IndentLines();
 
 	// Encoding
 	wxFontEncoding GetEncoding() const;

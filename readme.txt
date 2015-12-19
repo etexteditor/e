@@ -8,7 +8,7 @@ IRC: irc://freenode/etexteditor
 Windows users in particulary should take note of the Line Endings section.
 
 == Line Endings ==
-This is a Liux/Windows cross-platform project. Because of this and git's behavior,
+This is a Linux/Windows cross-platform project. Because of this and git's behavior,
 file line-endings are important to get right and keep consistent.
 
 The default for all new files in this repo is to use UNIX-style "LF" endings.

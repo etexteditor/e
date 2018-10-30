@@ -71,3 +71,4 @@ e homepage.
 Issues related to building and packaging e itself, or suggested code changes/
 refactorings may be placed in the GitHub issue tracker:
  * http://github.com/etexteditor/e/issues
+# i love git

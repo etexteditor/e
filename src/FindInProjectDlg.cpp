@@ -194,8 +194,13 @@ void FindInProjectDlg::OnIdle(wxIdleEvent& event) {
 				wxString errorMsg;
 				m_searchThread->GetCurrentPath(errorMsg);
 				m_pathStatic->SetLabel(errorMsg);
+			} else {
+				if (!m_pathStatic->GetLabel().empty()) m_pathStatic->SetLabel(wxT(""));
+
+				if (m_searchThread->UpdateOutput(m_output)) {
+					m_browser->LoadString(m_output);
+				}
 			}
-			else if (!m_pathStatic->GetLabel().empty()) m_pathStatic->SetLabel(wxT(""));
 
 			m_searchButton->SetLabel(_("Search"));
 			m_inSearch = false;

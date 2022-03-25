@@ -437,6 +437,8 @@ void SearchEvtHandler::OnKeyDown(wxKeyEvent &event) {
 		const int direction = wxGetKeyState(WXK_SHIFT) ? 0 : wxNavigationKeyEvent::IsForward;
 		((wxWindow*)event.GetEventObject())->Navigate(direction);
 		return;
+	} else if(parent->GetSearchService().HandleChord(event)) {
+		return;
 	}
 
 	event.Skip(true);

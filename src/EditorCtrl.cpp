@@ -1468,6 +1468,57 @@ bool EditorCtrl::SmartTab() {
 	return false;
 }
 
+/**
+ * This uses the GetRealIndent method to calculate the 'correct' indentation for each line.
+ * It strips the indentation from the line and then sets it to the above string.
+ * This could be *much* faster if more time was spent analyzing the usage of GetRealIndent, there are probably a ton of duplicate calculations going on.
+ * It does remove any selections if they were there.  This could probably be avoided if users want it.
+ */
+void EditorCtrl::IndentLines() {
+	std::vector<int> intervals;
+	const vector<interval> selections = GetSelections();
+	if(selections.size() == 0) {
+		intervals.push_back(0);
+		intervals.push_back(m_lines.GetLineCount()-1);
+	} else {
+		for(unsigned int c = 0; c < selections.size(); c++) {
+			intervals.push_back(m_lines.GetLineFromCharPos(selections[c].start));
+			intervals.push_back(m_lines.GetLineFromCharPos(selections[c].end));
+		}
+	}
+
+	Freeze();
+	for(unsigned int c = 0; c < intervals.size(); c += 2) {
+		unsigned int startLine = intervals[c];
+		unsigned int endLine = intervals[c+1];
+
+		while(endLine >= startLine) {
+			wxString realIndent = GetRealIndent(startLine, false, true);
+
+			const unsigned int startOfLine = m_lines.GetLineStartpos(startLine);
+			const unsigned int endOfLine = m_lines.GetLineEndpos(startLine);
+			unsigned int whitespaceEnd = startOfLine;
+
+			cxLOCKDOC_READ(m_doc)
+				while(whitespaceEnd < endOfLine) {
+					const wxChar c = doc.GetChar(whitespaceEnd);
+					if(!(c == ' ' || c == '\t')) break;
+					whitespaceEnd++;
+				}
+			cxENDLOCK
+
+			RawDelete(startOfLine, whitespaceEnd);
+			RawInsert(startOfLine, realIndent);
+
+			startLine++;
+		}
+	}
+
+	RemoveAllSelections();
+	Freeze();
+	DrawLayout();
+}
+
 void EditorCtrl::GetLine(unsigned int lineid, vector<char>& text) const {
 	unsigned int start;
 	unsigned int end;

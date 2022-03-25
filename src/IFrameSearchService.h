@@ -7,6 +7,7 @@ class IFrameSearchService {
 public:
 	virtual IEditorSearch* GetSearch() = 0;
 	virtual void ShowSearch(bool show=true, bool replace=false) = 0;
+	virtual bool HandleChord(wxKeyEvent& event) = 0;
 };
 
 
